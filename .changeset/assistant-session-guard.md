@@ -3,7 +3,7 @@
 '@dxos/plugin-assistant': minor
 ---
 
-Agents can delegate work to another agent: `Agent.delegate({ target: { kind: 'agent' } })` and the delegation skill's delegate-to-agent hand a request to that agent's session, which runs on its own permissions; an ambiguous agent name is refused.
+Agents can delegate work to another agent: `Agent.delegate({ target: { kind: 'agent', agent: Obj.getURI(receiver) } })` and the delegation skill's delegate-to-agent hand a request to that agent's session, which runs on its own permissions; an ambiguous agent name is refused.
 
 Processes now carry an `authority` (a principal and the grants it holds) instead of a guard: `Process.Guard`, `SpawnOptions.guard` and `@dxos/permission`'s `Guard` module are removed. Every call a process makes is held to its own authority and those it inherited, checked by compute-runtime's `Verifier`. Authorities persist with the process. `Process.Manager.grant` adds grants to a live process and to the copies its children inherited; the manager a process sees grants only to processes held to its own authorities, never to itself. Operations declare what they need with `Operation.requires`.
 

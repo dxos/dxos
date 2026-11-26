@@ -38,7 +38,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { TestHelpers } from '@dxos/effect/testing';
 import { makeRecordingTracer } from '@dxos/effect/testing';
 import { DXN, EntityId, URI } from '@dxos/keys';
-import { Principal } from '@dxos/permission';
+import { Grant, Permission, Principal, Subject } from '@dxos/permission';
 import { Text } from '@dxos/schema';
 import { ContentBlock, Message, Organization, Task } from '@dxos/types';
 
@@ -592,6 +592,22 @@ describe('Agent Service', () => {
           const [pid] = yield* activePids;
 
           // A caller that does not care which authority the chat runs under must not tear the running one down.
+          yield* AgentService.bindSession(chat);
+          expect(yield* activePids).toEqual([pid]);
+
+          // A grant added since keeps the process for a verb, which acts on the options the session was opened with.
+          const running = (yield* processManager.list({ target, key: SESSION_PROCESS_KEY })).find(
+            (process) => !Process.isTerminal(process.status.state),
+          );
+          if (running === undefined) {
+            return yield* Effect.die(new Error('The session has no running process.'));
+          }
+          const grant = yield* Grant.make({
+            issuer: Principal.identity('did:halo:TEST'),
+            audience: authority.principal,
+            permissions: [Permission.make({ subject: Subject.any(), command: '/test/write' })],
+          });
+          yield* processManager.grant(running.pid, [grant]);
           yield* AgentService.bindSession(chat);
           expect(yield* activePids).toEqual([pid]);
 

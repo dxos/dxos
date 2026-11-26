@@ -147,6 +147,12 @@ const sameAuthority = (left: Process.Authority | undefined, right: Process.Autho
   left.grants.length === right.grants.length &&
   left.grants.every((grant, index) => grant.id === right.grants[index]?.id);
 
+/** Whether `live` is `opened` with grants added since, as `ProcessManager.grant` appends them. */
+const extendsAuthority = (live: Process.Authority | undefined, opened: Process.Authority): boolean =>
+  live !== undefined &&
+  live.principal === opened.principal &&
+  opened.grants.every((grant, index) => grant.id === live.grants[index]?.id);
+
 export interface Options {
   systemPrompt?: string;
 
@@ -375,9 +381,14 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
       ): Effect.Effect<Process.Authority | undefined, never, Database.Service> =>
         opts?.defaultAuthority ? opts.defaultAuthority(chat) : Effect.succeed(undefined);
 
+      /**
+       * `reopen` is a verb acting on the options the session was last opened with: its authority may since have gained
+       * grants, which it keeps, so it reuses a process whose authority extends the saved one rather than replacing it.
+       */
       const getHandle = (
         chat: Agent.Session,
         options?: Agent.OpenSessionOptions,
+        { reopen = false }: { readonly reopen?: boolean } = {},
       ): Effect.Effect<SessionHandle, never, Database.Service> =>
         Effect.suspend(() =>
           lockFor(chat.id).withPermits(1)(
@@ -421,7 +432,7 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
                   cached.location === location &&
                   cached.process === executable.key &&
                   // No authority asked for is no demand for a process without one, so it reuses any.
-                  (authority === undefined || sameAuthority(liveAuthority, authority)) &&
+                  (authority === undefined || (reopen ? extendsAuthority : sameAuthority)(liveAuthority, authority)) &&
                   !Process.isTerminal(cached.handle.status.state)
                 ) {
                   return cached.session;
@@ -458,7 +469,7 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
                 // adopted; one already running under the same authority is, so a remount does not cut its turn short.
                 const activePid = activeProcess.pid;
                 const listed = (yield* processManager.processTree).find((process) => process.pid === activePid);
-                if (!sameAuthority(listed?.authorities?.at(-1), authority)) {
+                if (!(reopen ? extendsAuthority : sameAuthority)(listed?.authorities?.at(-1), authority)) {
                   yield* activeProcess.terminate();
                   activeProcess = undefined;
                 }
@@ -606,7 +617,7 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
         options?: Agent.OpenSessionOptions,
       ): Effect.Effect<SessionHandle, never, Database.Service> => {
         // Saved only once the open succeeds, so a refused reopen leaves the session's verbs on the options that worked.
-        return getHandle(chat, options ?? openedWith.get(chat.id)).pipe(
+        return getHandle(chat, options ?? openedWith.get(chat.id), { reopen: options === undefined }).pipe(
           Effect.tap(() =>
             Effect.sync(() => {
               if (options !== undefined) {
