@@ -284,7 +284,7 @@ import { Listbox } from '@dxos/react-ui-list';
                 <Listbox.ItemIcon />
                 <Listbox.ItemText />
                 <Listbox.ItemDescription />
-                <Button.Root label='Install' onClick={() => onInstall(plugin.name)} />
+                <Button.Root label={`Install ${plugin.name}`} onClick={() => onInstall(plugin.name)} />
               </Listbox.Item>
             ))}
           </Listbox.ItemGroup>
@@ -303,7 +303,7 @@ import { Listbox } from '@dxos/react-ui-list';
 | `Listbox.ItemIcon`                             | The option's `icon` in the leading cell; `icon`, `hue`, `valence` override it.         |
 | `Listbox.ItemText`                             | The option's `label`; children replace it.                                             |
 | `Listbox.ItemDescription`                      | The option's `description`, muted, under the text; children replace it.                |
-| A `Button` or other control after the text     | A trailing cell, level with the title.                                                 |
+| A `Button` or other control after the text     | A trailing cell, level with the title. Its `label` names the row for a screen reader.  |
 | `Listbox.ItemGroup` + `Listbox.ItemGroupLabel` | A heading over a run of rows.                                                          |
 | `Listbox.Empty`                                | Text for a list with no rows: a child of `Content`, drawn only while `items` is empty. |
 
