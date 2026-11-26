@@ -5,6 +5,13 @@ description: >
   `Model Fixture / model-fixture`). A failure never fails the calling job. Call after the setup and
   affected actions, from a job with `statuses: write`; a suite the change does not affect is skipped.
 
+inputs:
+  model-fixture:
+    description: >
+      Set "false" to skip the model-fixture replay and its status, which then runs only nightly and on
+      dispatch.
+    default: 'true'
+
 runs:
   using: 'composite'
   steps:
@@ -17,20 +24,25 @@ runs:
       env:
         DX_DEBUG_LEAKS_DIR: ${{ runner.temp }}/profiles
         VITEST_COVERAGE: 'false'
+        MODEL_FIXTURE_ENABLED: ${{ inputs.model-fixture }}
       run: |
         memory=success
         VITEST_TAGS_FILTER='!flaky && !sync && !sync-e2e && !functions-e2e' VITEST_XML_REPORT=false \
           moon run echo-client-e2e:test-memory || memory=failure
 
-        rm -rf test-results
-        fixture=success
-        DX_RUN_MODEL_FIXTURE_TESTS=1 VITEST_TAGS_FILTER=model-fixture VITEST_XML_REPORT=true \
-          moon run '#model-fixture:test' -- --no-file-parallelism || fixture=failure
+        fixture=skipped
+        if [ "$MODEL_FIXTURE_ENABLED" = 'true' ]; then
+          rm -rf test-results
+          fixture=success
+          DX_RUN_MODEL_FIXTURE_TESTS=1 VITEST_TAGS_FILTER=model-fixture VITEST_XML_REPORT=true \
+            moon run '#model-fixture:test' -- --no-file-parallelism || fixture=failure
+        fi
 
         echo "memory=$memory" >> "$GITHUB_OUTPUT"
         echo "model-fixture=$fixture" >> "$GITHUB_OUTPUT"
 
     - name: Upload model-fixture results
+      if: ${{ inputs.model-fixture == 'true' }}
       continue-on-error: true
       uses: actions/upload-artifact@v7
       with:
@@ -52,6 +64,9 @@ runs:
             ['Check / memory', process.env.MEMORY],
             ['Model Fixture / model-fixture', process.env.MODEL_FIXTURE],
           ]) {
+            if (state === 'skipped') {
+              continue;
+            }
             try {
               await github.rest.repos.createCommitStatus({
                 ...context.repo,
