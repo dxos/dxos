@@ -131,7 +131,7 @@ const DatabaseModuleContainer = ({ space, defaultView = 'graph' }: { space: Spac
               'overflow-hidden dx-base-surface border border-separator-subtle opacity-80',
             )}
           >
-            <JsonHighlighter classNames='text-sm' data={filter} />
+            <JsonHighlighter classNames='flex-1 min-w-0 text-sm' data={filter} />
           </div>
         ) : (
           (view === 'object-tree' || view === 'cards') &&
@@ -143,7 +143,7 @@ const DatabaseModuleContainer = ({ space, defaultView = 'graph' }: { space: Spac
                 'overflow-hidden dx-base-surface border border-separator-subtle opacity-80',
               )}
             >
-              <JsonHighlighter classNames='text-sm' data={selectedSnapshot} />
+              <JsonHighlighter classNames='flex-1 min-w-0 text-sm' data={selectedSnapshot} />
             </div>
           )
         )}

@@ -137,6 +137,8 @@ export const CrmAgentsScripted: Story = {
 
     const record = await accountRecord(canvasElement);
     await expectStatus(record, 'prospect');
+    // Visible, not only present: a highlighter that collapses to no width keeps its text in the DOM.
+    await expect(record.firstElementChild?.getBoundingClientRect().width ?? 0).toBeGreaterThan(0);
 
     await userEvent.click(await canvas.findByRole('button', { name: SCOUT_REQUEST }, { timeout: 60_000 }));
     await canvas.findAllByText(new RegExp(SCOUT_DELEGATED), {}, { timeout: 60_000 });
