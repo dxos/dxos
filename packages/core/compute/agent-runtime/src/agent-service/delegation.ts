@@ -64,24 +64,33 @@ export const prepareSessionDelegation = (
     return yield* assign(receiver, request);
   });
 
+/** What agent delegation writes: the session plan plus who the receiver's first turn comes from. */
+export type AgentDelegationPlan = DelegationPlan & {
+  /** The caller's agent, named on the receiver's first turn. */
+  readonly sender: Agent.PromptSender;
+};
+
 /**
- * Hands work to another agent: a new session filed under `agent`, which runs on that agent's own skills and
- * instructions, with the request's task on its checklist.
+ * Hands work from `caller` to another agent: that agent's primary session takes the message (or the task) as a turn
+ * from the caller's agent, and runs on that agent's own skills and permissions, never the caller's. An agent cannot
+ * delegate to itself, and one with no session has nothing to take the work.
  */
 export const prepareAgentDelegation = (
+  caller: Agent.Session,
   agent: Agent.Agent,
   request: Agent.DelegateRequest,
-): Effect.Effect<DelegationPlan, never, Database.Service> =>
+): Effect.Effect<AgentDelegationPlan, never, Database.Service | Scope.Scope> =>
   Effect.gen(function* () {
-    const feed = yield* Database.add(TrajectoryStore.makeFeed());
-    const receiver = yield* Database.add(
-      Agent.makeSession({
-        feed: Ref.make(feed),
-        ...(request.purpose !== undefined ? { name: request.purpose } : {}),
-        [Obj.Parent]: agent,
-      }),
-    );
-    return yield* assign(receiver, request);
+    const session = yield* Agent.loadSession(agent);
+    if (!session) {
+      return yield* Effect.die(new Error(`Agent ${agent.name ?? Obj.getURI(agent)} has no session to delegate to.`));
+    }
+    const callerAgent = yield* Agent.loadForSession(caller);
+    if (callerAgent?.id === agent.id) {
+      return yield* Effect.die(new Error('An agent cannot delegate to itself; delegate to a session instead.'));
+    }
+    const plan = yield* prepareSessionDelegation(caller, request, Obj.getURI(session));
+    return { ...plan, sender: { name: callerAgent?.name ?? caller.name ?? 'Another agent' } };
   });
 
 /** Puts the request's task on the receiver's checklist and builds its first prompt. */
@@ -97,8 +106,11 @@ const assign = (
       Task.update(assigned, { status: 'started', delegate: { role: 'assistant', subject: Ref.make(receiver) } });
     }
     yield* Database.flush();
+    // Delegated text comes from another session or agent, never the reader, so it shows as context, not their words.
     const prompt: ContentBlock.Any[] = request.message
-      ? [...request.message]
+      ? request.message.map((block) =>
+          block._tag === 'text' ? { ...block, disposition: 'synthetic' as const } : block,
+        )
       : [
           {
             _tag: 'text',

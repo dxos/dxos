@@ -26,21 +26,12 @@ export const SpotlightOperationHandlerSet = OperationHandlerSet.make(
          * arrives. The delay gives the action time to fire; if a new subject arrives, the pending
          * dismiss is cancelled.
          */
-        if (input.subject) {
-          // Cancel any pending dismiss and switch content.
+        if (input.state === false) {
+          // Schedule dismiss after a short delay. A close naming another dialog than the one shown leaves it be.
           yield* Capabilities.updateAtomValue(SpotlightCapabilities.State, (state) => {
-            if (state.dismissTimeout !== undefined) {
-              clearTimeout(state.dismissTimeout);
+            if (input.subject && state.dialogContent?.component !== input.subject) {
+              return state;
             }
-            return {
-              ...state,
-              dismissTimeout: undefined,
-              dialogContent: { component: input.subject!, props: input.props },
-            };
-          });
-        } else if (input.state === false) {
-          // Schedule dismiss after a short delay.
-          yield* Capabilities.updateAtomValue(SpotlightCapabilities.State, (state) => {
             if (state.dismissTimeout !== undefined) {
               clearTimeout(state.dismissTimeout);
             }
@@ -50,6 +41,18 @@ export const SpotlightOperationHandlerSet = OperationHandlerSet.make(
                 const { invoke } = await import('@tauri-apps/api/core');
                 await invoke('hide_spotlight');
               }, DISMISS_DEBOUNCE_MS),
+            };
+          });
+        } else if (input.subject) {
+          // Cancel any pending dismiss and switch content.
+          yield* Capabilities.updateAtomValue(SpotlightCapabilities.State, (state) => {
+            if (state.dismissTimeout !== undefined) {
+              clearTimeout(state.dismissTimeout);
+            }
+            return {
+              ...state,
+              dismissTimeout: undefined,
+              dialogContent: { component: input.subject!, props: input.props },
             };
           });
         }

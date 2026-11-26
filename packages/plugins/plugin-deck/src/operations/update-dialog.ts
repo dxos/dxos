@@ -51,11 +51,17 @@ const handler: Operation.WithHandler<typeof LayoutOperation.UpdateDialog> = Layo
         return;
       }
 
-      yield* Capabilities.updateAtomValue(DeckCapabilities.EphemeralState, (state) => ({
-        ...state,
-        dialogOpen: false,
-      }));
-      yield* Effect.forkDetach(clearWhenExited);
+      let closed = false;
+      yield* Capabilities.updateAtomValue(DeckCapabilities.EphemeralState, (state) => {
+        if (input.subject && state.dialogContent?.component !== input.subject) {
+          return state;
+        }
+        closed = true;
+        return { ...state, dialogOpen: false };
+      });
+      if (closed) {
+        yield* Effect.forkDetach(clearWhenExited);
+      }
     }),
   ),
 );

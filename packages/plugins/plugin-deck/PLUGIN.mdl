@@ -266,10 +266,11 @@ op UpdateComplementary
 op UpdateDialog
   key: org.dxos.operation.appToolkit.updateDialog
   desc: |
-    Show or hide the global dialog overlay. Accepts a surface component identifier
-    or a boolean state flag. Propagates to EphemeralDeckState.
+    Show or hide the global dialog overlay. Accepts a surface component identifier,
+    a boolean state flag, or both: `state: false` with a subject names the dialog to
+    close. Propagates to EphemeralDeckState.
   input:
-    subject?: string              # surface component identifier to display
+    subject?: string              # surface component identifier to display; with state false, the one to close
     props?: any                   # props forwarded to the dialog surface
     state?: boolean               # false to close the dialog
     type?: default | alert
@@ -521,7 +522,7 @@ feat F-4: Dialog & Popover Overlay
   uses: [UpdateDialog, UpdatePopover]
 
   req F-4.1:
-    when: UpdateDialog is dispatched with a subject component
+    when: UpdateDialog is dispatched with a subject component and state not false
     then: the matching surface is rendered inside the global dialog overlay
 
   req F-4.2:
@@ -529,8 +530,12 @@ feat F-4: Dialog & Popover Overlay
     then: popover is positioned relative to that DOM element
 
   req F-4.3:
-    when: dialog or popover state is set to false
+    when: popover state is set to false, or a dialog close names no subject or the one shown
     then: overlay is closed and content is unmounted
+
+  req F-4.4:
+    when: UpdateDialog is dispatched with state false and a subject other than the one shown
+    then: the dialog stays open with its content
 ```
 
 ```mdl
@@ -1249,6 +1254,23 @@ decision D-31: An in-app navigation drops the `action` parameter from the URL it
   affects: [F-5.5]
   why: The deck writes its URL through the same path when it re-states the deck it already shows. Counting the dropped parameter as a change would turn that write into a newer navigation and cancel the link's action.
   rejected: Having the overtaken link remove its parameter from the address bar, which cannot tell its own parameter from a newer link's.
+```
+
+```mdl
+decision D-32: A dialog close that names its subject (`UpdateDialog { subject, state: false }`) closes the dialog only while it shows that subject; a close with no subject closes whatever is open.
+  date: 2026-11-26
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [UpdateDialog, F-4.1, F-4.3, F-4.4]
+  why: A dialog's own completion close can arrive after another dialog has replaced it, as when the HALO join dialog finishes a device join after the onboarding manager has opened a space join dialog, and an unscoped close would dismiss the replacement.
+  rejected: Ordering the onboarding manager's dialogs so the late close always lands first, which nothing in the operation layer guarantees.
+```
+
+```mdl
+decision D-33: Every layout's `UpdateDialog` handler honours a close that names its subject, not only the deck's. Extends [D-32].
+  date: 2026-11-26
+  by: user:wittjosiah
+  affects: [UpdateDialog]
 ```
 
 ## Appendix: Extension Definitions

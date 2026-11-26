@@ -16,4 +16,6 @@ export {
   RoutineModule,
 } from './internal/modules/index.ts';
 
+export type { DatabaseModuleData, DatabaseView } from './internal/modules/index.ts';
+
 export { ModuleRole as Role, moduleSurfaces as surfaces } from './internal/modules/index.ts';

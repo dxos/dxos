@@ -40,8 +40,6 @@ export type EnsureChannelChatProps = {
   channel: Channel.Channel;
   thread?: string;
   title?: string;
-  /** A direct conversation the channel's host has yet to open; the chat also carries {@link AgentChannels.directKey}. */
-  direct?: boolean;
 };
 
 /**
@@ -53,19 +51,12 @@ export const ensureChannelChat = Effect.fnUntraced(function* ({
   channel,
   thread,
   title,
-  direct,
 }: EnsureChannelChatProps) {
   const key = AgentChannels.chatKey(channel.id, thread);
   // The same conversation may be bridged to more than one agent.
   const existing = yield* Database.query(Query.select(Filter.foreignKeys(Agent.Session, [key]))).run;
   const match = existing.find((chat) => Obj.getParent(chat)?.id === agent.id);
   if (match) {
-    // A chat first made without `direct` (e.g. by `EnsureChannelChat`) still needs the key the host finds pending DMs by.
-    if (direct && !Obj.getMeta(match).keys.some(({ source }) => source === AgentChannels.DIRECT_SOURCE)) {
-      Obj.update(match, (match) => {
-        Obj.getMeta(match).keys.push(AgentChannels.directKey(channel.id));
-      });
-    }
     yield* bindChannelSkills(match, channel);
     return match;
   }
@@ -77,7 +68,7 @@ export const ensureChannelChat = Effect.fnUntraced(function* ({
   const feed = yield* Database.add(TrajectoryStore.makeFeed());
   const chat = yield* Database.add(
     Agent.makeSession({
-      [Obj.Meta]: { keys: direct ? [key, AgentChannels.directKey(channel.id)] : [key] },
+      [Obj.Meta]: { keys: [key] },
       [Obj.Parent]: agent,
       name: title,
       feed: Ref.make(feed),

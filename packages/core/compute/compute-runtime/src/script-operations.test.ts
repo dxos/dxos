@@ -17,7 +17,7 @@ import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Trace from '@dxos/compute/Trace';
 import { DXN } from '@dxos/echo';
 import { SpaceId } from '@dxos/keys';
-import { Guard, Requirement } from '@dxos/permission';
+import { Permission, Requirement } from '@dxos/permission';
 
 import * as ProcessManager from './ProcessManager.ts';
 import * as ProcessOperationInvoker from './ProcessOperationInvoker.ts';
@@ -25,6 +25,7 @@ import * as RemoteProcessManager from './RemoteProcessManager.ts';
 import * as RemoteTraceMonitor from './RemoteTraceMonitor.ts';
 import * as ScriptRunner from './ScriptRunner.ts';
 import * as UnifiedProcessManager from './UnifiedProcessManager.ts';
+import * as Verifier from './Verifier.ts';
 
 const KEY = DXN.make('com.example.operation.script');
 
@@ -96,7 +97,9 @@ const failingRunner: Operation.ScriptRunner = {
 const testLayer = (runner: Operation.ScriptRunner) =>
   ProcessOperationInvoker.layer.pipe(
     Layer.provideMerge(UnifiedProcessManager.layer),
-    Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
+    Layer.provideMerge(
+      ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator }).pipe(Layer.provide(Verifier.layer())),
+    ),
     Layer.provideMerge(RemoteProcessManager.layerNoop),
     Layer.provideMerge(RemoteTraceMonitor.layerNoop),
     Layer.provide(ServiceResolver.layerRequirements(ScriptRunner.Service)),
@@ -161,9 +164,13 @@ describe('script operations', () => {
     }).pipe(Effect.provide(testLayer(failingRunner))),
   );
 
-  it.effect('a script that declares requirements is refused before it runs when the caller holds no guard', () => {
+  it.effect('a script that declares requirements is refused before it runs when the caller holds no authority', () => {
     const echo = makeEchoRunner();
-    const Exec = Greet.pipe(Guard.requires(Requirement.make('/sandbox/exec')));
+    const Exec = Greet.pipe(
+      Operation.requires(
+        Requirement.make(Permission.define({ command: '/sandbox/exec', name: 'Run sandbox commands' })),
+      ),
+    );
     return Effect.gen(function* () {
       const exit = yield* Operation.invoke(Exec, undefined, { on: 'local' }).pipe(Effect.exit);
       expect(exit._tag).toBe('Failure');

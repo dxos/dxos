@@ -15,7 +15,7 @@ import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { BaseError } from '@dxos/errors';
 import { Channel, Message, Person } from '@dxos/types';
 
-import { ChannelBackend, ThreadCapabilities, type ThreadOperation } from '#types';
+import { ThreadCapabilities, type ThreadOperation } from '#types';
 
 import { feedChannelBackend } from '../capabilities/channel-backend-feed.ts';
 import connectChannel from './connect-channel.ts';
@@ -216,26 +216,6 @@ describe('channel operations', () => {
       expect((yield* disconnectChannel.handler({ channel: Ref.make(channel) }).pipe(withBackend)).status.running).toBe(
         false,
       );
-    }).pipe(Effect.provide(testLayer())),
-  );
-
-  it.effect('a backend is mirrored only when it says so', () =>
-    Effect.gen(function* () {
-      const { provider } = makeFakeBackend();
-      const fake = yield* Database.add(Channel.make({ backend: { kind: FAKE_KIND, config: Feed.make() } }));
-      const feed = yield* Database.add(Channel.make({ name: 'general' }));
-      const orphan = yield* Database.add(
-        Channel.make({ backend: { kind: 'org.dxos.channel.backend.missing', config: Feed.make() } }),
-      );
-      const mirrored = (...providers: ThreadCapabilities.ChannelBackendProvider[]) =>
-        Effect.forEach([fake, feed, orphan], (channel) =>
-          ChannelBackend.isMirrored(channel).pipe(
-            Effect.provideService(Capability.Service, capabilities(feedChannelBackend, ...providers)),
-          ),
-        );
-
-      expect(yield* mirrored(provider)).toEqual([false, false, false]);
-      expect(yield* mirrored({ ...provider, mirrored: true })).toEqual([true, false, false]);
     }).pipe(Effect.provide(testLayer())),
   );
 

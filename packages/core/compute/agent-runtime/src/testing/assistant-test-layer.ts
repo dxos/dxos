@@ -24,6 +24,7 @@ import {
   TriggerDispatcher,
   TriggerStateStore,
   UnifiedProcessManager,
+  Verifier,
   configuredCredentialsLayer,
 } from '@dxos/compute-runtime';
 import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
@@ -153,7 +154,9 @@ export const AssistantTestLayer = (
     // manager needs the `ServiceResolver`, and the resolver needs nothing (it reads the manager via
     // the holder), so they must appear in exactly this order.
     Layer.provideMerge(captureProcessManager(processManagerHolder)),
-    Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
+    Layer.provideMerge(
+      ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator }).pipe(Layer.provide(Verifier.layer())),
+    ),
     Layer.provideMerge(AssistantTestServiceResolverLayer(options, processManagerHolder, agentServiceHolder)),
     Layer.provideMerge(AiService.languageModel(DXN.getName(resolvedModel), { provider: resolvedProvider })),
     Layer.provideMerge(AssistantTestTracingLayer(options.tracing ?? 'noop')),

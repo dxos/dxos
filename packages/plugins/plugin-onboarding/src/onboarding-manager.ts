@@ -24,7 +24,14 @@ import { osTranslations } from '@dxos/ui-theme';
 
 import { AUTHORIZING_DEVICE_DIALOG, WELCOME_SCREEN } from './constants.ts';
 import { OnboardingNamespace } from './namespace.ts';
-import { isInvalidRecoveryToken, queryAllCredentials, removeQueryParamByValue } from './util.ts';
+import { PendingSpaceInvitation } from './pending-space-invitation.ts';
+import {
+  isInvalidRecoveryToken,
+  isPageVisible,
+  queryAllCredentials,
+  removeQueryParamByValue,
+  whenPageVisible,
+} from './util.ts';
 
 export type OnboardingManagerProps = {
   invokePromise: Capabilities.OperationInvoker['invokePromise'];
@@ -43,6 +50,8 @@ export type OnboardingManagerProps = {
   accountInvitationCode?: string;
   /** Email associated with the new account; required when accountInvitationCode is set. */
   email?: string;
+  /** Holds a space invitation across the welcome gate; defaults to `localStorage`. */
+  pendingSpaceInvitation?: PendingSpaceInvitation;
 };
 
 export class OnboardingManager {
@@ -58,6 +67,7 @@ export class OnboardingManager {
   private readonly _spaceInvitationCode?: string;
   private readonly _accountInvitationCode?: string;
   private readonly _email?: string;
+  private readonly _pendingSpaceInvitation: PendingSpaceInvitation;
 
   private _identity: Identity | null = null;
   /**
@@ -80,6 +90,7 @@ export class OnboardingManager {
     spaceInvitationCode,
     accountInvitationCode,
     email,
+    pendingSpaceInvitation = new PendingSpaceInvitation(),
   }: OnboardingManagerProps) {
     this._ctx.onDispose(() => this._subscriptions.clear());
 
@@ -93,6 +104,7 @@ export class OnboardingManager {
     this._spaceInvitationCode = spaceInvitationCode;
     this._accountInvitationCode = accountInvitationCode;
     this._email = email;
+    this._pendingSpaceInvitation = pendingSpaceInvitation;
 
     this._identity = this._client.halo.identity.get();
 
@@ -106,7 +118,7 @@ export class OnboardingManager {
       // The gate is identity-presence: the moment a local identity exists, dismiss
       // the welcome dialog. Account binding / activation can complete asynchronously.
       if (identity && wasNull) {
-        void this._closeWelcome();
+        void this._passGate();
       }
     });
     // Bound closure: a detached `subscription.unsubscribe` loses its receiver and throws on dispose.
@@ -144,10 +156,14 @@ export class OnboardingManager {
       }
       // Automatically start join space flow if already authed.
       if (this._spaceInvitationCode) {
-        await this._openJoinSpace();
+        await this._openJoinSpace(this._spaceInvitationCode);
+        removeQueryParamByValue(this._spaceInvitationCode);
         if (aborted()) {
           return;
         }
+      } else {
+        // A magic-link or OAuth tab can create the identity before this manager exists.
+        void this._claimHeldInvitation();
       }
       // Ensure that recovery credential is present.
       await this._setupRecovery();
@@ -158,6 +174,11 @@ export class OnboardingManager {
       await this._createAgent();
       return;
     } else if (!this._skipAuth && this._deviceInvitationCode === undefined) {
+      // Redeemed once the user is through the gate (`_passGate`), whichever tab that happens in.
+      if (this._spaceInvitationCode) {
+        this._pendingSpaceInvitation.stash(this._spaceInvitationCode);
+        removeQueryParamByValue(this._spaceInvitationCode);
+      }
       // No identity yet: show welcome. Skipped when a device invitation is pending, since both dialog
       // updates then race through the operation layer and a welcome landing second hides the join.
       // A `?token=...` param means a magic-link redemption is about to run: show the "authorizing"
@@ -210,7 +231,8 @@ export class OnboardingManager {
 
     if (this._skipAuth && this._spaceInvitationCode) {
       // If skipping auth and a space invitation code is present, open join space flow.
-      await this._openJoinSpace();
+      await this._openJoinSpace(this._spaceInvitationCode);
+      removeQueryParamByValue(this._spaceInvitationCode);
     }
   }
 
@@ -387,6 +409,32 @@ export class OnboardingManager {
     await this._invokePromise(LayoutOperation.UpdateDialog, { state: false });
   }
 
+  private async _passGate(): Promise<void> {
+    await this._closeWelcome();
+    await this._claimHeldInvitation();
+  }
+
+  /**
+   * Opens the join dialog for a space invitation opened behind the gate. Every open tab shares the identity, so a
+   * hidden tab leaves the invitation to the one the user is looking at, and claims it only if they come back here first.
+   */
+  private async _claimHeldInvitation(): Promise<void> {
+    // Eligibility is checked once the lock is granted. Hidden again by then: wait for the user to come back.
+    // Signed out: the invitation waits for the next sign-in.
+    let hidden = true;
+    while (hidden && !this._destroyed) {
+      hidden = false;
+      await whenPageVisible(this._ctx);
+      const code = await this._pendingSpaceInvitation.take(() => {
+        hidden = !isPageVisible();
+        return !hidden && !this._destroyed && this._identity !== null;
+      });
+      if (code && !this._destroyed) {
+        await this._openJoinSpace(code);
+      }
+    }
+  }
+
   /** Shown in place of the login form while a `?token=...` magic-link redemption is in flight. */
   private async _showAuthorizingDevice(): Promise<void> {
     await this._invokePromise(LayoutOperation.UpdateDialog, {
@@ -470,12 +518,8 @@ export class OnboardingManager {
     removeQueryParamByValue('true');
   }
 
-  private async _openJoinSpace(): Promise<void> {
-    invariant(this._spaceInvitationCode);
-
-    await this._invokePromise(SpaceOperation.Join, { invitationCode: this._spaceInvitationCode });
-
-    removeQueryParamByValue(this._spaceInvitationCode);
+  private async _openJoinSpace(invitationCode: string): Promise<void> {
+    await this._invokePromise(SpaceOperation.Join, { invitationCode });
   }
 
   private async _startHelp(): Promise<void> {

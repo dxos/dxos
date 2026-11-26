@@ -457,7 +457,14 @@ export class ObjectsTreeModel {
       ids === undefined
         ? get(this.#spaceQuery)
         : get(this.#idsQueryFamily([...ids].filter((id) => EntityId.isValid(id)).join(',')));
-    const objects = entities.filter((entity) => Obj.isObject(entity));
+    // Unfiltered, an object with a parent shows only under it; a search or an id set lists its matches wherever they sit.
+    // Both reads: the atom re-runs this when a parent is set after the object was added, which changes no query result,
+    // and the direct read covers a parent set without a change notification the atom sees.
+    const isRoot = (entity: Obj.Unknown) =>
+      get(Obj.parentAtom(entity)) === undefined && Obj.getParent(entity) === undefined;
+    const objects = entities.filter(
+      (entity) => Obj.isObject(entity) && (filtered || ids !== undefined || isRoot(entity)),
+    );
     return {
       entities: filtered ? objects : objects.slice(0, limit),
       complete: filtered || objects.length <= limit,

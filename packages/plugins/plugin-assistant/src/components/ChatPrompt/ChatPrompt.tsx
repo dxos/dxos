@@ -374,6 +374,9 @@ export const ChatPrompt = ({
     >
       <div
         data-testid='assistant.prompt'
+        // Lets a test or a demo flow wait for the turn to end and read how it ended, ahead of the toast's own effect.
+        data-active={active}
+        data-error={error !== undefined}
         role='group'
         onDragOverCapture={handleDragOver}
         onDropCapture={handleDrop}

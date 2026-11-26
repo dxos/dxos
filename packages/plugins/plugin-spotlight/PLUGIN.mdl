@@ -22,6 +22,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `op`        | `org.dxos.mdl.op@1.0`          |
 | `test`      | `org.dxos.mdl.test@1.0`        |
+| `decision`  | `org.dxos.mdl.decision@1.0`    |
 
 ## Types
 
@@ -67,13 +68,14 @@ component SpotlightLayout
 op UpdateDialog
   desc: |
     Intercepts the standard LayoutOperation.UpdateDialog.
-    When a subject component is supplied, cancels any pending dismiss timeout and
-    switches the dialog content to the new surface. When state=false is supplied,
-    schedules a debounced (100 ms) call to the Tauri `hide_spotlight` command.
-    The debounce allows an action triggered by the commands dialog to replace the
-    content before the dismiss fires.
+    When state=false is supplied, schedules a debounced (100 ms) call to the Tauri
+    `hide_spotlight` command, unless the close names a subject other than the one
+    shown, which leaves the spotlight as it is. Otherwise, when a subject component
+    is supplied, cancels any pending dismiss timeout and switches the dialog content
+    to the new surface. The debounce allows an action triggered by the commands
+    dialog to replace the content before the dismiss fires.
   input:
-    subject?: string              # surface component identifier to show
+    subject?: string              # surface component identifier to show; with state=false, the one to dismiss
     props?: any                   # props forwarded to the surface
     state?: boolean               # false to schedule dismissal
   output: void
@@ -162,12 +164,16 @@ feat F-3: Debounced Dismiss on Dialog Close
   uses: [Close, UpdateDialog]
 
   req F-3.1:
-    when: UpdateDialog({ state: false }) is received
+    when: UpdateDialog({ state: false }) is received with no subject, or with the subject shown
     then: a 100 ms debounced call to hide_spotlight is scheduled
 
   req F-3.2:
-    when: UpdateDialog({ subject }) arrives before the debounce fires
+    when: UpdateDialog({ subject }) without state false arrives before the debounce fires
     then: the pending dismiss is cancelled and dialog content is switched to the new surface
+
+  req F-3.3:
+    when: UpdateDialog({ subject, state: false }) names a surface other than the one shown
+    then: no dismiss is scheduled and the dialog content is unchanged
 ```
 
 ```mdl
@@ -302,6 +308,25 @@ test QA-1: Invoke spotlight, navigate, and dismiss
       do: Spotlight has no persistent state to remove — it forwards navigation to the main
         window's existing plugins, which own their own cleanup.
       expect: closing the popover leaves the main window in the state the test navigated it to
+```
+
+## Changelog
+
+```mdl
+decision D-1: Every layout's `UpdateDialog` handler, the spotlight's included, honours a close that names its subject (`UpdateDialog({ subject, state: false })`): it closes only while that subject is shown.
+  date: 2026-11-26
+  by: user:wittjosiah
+  affects: [UpdateDialog, F-3.1, F-3.3]
+```
+
+```mdl
+decision D-2: A named close for a surface other than the one shown schedules no dismiss and leaves the content as it is, and the spotlight checks for a close before it switches content. Fills in [D-1].
+  date: 2026-11-26
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [UpdateDialog, F-3.1, F-3.2, F-3.3]
+  why: Checking the subject first turned a named close into a content switch to the dialog being closed; a late completion close, such as the HALO join dialog's after the space join dialog has replaced it, must not dismiss or replace what is shown.
+  rejected: Cancelling a pending dismiss on a non-matching named close, which would keep open a spotlight that an earlier unnamed close had asked to hide.
 ```
 
 ---

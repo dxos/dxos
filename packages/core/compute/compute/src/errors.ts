@@ -60,7 +60,11 @@ export class InvalidOperationInputError extends BaseError.extend(
   'Operation input did not match schema',
 ) {}
 
-/** An operation declared requirements that the invoking process's guard did not admit, or the process holds no guard. */
+/**
+ * An operation declared requirements that the invoking process's authorities did not admit, or the process holds none.
+ *
+ * @experimental
+ */
 export class OperationDeniedError extends BaseError.extend('OperationDeniedError', 'Operation denied') {}
 
 export class InvalidOperationOutputError extends BaseError.extend(

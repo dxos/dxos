@@ -251,11 +251,12 @@ op sendMessage
   requires: [Database.Service]
   note: |
     In order: a report to a relay's requester goes to `relay.replyChannel`/`replyThread`; else the
-    recipient's participant chat (appended, or posted through its channel when it mirrors one); else
+    recipient's participant chat (woken, or posted through its channel when it mirrors one); else
     the first of the agent's channels whose backend opens a direct conversation (`openDirect`), which
-    then becomes the person's chat. Posts go through plugin-thread's `sendToChannel` and are recorded
-    in the conversation's chat with the backend's receipt properties. A backend refusal is returned
-    as `{ delivered: false, reason }`.
+    then becomes the person's chat. Every channel post goes through plugin-thread's `sendToChannel`,
+    never left in a chat for a host to post, and is recorded in the chat keyed by the thread the
+    receipt reports, with its properties; that chat belongs to the recipient. A backend refusal is
+    returned as `{ delivered: false, reason }`.
 ```
 
 ```mdl
@@ -1436,6 +1437,15 @@ decision D-19: QA-6 is the timed Kai-on-Discord demo: it enters the thread Kai s
   affects: [F-2.4]
   why: The demo times each answer and the document's render, so it needs Kai's own thread and answers, an edit, and the edited document on screen; preview EDGE and its bot keep the demo off production.
   source: https://github.com/dxos/dxos/pull/14608
+```
+
+```mdl
+decision D-20: sendMessage always posts a channel message through plugin-thread's sendToChannel. Mirrored delivery is removed: the `outbound` message flag and the direct-chat key a host read to post and open DMs are gone.
+  date: 2026-11-26
+  by: user:mykola-vrmchk
+  affects: [sendMessage]
+  why: An agent should deliberately post every message; a message left in a chat for a host to post waited on that host's sweep, which EDGE no longer runs (dxos/edge#1590).
+  source: https://github.com/dxos/dxos/pull/14701
 ```
 
 ## Appendix: Extension Definitions

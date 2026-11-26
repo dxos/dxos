@@ -9,7 +9,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as Surface from '@dxos/app-framework/Surface';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as Agent from '@dxos/compute/Agent';
-import { Filter } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import * as ChatParticipant from '@dxos/plugin-agent/ChatParticipant';
 import * as Profile from '@dxos/plugin-agent/Profile';
 import * as Assistant from '@dxos/plugin-assistant/Assistant';
@@ -19,12 +19,18 @@ import * as AssistantHooks from '@dxos/plugin-assistant/Hooks';
 import { type Space, useObject, useQuery, useRegistry } from '@dxos/react-client/echo';
 import { MenuBuilder } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
+import * as Icon from '@dxos/react-ui/Icon';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Popover from '@dxos/react-ui/Popover';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
 import * as StoryModules from '@dxos/storybook-testing/StoryModules';
 import { Person } from '@dxos/types';
 
 export type ChatModuleData = {
+  /** Name of the agent whose chat the panel shows, when the space holds several agents. */
+  agent?: string;
+  /** The names of the permissions the agent holds grants for, shown on hovering its name. */
+  permissions?: readonly string[];
   /**
    * Name (preferred or full) of the person this panel speaks as: the panel shows the agent's chat with
    * them (see plugin-agent's `ChatParticipant`) and attributes every prompt to them.
@@ -40,6 +46,12 @@ export type ChatModuleData = {
   defaultDrawer?: Chat.RootProps['defaultDrawer'];
 };
 
+/** The name of the agent that parents the chat, if one does. */
+const agentName = (chat: Agent.Session): string | undefined => {
+  const parent = Obj.getParent(chat);
+  return parent && Obj.instanceOf(Agent.Agent, parent) ? parent.name : undefined;
+};
+
 export const ChatModule = ({ data }: Surface.ComponentProps<ChatModuleData>) => {
   const space = ToolkitHooks.useActiveSpace();
   if (!space) {
@@ -50,13 +62,20 @@ export const ChatModule = ({ data }: Surface.ComponentProps<ChatModuleData>) => 
 
 const ChatModuleContainer = ({
   space,
+  agent,
+  permissions,
   participant,
   hue,
   initialPrompt,
   suggestions = [],
   defaultDrawer,
 }: ChatModuleData & { space: Space }) => {
-  const chats = useQuery(space.db, Filter.type(Agent.Session));
+  const allChats = useQuery(space.db, Filter.type(Agent.Session));
+  // A panel for one agent selects and offers only that agent's sessions, so it never shows another agent's chat.
+  const chats = useMemo(
+    () => (agent ? allChats.filter((chat) => agentName(chat) === agent) : allChats),
+    [allChats, agent],
+  );
   const people = useQuery(space.db, Filter.type(Person.Person));
   const person = participant
     ? people.find(({ preferredName, fullName }) => preferredName === participant || fullName === participant)
@@ -67,16 +86,18 @@ const ChatModuleContainer = ({
   // The newest chat until the reader picks another; a template switch drops the id and lands on the
   // new space's own chat.
   const [selected, setSelected] = useState<string>();
-  const chat = chats.find(({ id }) => id === selected) ?? (participant ? participantChat : chats.at(-1));
+  const chat =
+    chats.find(({ id }) => id === selected) ?? (participant ? participantChat : agent ? chats[0] : chats.at(-1));
 
   // The picker edits the chat's own model, so the hook needs the chat it is rendered for.
   const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
   const { preset, ...chatProps } = AssistantHooks.usePresets(settings, chat);
 
-  // Every chat in the space, not the companion chats of one object: the story is a tour of the
+  // Every chat in the space, or of the panel's agent, not the companion chats of one object: the story is a tour of the
   // space, and its chats are the thing worth moving between.
   const onSelect = useCallback((chat: Agent.Session) => setSelected(chat.id), []);
   const switcher = useMemo(() => ({ chats: [...chats], onSelect }), [chats, onSelect]);
+  const headerAgent = chat ? agentName(chat) : undefined;
 
   const registry = useRegistry();
   const runtime = Hooks.useProcessManagerRuntime();
@@ -125,10 +146,33 @@ const ChatModuleContainer = ({
     return null;
   }
 
+  const header = (
+    <div className='flex items-center gap-2 px-2 py-1 border-b border-separator' data-testid='chat-module.agent-header'>
+      <Icon.Icon icon='ph--robot--regular' classNames='w-4 h-4 text-fg-subtle' />
+      <span className='font-medium truncate' data-testid='chat-module.agent'>
+        {headerAgent}
+      </span>
+    </div>
+  );
+
   return (
     <Chat.Root chat={chat} chatModel={chatModel} defaultDrawer={defaultDrawer}>
-      <Panel.Root data-testid={participant ? `chat-panel-${participant}` : 'chat-module'}>
-        <Panel.Header>
+      <Panel.Root
+        data-testid={participant ? `chat-panel-${participant}` : agent ? `chat-panel-${agent}` : 'chat-module'}
+      >
+        <Panel.Header classNames='flex flex-col'>
+          {headerAgent &&
+            // A tooltip needs a provider, which only a story that lists the agent's permissions sets up.
+            (permissions === undefined ? (
+              header
+            ) : (
+              <Tooltip.Trigger
+                asChild
+                content={permissions.length > 0 ? `Permissions: ${permissions.join(', ')}` : 'No permissions'}
+              >
+                {header}
+              </Tooltip.Trigger>
+            ))}
           <Chat.Toolbar attendableId={chat.id} alwaysActive switcher={switcher} customActions={customActions} />
         </Panel.Header>
         <Panel.Body asChild>

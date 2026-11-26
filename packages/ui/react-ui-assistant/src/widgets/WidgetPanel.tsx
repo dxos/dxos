@@ -17,7 +17,8 @@ export type WidgetPanelProps = PropsWithChildren<
     label: string;
     /** Trails the label in the summary row (e.g., a failure count). */
     suffix?: ReactNode;
-    error?: boolean;
+    /** Colours the label: a widget that ended in an error, or in a warning such as a denied call. */
+    tone?: 'error' | 'warning';
     testId?: string;
   } & Pick<TogglePanelRootProps, 'onChangeOpen' | 'lazyMount'>
 >;
@@ -30,7 +31,7 @@ export const WidgetPanel = ({
   icon,
   label,
   suffix,
-  error,
+  tone,
   testId,
   onChangeOpen,
   lazyMount,
@@ -55,7 +56,15 @@ export const WidgetPanel = ({
         <Icon.Icon icon={icon} size='md' />
         {/* Takes the base colour on hover, as a breadcrumb link does: the title is prose, not a list row.
             A named group: a bare `group-hover` matches any `group` ancestor, and the app's planks are one. */}
-        <span className={mx('truncate group-hover/disclosure:text-fg', error && 'text-error-text')}>{label}</span>
+        <span
+          className={mx(
+            'truncate group-hover/disclosure:text-fg',
+            tone === 'error' && 'text-error-text',
+            tone === 'warning' && 'text-warning-text',
+          )}
+        >
+          {label}
+        </span>
         {suffix}
       </span>
     </TogglePanel.Header>

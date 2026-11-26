@@ -256,7 +256,8 @@ export class Impl<I, O, R> implements Process.Process<I, O, any> {
     return this.#currentStatus;
   }
   /** The process as of now: its current data, live members delegating to this handle. */
-  snapshotProcessInfo(): Process.Process<I, O, any> {
+  /** A snapshot for the process tree; `authorities` are the manager's, since the handle does not hold them. */
+  snapshotProcessInfo(authorities: readonly Process.Authority[] = []): Process.Process<I, O, any> {
     return makeProcessSnapshot<I, O, any>(
       {
         pid: this.pid,
@@ -269,6 +270,7 @@ export class Impl<I, O, R> implements Process.Process<I, O, any> {
         startedAt: this.startedAt,
         completedAt: this.completedAt,
         metrics: this.metrics,
+        ...(authorities.length > 0 ? { authorities } : {}),
       },
       () => this,
     );

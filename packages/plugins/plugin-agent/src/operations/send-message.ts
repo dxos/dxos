@@ -12,7 +12,6 @@ import { TrajectoryStore } from '@dxos/assistant';
 import type * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
-import * as ChannelBackend from '@dxos/plugin-thread/ChannelBackend';
 import * as ThreadOperation from '@dxos/plugin-thread/ThreadOperation';
 import { Channel, Message, Person, Task } from '@dxos/types';
 
@@ -38,8 +37,7 @@ const handler: Operation.WithHandler<typeof RelayOperation.SendMessage> = RelayO
 
       const brain = yield* BrainService.BrainService;
       const deliver: Effect.Effect<Delivery, never, Services> = Effect.gen(function* () {
-        // Only the agent's current channels: a disconnected one keeps its conversations, but no host posts there any more,
-        // so a mirrored append into it would be reported delivered and never sent.
+        // Only the agent's current channels: a disconnected one keeps its conversations, but no longer posts.
         const channels = yield* AgentChannels.loadChannels(agent);
 
         // The requester asked from a particular conversation, so the outcome goes back there first.
@@ -66,7 +64,12 @@ const handler: Operation.WithHandler<typeof RelayOperation.SendMessage> = RelayO
           if (conversation && channel) {
             const sent = yield* postToChannel(agent, channel, conversation.thread, text);
             if (sent.delivered) {
-              return { delivered: true, via: 'channel', chat: Ref.make(chat) };
+              // The backend may resolve a pending thread, so the message lands in another chat, which must belong to
+              // the recipient for the lookup above to find it next time.
+              if (sent.chat.id !== chat.id) {
+                Obj.update(sent.chat, (landed) => ChatParticipant.set(landed, recipient));
+              }
+              return { delivered: true, via: 'channel', chat: Ref.make(sent.chat) };
             }
             reasons.push(sent.reason ?? `${channel.name ?? 'A channel'} refused the message.`);
           }
@@ -82,7 +85,7 @@ const handler: Operation.WithHandler<typeof RelayOperation.SendMessage> = RelayO
               reasons.push(direct.reason ?? `${channel.name ?? 'A channel'} cannot reach them.`);
               continue;
             }
-            const sent = yield* postToChannel(agent, channel, direct.thread, text, { direct: true });
+            const sent = yield* postToChannel(agent, channel, direct.thread, text);
             if (!sent.delivered) {
               // A refused DM (closed DMs) falls through to the next channel, then the Composer chat.
               reasons.push(sent.reason ?? `${channel.name ?? 'A channel'} refused the direct message.`);
@@ -157,28 +160,17 @@ const appendToChat = (agent: Agent.Agent, chat: Agent.Session, text: string, pro
 type Posted = { delivered: true; chat: Agent.Session } | { delivered: false; reason?: string };
 
 /**
- * Delivers into a channel conversation and records it in the agent's chat for that conversation. On a mirrored
- * channel the record is the delivery: its host (EDGE's Discord bot) posts it with credentials only it holds.
- * Elsewhere the backend posts it, and the record carries the backend's receipt so no mirror posts it again.
+ * Posts into a channel conversation through its backend and records it, with the backend's receipt, in the agent's
+ * chat for that conversation. The chat is keyed by the thread the backend reports, so a DM opened by its first post
+ * (Discord) shares the chat its replies arrive in.
  */
-const postToChannel = (
-  agent: Agent.Agent,
-  channel: Channel.Channel,
-  thread: string | undefined,
-  text: string,
-  { direct = false }: { direct?: boolean } = {},
-) =>
+const postToChannel = (agent: Agent.Agent, channel: Channel.Channel, thread: string | undefined, text: string) =>
   Effect.gen(function* () {
-    if (yield* ChannelBackend.isMirrored(channel)) {
-      const chat = yield* ensureChannelChat({ agent, channel, thread, direct }).pipe(Effect.orDie);
-      yield* appendToChat(agent, chat, text, { [AgentChannels.OUTBOUND_PROPERTY]: true });
-      return { delivered: true, chat } satisfies Posted;
-    }
     const sent = yield* Operation.invoke(ThreadOperation.SendToChannel, { channel: Ref.make(channel), thread, text });
     if (!sent.delivered) {
       return { delivered: false, reason: sent.reason } satisfies Posted;
     }
-    const chat = yield* ensureChannelChat({ agent, channel, thread }).pipe(Effect.orDie);
+    const chat = yield* ensureChannelChat({ agent, channel, thread: sent.thread ?? thread }).pipe(Effect.orDie);
     yield* appendToChat(agent, chat, text, sent.properties);
     return { delivered: true, chat } satisfies Posted;
   }).pipe(Effect.orDie);
