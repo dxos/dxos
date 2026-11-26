@@ -5,7 +5,7 @@
 import * as Atom from 'effect/reactivity/Atom';
 
 import { initialKeys, orderToEnd } from '@dxos/react-ui-canvas';
-import { type Scene, findLayout, resolveLayout } from '@dxos/scene';
+import { type Scene, findLayout, groupOf } from '@dxos/scene';
 
 import { copyFragment, getSessionClipboard, pasteInto, setSessionClipboard } from '../clipboard.ts';
 import { type Command, type EngineCommand, buildCommands } from '../commands.ts';
@@ -13,14 +13,18 @@ import { type Dimension } from '../config.ts';
 import { type EditorCommands, type EditorDocument, type EditorSelection, type EditorTools } from './context.ts';
 import { type AspectOptions, keep } from './host.ts';
 
-/** The open layout's model, and the one selected element with its resolved type. */
+/** The open layout's model, and the one selected element with whether it places a group. */
 const selected = (document: Scene.SceneDocument, open: string | undefined, selection: readonly string[]) => {
   const record = open === undefined ? undefined : findLayout(document, open);
   const element = selection.length === 1 ? record?.elements[selection[0]] : undefined;
+  const model = document.models[0];
   return {
-    model: document.models[0]?.id,
+    model: model?.id,
     element,
-    type: element && record ? resolveLayout(document, record)[element.id]?.kind : undefined,
+    grouped:
+      element !== undefined && record !== undefined && model !== undefined
+        ? groupOf(model, record, element.id) !== undefined
+        : false,
   };
 };
 
@@ -221,7 +225,7 @@ export const createCommandsAspect = <C>(
       get(historyVersion);
       const document = get(atoms.document);
       const selection = get(editorSelection.atoms.selection);
-      const { model, type } = selected(document, get(atoms.layout), selection);
+      const { model, grouped } = selected(document, get(atoms.layout), selection);
       const { history } = latest.current.props;
       const edits: Partial<Record<string, EngineCommand>> = Object.fromEntries(
         Object.entries(dimension.edits ?? {}).flatMap(([id, edit]) =>
@@ -239,7 +243,7 @@ export const createCommandsAspect = <C>(
           selection,
           canUndo: history?.canUndo ?? false,
           canRedo: history?.canRedo ?? false,
-          canUngroup: type === 'group',
+          canUngroup: grouped,
           canMakeObject: model !== undefined && get(atoms.host).model,
           canOrder: config.dim === '2d',
           clipboard: get(atoms.host).clipboard,

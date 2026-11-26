@@ -12,6 +12,7 @@ import {
   type Node,
   NODE_KINDS,
   type Scene,
+  applyModelIntent,
   linkPath,
   readDocument,
   sidePort,
@@ -136,6 +137,72 @@ describe('toRenderLists2D', () => {
     expect(written).toMatchObject({ center: { x: 110, y: 0 }, scale: { x: 2, y: 2 } });
     expect(written?.size).toBeUndefined();
     expect(written).not.toHaveProperty('frame');
+  });
+
+  test('a group draws its members where they were, as one instance its box round them, and writes back as the group', () => {
+    const { document } = DSL.readScenes(EXEMPLARS.links);
+    const layout = document.layouts.find((candidate) => candidate.dim === '2d');
+    const model = document.models[0];
+    expect(layout && model).toBeDefined();
+    if (!layout || !model) {
+      return;
+    }
+    const before = toRenderList2D(document, layout);
+    const { a, b } = before.nodes;
+    const grouped = applyModelIntent(document, {
+      kind: 'group',
+      model: model.id,
+      layout: layout.id,
+      id: 'g',
+      members: ['a', 'b'],
+    });
+    expect(grouped.problems).toEqual([]);
+
+    const { lists } = toRenderLists2D(grouped.doc);
+    const root = lists.find((list) => list.id === layout.id);
+    const parts = lists.find((list) => list.id === `${layout.id}/g`);
+    // The members keep their own positions inside the group.
+    expect(parts?.nodes.a).toMatchObject({ center: a.center, size: a.size });
+    expect(parts?.nodes.b).toMatchObject({ center: b.center, size: b.size });
+    const left = Math.min(a.center.x - a.size.width / 2, b.center.x - b.size.width / 2);
+    const right = Math.max(a.center.x + a.size.width / 2, b.center.x + b.size.width / 2);
+    const top = Math.min(a.center.y - a.size.height / 2, b.center.y - b.size.height / 2);
+    const bottom = Math.max(a.center.y + a.size.height / 2, b.center.y + b.size.height / 2);
+    expect(root?.nodes.g).toMatchObject({
+      kind: 'instance',
+      composite: `${layout.id}/g`,
+      fit: 'none',
+      center: { x: (left + right) / 2, y: (top + bottom) / 2 },
+      size: { width: right - left, height: bottom - top },
+    });
+    // The link from the group to the element left outside it is still drawn.
+    expect(Object.values(root?.links ?? {}).some((link) => 'node' in link.source && link.source.node === 'g')).toBe(
+      true,
+    );
+
+    // Moved by 64 on the canvas, the group is stored as its members' origin moved by as much.
+    const node = root?.nodes.g;
+    const moved: RenderList2D | undefined =
+      root && node
+        ? { ...root, nodes: { ...root.nodes, g: { ...node, center: { x: node.center.x + 64, y: node.center.y } } } }
+        : undefined;
+    const written = moved && fromRenderList2D(moved);
+    expect(written?.layout.elements.g).toMatchObject({
+      object: `${layout.id}/g`,
+      center: { x: 64, y: 0 },
+      scale: { x: 1, y: 1 },
+    });
+    // It still places the group's own object, so no other is made for it and it can be ungrouped.
+    expect(written?.objects.map((object) => object.id)).not.toContain(`instance:${layout.id}/g`);
+    const stored = written && {
+      ...grouped.doc,
+      layouts: grouped.doc.layouts.map((record) => (record.id === layout.id ? written.layout : record)),
+    };
+    const ungrouped =
+      stored && applyModelIntent(stored, { kind: 'ungroup', model: model.id, layout: layout.id, id: 'g' });
+    expect(ungrouped?.problems).toEqual([]);
+    const after = ungrouped?.doc.layouts.find((record) => record.id === layout.id);
+    expect(after?.elements.a?.center).toEqual({ x: a.center.x + 64, y: a.center.y });
   });
 
   test("an element placing an object draws with the object's kind and size", () => {

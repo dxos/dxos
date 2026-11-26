@@ -510,3 +510,85 @@ export const Canvas3D: Story = {
     );
   },
 };
+
+/**
+ * Grouping in 2D (A → B → C): the selection becomes one group that draws its members where they were.
+ *
+ * Test:
+ * 1. Select all and Group: one group replaces A, B and C, and draws all three inside its box.
+ * 2. Ungroup is enabled on the group, and puts A, B and C back in the scene.
+ * 3. Undo makes the group again.
+ */
+export const Group2D: Story = {
+  decorators: withScenes(EXEMPLARS.links),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const view = await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 });
+    // Queried inside the scene view: an inspector draws a thumbnail of the same nodes, which is not the scene.
+    await waitFor(() => expect(view.querySelector('[data-node-id="a"]')).not.toBeNull());
+    const group = () => view.querySelector<HTMLElement>('[data-node-id^="group-"]');
+
+    // 1. The group is drawn with a box, and its members are drawn inside it at their own size.
+    view.focus();
+    await userEvent.keyboard('{Meta>}a{/Meta}');
+    await userEvent.click(await canvas.findByTestId('scene-action-group'));
+    await waitFor(() => expect(group()).not.toBeNull());
+    await expect(group()?.getBoundingClientRect().width).toBeGreaterThan(0);
+    for (const id of ['a', 'b', 'c']) {
+      const member = group()?.querySelector<HTMLElement>(`[data-node-id="${id}"]`);
+      await expect(member?.getBoundingClientRect().width).toBeGreaterThan(0);
+    }
+
+    // 2. The group is selected, so Ungroup is offered; it puts the members back.
+    const ungroup = await canvas.findByTestId<HTMLButtonElement>('scene-action-ungroup');
+    await waitFor(() => expect(ungroup.disabled).toBe(false));
+    await userEvent.click(ungroup);
+    await waitFor(() => expect(group()).toBeNull());
+    await expect(view.querySelector('[data-node-id="a"]')).not.toBeNull();
+
+    // 3. One undo step brings the group back.
+    await userEvent.click(await canvas.findByTestId('scene-action-undo'));
+    await waitFor(() => expect(group()).not.toBeNull());
+  },
+};
+
+/**
+ * Grouping in 3D (two cubes and a sphere): the selection becomes one group whose members stay where they were.
+ *
+ * Test:
+ * 1. Select all and Group: the group is the selection, and the Objects inspector lists it.
+ * 2. Ungroup is enabled on the group, and takes it out of the model again.
+ */
+export const Group3D: Story = {
+  decorators: withScenes(trim`
+    scene shapes dim=3d layout=shapes name="Shapes" {
+      camera target=0,1,0 yaw=-45 pitch=30 distance=12 fov=0.8 projection=perspective
+    }
+
+    layout shapes dim=3d model=library {
+      element left cube @ -3,1,0 scale=2 color=blue fill=solid
+      element middle sphere @ 0,1,0 scale=2 color=green fill=solid
+      element right cube @ 3,1,0 scale=2 color=red fill=solid
+    }
+
+    model library dim=3d {
+    }
+  `),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const editor = await canvas.findByTestId('scene.3d.editor', undefined, { timeout: 30_000 });
+
+    // 1. The group replaces the three elements as the selection.
+    editor.focus();
+    await userEvent.keyboard('{Meta>}a{/Meta}');
+    await waitFor(() => expect(editor.dataset.selection?.split(' ').sort()).toEqual(['left', 'middle', 'right']));
+    await userEvent.click(await canvas.findByTestId('scene-action-group'));
+    await waitFor(() => expect(editor.dataset.selection).toMatch(/^group-/));
+
+    // 2. Ungroup takes the group apart, leaving nothing selected.
+    const ungroup = await canvas.findByTestId<HTMLButtonElement>('scene-action-ungroup');
+    await waitFor(() => expect(ungroup.disabled).toBe(false));
+    await userEvent.click(ungroup);
+    await waitFor(() => expect(editor.dataset.selection).toBe(''));
+  },
+};

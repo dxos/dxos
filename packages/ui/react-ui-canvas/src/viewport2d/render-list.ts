@@ -65,13 +65,19 @@ export const styleClasses = (styles: Readonly<Record<string, NamedStyle2D>> | un
 export const namedStyles = (classes: StyleMap): Record<string, NamedStyle2D> =>
   Object.fromEntries(Object.values(classes).map(({ id, name, style }) => [id, { name, ...style }]));
 
+const ORIGIN = { x: 0, y: 0 };
+const UNIT_SCALE = { x: 1, y: 1 };
+
 /** A placed composite's box and fixed region: its parts' bounds at its `scale` about its origin (decision 18). */
 type ScaledFrame = { center: { x: number; y: number }; size: { width: number; height: number }; frame: Bounds };
 
-/** Undefined for an element with no scale, or whose parts have nothing with a frame. */
+/**
+ * Undefined for an element with a frame of its own and no scale, or whose parts have nothing with a frame. One with
+ * no centre places its parts where they are, at their own size, as a group does and as 3D places such an element.
+ */
 const scaledFrame = (doc: Scene.SceneDocument, element: Resolved2D): ScaledFrame | undefined => {
   const parts = element.parts === undefined ? undefined : findLayout(doc, element.parts);
-  if (!element.scale || !element.center || parts?.dim !== '2d') {
+  if ((!element.scale && element.center) || parts?.dim !== '2d') {
     return undefined;
   }
   const boxes = Object.values(resolveLayout2D(doc, parts)).flatMap(({ center, size }) =>
@@ -84,7 +90,7 @@ const scaledFrame = (doc: Scene.SceneDocument, element: Resolved2D): ScaledFrame
   const y = Math.min(...boxes.map((box) => box.y));
   const width = Math.max(...boxes.map((box) => box.x + box.width)) - x;
   const height = Math.max(...boxes.map((box) => box.y + box.height)) - y;
-  const { center, scale } = element;
+  const { center = ORIGIN, scale = UNIT_SCALE } = element;
   return {
     center: { x: center.x + scale.x * (x + width / 2), y: center.y + scale.y * (y + height / 2) },
     size: { width: width * scale.x, height: height * scale.y },
@@ -172,10 +178,12 @@ const nodeElement = (node: Node, objects: Map<string, Scene.Object2D>): Scene.El
   // The node keeps its scene or composite beside the object it places: a portal to a layout outside the drawing
   // places an object whose parts resolve to no layout, and must still read back as that portal.
   const parts = node.kind === 'view' && typeof scene === 'string' ? scene : undefined;
+  // An instance naming the model object it was read from (a group) keeps placing that one, which is the node's field.
+  const named = isInstanceNode(node) && typeof Reflect.get(node, 'object') === 'string';
   const placed =
     parts !== undefined
       ? { id: `${VIEW_PREFIX}${parts}`, kind: 'rect', parts }
-      : isInstanceNode(node)
+      : isInstanceNode(node) && !named
         ? { id: `${INSTANCE_PREFIX}${node.composite}`, kind: 'rect', parts: node.composite }
         : undefined;
   placed && objects.set(placed.id, placed);
@@ -286,26 +294,26 @@ const ownLook = ({ layout, model }: Reading, element: Resolved2D): Style2D | und
 
 /**
  * An element as the node it draws as. A composite element (its object has parts) is the kind it names, else an
- * `instance` where its object says it is an Object, else a `view` over its parts. Any other kind is drawn as itself:
+ * `instance` where its object says it is an Object or a group, else a `view` over its parts. Any other kind is drawn as itself:
  * the engine's own start from the kind's defaults, so a template that gives a polyline no points still draws, and a
  * kind the engine does not know is a box.
  */
 const toNode = (context: Reading, element: Resolved2D, z: string): Node | undefined => {
   const layer = layerOf(context.layout, element);
-  const stated = context.layout.elements[element.id]?.kind;
+  const { kind: stated, object: placing } = context.layout.elements[element.id] ?? {};
   const kind =
     element.parts === undefined
       ? element.kind
       : stated !== undefined && stated.length > 0
         ? stated
-        : element.kind === 'instance'
+        : element.kind === 'instance' || element.kind === 'group'
           ? 'instance'
           : 'view';
-  if (kind.length === 0 || kind === LINK_KIND || (kind === 'group' && element.parts === undefined) || !element.center) {
-    return undefined;
-  }
   const scaled = scaledFrame(context.doc, element);
   const center = scaled?.center ?? element.center;
+  if (kind.length === 0 || kind === LINK_KIND || (kind === 'group' && element.parts === undefined) || !center) {
+    return undefined;
+  }
   const size = scaled?.size ?? element.size;
   const builtin = NODE_KINDS.find((candidate) => candidate === kind);
   const overrides = ownLook(context, element);
@@ -325,6 +333,10 @@ const toNode = (context: Reading, element: Resolved2D, z: string): Node | undefi
     ...(scaled ? { frame: scaled.frame } : {}),
     ...(overrides ? { overrides } : {}),
     ...(element.parts === undefined ? {} : isObject ? { composite: element.parts } : { scene: element.parts }),
+    // A model object placed by name is not the one an instance node makes for itself, so the node has to say which.
+    ...(kind === 'instance' && element.parts !== undefined && placing !== `${INSTANCE_PREFIX}${element.parts}`
+      ? { object: placing }
+      : {}),
   };
 };
 

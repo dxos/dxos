@@ -1320,3 +1320,12 @@ decision D-122: The registry of the stored format's schemas has a Theme group (`
   affects: [F-6.1]
   why: Colours, geometry and style values are named by the schemas of every other group, so the JSON Schema document and the docs page describe each once.
 ```
+
+```mdl
+decision D-123: An element is a group when the object it places is of kind `group`, whatever kind the element states (`groupOf`); Ungroup and the editor's Ungroup command both ask that. Fills in [D-96].
+  date: 2026-11-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1.5]
+  why: A canvas stores the kind it draws an element as, so a group moved in 2D states `instance`; read from the element's resolved kind, the command was disabled on a group that the intent would still take apart.
+```

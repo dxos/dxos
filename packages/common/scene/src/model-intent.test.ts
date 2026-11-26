@@ -5,7 +5,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { resolveLayout3D } from './document.ts';
-import { applyModelIntent } from './model-intent.ts';
+import { applyModelIntent, groupOf } from './model-intent.ts';
 import type * as Scene from './Scene.ts';
 import { layout3D, model3D, scene3D } from './testing.ts';
 import { validateDocument } from './validate.ts';
@@ -141,6 +141,16 @@ describe('applyModelIntent', () => {
     const host = grouped.doc.layouts.find((layout) => layout.id === 'root');
     expect(host?.elements.g).toEqual({ id: 'g', object: 'root/g', fit: 'none' });
     expect(host?.elements.bc?.source).toEqual({ node: 'g', port: 'b' });
+
+    // A group is what its element places: one a canvas stored as the kind it draws (`instance`) is still the group.
+    const model = grouped.doc.models[0];
+    expect(host && groupOf(model, host, 'g')?.id).toBe('root/g');
+    expect(host && groupOf(model, host, 'c')).toBeUndefined();
+    const drawn =
+      host?.dim === '3d'
+        ? { ...host, elements: { ...host.elements, g: { ...host.elements.g, kind: 'instance' } } }
+        : undefined;
+    expect(drawn && groupOf(model, drawn, 'g')?.id).toBe('root/g');
 
     const ungrouped = applyModelIntent(grouped.doc, { kind: 'ungroup', model: 'm', layout: 'root', id: 'g' });
     expect(ungrouped.problems).toEqual([]);

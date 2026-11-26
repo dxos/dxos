@@ -301,6 +301,20 @@ const shifted = <E extends Element2D | Element3D>(element: E, center: E['center'
   };
 };
 
+/**
+ * The group the element `id` of a layout places, which `ungroup` takes apart. What the element places says it is a
+ * group, not its own kind: a canvas stores the kind it draws the element as.
+ */
+export const groupOf = (
+  model: ModelRecord,
+  layout: LayoutRecord,
+  id: string,
+): ModelRecord['objects'][string] | undefined => {
+  const placed = layout.elements[id]?.object;
+  const object = placed === undefined ? undefined : model.objects[placed];
+  return object?.kind === 'group' ? object : undefined;
+};
+
 /** Undoes `group`: the group's elements return to the layout where they are drawn, and links to its ports rebind. */
 const ungroup = (
   doc: SceneDocument,
@@ -313,9 +327,9 @@ const ungroup = (
     problems: [{ part: 'layout', id: layout.id, message }],
   });
   const element = layout.elements[intent.id];
-  const object = element?.object === undefined ? undefined : model.objects[element.object];
+  const object = groupOf(model, layout, intent.id);
   const parts = object?.parts === undefined ? undefined : doc.layouts.find((record) => record.id === object.parts);
-  if (!element || !object || object.kind !== 'group' || !parts || parts.dim !== layout.dim) {
+  if (!element || !object || !parts || parts.dim !== layout.dim) {
     return problem(`"${intent.id}" is not a group.`);
   }
   const fromPort = (end: ElementEndpoint | undefined) =>
