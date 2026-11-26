@@ -281,7 +281,7 @@ Open questions to settle before phase 2:
 | Process            | `Operation.Durable` definition; `ProcessHandle` instance                                                  | `compute/src/Process.ts`, `compute-runtime/src/ProcessHandle.ts` |
 | Agent Process      | `AgentProcess` (key `org.dxos.testing.process.agent`)                                                     | `agent-runtime/src/agent-service/agent-process.ts`               |
 | Session            | `Chat.Chat` → owns a `Feed.Feed` (rename to `Session` pending; sessions are not always interactive chats) | `assistant/src/types/Chat.ts`                                    |
-| Alarm              | `Alarm.Alarm` feed record; `HarnessControl.setAlarm`                                                      | `assistant/src/session/Alarm.ts`                                 |
+| Alarm              | `Alarm.Alarm` feed record; `SessionControlRpcs.setAlarm`                                                      | `assistant/src/session/Alarm.ts`                                 |
 | Skill              | `Skill.Skill`                                                                                             | `compute/src/types/Skill.ts`                                     |
 | Trace feed         | `Feed` of kind `dxos.org.feed.trace`                                                                      | `compute-runtime/src/FeedTraceSink.ts`                           |
 | Artifact / Task    | ordinary ECHO objects read and written through skills                                                     | —                                                                |

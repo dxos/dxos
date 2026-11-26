@@ -19,8 +19,6 @@ import * as Struct from 'effect/Struct';
 import { AiService, Model, OpaqueToolkit } from '@dxos/ai';
 import {
   Alarm,
-  HarnessControl,
-  type HarnessControlRpcs,
   type PendingState,
   SessionStore,
   TrajectoryStore,
@@ -50,6 +48,7 @@ import { markWork, trim } from '@dxos/util';
 import { mcpServerTypes } from '../mcp-server-types.ts';
 import { type DelegationStrategy } from './delegation-strategy.ts';
 import { type McpEndpointOf, loadMcpServers } from './mcp-servers.ts';
+import { type SessionControlRpc, SessionControlRpcs } from './session-control.ts';
 import { type ThreadingOptions, runLanes, tenantOf } from './thread-scheduler.ts';
 import { type MakeTurnProducer, type TurnProducer, makeAiSessionTurnProducer } from './turn-producer.ts';
 import { withTurnStatus } from './turn-status.ts';
@@ -164,10 +163,10 @@ export const makeInputMessage = (input: AgentInput): Message.Message => {
 
 /**
  * A process that can run a chat in place of {@link SessionProcess}: it takes the same input and serves
- * the same `HarnessControl` RPCs, so a session drives it without knowing which one it is. Its
+ * the same {@link SessionControlRpcs}, so a session drives it without knowing which one it is. Its
  * requirements are its own; the host resolves them when it spawns the process.
  */
-export type SessionProcessDefinition = Operation.Durable<AgentInput, void, any, HarnessControlRpcs>;
+export type SessionProcessDefinition = Operation.Durable<AgentInput, void, any, SessionControlRpc>;
 
 /**
  * How long to wait before re-reading a queue that contradicts a write this process just made, and
@@ -236,7 +235,7 @@ export const SessionProcess = (options: SessionProcessOptions) =>
     ],
     // Where the host has one, `TrajectoryCache` keeps its checkpoints there, shared with the chat UI on this device.
     optionalServices: [SqlService.SqlService],
-    rpcs: HarnessControl,
+    rpcs: SessionControlRpcs,
   }).pipe(
     Operation.withDurableHandler((ctx) =>
       Effect.gen(function* () {
@@ -680,7 +679,7 @@ export const SessionProcess = (options: SessionProcessOptions) =>
           }),
           // Control plane (§4.3): handlers run on the host process's server fiber, writing their
           // durable effect to the feed inline.
-          rpcHandlers: yield* HarnessControl.toHandlers({
+          rpcHandlers: yield* SessionControlRpcs.toHandlers({
             setAlarm: Effect.fn(function* ({ at, message }) {
               const alarm = yield* sessionStore.setAlarm(feed, {
                 wakeAt: DateTime.toEpochMillis(at),
