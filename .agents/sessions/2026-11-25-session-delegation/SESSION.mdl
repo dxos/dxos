@@ -73,7 +73,7 @@ goal G-6: Storybook deploys to preview and production after the merge.
 ```
 
 ```mdl
-goal G-7: An agent hands work to an agent holding the needed permission.
+goal G-7: An agent hands work to an agent that has the permission.
   status: review
   notes:
     - Each process carries its authority, and the Verifier in compute-runtime checks every call.
