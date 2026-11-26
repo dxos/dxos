@@ -36,7 +36,7 @@ import { DXN, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
-import { type ChatRequestContext, createPromptContent } from '@dxos/plugin-assistant/ChatRequest';
+import * as ChatRequest from '@dxos/plugin-assistant/ChatRequest';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
@@ -231,7 +231,7 @@ const runAgentSession = <I>(
   seededChat?: Ref.Ref<Agent.Session>,
   conversation?: Conversation<I>,
   transcript: Scorer.Turn[] = [],
-  requestContext?: ChatRequestContext,
+  requestContext?: ChatRequest.Context,
 ) =>
   harness.runPromise(
     Effect.gen(function* () {
@@ -253,10 +253,10 @@ const runAgentSession = <I>(
           });
       // Each turn's reply is every assistant text since its prompt: a turn may span several messages.
       let seen = 0;
-      const turn = (text: string, said = text, attached?: ChatRequestContext) =>
+      const turn = (text: string, said = text, attached?: ChatRequest.Context) =>
         Effect.gen(function* () {
           transcript.push({ role: 'user', text: said });
-          yield* Agent.submitPrompt(agent.chat, createPromptContent({ message: text, context: attached }));
+          yield* Agent.submitPrompt(agent.chat, ChatRequest.createPromptContent({ message: text, context: attached }));
           yield* Agent.waitForCompletion(agent.chat);
           const messages = yield* TrajectoryStore.messages(agent.feed);
           const reply = messages
@@ -421,7 +421,7 @@ export type SeedResult = {
    * What the app captures at submit time alongside the opening prompt (e.g. the user's selection in
    * the document they are viewing), delivered exactly as the chat delivers it. Agent sessions only.
    */
-  context?: ChatRequestContext;
+  context?: ChatRequest.Context;
 };
 
 export type VariantConfig =

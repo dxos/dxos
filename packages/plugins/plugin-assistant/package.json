@@ -94,9 +94,9 @@
       "import": "./dist/lib/AssistantOptions.mjs"
     },
     "./ChatRequest": {
-      "source": "./src/chat-model/prompt.ts",
-      "types": "./dist/types/src/chat-model/prompt.d.ts",
-      "import": "./dist/lib/ChatRequest.mjs"
+      "source": "./src/ChatRequest.ts",
+      "types": "./dist/types/src/ChatRequest.d.ts",
+      "import": "./dist/lib/ns/ChatRequest.mjs"
     },
     "./AssistantPlugin": {
       "source": "./dx.config.ts",
@@ -201,7 +201,7 @@
         "dist/types/src/types/AssistantOptions.d.ts"
       ],
       "ChatRequest": [
-        "dist/types/src/chat-model/prompt.d.ts"
+        "dist/types/src/ChatRequest.d.ts"
       ],
       "AssistantPreset": [
         "dist/types/src/types/AssistantPreset.d.ts"
