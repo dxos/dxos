@@ -210,6 +210,57 @@ describe('EnsureChannelChat', () => {
   );
 });
 
+describe('RecordChannelSend', () => {
+  it.effect(
+    "records what the agent sent in the conversation's chat, created on first contact and reused after",
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, {
+          name: 'Concierge',
+          instructions: 'Greet people.',
+        });
+        const channel = yield* Database.add(makeTestChannel());
+        const channelRef = Ref.make(channel);
+        yield* Database.flush();
+
+        const receipt = { discord: { channelId: 'dm-1', messageId: 'm-1' } };
+        const first = yield* Operation.invoke(AgentOperation.RecordChannelSend, {
+          agent: agentRef,
+          channel: channelRef,
+          thread: 'dm-1',
+          text: 'Which day is the demo?',
+          properties: receipt,
+        });
+        yield* Database.flush();
+        const second = yield* Operation.invoke(AgentOperation.RecordChannelSend, {
+          agent: agentRef,
+          channel: channelRef,
+          thread: 'dm-1',
+          text: 'Also, which venue?',
+        });
+        // The same chat EnsureChannelChat answers for the conversation, so the person's answer lands beside it.
+        const ensured = yield* Operation.invoke(AgentOperation.EnsureChannelChat, {
+          agent: agentRef,
+          channel: channelRef,
+          thread: 'dm-1',
+        });
+        expect(second.chat.uri).toBe(first.chat.uri);
+        expect(ensured.chat.uri).toBe(first.chat.uri);
+
+        const chat = yield* Database.load(first.chat);
+        const messages = yield* TrajectoryStore.messages(yield* Database.load(chat.feed));
+        expect(messages.map((message) => [message.sender.role, message.blocks[0]])).toEqual([
+          ['assistant', { _tag: 'text', text: 'Which day is the demo?' }],
+          ['assistant', { _tag: 'text', text: 'Also, which venue?' }],
+        ]);
+        expect(messages[0].properties).toMatchObject(receipt);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+});
+
 describe('AgentChannels', () => {
   it.effect(
     'is parented to its agent and resolves its channels',

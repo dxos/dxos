@@ -10,7 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { type Channel } from '@dxos/types';
+import { type Channel, Message } from '@dxos/types';
 
 import { AgentChannels, AgentOperation } from '#types';
 
@@ -88,6 +88,24 @@ export const ensureChannelChat = Effect.fnUntraced(function* ({
   );
   return chat;
 }, Effect.scoped);
+
+/** Appends a message the agent sent to the chat's feed; `properties` carry the backend's receipt. */
+export const appendToChat = (
+  agent: Agent.Agent,
+  chat: Agent.Session,
+  text: string,
+  properties?: Record<string, unknown>,
+) =>
+  Effect.gen(function* () {
+    const feed = yield* Database.load(chat.feed).pipe(Effect.orDie);
+    yield* TrajectoryStore.appendMessages(feed, [
+      Message.make({
+        sender: { role: 'assistant', name: agent.name },
+        blocks: [{ _tag: 'text', text }],
+        properties,
+      }),
+    ]);
+  });
 
 /**
  * The skills the channel's backend declares on its config type ({@link Skill.SkillsAnnotation}): how the agent
