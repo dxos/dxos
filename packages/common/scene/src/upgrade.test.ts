@@ -9,8 +9,8 @@ import { Link, RectNode, Style2D } from './element.ts';
 import type * as Scene from './Scene.ts';
 import { Style3D } from './style.ts';
 import {
-  upgradeConstraint,
   retypeContainers,
+  upgradeConstraint,
   upgradeDocument,
   upgradeElement2D,
   upgradeElement3D,
