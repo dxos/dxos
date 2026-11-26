@@ -78,7 +78,7 @@ export const Calls: Story = {
       await userEvent.click(await canvas.findByTestId('settings-reset'));
       await userEvent.click(await canvas.findByTestId('settings-set'));
       await waitFor(
-        async () => expect((await canvas.findByTestId('settings-list')).textContent).toContain('theme dark'),
+        async () => expect((await canvas.findByTestId('settings-list')).textContent).toMatch(/theme.*dark/),
         TIMEOUT,
       );
     });

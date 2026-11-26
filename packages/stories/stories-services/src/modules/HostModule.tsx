@@ -4,8 +4,9 @@
 
 import React, { useCallback, useState } from 'react';
 
+import { Listbox } from '@dxos/react-ui-list';
 import * as Button from '@dxos/react-ui/Button';
-import * as Icon from '@dxos/react-ui/Icon';
+import type * as UiListbox from '@dxos/react-ui/Listbox';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
@@ -20,8 +21,6 @@ const EDGE_HOST = 'edge';
 
 const CONNECTED_ICON = 'ph--plugs-connected--regular';
 const DISCONNECTED_ICON = 'ph--plugs--regular';
-
-const ROW = 'grid grid-cols-[auto_1fr_auto] items-start gap-2';
 
 /** The story's provider plugins, the contract each one provides and the host feature it needs. */
 const PLUGINS = [
@@ -62,6 +61,18 @@ const probeSummary = (probe: HostControl.Probe): string => {
   return `${count('blocked')} blocked, ${count('reachable')} reachable`;
 };
 
+/** A row for each check of a probe: its verdict, and why. */
+const probeOptions = (probe: HostControl.Probe): UiListbox.Option[] =>
+  CHECKS.map((check) => {
+    const result = probe[check.field];
+    return {
+      value: check.field,
+      label: `${check.label}: ${OUTCOME_LABELS[result.outcome]}`,
+      icon: OUTCOME_ICONS[result.outcome],
+      description: result.detail,
+    };
+  });
+
 /** Whether the host runs what a plugin provides, which is what its row's icon shows. */
 const isActive = (host: HostControl.Description, plugin: (typeof PLUGINS)[number]): boolean =>
   host.services.some((service) => service.key === plugin.contract && service.active);
@@ -77,6 +88,15 @@ const pluginStatus = (host: HostControl.Description, plugin: (typeof PLUGINS)[nu
   }
   return service.active ? 'active' : `inactive, this host has no ${service.unmet.join(', ')}`;
 };
+
+/** A row for each plugin: whether this host runs it, and the feature it needs. */
+const pluginOptions = (host: HostControl.Description): UiListbox.Option[] =>
+  PLUGINS.map((plugin) => ({
+    value: plugin.name,
+    label: `${plugin.name}: ${pluginStatus(host, plugin)}`,
+    icon: isActive(host, plugin) ? CONNECTED_ICON : DISCONNECTED_ICON,
+    description: `needs ${plugin.needs}`,
+  }));
 
 export type HostModuleProps = {
   /** The host this module shows; the app host is the one the story's consumers run in. */
@@ -126,26 +146,21 @@ export const HostModule = ({ id, title, where, start }: HostModuleProps) => {
       </Panel.Header>
       <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport classNames='flex flex-col gap-2 p-2'>
+          <ScrollArea.Viewport classNames='p-2 space-y-2'>
             {error && (
               <p className='text-sm text-error-text' data-testid={`host-error-${id}`}>
                 {error}
               </p>
             )}
             {host && (
-              <ul className='text-sm space-y-2'>
-                {PLUGINS.map((plugin) => {
-                  const installed = host.plugins.includes(plugin.url);
-                  return (
-                    <li key={plugin.name} className={ROW} data-testid={`plugin-${plugin.name}-${id}`}>
-                      <Icon.Icon icon={isActive(host, plugin) ? CONNECTED_ICON : DISCONNECTED_ICON} />
-                      <div>
-                        <div>
-                          {plugin.name}: {pluginStatus(host, plugin)}
-                        </div>
-                        <div className='text-fg-muted'>needs {plugin.needs}</div>
-                      </div>
-                      {installed ? (
+              <Listbox.Root items={pluginOptions(host)}>
+                <Listbox.Content aria-label='Plugins'>
+                  {PLUGINS.map((plugin) => (
+                    <Listbox.Item key={plugin.name} id={plugin.name} data-testid={`plugin-${plugin.name}-${id}`}>
+                      <Listbox.ItemIcon />
+                      <Listbox.ItemText />
+                      <Listbox.ItemDescription />
+                      {host.plugins.includes(plugin.url) ? (
                         <Button.Root
                           label='Uninstall'
                           onClick={() => run(() => controller.uninstall(id, plugin.url))}
@@ -158,29 +173,22 @@ export const HostModule = ({ id, title, where, start }: HostModuleProps) => {
                           data-testid={`install-${plugin.name}-${id}`}
                         />
                       )}
-                    </li>
-                  );
-                })}
-              </ul>
+                    </Listbox.Item>
+                  ))}
+                </Listbox.Content>
+              </Listbox.Root>
             )}
             {host && probe && (
-              <ul className='text-sm space-y-2' data-testid={`probe-result-${id}`}>
-                <li className='font-medium'>Probe: {probeSummary(probe)}</li>
-                {CHECKS.map((check) => {
-                  const result = probe[check.field];
-                  return (
-                    <li key={check.field} className={ROW} data-testid={`probe-${check.field}-${id}`}>
-                      <Icon.Icon icon={OUTCOME_ICONS[result.outcome]} />
-                      <div>
-                        <div>
-                          {check.label}: {OUTCOME_LABELS[result.outcome]}
-                        </div>
-                        <div className='text-fg-muted'>{result.detail}</div>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
+              <Listbox.Root items={probeOptions(probe)} data-testid={`probe-result-${id}`}>
+                <Listbox.Content>
+                  <Listbox.ItemGroup>
+                    <Listbox.ItemGroupLabel>Probe: {probeSummary(probe)}</Listbox.ItemGroupLabel>
+                    {CHECKS.map((check) => (
+                      <Listbox.Item key={check.field} id={check.field} data-testid={`probe-${check.field}-${id}`} />
+                    ))}
+                  </Listbox.ItemGroup>
+                </Listbox.Content>
+              </Listbox.Root>
             )}
           </ScrollArea.Viewport>
         </ScrollArea.Root>

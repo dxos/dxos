@@ -51,7 +51,7 @@ export const SummarizerModule = () => {
       </Panel.Header>
       <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport classNames='flex flex-col gap-2 p-2'>
+          <ScrollArea.Viewport classNames='p-2 space-y-2'>
             <p className='text-sm text-fg-muted' data-testid='summarizer-binding'>
               Summarizer: {bindingLabel(snapshot.bindings[Summarizer.Contract.key])}
             </p>

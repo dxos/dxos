@@ -8,6 +8,7 @@ import * as Stream from 'effect/Stream';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import * as EffectEx from '@dxos/effect/EffectEx';
+import { Listbox } from '@dxos/react-ui-list';
 import * as Button from '@dxos/react-ui/Button';
 import * as Input from '@dxos/react-ui/Input';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -60,7 +61,7 @@ export const SettingsModule = () => {
       </Panel.Header>
       <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport classNames='flex flex-col gap-2 p-2'>
+          <ScrollArea.Viewport classNames='p-2 space-y-2'>
             <p className='text-sm text-fg-muted' data-testid='settings-binding'>
               Settings: {bindingLabel(snapshot.bindings[Settings.Contract.key])}
             </p>
@@ -85,13 +86,16 @@ export const SettingsModule = () => {
               </div>
             )}
             {error && <p className='text-sm text-error-text'>{error}</p>}
-            <ul className='text-sm space-y-1' data-testid='settings-list'>
-              {entries.map(([name, current]) => (
-                <li key={name}>
-                  <span className='text-fg-muted'>{name}</span> {current}
-                </li>
-              ))}
-            </ul>
+            <Listbox.Root
+              items={entries.map(([name, current]) => ({ value: name, label: name, description: current }))}
+              data-testid='settings-list'
+            >
+              <Listbox.Content aria-label='Settings'>
+                {entries.map(([name]) => (
+                  <Listbox.Item key={name} id={name} />
+                ))}
+              </Listbox.Content>
+            </Listbox.Root>
             {changed && (
               <p className='text-sm text-fg-muted' data-testid='settings-changed'>
                 Last changed: {changed.key}
