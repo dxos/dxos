@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { NoteStore, Summarizer } from '../contracts/index.ts';
+import { Settings, Summarizer } from '../contracts/index.ts';
 import { type HostControl, ServiceHost } from '../services/index.ts';
 import { fakeGateway } from './gateway.ts';
 
@@ -120,13 +120,11 @@ const probe = async (host: ServiceHost.ServiceHost, origin: string): Promise<Hos
     (await indexedDB.databases()).some((database) => database.name === marker(origin)),
   ),
   network: `fetch ${await attempt(() => fetch(new URL('/index.json', origin), { cache: 'no-store' }))}, image ${await requestImage(origin)}`,
-  // The app's notes, which a frame is not granted; a host that provides notes itself would only reach its own.
-  ungranted: host
-    .getSnapshot()
-    .self.services.some((service) => service.key === NoteStore.Contract.key && service.active)
+  // The app's settings, which a frame is not granted; a host that provides settings itself would only reach its own.
+  ungranted: host.getSnapshot().self.services.some((service) => service.key === Settings.Contract.key && service.active)
     ? 'not tried, this host provides its own'
     : await attempt(() =>
-        EffectEx.runPromise(host.client(NoteStore.Contract).list({}).pipe(Effect.timeout('1 second'))),
+        EffectEx.runPromise(host.client(Settings.Contract).values.get.pipe(Effect.timeout('1 second'))),
       ),
 });
 
@@ -137,8 +135,8 @@ export const startChildHost = (init: Init): ServiceHost.ServiceHost => {
     features[Summarizer.GATEWAY_FEATURE] = fakeGateway(init.id);
   }
   // A worker has no local storage to give, so a host in one cannot run a provider that needs it.
-  if (init.features.includes(NoteStore.STORAGE_FEATURE) && 'localStorage' in globalThis) {
-    features[NoteStore.STORAGE_FEATURE] = globalThis.localStorage;
+  if (init.features.includes(Settings.STORAGE_FEATURE) && 'localStorage' in globalThis) {
+    features[Settings.STORAGE_FEATURE] = globalThis.localStorage;
   }
   const host: ServiceHost.ServiceHost = new ServiceHost.ServiceHost({
     id: init.id,

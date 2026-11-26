@@ -7,7 +7,7 @@ import React, { useCallback, useState } from 'react';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
 
-import { NoteStore, Summarizer } from '../contracts/index.ts';
+import { Settings, Summarizer } from '../contracts/index.ts';
 import { type HostControl } from '../services/index.ts';
 import { PLUGIN_URLS, useServices } from './ServicesContext.tsx';
 
@@ -20,7 +20,7 @@ const KIND_LABELS: Partial<Record<HostControl.Kind, string>> = {
 
 /** The story's provider plugins, and the contract each one provides. */
 const PLUGINS = [
-  { name: 'notes', url: PLUGIN_URLS.notes, contract: NoteStore.Contract.key },
+  { name: 'settings', url: PLUGIN_URLS.settings, contract: Settings.Contract.key },
   { name: 'summarizer', url: PLUGIN_URLS.summarizer, contract: Summarizer.Contract.key },
 ] as const;
 
@@ -131,7 +131,7 @@ export const HostCard = ({ host, probe, onInstall, onUninstall, onProbe }: HostC
       {probe && (
         <Card.Section title='Probe'>
           <Card.Text variant='muted' data-testid={`probe-result-${host.id}`}>
-            localStorage: {probe.localStorage}; indexedDB: {probe.indexedDb}; network: {probe.network}; app notes:{' '}
+            localStorage: {probe.localStorage}; indexedDB: {probe.indexedDb}; network: {probe.network}; app settings:{' '}
             {probe.ungranted}
           </Card.Text>
         </Card.Section>

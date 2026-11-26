@@ -23,7 +23,7 @@ const meta: Meta<typeof ModuleContainer.Root> = {
   },
   args: {
     layout: [
-      [StoryRole.Notes, StoryRole.Summarizer],
+      [StoryRole.Settings, StoryRole.Summarizer],
       [StoryRole.LocalRuntime, StoryRole.RemoteRuntime],
     ],
     columns: '28rem_1fr',
@@ -39,14 +39,14 @@ type Story = StoryObj<typeof meta>;
  * logs the route its calls took. The right column is the runtimes, one module shown twice: the hosts
  * on this device above, and the remote host below.
  *
- * 1. Notes are provided in the app host and bound in memory.
+ * 1. Settings are provided in the app host and bound in memory.
  * 2. Summarize fails: no host provides the contract.
  * 3. Start the EDGE host (mock) and install the summarizer there: the call streams over a port.
  * 4. Install the summarizer in the app as well: it stays inactive, since only EDGE has an AI gateway,
  *    and calls still go to EDGE.
- * 5. Install notes in the EDGE host: inactive there, since a worker has no local storage.
- * 6. Start the frame host and install notes there, then uninstall notes from the app: the same
- *    client rebinds over a port, to notes kept in the frame's own storage. Probe shows what the
+ * 5. Install settings in the EDGE host: inactive there, since a worker has no local storage.
+ * 6. Start the frame host and install settings there, then uninstall settings from the app: the same
+ *    client rebinds over a port, to settings kept in the frame's own storage. Probe shows what the
  *    sandbox refuses.
  */
 export const Default: Story = {
@@ -56,7 +56,7 @@ export const Default: Story = {
 const TIMEOUT = { timeout: 30_000 };
 
 /**
- * The same story, driven: one consumer calls `NoteStore`, which only a local host can provide, and
+ * The same story, driven: one consumer calls `Settings`, which only a local host can provide, and
  * `Summarizer`, which only the remote host can. The frame step is left to `Default`, since it needs
  * the dev server under a second loopback name.
  */
@@ -74,12 +74,11 @@ export const Calls: Story = {
     };
 
     await step('Call a service provided in the app: bound in memory', async () => {
-      await binding('notes-binding', 'memory → app');
-      await userEvent.click(await canvas.findByTestId('notes-clear'));
-      await userEvent.click(await canvas.findByTestId('notes-add'));
+      await binding('settings-binding', 'memory → app');
+      await userEvent.click(await canvas.findByTestId('settings-reset'));
+      await userEvent.click(await canvas.findByTestId('settings-set'));
       await waitFor(
-        async () =>
-          expect((await canvas.findByTestId('notes-list')).textContent).toContain('Plugins share only a contract.'),
+        async () => expect((await canvas.findByTestId('settings-list')).textContent).toContain('theme dark'),
         TIMEOUT,
       );
     });
@@ -112,10 +111,13 @@ export const Calls: Story = {
       await summarize('edge');
     });
 
-    await step('Install notes in the EDGE host: no local storage there, so the app still provides them', async () => {
-      await userEvent.click(await canvas.findByTestId('install-notes-edge'));
-      await status('plugin-notes-edge', 'host has no localStorage');
-      await binding('notes-binding', 'memory → app');
-    });
+    await step(
+      'Install settings in the EDGE host: no local storage there, so the app still provides them',
+      async () => {
+        await userEvent.click(await canvas.findByTestId('install-settings-edge'));
+        await status('plugin-settings-edge', 'host has no localStorage');
+        await binding('settings-binding', 'memory → app');
+      },
+    );
   },
 };

@@ -14,32 +14,32 @@ import React, {
   useSyncExternalStore,
 } from 'react';
 
-import { NoteStore, Summarizer } from '../contracts/index.ts';
+import { Settings, Summarizer } from '../contracts/index.ts';
 import * as HostController from '../hosts/HostController.ts';
-import notesPluginUrl from '../plugins/notes-plugin.ts?module-url';
+import settingsPluginUrl from '../plugins/settings-plugin.ts?module-url';
 import summarizerPluginUrl from '../plugins/summarizer-plugin.ts?module-url';
 import { type Service, type ServiceHost } from '../services/index.ts';
 
 /** Module paths of the story's provider plugins; the same path installs a plugin into any host. */
 export const PLUGIN_URLS = {
-  notes: new URL(notesPluginUrl).pathname,
+  settings: new URL(settingsPluginUrl).pathname,
   summarizer: new URL(summarizerPluginUrl).pathname,
 } as const;
 
 export type ServicesContextValue = {
   readonly controller: HostController.HostController;
   /** The consumer's clients: built once, and never rebuilt when a provider moves. */
-  readonly notes: NoteStore.Client;
+  readonly settings: Settings.Client;
   readonly summarizer: Summarizer.Client;
-  /** Why the notes plugin could not be installed when the story started, if it could not. */
+  /** Why the settings plugin could not be installed when the story started, if it could not. */
   readonly startupError?: string;
-  /** Installs the notes plugin again after a failed start. */
+  /** Installs the settings plugin again after a failed start. */
   readonly retry: () => void;
 };
 
 const ServicesContext = createContext<ServicesContextValue | undefined>(undefined);
 
-/** Owns the app host for the story, with the notes plugin installed as the app would have it. */
+/** Owns the app host for the story, with the settings plugin installed as the app would have it. */
 export const ServicesProvider = ({ children }: PropsWithChildren) => {
   const [value, setValue] = useState<ServicesContextValue>();
 
@@ -50,7 +50,7 @@ export const ServicesProvider = ({ children }: PropsWithChildren) => {
     let disposed = false;
     const install = () => {
       setValue((current) => (current ? { ...current, startupError: undefined } : current));
-      controller.install(HostController.APP_HOST, PLUGIN_URLS.notes).catch((err) => {
+      controller.install(HostController.APP_HOST, PLUGIN_URLS.settings).catch((err) => {
         if (!disposed) {
           const startupError = err instanceof Error ? err.message : String(err);
           setValue((current) => (current ? { ...current, startupError } : current));
@@ -59,7 +59,7 @@ export const ServicesProvider = ({ children }: PropsWithChildren) => {
     };
     setValue({
       controller,
-      notes: controller.app.client(NoteStore.Contract),
+      settings: controller.app.client(Settings.Contract),
       summarizer: controller.app.client(Summarizer.Contract),
       retry: install,
     });

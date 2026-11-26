@@ -731,18 +731,18 @@ answers the questions the design cannot settle on paper.
 
 A private package `packages/stories/stories-services` with one Storybook story and one vitest file.
 
-| Plugin       | Role                                                                                           | Host                                     |
-| ------------ | ---------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| `notes`      | Provides `NoteStore` (`put`, `list`, property `count`, event `changed`); needs `localStorage`. | A local host only: the app, or the frame |
-| `summarizer` | Provides `Summarizer` (streamed `summarize`, property `status`); needs `aiGateway`.            | The mock remote host only: a Web Worker  |
-| `panel`      | The consumer: contributes the notes and summarizer story modules, which call the two services. | App host                                 |
+| Plugin       | Role                                                                                                   | Host                                     |
+| ------------ | ------------------------------------------------------------------------------------------------------ | ---------------------------------------- |
+| `settings`   | Provides `Settings` (`set`, `get`, `reset`, property `values`, event `changed`); needs `localStorage`. | A local host only: the app, or the frame |
+| `summarizer` | Provides `Summarizer` (streamed `summarize`, property `status`); needs `aiGateway`.                    | The mock remote host only: a Web Worker  |
+| `panel`      | The consumer: contributes the settings and summarizer story modules, which call the two services.      | App host                                 |
 
 The story is laid out from story modules, as the stories in `stories-compute` and
 `stories-assistant` are (`StoryModules` in `@dxos/storybook-testing`):
 
 | Module             | Shows                                                                                                                                                                                                                             |
 | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `NotesModule`      | The notes, read and written through `NoteStore`, and the route each of its calls took.                                                                                                                                            |
+| `SettingsModule`   | The settings, read and written through `Settings`, the last `changed` event, and the route each of its calls took.                                                                                                                |
 | `SummarizerModule` | A summarize action and its streamed result, through `Summarizer`, and the route each of its calls took.                                                                                                                           |
 | `RuntimeModule`    | One runtime: its hosts, the plugins installed in each, the install actions and each host's probe. The story shows it twice, over the local hosts (the app and the sandboxed frame) and over the remote host (the mock EDGE host). |
 
@@ -759,21 +759,21 @@ host; where the host lacks the feature, the provider stays inactive and the cata
 
 The story walks through six steps:
 
-1. The panel lists notes through `NoteStore`, provided in the app. The binding reads `memory → app`.
+1. The panel shows settings through `Settings`, provided in the app. The binding reads `memory → app`.
 2. Summarize fails with `ServiceNotAvailableError`, because nothing provides `Summarizer`.
 3. Start the mock EDGE host and install the summarizer in it, a call of `install` on that host's
    own contract. Its catalog changes, the resolver binds a stub, and tokens stream into the panel.
    The binding reads `port → edge`.
 4. Install the summarizer in the app as well. It stays inactive, "host has no aiGateway", and calls
    still go to EDGE.
-5. Install notes in the EDGE host. It stays inactive, "host has no localStorage", and the app still
+5. Install settings in the EDGE host. It stays inactive, "host has no localStorage", and the app still
    provides them.
-6. Start the frame host, a hidden sandboxed iframe with `connect-src 'none'`, install notes in it
-   and uninstall them from the app. The same client rebinds to `port → frame`, and the notes are
-   now the ones in the frame's own storage. The probe then tries to read the app's `localStorage`
+6. Start the frame host, a hidden sandboxed iframe with `connect-src 'none'`, install settings in
+   it and uninstall them from the app. The same client rebinds to `port → frame`, and the settings
+   are now the ones in the frame's own storage. The probe then tries to read the app's `localStorage`
    and IndexedDB and to `fetch` a URL, and the card shows all three refused.
 
-An operation `notes.summarize`, whose handler requires both contracts, runs in step 3 to show
+An operation `settings.summarize`, whose handler requires both contracts, runs in step 3 to show
 operations on top of services.
 
 ### What is mocked
@@ -811,21 +811,21 @@ Storybook test runner passes.
 
 ### What was observed
 
-| Step | Observed in the browser                                                                                                                                                                                                 |
-| ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1    | `NoteStore: memory → app`; a note is added and the count property updates.                                                                                                                                              |
-| 2    | Summarize fails with `ServiceNotAvailableError` naming the contract.                                                                                                                                                    |
-| 3    | A worker starts as the mock EDGE host. Installing the summarizer there is a call on the worker's own contract. The binding becomes `port → edge` and the output begins `[edge]`.                                        |
-| 4    | The summarizer installed in the app reads "inactive, host has no aiGateway". The binding stays `port → edge`.                                                                                                           |
-| 5    | Notes installed in the EDGE host read "inactive, host has no localStorage". The binding stays `memory → app`.                                                                                                           |
-| 6    | A frame on a second origin starts. With notes installed there and uninstalled from the app, the binding becomes `port → frame`, the panel's client is not rebuilt, and the list shows the frame's notes, not the app's. |
+| Step | Observed in the browser                                                                                                                                                                                                        |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1    | `Settings: memory → app`; a setting is set and the values property updates.                                                                                                                                                    |
+| 2    | Summarize fails with `ServiceNotAvailableError` naming the contract.                                                                                                                                                           |
+| 3    | A worker starts as the mock EDGE host. Installing the summarizer there is a call on the worker's own contract. The binding becomes `port → edge` and the output begins `[edge]`.                                               |
+| 4    | The summarizer installed in the app reads "inactive, host has no aiGateway". The binding stays `port → edge`.                                                                                                                  |
+| 5    | Settings installed in the EDGE host read "inactive, host has no localStorage". The binding stays `memory → app`.                                                                                                               |
+| 6    | A frame on a second origin starts. With settings installed there and uninstalled from the app, the binding becomes `port → frame`, the panel's client is not rebuilt, and the panel shows the frame's settings, not the app's. |
 
 The probe, run in each child host:
 
-| Host   | App's local storage | App's IndexedDB     | `fetch` | Image request | App's notes, not granted |
-| ------ | ------------------- | ------------------- | ------- | ------------- | ------------------------ |
-| Worker | Absent in a worker  | Sees the app's data | Allowed | No document   | Allowed                  |
-| Frame  | Isolated            | Isolated            | Refused | Refused       | Refused                  |
+| Host   | App's local storage | App's IndexedDB     | `fetch` | Image request | App's settings, not granted |
+| ------ | ------------------- | ------------------- | ------- | ------------- | --------------------------- |
+| Worker | Absent in a worker  | Sees the app's data | Allowed | No document   | Allowed                     |
+| Frame  | Isolated            | Isolated            | Refused | Refused       | Refused                     |
 
 This is the claim of "Isolation on the client" measured: the worker reads the app's IndexedDB, and
 the frame reaches none of the five. The probe does not try the two paths the frame's policy leaves
@@ -873,7 +873,7 @@ open: a script request to its own origin, and navigating itself.
   the app as a typed error over the control contract.
 - **A grant has to cover the catalog and the host's own contract, not only the services.** At
   first the frame was served no contract it was not granted, but it could read that the app
-  provides notes, and it could call `install` on the app, which loads code in the app's realm. A
+  provides settings, and it could call `install` on the app, which loads code in the app's realm. A
   peer with a grant now gets a catalog of what it was granted and is refused `install`.
 - **A host must not answer a peer's catalog with its own.** The first version republished its
   catalog whenever a peer's arrived, so two idle hosts exchanged catalogs without end. A host now

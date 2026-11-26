@@ -6,7 +6,7 @@
 
 import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { NoteStore } from '../contracts/index.ts';
+import { Settings } from '../contracts/index.ts';
 import { type HostControl, ServiceHost } from '../services/index.ts';
 import { type Init, importPlugin, isReady, marker } from './child-host.ts';
 
@@ -51,7 +51,7 @@ export class HostController {
     this.app = new ServiceHost.ServiceHost({
       id: APP_HOST,
       kind: 'app',
-      features: { [NoteStore.STORAGE_FEATURE]: window.localStorage },
+      features: { [Settings.STORAGE_FEATURE]: window.localStorage },
       loadPlugin: importPlugin,
     });
     writeMarker();
@@ -178,7 +178,7 @@ export class HostController {
   }
 
   async probe(hostId: string): Promise<HostControl.Probe> {
-    return EffectEx.runPromise(this.#control(hostId).probe({ ungranted: NoteStore.Contract.key }));
+    return EffectEx.runPromise(this.#control(hostId).probe({ ungranted: Settings.Contract.key }));
   }
 
   async dispose(): Promise<void> {

@@ -6,21 +6,21 @@ import * as Role from '@dxos/app-framework/Role';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as StoryModules from '@dxos/storybook-testing/StoryModules';
 
-import { NotesModule } from './NotesModule.tsx';
 import { LocalRuntimeModule, RemoteRuntimeModule } from './RuntimeModule.tsx';
+import { SettingsModule } from './SettingsModule.tsx';
 import { SummarizerModule } from './SummarizerModule.tsx';
 
 export * from './CallLog.tsx';
 export * from './HostCard.tsx';
-export * from './NotesModule.tsx';
 export * from './RuntimeModule.tsx';
 export * from './ServicesContext.tsx';
+export * from './SettingsModule.tsx';
 export * from './SummarizerModule.tsx';
 
 /** Roles for this package's story panels, plus the generic diagnostic ones. */
 export const StoryRole = {
   ...StoryModules.Role,
-  Notes: Role.make<Record<string, never>>('org.dxos.storybook.role.services.notes'),
+  Settings: Role.make<Record<string, never>>('org.dxos.storybook.role.services.settings'),
   Summarizer: Role.make<Record<string, never>>('org.dxos.storybook.role.services.summarizer'),
   LocalRuntime: Role.make<Record<string, never>>('org.dxos.storybook.role.services.localRuntime'),
   RemoteRuntime: Role.make<Record<string, never>>('org.dxos.storybook.role.services.remoteRuntime'),
@@ -29,7 +29,11 @@ export const StoryRole = {
 /** React surfaces for this package's panels, keyed by `StoryRole` tokens, plus the generic ones. */
 export const moduleSurfaces: Surface.Definition[] = [
   ...StoryModules.surfaces,
-  Surface.create({ id: 'role.services.notes', filter: Surface.makeFilter(StoryRole.Notes), component: NotesModule }),
+  Surface.create({
+    id: 'role.services.settings',
+    filter: Surface.makeFilter(StoryRole.Settings),
+    component: SettingsModule,
+  }),
   Surface.create({
     id: 'role.services.summarizer',
     filter: Surface.makeFilter(StoryRole.Summarizer),
