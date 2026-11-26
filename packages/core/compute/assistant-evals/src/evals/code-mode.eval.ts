@@ -27,7 +27,7 @@ import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as Sheet from '@dxos/plugin-sheet/Sheet';
 import * as SheetPlugin from '@dxos/plugin-sheet/SheetPlugin';
 import * as SheetUtil from '@dxos/plugin-sheet/SheetUtil';
-import { SheetSkill } from '@dxos/plugin-sheet/skills';
+import * as SheetSkill from '@dxos/plugin-sheet/SheetSkill';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { Selection } from '@dxos/react-ui-attention/types';
 import { Milestone, Organization, Person, Task, TaskSet } from '@dxos/types';

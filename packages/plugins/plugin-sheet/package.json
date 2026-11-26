@@ -106,10 +106,10 @@
       "types": "./dist/types/src/types/SheetUtil.d.ts",
       "import": "./dist/lib/SheetUtil.mjs"
     },
-    "./skills": {
-      "source": "./src/skills/index.ts",
-      "types": "./dist/types/src/skills/index.d.ts",
-      "import": "./dist/lib/skills.mjs"
+    "./SheetSkill": {
+      "source": "./src/skills/SheetSkill.ts",
+      "types": "./dist/types/src/skills/SheetSkill.d.ts",
+      "import": "./dist/lib/SheetSkill.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -136,8 +136,8 @@
       "SheetUtil": [
         "dist/types/src/types/SheetUtil.d.ts"
       ],
-      "skills": [
-        "dist/types/src/skills/index.d.ts"
+      "SheetSkill": [
+        "dist/types/src/skills/SheetSkill.d.ts"
       ]
     }
   },
