@@ -1,0 +1,556 @@
+# Plugin services: one mechanism for capabilities, layer specs and remote plugins
+
+Status: proposal, awaiting approval. Nothing here is built.
+
+## Summary
+
+A plugin provides **services**. A service has a **contract**: a key, a version, and schemas for its
+methods, properties and events. A consumer asks for a contract and gets a typed client. When a
+provider runs in the same runtime the client calls it in memory. When it runs elsewhere (a Web
+Worker, EDGE) the client is a stub that sends the same call over Effect RPC. The consumer's code is
+the same in both cases.
+
+Each runtime runs a **host** that loads plugins, activates their providers and serves their
+contracts. A provider states the host features it needs (`localStorage`, `aiGateway`), and a resolver
+picks the nearest host that has them.
+
+The service replaces three things: layer specs, the JSON proxies EDGE serves to plugin bundles, and
+stateful singleton capabilities. Operations stay as the verb a person or an agent invokes; their
+handlers require services. Multi capabilities (surfaces, schemas, translations) stay as they are.
+
+The client's own services (`DataService`, `SpacesService` and 16 more) already work this way: each is
+an Effect RPC group registered on a router that serves it in process and over a port. This design
+opens that pattern to plugins and adds what a plugin needs on top: a catalog, a space scope, host
+features and resolution across hosts.
+
+## Decisions taken
+
+Rich accepted these defaults on 2026-11-25. Everything else in this document is a proposal.
+
+| Id  | Decision                                                                                                                                                                  |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| U-1 | The service replaces layer specs, the JSON host-service proxies and stateful singleton capabilities. Multi capabilities stay.                                             |
+| U-2 | An operation is a separate concept from a service. Its handler requires services.                                                                                         |
+| U-3 | The JavaBeans precedent means a self-describing descriptor (methods, properties, events), a container-managed lifecycle, and local and remote interfaces.                 |
+| U-4 | A service declares the host features it needs. The resolver picks the nearest runtime that has them and prefers local.                                                    |
+| U-5 | Services are stateless over ECHO for now. A durable per-space instance is a later phase.                                                                                  |
+| U-6 | EDGE-PLUGINS decisions D-41 and D-88 are reversed: plugins on EDGE call each other's services. Each plugin keeps its own isolate.                                         |
+| U-7 | Install stays two lists: the space's plugin map and the device's enabled set. The local host also reads the space's map.                                                  |
+| U-8 | The work is a registered project, `plugin-services`.                                                                                                                      |
+
+## Review: what exists
+
+Five mechanisms let one piece of code offer something to another. They were built at different
+times and each solves part of the problem.
+
+| Mechanism           | Defined in                                                                                       | Keyed by                | Carries                                          | Scope                       | Crosses a wire                    |
+| ------------------- | ------------------------------------------------------------------------------------------------ | ----------------------- | ------------------------------------------------ | --------------------------- | --------------------------------- |
+| Capability          | `packages/sdk/app-framework/src/core/capability.ts`                                              | NSID string             | Any JS value: object, atom, component, layer     | Application                 | No                                |
+| Layer spec          | `packages/core/compute/compute/src/LayerSpec.ts`                                                 | Effect tag key          | An Effect layer with `requires` and `provides`   | Application, space, process | No                                |
+| Client service      | `packages/core/protocols/src/*Service.ts`, `packages/core/mesh/rpc/src/RpcRouter.ts`             | RPC tag prefix          | An Effect `RpcGroup` and its handlers            | Application                 | Yes, typed; in process when local |
+| Operation           | `packages/core/compute/compute/src/Operation.ts`                                                 | DXN                     | One handler with input and output schemas        | A process per invocation    | Yes, by per-call `on: 'edge'`     |
+| EDGE host service   | `packages/core/protocols/src/PluginProtocol.ts`, `plugin-host-cloudflare/src/HostServices.ts`    | Effect tag key (string) | A proxy whose methods are JSON calls             | One invocation              | Yes, untyped                      |
+
+### Capabilities
+
+Plugins and sdk packages define about 279 capabilities: 111 multi and 168 singleton.
+
+- **Multi capabilities are contributions.** Surfaces, schemas, translations, operation handlers and
+  skills are stateless code or data that a host collects. They are imported on demand from a
+  manifest that already lists each module's `requires`, `provides` and `environments`
+  (`plugin-manifest.ts`).
+- **Singleton capabilities are shared objects.** 64 hold a writable atom (settings and view state),
+  5 hold a read-only atom, and the rest are managers and clients with an in-memory API.
+- **They are application-scoped and in-memory.** A capability has no schema, so it cannot cross an
+  isolation boundary, and it has no notion of a space.
+
+### Layer specs
+
+A layer spec is the closest existing thing to a service.
+
+- **It is already a service registry.** A spec lists the Effect tags it requires and provides, and
+  has an affinity of `application`, `space` or `process`. `LayerStack` builds each spec lazily per
+  space or process, and `ServiceResolver.resolve(tag, { identity, space, conversation, process })`
+  hands the result to operation handlers.
+- **Plugins contribute specs through a capability.** `Capabilities.LayerSpec` is a multi capability,
+  so layer specs ride the module and manifest machinery with no loader of their own.
+- **It has no wire form.** A tag's service type is a TypeScript interface. Across packages there are
+  about 200 `affinity` declarations (149 application, 34 space, 14 process), tests included.
+
+### Client services
+
+The client's own services are the one place where the target pattern is already built.
+
+- **Each service is an RPC group.** `@dxos/protocols/rpc` defines 18 of them (`DataService`,
+  `QueryService`, `SpacesService`, ...) as Effect `RpcGroup`s.
+- **A layer spec registers each group on a router.** `RegisterService` in
+  `packages/sdk/client-protocol/src/service-rpc.ts` adds a provider's handlers to the stack's
+  `RpcRouter`. `LayerSpec.eager` exists for this case.
+- **The router serves in process and over a transport.** `RpcRouter` serves every registered group
+  over each attached transport (a `MessagePort` to the shared worker, an `RpcPort` to an iframe). Its
+  in-process client calls the handlers directly, with no transport and no codec.
+- **It is closed to plugins.** The set is fixed by the client. A group has no catalog entry, no
+  space scope and no statement of what its host must provide.
+
+### Operations and processes
+
+- **Operations have schemas and are routed.** `ProcessOperationInvoker` spawns a process per
+  invocation. With `on: 'edge'` it sends the encoded input to EDGE through `RemoteOperationInvoker`.
+- **Placement is manual.** The caller names `local` or `edge` per call (`InvokeOptions.on`,
+  `Process.Location`), and a call that names neither runs locally. Nothing derives placement from
+  what the handler needs.
+- **Not every operation is serializable.** `Operation.serializable()` silently drops operations
+  whose schemas do not render as JSON Schema.
+- **A durable process has one RPC group for two locations.** A local process serves its control
+  group through a loopback (`RpcTest.makeClient` in `ProcessManager.ts`); a process on EDGE serves
+  the same group over HTTP (`EdgeProcessControl.makeRpcClient`). The loopback is untyped: the group
+  is `RpcGroup<any>` and the client is cast.
+
+### Plugins on EDGE
+
+`packages/sdk/app-framework/docs/EDGE-PLUGINS.mdl` records 92 decisions. The parts that matter here:
+
+- **One bundle runs everywhere.** A module's `environments` decides at load whether it runs in the
+  browser, Node, Tauri or `workerd` (D-23). About 236 module declarations set it.
+- **EDGE runs plugin bundles.** compute-service's plugin router loads a published bundle into a
+  Worker Loader isolate and calls `PluginProtocol.Entrypoint.invoke`. `OPERATION_ROUTING` still
+  defaults to operation-service, with plugins moved over in batches (`dxos/edge` `origin/main`,
+  `compute-service/src/plugins/plugin-router.ts`).
+- **A bundle has no layer stack.** `PluginActivation.ts` collects a plugin's operation handlers,
+  schemas, skills, hooks and toolkits. It does not read layer specs, although the spec's "Module
+  body and host" section lists them. A handler's services are set per invocation with
+  `Effect.provideService` (`HostServices.ts`).
+- **Host services are an untyped RPC.** EDGE serves nine services to a bundle through
+  `ServiceHost.call(service, method, args)` with JSON arguments. The bundle rebuilds each one with a
+  `Proxy`, and EDGE validates arguments by hand (`invocation-scope.ts` has `stringArg`, `isWake`,
+  `isSendRequest`). plugin-agent's `HostServiceAdapter` re-hydrates one of them.
+- **A plugin runs alone.** A bundle shares no capabilities with other plugins (D-41), and reading
+  another plugin's contributions is out of scope (D-88). Hooks do not reach an agent turn on EDGE
+  for this reason.
+- **Durable processes are a closed set.** compute-service compiles its process registry in; a
+  plugin cannot contribute one (D-80).
+
+### Findings
+
+1. **There are four registries of "a thing provided under a key".** Capability tags, layer-spec
+   tags, operation keys and RPC routes each have their own lookup and lifecycle.
+2. **The remote service mechanism on EDGE has no contract.** `ServiceHost.call` is the
+   serializable RPC this proposal asks for, minus schemas, streams with back-pressure, and types
+   shared by both ends.
+3. **The transparent local-or-remote call exists, but not for plugins.** Client services and
+   durable processes each serve one `RpcGroup` in process and over a wire. Nothing a plugin
+   provides can use either.
+4. **Placement is declared in three ways.** A module's `environments`, a call's `on`, and
+   compute-service's routing variables each decide where code runs.
+5. **Isolation on the client is undecided.** `.agents/projects/mcp/DESIGN.md` §2.6 leaves
+   third-party plugin isolation in the browser open. A wire contract is the precondition.
+6. **Cross-plugin behaviour on EDGE has no path.** D-88 defers it because capabilities are
+   in-memory objects.
+
+## Approaches
+
+Four ways to get one mechanism. The third is the proposal.
+
+1. **Give capabilities schemas.** Add an optional schema to a capability tag and proxy it over RPC.
+   Most of the 279 definitions hold values that cannot be serialized (components, atoms, live
+   clients), the capability manager has no space scope, and multi capabilities would gain a wire
+   form they do not need.
+2. **Make operations the only remote call.** Model a service as a set of operations. Every call
+   would spawn a process and appear in history, undo and the agent's tool catalog. Operations have
+   no streams and no properties.
+3. **Promote the layer spec to a service with a contract.** Chosen. A layer spec already has the
+   lifecycle, the `requires` and `provides` graph, the space scope and the capability that carries
+   it in a manifest. Client services already pair a layer spec with an RPC group on a router, which
+   is this design applied to one fixed set. EDGE's host-service proxies satisfy the same tags by
+   key. The missing parts are a contract a plugin can declare, host features, a catalog entry and
+   a resolver that binds across hosts.
+4. **Adopt an external component model.** Cap'n Web or Workers RPC everywhere, or the WASM
+   component model. Each either has no browser story or discards the Effect layers every handler
+   is written against.
+
+## Design
+
+### Vocabulary
+
+| Term         | Meaning                                                                                  | JavaBeans and EJB counterpart                |
+| ------------ | ---------------------------------------------------------------------------------------- | -------------------------------------------- |
+| Contract     | A key, a version, and schemas for methods, properties and events.                        | The bean's interface and its `BeanInfo`      |
+| Provider     | A plugin module that implements a contract.                                              | The bean                                     |
+| Client       | The typed value a consumer holds.                                                        | A local reference or a remote stub           |
+| Host         | The runtime's container: loads plugins, activates providers, serves contracts.           | The container, `BeanContext`                 |
+| Host feature | Something only a runtime has, such as `localStorage` or `aiGateway`.                     | A container-provided resource                |
+| Catalog      | The contracts a host or a published plugin provides, as JSON.                            | The deployment descriptor                    |
+| Affinity     | The provider's lifetime: `application`, `space` or `process`.                            | Stateless and stateful session scopes        |
+| Kind         | `remote` (has schemas, may cross a wire) or `local` (in-memory only).                    | Remote and local interfaces                  |
+
+![Architecture: a consumer asks the resolver for a contract; the resolver binds a local provider in memory or a stub that calls a remote host.](diagrams/plugin-services-architecture.dx.svg)
+
+### Contract
+
+A contract is data plus schemas. It imports no implementation, so a consumer depends on the
+contract's package and never on the provider's. The types below are a sketch for the spike to
+confirm, not final signatures.
+
+```ts
+// packages/plugins/plugin-summarizer/src/types/Summarizer.ts
+import * as Schema from 'effect/Schema';
+
+import * as Service from '@dxos/compute/Service';
+
+export const Summarizer = Service.make('org.dxos.plugin.summarizer.service.summarizer', {
+  version: '0.1.0',
+  methods: {
+    summarize: {
+      payload: Schema.Struct({ text: Schema.String }),
+      success: Schema.String,
+      stream: true,
+    },
+    cancel: { payload: Schema.Struct({ id: Schema.String }), success: Schema.Void },
+  },
+  properties: {
+    status: Schema.Literals(['idle', 'busy']),
+  },
+  events: {
+    completed: Schema.Struct({ id: Schema.String, tokens: Schema.Number }),
+  },
+});
+```
+
+```ts
+// @dxos/compute/Service
+export interface Contract<Key extends string, Shape extends ContractShape> {
+  readonly key: Key;
+  readonly version: string;
+  readonly kind: 'remote' | 'local';
+  readonly methods: Shape['methods'];
+  readonly properties: Shape['properties'];
+  readonly events: Shape['events'];
+  /** The Effect RPC group the three maps compile to; the only wire form. */
+  readonly rpcs: RpcGroup.RpcGroup<RpcsOf<Shape>>;
+}
+
+/** What a consumer holds. Identical for the in-memory and the remote binding. */
+export type Client<C extends Contract.Any> = {
+  readonly [M in keyof C['methods']]: MethodOf<C['methods'][M]>; // Effect, or Stream when `stream`
+} & {
+  readonly [P in keyof C['properties']]: Property<Schema.Schema.Type<C['properties'][P]>>;
+} & {
+  readonly [E in keyof C['events']]: Stream.Stream<Schema.Schema.Type<C['events'][E]>, ServiceError>;
+};
+
+export interface Property<A> {
+  readonly get: Effect.Effect<A, ServiceError>;
+  readonly changes: Stream.Stream<A, ServiceError>;
+  /** For React: the provider's own atom in memory, a mirror fed by `changes` over a wire. */
+  readonly atom: Atom.Atom<Result.Result<A, ServiceError>>;
+}
+```
+
+- **A contract is an Effect service tag.** Its service type is `Client<C>`. An operation lists it in
+  `services: [Summarizer]` and a handler writes `yield* Summarizer`, as it does for a layer-spec tag
+  today.
+- **Properties and events compile to RPCs.** A property `status` becomes `$get.status` and a stream
+  `$watch.status`; a writable property adds `$set.status`; an event `completed` becomes a stream
+  `$on.completed`. One `RpcGroup` per contract is the whole wire.
+- **Identity is the key string.** Each EDGE isolate vendors its own copy of every package, so two
+  copies of one contract module must be equal by `key` and `version`, never by object identity.
+- **A migrated tag keeps its key.** Operation records persist their services as tag key strings
+  (`Operation.serialize`), so a layer-spec tag that becomes a contract keeps the key it has. Only
+  new contracts take an NSID.
+- **Versions follow semver.** A provider satisfies a consumer when it has the same major version
+  and an equal or higher minor. Adding a method, property or event is a minor change; anything else
+  is a major one. A mismatch fails with `ServiceVersionError`.
+- **An existing RPC group is already a contract.** `Service.fromRpcGroup(key, group)` wraps a client
+  service group without changing it, so the 18 client services need no migration.
+- **A local contract has no schemas.** `Service.local<ViewStateManager>()('org.dxos.plugin.deck.service.viewState')`
+  is a typed key with the same lifecycle and resolver, which cannot cross a wire. This is what a
+  singleton capability or a layer-spec tag becomes first.
+
+### Provider
+
+A provider is a layer spec with a contract and a list of host features. It is what a client service
+does today with `LayerSpec.make` and `RegisterService`, written as one declaration.
+
+```ts
+// packages/plugins/plugin-summarizer/src/capabilities/summarizer.ts
+export default Capability.makeModule(() =>
+  Effect.succeed(
+    Capability.contribute(
+      Capabilities.Service,
+      Service.provide(Summarizer, {
+        affinity: 'space',
+        needs: [Host.aiGateway],
+        requires: [AiService.AiService],
+        make: () => SummarizerLive, // Layer<Service.Handlers<typeof Summarizer>, never, AiService>
+      }),
+    ),
+  ),
+);
+```
+
+- **Providers are contributed through one multi capability.** `Capabilities.Service` replaces
+  `Capabilities.LayerSpec`, so the module loader, `requires` and `provides` ordering and lazy import
+  are unchanged. `AppCapability.service(() => import(...))` replaces `AppCapability.layerSpec`.
+- **The manifest lists a module's services.** Each manifest module gains
+  `services: [{ key, version, kind, affinity, needs }]`, so a host knows what a plugin provides
+  without importing a body.
+- **A remote provider keeps no durable state of its own.** What must outlive the provider lives in
+  ECHO or behind a host feature (U-5). Two providers of one remote contract are therefore
+  interchangeable, which is what lets the resolver choose between hosts.
+- **A provider may hold state for its scope.** A property's current value lives in the provider's
+  memory for as long as its affinity's scope lasts. A local contract in the app host, such as view
+  state, is ordinary in-memory state; U-5 does not constrain it because it never runs elsewhere.
+- **Lifecycle is the host's.** A provider activates when its contract is first resolved, lives for
+  its affinity's scope and is disposed when the scope closes or its plugin is disabled. `eager`
+  keeps the layer-spec meaning.
+
+### Client and bindings
+
+`Service.get(contract, context?)` returns a client. Inside a process the context is the process's
+own, as it is for `ServiceResolver` today.
+
+| Binding     | When                                         | Transport                                                  | Exists today                                       |
+| ----------- | -------------------------------------------- | ---------------------------------------------------------- | -------------------------------------------------- |
+| In-memory   | The provider is active in this host.         | A direct call of the handler; no encoding.                 | `RpcRouter`'s in-process client                    |
+| Port        | The provider is in a Worker, iframe or tab.  | Effect RPC over `MessagePort` or `RpcPort`.                | `RpcRouter.attach`, `effect-rpc.ts`                |
+| HTTP        | The browser calls EDGE.                      | Effect RPC over HTTP, ndjson.                              | `EdgeProcessControl.makeRpcClient`                 |
+| Workers RPC | An isolate calls EDGE or another isolate.    | A Workers RPC stub carrying encoded RPC messages.          | `ServiceHost.call` (untyped), `WorkerdBridge.ts`   |
+
+- **The host's RPC server is `RpcRouter`.** A provider registers its contract's group on the
+  host's router, as `RegisterService` does. The router serves it over every attached transport
+  and gives the in-memory binding its client. Only the HTTP and Workers RPC transports are new.
+- **A client is a stable handle that binds per call.** The handle a consumer holds does not
+  change when the provider moves. Each call goes to the provider bound at that moment, and a call
+  in flight finishes on the provider that took it. After a rebind, a property's `changes` emits
+  the new provider's current value; values are not copied between providers.
+- **Every call carries its context.** The resolution context (`identity`, `space`, `conversation`,
+  `process`), the calling plugin's key and the contract version travel as RPC headers.
+- **Strict mode keeps local development correct.** In tests and development the in-memory binding
+  encodes and decodes every payload through the contract's schemas, so a value that would not
+  survive a wire fails on the developer's machine.
+- **ECHO objects cross as references.** A contract schema that takes an object encodes it as
+  `{ '/': uri }`; the caller flushes, the callee loads. This is the rule EDGE-PLUGINS D-71 already
+  set for nested operations.
+- **Failures are typed.** `ServiceNotAvailableError` (no provider, with the unmet features),
+  `ServiceVersionError` (the provider's version does not satisfy the consumer's), and the
+  contract's own error schemas.
+
+![Resolution: the local host lacks the feature, so the resolver binds a stub to the remote host.](diagrams/plugin-services-resolve.dx.svg)
+
+### Hosts, features and placement
+
+A host is the container for one runtime. It holds a plugin manager, a layer stack, an RPC router and
+a set of features.
+
+- **The app host owns the layer stack.** Today the process-manager plugin builds the `LayerStack`
+  (`process-manager-capability.ts`), so nothing resolves a service without that plugin. The stack
+  and the router move into app-framework's core and are created with the plugin manager. The
+  process manager becomes a consumer of them.
+- **An application-scoped local contract can be read synchronously.** Singleton capabilities are
+  read that way today, and `useCapability` suspends until one is contributed. `useService(contract)`
+  does the same: it suspends until the provider has activated and then returns the client. Space-
+  and process-scoped contracts, and every remote one, resolve as an Effect.
+- **The EDGE host gets a layer stack.** PluginHost builds application-scoped providers once per
+  isolate. One isolate serves every space (EDGE-PLUGINS D-6), so it builds space- and
+  process-scoped providers per invocation, from the invocation's scope, and closes them when the
+  call returns.
+
+| Host            | Runtime                         | Features (initial vocabulary)                                   |
+| --------------- | ------------------------------- | --------------------------------------------------------------- |
+| App host        | Browser or Tauri main thread    | `dom`, `localStorage`, `opfs`, `microphone`                     |
+| Worker host     | Web Worker or iframe            | `opfs`; isolated from the app's memory                          |
+| CLI host        | Node (`dx`)                     | `filesystem`, `shell`                                           |
+| EDGE host       | `workerd` isolate (PluginHost)  | `aiGateway`, `email`, `alwaysOn`; later `durableStorage`        |
+
+Resolution of a contract in a context:
+
+1. Collect the providers of the contract's key from plugins installed for the context: the device's
+   enabled set, and the space's `properties.plugins` map.
+2. Drop a provider whose `needs` its host does not have.
+3. Order the rest: this host, then other hosts on this device, then EDGE.
+4. Bind the first. Its location decides the binding.
+5. If none remain, fail with `ServiceNotAvailableError`.
+
+`Service.get(contract, { on: 'edge' })` pins a host, which keeps today's manual override. A
+module's `environments` stays for modules that provide no service. For a provider module it is
+derived from `needs`.
+
+### Catalog and install
+
+- **The catalog lists services.** `PluginProtocol.Catalog` gains `services`: each contract's key,
+  version, kind, affinity, needs and JSON Schema. registry-service indexes contract key to plugin,
+  as it indexes operation keys today.
+- **Install is itself a service.** Each host provides `org.dxos.host.service.plugins` with
+  `install`, `uninstall` and `list`, and a property `installed`. The app host's provider wraps the
+  plugin manager and the existing URL loader. The EDGE provider writes the space's
+  `properties.plugins` map; the router loads a bundle on first use, so no deploy step exists.
+- **The two lists stay (U-7).** The device's enabled set is unchanged. The app host also reads the
+  space's map and offers to enable those plugins on the device.
+
+### Operations and capabilities
+
+- **Operations sit on top.** An operation's `services` may list contracts. Undo, history, skills
+  and MCP exposure are unchanged.
+- **An operation still runs where it is invoked.** A handler whose services resolve to stubs runs
+  locally and calls out, so the default for every existing operation is unchanged. The invoker
+  sends an operation to another host in three cases: the caller passes `on`; this host has no
+  handler for the key; or the handler requires a local contract or a host feature that only
+  another host has. The third case is what replaces a caller's guess.
+- **Multi capabilities are unchanged.** They remain the mechanism for stateless code that a host
+  imports on demand.
+
+| Today                                         | Count           | Becomes                                                          |
+| --------------------------------------------- | --------------- | ---------------------------------------------------------------- |
+| Multi capability                              | 111             | Unchanged                                                        |
+| Singleton capability holding a writable atom  | 64              | A writable property of a local contract                          |
+| Singleton capability holding a read-only atom | 5               | A property of a local contract                                   |
+| Other singleton capability                    | about 99        | A local contract; made remote when a second host needs it        |
+| Layer spec                                    | about 200 sites | A provider of a local contract; made remote in the same way      |
+| Client service RPC group                      | 18              | Unchanged; wrapped as a contract when another host needs it      |
+| EDGE host service descriptor                  | 9               | A remote contract that compute-service provides                  |
+| `HostServiceAdapter` capability               | 1 use           | Deleted; the contract's schemas do the decoding                  |
+
+### What changes in EDGE-PLUGINS
+
+Each of these is a new decision in the spec's changelog, written when its phase starts.
+
+- **D-68 becomes typed.** `InvocationScope.services` carries a resolver stub keyed by contract. A
+  bundle built with the new host has no descriptor list and no `Proxy`.
+- **Protocol 2 stays served.** A published bundle is immutable and EDGE speaks each bundle's own
+  protocol version (D-70). compute-service therefore keeps `ServiceHost.call` for version 2
+  bundles until no channel points at one. Removing that path is its own task.
+- **EDGE's contracts live with EDGE's protocol.** D-68 chose untyped calls so that compute-service
+  would not import plugin-agent or plugin-discord. A contract is schemas with no implementation,
+  so the nine contracts EDGE provides go in `@dxos/protocols`, beside `PluginProtocol` and the
+  client service groups. One whose schemas need ECHO types goes in a private contract-only
+  package. The plugins import them from there.
+- **D-41 is narrowed.** A plugin still runs alone in its isolate. It can now call a contract that
+  another plugin provides. compute-service is the router: it resolves the contract key to a
+  bundle, as it resolves an operation key, and forwards the call. The isolate serves its own
+  plugin's contracts through a new `PluginProtocol.Entrypoint` method.
+- **D-88 is answered.** Behaviour crosses plugins as a service call. Data contributions (skills,
+  schemas, hooks) cross as catalog entries the router already merges.
+- **D-80 is unchanged for now.** Plugin-contributed durable processes and stateful services arrive
+  with the Durable Object facet (D-8), in the last phase.
+
+## Spike
+
+A throwaway build that shows one app using a local and a remote plugin through the same API. It
+answers the questions the design cannot settle on paper.
+
+### What it shows
+
+A private package `packages/stories/stories-services` with one Storybook story and one vitest file.
+
+| Plugin              | Role                                                                                              | Host                                    |
+| ------------------- | ------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| `notes`             | Provides `NoteStore` (`put`, `list`, property `count`, event `changed`); needs `localStorage`.    | App host, in memory                     |
+| `summarizer`        | Provides `Summarizer` (streamed `summarize`, property `status`); needs `aiGateway`.               | Mock remote host: a Web Worker          |
+| `panel`             | A surface that lists notes, summarizes one and shows where each contract resolved.                | App host                                |
+
+The story walks through four steps:
+
+1. The panel lists notes through `NoteStore`. The binding label reads "in-memory".
+2. Summarize fails with `ServiceNotAvailableError`, because nothing provides `Summarizer`.
+3. "Install remotely" calls `install` on the worker host with the summarizer's manifest URL. The
+   worker's catalog changes, the resolver binds a stub, and tokens stream into the panel. The
+   label reads "port".
+4. "Install locally with a fake gateway" enables the same plugin in the app host. The resolver
+   rebinds in memory with no change to the panel.
+
+An operation `notes.summarize`, whose handler requires both contracts, runs in step 3 to show
+operations on top of services.
+
+### What is mocked
+
+- The remote host is a Web Worker running the same host code, reached over a `MessagePort`.
+- `aiGateway` is a canned token stream.
+- There is no EDGE, no auth and no registry: the manifest is a local URL.
+
+### Questions it answers
+
+1. Do the in-memory and port bindings give one `Client<C>` type with no cast? The durable-process
+   loopback casts today, so this is not yet shown.
+2. What does an in-memory call cost against a direct function call?
+3. Do properties and events as stream RPCs feed an atom that React reads without tearing?
+4. Does the space in the resolution context reach a provider in another host?
+5. Can a host install a plugin from a manifest at run time and tell connected hosts?
+6. Do contract types survive declaration emit across packages?
+
+The vitest file runs the same plugins with two in-process hosts joined by a `MessageChannel`, so
+steps 1 to 4 are checked without a browser. Size: one session and one draft PR that is not merged.
+
+## Workplan
+
+Phases run in order. Each ends with a test that proves its exit criterion. The task ledger is the
+`plugin-services` project.
+
+| Phase | Delivers                                                                                                                                                    | Repos      | Exit criterion                                                                                           |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | -------------------------------------------------------------------------------------------------------- |
+| 0     | The spike above.                                                                                                                                            | dxos       | The six questions have written answers; this document is revised.                                        |
+| 1     | `@dxos/compute/Service`: contract, provider, client, in-memory binding, strict mode. The layer stack and router move into app-framework's core. `Capabilities.Service`, `AppCapability.service`, `useService`, manifest `services`. | dxos       | A layer spec and a provider resolve side by side in one `LayerStack`, with no process-manager plugin loaded. |
+| 2     | Providers register on `RpcRouter`; HTTP and Workers RPC transports for it; `Catalog.services`; protocol version 3.                                           | dxos       | One contract passes the same test suite on all four bindings.                                            |
+| 3     | EDGE's nine host services as contracts in `@dxos/protocols`. Version 3 bundles use them; `HostServiceAdapter` and the bundle's proxy are removed.            | dxos, edge | The agent and MCP suites pass on version 3 bundles with typed contracts; version 2 bundles still run.     |
+| 4     | A layer stack in PluginHost. Cross-plugin calls on EDGE: a contract index in registry-service, router resolution, EDGE-PLUGINS decisions.                    | dxos, edge | Sample plugin A calls a contract of sample plugin B on EDGE (T-20's counterpart for services).            |
+| 5     | Host features and derived placement; the plugins service; the app host reads the space's plugin map.                                                        | dxos, edge | An operation with no `on` runs where its services resolve, in a test with a local and a remote host.      |
+| 6     | Migration: layer specs to providers, then singleton capabilities to contracts, one package group per PR. `Capabilities.LayerSpec` deleted.                   | dxos       | No `LayerSpec.make` call remains; the capability census shows only multi capabilities and local keys.     |
+| 7     | Isolation and state: third-party plugins in a Worker host; a Durable Object facet for stateful services; plugin-contributed durable processes.               | dxos, edge | A plugin not owned by DXOS runs in a Worker host in Composer; a stateful service survives an isolate.     |
+
+- **Phases 1 and 2 keep every call site working.** `LayerSpec.make` keeps working because a layer
+  spec is admitted to the stack as a provider of local contracts. Phase 1 does move the stack out of
+  the process-manager plugin, which is a refactor of that one module.
+- **Phase 3 is the first that removes code**, and the first that needs both repositories. It uses
+  `pnpm link-packages` from the edge checkout, never a published build.
+- **Phase 3 waits for operation-service to go.** The Plugin Runtime project is removing
+  operation-service (EDGE-PLUGINS D-86). Until it is gone, each host service is served twice, once
+  by operation-service's bindings and once through the invocation scope, and phase 3 would have to
+  convert both. Phases 0 to 2 do not depend on it.
+- **Removing the version 2 path on EDGE is a separate task**, done when no channel points at a
+  version 2 bundle.
+- **Phase 6 has no compatibility shims.** Each PR moves one group of packages and updates every
+  call site in the same change.
+- **Before phase 6**, audit the operations that `Operation.serializable()` drops, since a remote
+  contract's schemas have the same constraint.
+
+## Risks and open questions
+
+1. **In-memory cost.** If a direct handler call cannot be typed as `Client<C>` without the RPC
+   machinery, every local call pays for message framing. The spike measures it (question 2).
+2. **Reactive properties on EDGE.** An isolate lives for one invocation, so a property stream from
+   a stateless EDGE provider ends with the call. Properties are useful on EDGE only after phase 7.
+3. **Isolate fan-out.** A Durable Object may have 10 Dynamic Workers in flight and a Worker request
+   4 (EDGE-PLUGINS open question). Cross-plugin service calls multiply isolates per request.
+4. **Version skew.** A space may run a provider older than the consumer's contract. The catalog
+   carries versions, but the policy (refuse, or negotiate the common methods) is not decided.
+5. **Offline.** A contract with only a remote provider fails when the device is offline. Each
+   consumer has to handle `ServiceNotAvailableError`; a queued call is out of scope.
+6. **Permissions.** A call carries the caller's plugin key and identity, but nothing yet decides
+   which plugin may call which contract. Operations have `RequiresAnnotation`; services need an
+   equivalent before phase 7.
+7. **Naming.** `Service` collides in conversation with Effect's `Context.Service` and with EDGE's
+   workers ("compute-service"). The term is kept because the code already calls these things
+   services.
+
+## Calls made in this document
+
+These are the author's, not Rich's. An independent reader asked for each; all are open to change.
+
+1. **U-5 covers remote providers only.** A provider may hold state for its scope, and a local
+   contract in the app host is ordinary in-memory state.
+2. **A client binds per call.** Values are not copied when a provider moves.
+3. **The layer stack and router move into app-framework's core**, out of the process-manager
+   plugin, and `useService` reads an application-scoped local contract synchronously.
+4. **Migrated tags keep their keys.** Only new contracts take an NSID.
+5. **Versions follow semver**, same major and equal or higher minor.
+6. **An operation still runs where it is invoked** unless it cannot.
+7. **EDGE keeps serving protocol 2 bundles** after version 3 ships.
+8. **EDGE's contracts live in `@dxos/protocols`.**
+9. **Client services are wrapped, not migrated**, and `RpcRouter` is the host's RPC server.
+10. **PluginHost builds space-scoped providers per invocation.**
+
+## Left to the builder
+
+- The exact `Service.make` signature and how `methods` map onto `Rpc.make` options.
+- Whether `Capabilities.Service` carries providers directly or a lazy reference to one.
+- The header names for the resolution context.
+- The name and signature of the `PluginProtocol.Entrypoint` method that serves a contract.
