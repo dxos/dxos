@@ -374,6 +374,8 @@ export const ChatPrompt = ({
     >
       <div
         data-testid='assistant.prompt'
+        // Lets a test or a demo flow wait for the turn to end rather than guessing from the text.
+        data-active={active}
         role='group'
         onDragOverCapture={handleDragOver}
         onDropCapture={handleDrop}

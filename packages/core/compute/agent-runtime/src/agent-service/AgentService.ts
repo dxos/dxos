@@ -391,6 +391,11 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
               const location: Agent.AgentLocation = options?.location ?? 'local';
               const authority = options?.authority;
               const executable = executableFor(chat, provider);
+              if (location === 'edge' && authority !== undefined) {
+                // A remote spawn carries no authority and an EDGE snapshot returns none, so one asked for would be
+                // dropped silently; refusing it keeps a session from running without the limits it was opened with.
+                return yield* Effect.die(new Error('A session on EDGE cannot be opened with an authority yet.'));
+              }
               if (location === 'edge' && executable.key !== SESSION_PROCESS_KEY) {
                 // EDGE spawns by key from its own registry, which holds no process a plugin contributed.
                 return yield* Effect.die(
@@ -399,8 +404,8 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
               }
               const cached = sessionCache.get(chat.id);
               if (cached) {
-                // A grant extends a live process's authority after it was cached, so the check reads the live one; a
-                // process the tree does not list (one on EDGE) keeps the authority it was cached with.
+                // A grant extends a live process's authority after it was cached, so the check reads the live one. An EDGE
+                // session is never opened with an authority, so the fallback serves only a process the tree has dropped.
                 const cachedPid = cached.handle.pid;
                 const liveAuthority =
                   authority === undefined

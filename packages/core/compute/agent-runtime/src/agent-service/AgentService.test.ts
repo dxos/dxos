@@ -3,6 +3,7 @@
 //
 
 import { describe, it } from '@effect/vitest';
+import * as Cause from 'effect/Cause';
 import * as Clock from 'effect/Clock';
 import * as DateTime from 'effect/DateTime';
 import * as Deferred from 'effect/Deferred';
@@ -1366,6 +1367,24 @@ describe('Agent Service', () => {
     });
 
     describe('lifecycle', () => {
+      it.effect(
+        'refuses to open a session on EDGE with an authority, which EDGE would drop',
+        Effect.fnUntraced(
+          function* ({ expect }) {
+            const session = yield* AgentService.createSession({ skills: [ResearchSkill] });
+            const exit = yield* AgentService.bindSession(session.chat, {
+              location: 'edge',
+              authority: { principal: Principal.process('process://test/edge'), grants: [] },
+            }).pipe(Effect.exit);
+            expect(Exit.isFailure(exit) && String(Cause.squash(exit.cause))).toContain(
+              'cannot be opened with an authority',
+            );
+          },
+          Effect.provide(ScriptedTestLayer(makeScriptedModel(researchReplies).script)),
+          TestHelpers.provideTestContext,
+        ),
+      );
+
       it.effect(
         'restarts during a tool call: redelivery runs the tool again and the turn completes',
         Effect.fnUntraced(
