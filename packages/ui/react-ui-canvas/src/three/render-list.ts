@@ -8,8 +8,10 @@ import {
   Scene,
   type Style3D,
   bounds3D,
+  containerOf,
   findLayout,
   fitChild,
+  isGrouping,
   radiusOf,
   resolveLayout3D,
   rootScene,
@@ -73,7 +75,7 @@ const drawnElements = (
   return Object.fromEntries(
     Object.entries(elements).flatMap(([key, element]): [string, Resolved3D][] => {
       const parts = element.parts === undefined ? undefined : findLayout(doc, element.parts);
-      if (element.kind !== 'group' || parts?.dim !== '3d' || path.includes(parts.id)) {
+      if (!isGrouping(containerOf(doc, layout, element.id)) || parts?.dim !== '3d' || path.includes(parts.id)) {
         return [[key, element]];
       }
       const offset = element.center ?? ZERO;
@@ -122,7 +124,7 @@ export const renderList = (
     for (const element of Object.values(elements)) {
       const parts = element.parts === undefined ? undefined : findLayout(doc, element.parts);
       // A group draws only its members, where they are relative to it (fit `none`, decision 18).
-      if (element.kind === 'group') {
+      if (isGrouping(containerOf(doc, own, element.id))) {
         if (!element.hidden && parts?.dim === '3d' && !path.includes(parts.id)) {
           const placement = {
             offset: apply(transform, element.center ?? ZERO),

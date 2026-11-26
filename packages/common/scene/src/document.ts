@@ -89,6 +89,50 @@ const objects3D = (doc: SceneDocument, layout: LayoutRecord3D): Readonly<Record<
   return model?.dim === '3d' ? model.objects : {};
 };
 
+/** The kinds a model object takes to say which container it is; any other object with parts is an Object. */
+export const CONTAINER_KINDS = ['group', 'hull', 'view'] as const;
+export type ContainerKind = (typeof CONTAINER_KINDS)[number];
+
+/** What an element placing an object with parts is: a group, a hull, a View, or a reusable Object. */
+export type Container = ContainerKind | 'object';
+
+const isContainerKind = (kind: string): kind is ContainerKind => CONTAINER_KINDS.some((known) => known === kind);
+
+/**
+ * Which container the element `id` of a layout is, by the object `model` holds for it; nothing where it places no
+ * object with parts. The object's kind says it. A drawing stored before it did says it on the element (a `view`, a
+ * `hull`) and on the parts layout (`anonymous`, as Group made it), which is read here and nowhere else.
+ */
+export const containerIn = (
+  doc: SceneDocument,
+  model: ModelRecord | undefined,
+  layout: LayoutRecord,
+  id: string,
+): Container | undefined => {
+  const element = layout.elements[id];
+  const object = element?.object === undefined ? undefined : model?.objects[element.object];
+  if (!element || object?.parts === undefined) {
+    return undefined;
+  }
+  if (isContainerKind(object.kind)) {
+    return object.kind;
+  }
+  if (element.kind === 'view') {
+    return 'view';
+  }
+  if (Reflect.get(element, 'hull') !== undefined) {
+    return 'hull';
+  }
+  return findLayout(doc, object.parts)?.anonymous ? 'group' : 'object';
+};
+
+/** {@link containerIn} the layout's own model. */
+export const containerOf = (doc: SceneDocument, layout: LayoutRecord, id: string): Container | undefined =>
+  containerIn(doc, modelOf(doc, layout), layout, id);
+
+/** Whether the container keeps its members in the parent's coordinates, which Ungroup puts back. */
+export const isGrouping = (container: Container | undefined): boolean => container === 'group' || container === 'hull';
+
 /** A 2D element with the object it places applied: the element's own fields win, style and props merge. */
 export const resolve2D = (
   element: Element2D,

@@ -4,8 +4,8 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { resolveLayout3D } from './document.ts';
-import { applyModelIntent, groupOf } from './model-intent.ts';
+import { containerOf, resolveLayout3D } from './document.ts';
+import { applyModelIntent } from './model-intent.ts';
 import type * as Scene from './Scene.ts';
 import { layout3D, model3D, scene3D } from './testing.ts';
 import { validateDocument } from './validate.ts';
@@ -143,14 +143,13 @@ describe('applyModelIntent', () => {
     expect(host?.elements.bc?.source).toEqual({ node: 'g', port: 'b' });
 
     // A group is what its element places: one a canvas stored as the kind it draws (`instance`) is still the group.
-    const model = grouped.doc.models[0];
-    expect(host && groupOf(model, host, 'g')?.id).toBe('root/g');
-    expect(host && groupOf(model, host, 'c')).toBeUndefined();
+    expect(host && containerOf(grouped.doc, host, 'g')).toBe('group');
+    expect(host && containerOf(grouped.doc, host, 'c')).toBeUndefined();
     const drawn =
       host?.dim === '3d'
         ? { ...host, elements: { ...host.elements, g: { ...host.elements.g, kind: 'instance' } } }
         : undefined;
-    expect(drawn && groupOf(model, drawn, 'g')?.id).toBe('root/g');
+    expect(drawn && containerOf(grouped.doc, drawn, 'g')).toBe('group');
 
     const ungrouped = applyModelIntent(grouped.doc, { kind: 'ungroup', model: 'm', layout: 'root', id: 'g' });
     expect(ungrouped.problems).toEqual([]);
@@ -181,5 +180,62 @@ describe('applyModelIntent', () => {
     const root = ungrouped.doc.layouts.find((layout) => layout.id === 'root');
     expect(root?.elements.c?.center).toEqual({ x: 4, y: 1, z: 0 });
     expect(root?.elements.inner?.center).toEqual({ x: 0, y: 1, z: 0 });
+  });
+
+  test('an element is the container its object names: an extract an Object, and what older drawings said still reads', () => {
+    const extracted = applyModelIntent(doc(), {
+      kind: 'extract',
+      model: 'm',
+      layout: 'root',
+      ids: ['a', 'b'],
+      object: { id: 'pair', kind: 'cube' },
+    });
+    expect(extracted.problems).toEqual([]);
+    const host = extracted.doc.layouts.find((layout) => layout.id === 'root');
+    expect(host && containerOf(extracted.doc, host, 'pair')).toBe('object');
+    expect(extracted.doc.layouts.find((layout) => layout.id === 'pair-parts')?.kind).toBe('composite');
+
+    // Before the object's kind said so, the 2D engine said a View on the element and a group on the parts layout.
+    const legacy: Scene.SceneDocument = {
+      scenes: [],
+      layouts: [
+        {
+          id: 'root',
+          dim: '2d',
+          model: 'm2',
+          elements: {
+            v: { id: 'v', kind: 'view', object: 'view:inner', center: { x: 0, y: 0 } },
+            g: { id: 'g', kind: 'instance', object: 'instance:parts', center: { x: 0, y: 0 } },
+            h: { id: 'h', kind: 'instance', object: 'instance:border', hull: 'box', center: { x: 0, y: 0 } },
+            o: { id: 'o', kind: 'instance', object: 'instance:card', center: { x: 0, y: 0 } },
+            r: { id: 'r', kind: 'rect', center: { x: 0, y: 0 } },
+          },
+        },
+        { id: 'inner', dim: '2d', elements: {} },
+        { id: 'parts', dim: '2d', kind: 'composite', anonymous: true, elements: {} },
+        { id: 'border', dim: '2d', kind: 'composite', anonymous: true, elements: {} },
+        { id: 'card', dim: '2d', kind: 'composite', elements: {} },
+      ],
+      models: [
+        {
+          id: 'm2',
+          dim: '2d',
+          objects: {
+            'view:inner': { id: 'view:inner', kind: 'rect', parts: 'inner' },
+            'instance:parts': { id: 'instance:parts', kind: 'rect', parts: 'parts' },
+            'instance:border': { id: 'instance:border', kind: 'rect', parts: 'border' },
+            'instance:card': { id: 'instance:card', kind: 'rect', parts: 'card' },
+          },
+        },
+      ],
+    };
+    const root = legacy.layouts[0];
+    expect(['v', 'g', 'h', 'o', 'r'].map((id) => containerOf(legacy, root, id))).toEqual([
+      'view',
+      'group',
+      'hull',
+      'object',
+      undefined,
+    ]);
   });
 });

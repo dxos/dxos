@@ -4,6 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import { containerIn, isGrouping } from './document.ts';
 import { type ElementEndpoint, endpointNode, rebindEndpoint } from './element.ts';
 import {
   type Arrangement,
@@ -192,7 +193,13 @@ const extract = (
         round(centers.reduce((total, center) => total + center[axis], 0) / Math.max(1, centers.length));
       return { id: elementId, object: object.id, center: { x: mean('x'), y: mean('y'), z: mean('z') } };
     });
-    parts = { id: partsId, dim: '3d', model: model.id, elements: result.inside } satisfies LayoutRecord3D;
+    parts = {
+      id: partsId,
+      dim: '3d',
+      model: model.id,
+      kind: 'composite',
+      elements: result.inside,
+    } satisfies LayoutRecord3D;
     host = { ...layout, model: layout.model ?? model.id, elements: result.outside };
   } else {
     const result = split<Element2D>(layout.elements, ids, elementId, (inside) => {
@@ -212,7 +219,13 @@ const extract = (
             size: { width: round(right - left), height: round(bottom - top) },
           };
     });
-    parts = { id: partsId, dim: '2d', model: model.id, elements: result.inside } satisfies LayoutRecord2D;
+    parts = {
+      id: partsId,
+      dim: '2d',
+      model: model.id,
+      kind: 'composite',
+      elements: result.inside,
+    } satisfies LayoutRecord2D;
     host = { ...layout, model: layout.model ?? model.id, elements: result.outside };
   }
   return {
@@ -306,20 +319,6 @@ const shifted = <E extends Element2D | Element3D>(element: E, center: E['center'
   };
 };
 
-/**
- * The group the element `id` of a layout places, which `ungroup` takes apart. What the element places says it is a
- * group, not its own kind: a canvas stores the kind it draws the element as.
- */
-export const groupOf = (
-  model: ModelRecord,
-  layout: LayoutRecord,
-  id: string,
-): ModelRecord['objects'][string] | undefined => {
-  const placed = layout.elements[id]?.object;
-  const object = placed === undefined ? undefined : model.objects[placed];
-  return object?.kind === 'group' ? object : undefined;
-};
-
 /** Undoes `group`: the group's elements return to the layout where they are drawn, and links to its ports rebind. */
 const ungroup = (
   doc: SceneDocument,
@@ -332,9 +331,10 @@ const ungroup = (
     problems: [{ part: 'layout', id: layout.id, message }],
   });
   const element = layout.elements[intent.id];
-  const object = groupOf(model, layout, intent.id);
+  const object = element?.object === undefined ? undefined : model.objects[element.object];
   const parts = object?.parts === undefined ? undefined : doc.layouts.find((record) => record.id === object.parts);
-  if (!element || !object || !parts || parts.dim !== layout.dim) {
+  const grouping = isGrouping(containerIn(doc, model, layout, intent.id));
+  if (!element || !object || !grouping || !parts || parts.dim !== layout.dim) {
     return problem(`"${intent.id}" is not a group.`);
   }
   const fromPort = (end: ElementEndpoint | undefined) =>
@@ -355,7 +355,7 @@ const ungroup = (
         .map(([key, each]): [string, E] => [key, rebound(each)]),
       ...Object.entries(inner).map(([key, each]): [string, E] => [
         key,
-        shifted(each, center, groupOf(model, parts, key) !== undefined),
+        shifted(each, center, isGrouping(containerIn(doc, model, parts, key))),
       ]),
     ]);
   const host: LayoutRecord =

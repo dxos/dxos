@@ -5,7 +5,7 @@
 import * as Atom from 'effect/reactivity/Atom';
 
 import { initialKeys, orderToEnd } from '@dxos/react-ui-canvas';
-import { type Scene, findLayout, groupOf } from '@dxos/scene';
+import { type Scene, containerOf, findLayout, isGrouping } from '@dxos/scene';
 
 import { copyFragment, getSessionClipboard, pasteInto, setSessionClipboard } from '../clipboard.ts';
 import { type Command, type EngineCommand, buildCommands } from '../commands.ts';
@@ -17,14 +17,10 @@ import { type AspectOptions, keep } from './host.ts';
 const selected = (document: Scene.SceneDocument, open: string | undefined, selection: readonly string[]) => {
   const record = open === undefined ? undefined : findLayout(document, open);
   const element = selection.length === 1 ? record?.elements[selection[0]] : undefined;
-  const model = document.models[0];
   return {
-    model: model?.id,
+    model: document.models[0]?.id,
     element,
-    grouped:
-      element !== undefined && record !== undefined && model !== undefined
-        ? groupOf(model, record, element.id) !== undefined
-        : false,
+    grouped: element !== undefined && record !== undefined && isGrouping(containerOf(document, record, element.id)),
   };
 };
 

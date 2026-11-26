@@ -138,7 +138,7 @@ export const buildCommands = ({
     'delete': some,
     'bring-to-front': some && state.canOrder,
     'send-to-back': some && state.canOrder,
-    'group': editable && state.selection.length > 1,
+    'group': editable && state.selection.length > 0,
     'ungroup': editable && state.canUngroup,
     'make-object': some && state.canMakeObject,
   };
