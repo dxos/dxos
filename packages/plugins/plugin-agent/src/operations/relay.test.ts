@@ -307,6 +307,36 @@ describe('Relay', () => {
   );
 
   it.effect(
+    "returns the chat the backend's reported thread keys, not the pending chat it posted from",
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { agent, agentRef, channel } = yield* setupAgent({ kind: TEST_PENDING_DM_BACKEND_KIND });
+        const josiah = yield* resolve('Josiah', '200');
+        // A chat still keyed by a pending DM thread, as the mirror left it before its host opened the DM.
+        const pending = yield* ensureChannelChat({ agent, channel, thread: 'pending-200' });
+        const person = yield* Database.load(josiah);
+        Obj.update(pending, (pending) => ChatParticipant.set(pending, person));
+
+        const delivered = yield* Operation.invoke(RelayOperation.SendMessage, {
+          agent: agentRef,
+          recipient: josiah,
+          text: 'Hello.',
+        });
+        expect(delivered).toMatchObject({ delivered: true, via: 'channel' });
+        expect(pendingDirect.posts).toEqual([{ channel: channel.id, thread: 'dm-200', text: 'Hello.' }]);
+        expect(delivered.chat).toBeDefined();
+        if (delivered.chat) {
+          const chat = yield* Database.load(delivered.chat);
+          expect(chat.id).not.toBe(pending.id);
+          expect(AgentChannels.conversationOf(chat)).toEqual({ channelId: channel.id, thread: 'dm-200' });
+        }
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
     "on a mirrored channel is appended to the conversation's chat for its host to post, never sent",
     Effect.fnUntraced(
       function* ({ expect }) {
