@@ -74,8 +74,10 @@ export const steps = [
         { timeout: ANSWER_TIMEOUT },
       );
       // A streaming prefix passes the check above, so the answer is complete only once the chat model is idle.
-      await page.locator('[data-testid="assistant.prompt"][data-active="false"]').waitFor({ timeout: ANSWER_TIMEOUT });
-      if (await page.locator(ERROR).isVisible()) {
+      const prompt = page.locator('[data-testid="assistant.prompt"][data-active="false"]');
+      await prompt.waitFor({ timeout: ANSWER_TIMEOUT });
+      // The model's own error state, set before the turn ends; the toast follows it only after an effect runs.
+      if ((await prompt.getAttribute('data-error')) !== 'false') {
         throw new Error('the retried turn failed again');
       }
       const count = await promptCount(page);
