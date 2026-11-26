@@ -146,34 +146,33 @@ const ChatModuleContainer = ({
     return null;
   }
 
+  const header = (
+    <div className='flex items-center gap-2 px-2 py-1 border-b border-separator' data-testid='chat-module.agent-header'>
+      <Icon.Icon icon='ph--robot--regular' classNames='w-4 h-4 text-fg-subtle' />
+      <span className='font-medium truncate' data-testid='chat-module.agent'>
+        {headerAgent}
+      </span>
+    </div>
+  );
+
   return (
     <Chat.Root chat={chat} chatModel={chatModel} defaultDrawer={defaultDrawer}>
       <Panel.Root
         data-testid={participant ? `chat-panel-${participant}` : agent ? `chat-panel-${agent}` : 'chat-module'}
       >
         <Panel.Header classNames='flex flex-col'>
-          {headerAgent && (
-            <Tooltip.Trigger
-              asChild
-              content={
-                permissions === undefined
-                  ? undefined
-                  : permissions.length > 0
-                    ? `Permissions: ${permissions.join(', ')}`
-                    : 'No permissions'
-              }
-            >
-              <div
-                className='flex items-center gap-2 px-2 py-1 border-b border-separator'
-                data-testid='chat-module.agent-header'
+          {headerAgent &&
+            // A tooltip needs a provider, which only a story that lists the agent's permissions sets up.
+            (permissions === undefined ? (
+              header
+            ) : (
+              <Tooltip.Trigger
+                asChild
+                content={permissions.length > 0 ? `Permissions: ${permissions.join(', ')}` : 'No permissions'}
               >
-                <Icon.Icon icon='ph--robot--regular' classNames='w-4 h-4 text-fg-subtle' />
-                <span className='font-medium truncate' data-testid='chat-module.agent'>
-                  {headerAgent}
-                </span>
-              </div>
-            </Tooltip.Trigger>
-          )}
+                {header}
+              </Tooltip.Trigger>
+            ))}
           <Chat.Toolbar attendableId={chat.id} alwaysActive switcher={switcher} customActions={customActions} />
         </Panel.Header>
         <Panel.Body asChild>
