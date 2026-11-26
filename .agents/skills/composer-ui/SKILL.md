@@ -242,20 +242,85 @@ Pick the collection primitive by decision order:
    `Picker` / `Combobox` / `Listbox` in [`@dxos/react-ui-list`](../../../packages/ui/react-ui-list/src/components),
    or a domain widget like `SearchList` (`@dxos/react-ui-search`). Reuse before building.
 2. **A simple flat list** (display rows, selectable rows, or rows with per-row
-   controls)? Use **`Listbox`** from `@dxos/react-ui-list`:
-   `Listbox.Root` (headless; omit `value`/`onValueChange` for a non-selectable
-   `role=list`, pass them for single-select) → `Listbox.Content` (the `<ul>`) →
-   `Listbox.Item id=… classNames=…` (a row; put arbitrary children — labels via
-   `Listbox.ItemLabel`, buttons, a `Select` — inside). See
-   `plugin-space/src/components/ForeignKeys/ForeignKeys.tsx` for the read-only
-   idiom. For a **reorderable / master-detail** list use `OrderedList`; for
-   hierarchy use `Tree` / `Accordion`.
+   controls)? Use **`Listbox`** from `@dxos/react-ui-list`, built as
+   [the standard list row](#the-standard-list-row) below. For a
+   **reorderable / master-detail** list use `OrderedList`; for hierarchy use
+   `Tree` / `Accordion`.
 3. **A reorderable / resizable / tiled collection of surfaces**? Use the **`Stack` from
    `@dxos/react-ui-mosaic`** (`MosaicStack` / `MosaicVirtualStack`, with `MosaicStackTileComponent`
    tiles).
 
 **Do NOT use `@dxos/react-ui-stack` — it is deprecated.** (Some plugins still import it; don't copy them.)
 The live Stack is the Mosaic one.
+
+### The standard list row
+
+A row is a leading icon, a title, a description under the title, and trailing controls. The icon, the
+title and the controls share the first line. The rows' data goes to `Listbox.Root` as `items`; each
+`Listbox.Item` names its option by `id` and lays out the parts:
+
+```tsx
+import * as Button from '@dxos/react-ui/Button';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import { Listbox } from '@dxos/react-ui-list';
+
+<Panel.Body asChild>
+  <ScrollArea.Root orientation='vertical'>
+    <ScrollArea.Viewport>
+      <Listbox.Root
+        items={plugins.map((plugin) => ({
+          value: plugin.name,
+          label: `${plugin.name}: ${plugin.status}`,
+          icon: plugin.active ? 'ph--plugs-connected--regular' : 'ph--plugs--regular',
+          description: `needs ${plugin.needs}`,
+        }))}
+      >
+        <Listbox.Content aria-label='Plugins'>
+          <Listbox.ItemGroup>
+            <Listbox.ItemGroupLabel>Plugins</Listbox.ItemGroupLabel>
+            {plugins.map((plugin) => (
+              <Listbox.Item key={plugin.name} id={plugin.name}>
+                <Listbox.ItemIcon />
+                <Listbox.ItemText />
+                <Listbox.ItemDescription />
+                <Button.Root label='Install' onClick={() => onInstall(plugin.name)} />
+              </Listbox.Item>
+            ))}
+          </Listbox.ItemGroup>
+        </Listbox.Content>
+      </Listbox.Root>
+    </ScrollArea.Viewport>
+  </ScrollArea.Root>
+</Panel.Body>
+```
+
+| Part                                           | Shows                                                                                  |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `Listbox.Root items={…}`                       | Owns the options: `{ value, label, icon?, description?, disabled? }`.                  |
+| `Listbox.Content`                              | The list element. Give it an `aria-label`.                                             |
+| `Listbox.Item id={value}`                      | One row. With no children it draws the option's icon, label and description.           |
+| `Listbox.ItemIcon`                             | The option's `icon` in the leading cell; `icon`, `hue`, `valence` override it.         |
+| `Listbox.ItemText`                             | The option's `label`; children replace it.                                             |
+| `Listbox.ItemDescription`                      | The option's `description`, muted, under the text; children replace it.                |
+| A `Button` or other control after the text     | A trailing cell, level with the title.                                                 |
+| `Listbox.ItemGroup` + `Listbox.ItemGroupLabel` | A heading over a run of rows.                                                          |
+| `Listbox.Empty`                                | Text for a list with no rows: a child of `Content`, drawn only while `items` is empty. |
+
+- **Selection.** Pass `value` / `onValueChange` to `Listbox.Root` for single selection. Omit both for a
+  list that only displays rows or carries per-row controls.
+- **Where it scrolls.** In a panel whose body is a `ScrollArea`, `Listbox.Content` goes straight into
+  `Listbox.Root`, as above. A list that scrolls on its own, with no scrolling host, wraps its Content
+  in `Listbox.Viewport`.
+- **The host viewport is a block.** `ScrollArea.Viewport` takes no `flex` class when it holds a
+  `Listbox`; lists stacked in it then keep their full height.
+- **One `Listbox.Root` for each list.** Two lists under two headings are two Roots, one after the
+  other in the viewport.
+- **A heading is a group label.** `Listbox.ItemGroupLabel` lines up with the rows in either case.
+  `Listbox.Label` is placed by `Listbox.Viewport`, so it belongs to a list that has one.
+
+`plugin-space/src/components/ForeignKeys/ForeignKeys.tsx` is a list that scrolls itself, with an
+icon-only trailing action.
 
 **A collapsible header over rows is an `Accordion` item, not a `Collapsible`.** `Accordion.ItemTrigger`
 puts its icon and caret in `Block`s, the same columns as a `Listbox` row's icon and trailing control, so
@@ -596,7 +661,7 @@ link `.../<branch>/<path>` — that 404s the moment the file goes.
   hand-rolled `<div className='flex …'>`; `gap` from the ramp (`sm`/`md`/…), not `gap-2`; no wrapper
   `<div>`s for styling; `asChild` when the child is composable.
 - Let `Form`/`List`/`Stack` own their padding/spacing — don't double-pad them.
-- Collections: never hand-roll a list of mapped `<div>`s — existing picker/combobox → `react-ui-list` (`Listbox` for flat lists; `OrderedList`/`Tree`/`Accordion` otherwise) → Mosaic `Stack`. `@dxos/react-ui` `List`/`ListItem` and `@dxos/react-ui-stack` are deprecated.
+- Collections: never hand-roll a list of mapped `<div>`s — existing picker/combobox → `react-ui-list` (`Listbox` for flat lists, each row `ItemIcon` + `ItemText` + `ItemDescription` + trailing controls; `OrderedList`/`Tree`/`Accordion` otherwise) → Mosaic `Stack`. `@dxos/react-ui` `List`/`ListItem` and `@dxos/react-ui-stack` are deprecated.
 - Colors from verified tokens (grep `semantic.css` / copy a component); no invented tokens, no `className`.
 - Toolbars via `MenuBuilder` + `useMenuActions` + `Menu.Root` with `attendableId`.
 - Object editing via composed `Form` (`Viewport`/`Content`/`FieldSet`) + schema; no native inputs; form never mutates `values`.
