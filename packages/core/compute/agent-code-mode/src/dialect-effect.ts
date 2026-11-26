@@ -246,8 +246,9 @@ const operationKey = (definition: Operation.Definition.Any): string => String(de
 /**
  * `Database.resolve`, answering the turn's bound operations itself: a definition is code that lives
  * with its handler rather than an entity the registry holds, so the registry cannot resolve one.
- * Every other DXN — a type, an object — goes to the real resolver; a key it cannot find is then asked of
- * `lookupOperation`, which knows the operations of a skill enabled since the evaluation began.
+ * Every other DXN — a type, an object — goes to the real resolver. A key it cannot find, or finds only as a stored
+ * operation record, is then asked of `lookupOperation`, which knows the operations of a skill enabled since the
+ * evaluation began.
  */
 const resolveWith = (operations: readonly SandboxOperation[], lookupOperation?: LookupOperation) => {
   // Keyed without the `dxn:` prefix: the Skill Manager reports an operation by its registry key, which may omit it.
@@ -281,16 +282,24 @@ const resolveWith = (operations: readonly SandboxOperation[], lookupOperation?: 
             return type !== undefined && schema === undefined ? type : yield* resolved;
           })
         : resolved;
-    return typeof ref === 'string' && schema === undefined && lookupOperation !== undefined
-      ? entity.pipe(
-          // The original failure, not the lookup's miss, is what tells the model what it named wrong.
-          Effect.catchCause((cause) =>
-            lookupOperation(bareKey(ref)).pipe(
-              Effect.flatMap((found) => (found === undefined ? Effect.failCause(cause) : Effect.succeed(found))),
-            ),
+    if (typeof ref !== 'string' || schema !== undefined || lookupOperation === undefined) {
+      return entity;
+    }
+    const lookup = lookupOperation(bareKey(ref));
+    return entity.pipe(
+      Effect.matchCauseEffect({
+        // The original failure, not the lookup's miss, is what tells the model what it named wrong.
+        onFailure: (cause) =>
+          lookup.pipe(
+            Effect.flatMap((found) => (found === undefined ? Effect.failCause(cause) : Effect.succeed(found))),
           ),
-        )
-      : entity;
+        // A space that stores its operations answers with the stored record, which `Operation.invoke` cannot run.
+        onSuccess: (value): Effect.Effect<unknown> =>
+          Obj.instanceOf(Operation.PersistentOperation, value)
+            ? lookup.pipe(Effect.map((found) => found ?? value))
+            : Effect.succeed(value),
+      }),
+    );
   };
 };
 

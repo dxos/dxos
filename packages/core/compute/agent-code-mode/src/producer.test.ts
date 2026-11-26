@@ -306,6 +306,10 @@ describe('code mode calls an enabled skill in the program that enabled it', () =
     'effect dialect: enable, resolve and invoke in one eval; an unknown key still fails as before',
     Effect.fnUntraced(
       function* (_) {
+        // A host whose registry holds operation records (as Composer's registry sync adds them) resolves the key to this
+        // record, which `Operation.invoke` cannot run.
+        const { db } = yield* Database.Service;
+        db.registry.add([Operation.serialize(AddNote)]);
         const session = yield* AgentService.createSession({ skills: [ScoreSkill] });
         yield* session.submitPrompt('Note "remember the docs".');
         yield* session.waitForCompletion();
