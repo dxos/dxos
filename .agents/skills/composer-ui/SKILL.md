@@ -313,7 +313,9 @@ import { Listbox } from '@dxos/react-ui-list';
   `Listbox.Root`, as above. A list that scrolls on its own, with no scrolling host, wraps its Content
   in `Listbox.Viewport`.
 - **The host viewport is a block.** `ScrollArea.Viewport` takes no `flex` class when it holds a
-  `Listbox`; lists stacked in it then keep their full height.
+  `Listbox`; lists stacked in it then keep their full height. A viewport rendered `asChild` onto a
+  `Container` is a grid of bounded height, which shrinks each `Listbox.Root` as a flex column does:
+  it suits one list with nothing after it, not a stack.
 - **One `Listbox.Root` for each list.** Two lists under two headings are two Roots, one after the
   other in the viewport.
 - **A heading is a group label.** `Listbox.ItemGroupLabel` lines up with the rows in either case.
