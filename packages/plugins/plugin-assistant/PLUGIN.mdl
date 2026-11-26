@@ -944,6 +944,7 @@ decision D-32: Code mode is off by default again; the setting goes back to `code
 decision D-33: "Try again" on a failed request resumes a prompt the agent already holds with a hidden synthetic prompt, and resends one that never reached it in its own outbox row.
   date: 2026-11-26
   by: agent:claude-opus-5-5
+  for: user:dmaretskyi
   affects: [F-1.5, QA-7]
   why: The agent appends a delivered prompt to its trajectory, so sending it again shows it twice; one that never arrived has only its failed outbox row.
   rejected:
