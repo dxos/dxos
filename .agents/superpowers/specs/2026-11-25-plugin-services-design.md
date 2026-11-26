@@ -27,6 +27,53 @@ edge Provider implements Service "provides"
 - **Consumer plugin.** Calls the service. It does not know which plugin provides it or where that
   plugin runs.
 
+The same three roles, with every place a provider plugin can run:
+
+![System: the consumer plugin asks the service resolver for a contract. The resolver reaches a provider plugin in the app host in memory, one in a worker over a port, one in a sandboxed frame over a port with a grant, and one on EDGE over HTTP through the router. Every provider implements the same service contract.](diagrams/plugin-services-system.dx.svg)
+
+<details>
+<summary>Diagram source</summary>
+
+```diagram
+diagram flow=right
+group app "App host: main thread" {
+  node Consumer "Consumer plugin"
+  node Resolver "Service resolver" ref="packages/core/compute/compute/src/ServiceResolver.ts"
+  node ProviderApp "Provider (app)"
+}
+node Contract "Service contract"
+node Catalog "Service catalog" ref="packages/core/protocols/src/PluginProtocol.ts"
+group isolated "Isolated on the device" {
+  node ProviderWorker "Provider (worker)" ref="packages/sdk/worker-framework/src/Worker.ts"
+  node ProviderFrame "Provider (frame)" ref="packages/plugins/plugin-cloudflare-os/src/api/Sandbox.ts"
+}
+group remote "EDGE" {
+  node Router "Router"
+  node ProviderEdge "Provider (EDGE)" ref="packages/core/compute/plugin-host-cloudflare/src/PluginHost.ts"
+}
+edge Consumer -> Resolver "get(contract)"
+edge Resolver -> ProviderApp "in memory"
+edge Resolver -> ProviderWorker "port"
+edge Resolver -> ProviderFrame "port + grant"
+edge Resolver -> Router "HTTP"
+edge Router -> ProviderEdge "Workers RPC"
+edge Resolver depends-on Catalog "who provides?"
+edge ProviderApp implements Contract "implements"
+edge ProviderWorker implements Contract "implements"
+edge ProviderFrame implements Contract "implements"
+edge ProviderEdge implements Contract "implements"
+```
+
+</details>
+
+- **One contract, four placements.** The provider plugin is the same bundle in each. What differs
+  is the host it runs in and the binding the resolver uses to reach it.
+- **The resolver chooses.** It asks the catalog which hosts provide the contract, drops the ones
+  that lack a feature the provider needs or that the plugin's isolation policy forbids, and
+  prefers the nearest.
+- **The consumer's code does not change.** It holds one client whichever provider answers.
+
+
 ## Summary
 
 A plugin provides **services**. A service has a **contract**: a key, a version, and schemas for its
