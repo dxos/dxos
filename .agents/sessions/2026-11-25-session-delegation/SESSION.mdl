@@ -193,3 +193,9 @@ event T-11: A second review round found two more permission gaps. Both are fixed
   date: 2026-11-26T21:45Z
   by: agent:claude-code
 ```
+
+```mdl
+event T-12: A session on EDGE now refuses an authority, which EDGE would drop.
+  date: 2026-11-26T22:05Z
+  by: agent:claude-code
+```
