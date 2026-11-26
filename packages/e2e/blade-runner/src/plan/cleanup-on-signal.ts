@@ -20,12 +20,16 @@ let installed = false;
 /** Bounded: a cleanup that hangs must not stop the process from dying. */
 const CLEANUP_BUDGET_MS = 60_000;
 
+/** 128 + the signal number, so a caller still sees the run was killed and by what. */
+const EXIT_CODES = { SIGHUP: 129, SIGINT: 130, SIGTERM: 143 } as const;
+
 const install = (): void => {
   if (installed) {
     return;
   }
   installed = true;
-  for (const signal of ['SIGTERM', 'SIGINT'] as const) {
+  // `SIGHUP` too: a run started from a shell that exits dies of it, and leaks exactly as a killed one does.
+  for (const signal of ['SIGTERM', 'SIGINT', 'SIGHUP'] as const) {
     process.on(signal, () => {
       log.warn('signal received; running cleanup before exiting', { signal, handlers: registered.size });
       void Promise.race([
@@ -34,8 +38,7 @@ const install = (): void => {
       ])
         .catch((err) => log.warn('cleanup on signal threw', { err }))
         .finally(() => {
-          // The conventional code for the signal, so a caller still sees it was killed.
-          process.exit(signal === 'SIGINT' ? 130 : 143);
+          process.exit(EXIT_CODES[signal]);
         });
     });
   }
