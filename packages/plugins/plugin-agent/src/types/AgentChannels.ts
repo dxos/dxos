@@ -76,7 +76,7 @@ export const loadChannels: (agent: Agent.Agent) => Effect.Effect<Channel.Channel
   });
 
 /**
- * `Message.properties` flag on a message queued for a mirrored channel's host to post (EDGE's Discord bot). The host
+ * `Message.properties` flag on a message queued for a mirrored channel's host to post. The host
  * posts only these: the agent's own text in a channel conversation is not sent, it speaks through its channel skills.
  */
 export const OUTBOUND_PROPERTY = 'outbound';

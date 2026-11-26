@@ -106,8 +106,8 @@ export type DeliveryChannel = Schema.Schema.Type<typeof DeliveryChannel>;
 /**
  * Delivers a message to a person through whatever conversation the agent has with them: their chat with
  * the agent (see `ChatParticipant`, posted through its channel when it mirrors one), else a direct
- * message opened through one of the agent's channels. On a mirrored channel (Discord) the message is
- * appended to the conversation's chat and the channel's host posts it. Given a relay, delivery to its
+ * message opened through one of the agent's channels. On a mirrored channel the message is appended to
+ * the conversation's chat and the channel's host posts it; elsewhere the channel's backend posts it. Given a relay, delivery to its
  * recipient marks it `delivered` and delivery to its requester marks it `reported`.
  */
 export const SendMessage = Operation.make({

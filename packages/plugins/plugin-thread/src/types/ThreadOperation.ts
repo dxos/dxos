@@ -50,9 +50,14 @@ export const AppendChannelMessage = Operation.make({
 
 /**
  * What a backend reports about a message it posted. `properties` are stamped on the copy a caller
- * records locally, so a mirror of that record (EDGE's Discord bot) can tell it was already posted.
+ * records locally, so a mirror of that record can tell it was already posted.
  */
 export const SendReceipt = Schema.Struct({
+  thread: Schema.optional(
+    Schema.String.annotate({
+      description: 'The thread the message landed in, when the backend resolved it (a DM opened by the first post).',
+    }),
+  ),
   messageIds: Schema.optional(Schema.Array(Schema.String).annotate({ description: 'Backend ids of the posts.' })),
   properties: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
 });

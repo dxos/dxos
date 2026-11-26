@@ -38,8 +38,8 @@ const handler: Operation.WithHandler<typeof RelayOperation.SendMessage> = RelayO
 
       const brain = yield* BrainService.BrainService;
       const deliver: Effect.Effect<Delivery, never, Services> = Effect.gen(function* () {
-        // Only the agent's current channels: a disconnected one keeps its conversations, but no host posts there any more,
-        // so a mirrored append into it would be reported delivered and never sent.
+        // Only the agent's current channels: a disconnected one keeps its conversations, but nothing posts there any
+        // more, so a mirrored append into it would be reported delivered and never sent.
         const channels = yield* AgentChannels.loadChannels(agent);
 
         // The requester asked from a particular conversation, so the outcome goes back there first.
@@ -158,8 +158,9 @@ type Posted = { delivered: true; chat: Agent.Session } | { delivered: false; rea
 
 /**
  * Delivers into a channel conversation and records it in the agent's chat for that conversation. On a mirrored
- * channel the record is the delivery: its host (EDGE's Discord bot) posts it with credentials only it holds.
- * Elsewhere the backend posts it, and the record carries the backend's receipt so no mirror posts it again.
+ * channel the record is the delivery: its host posts it with credentials only it holds. Elsewhere the backend posts
+ * it, and the record carries the backend's receipt so no mirror posts it again; the chat is keyed by the thread the
+ * backend reports, so a DM opened by its first post (Discord) shares the chat its replies arrive in.
  */
 const postToChannel = (
   agent: Agent.Agent,
@@ -178,7 +179,7 @@ const postToChannel = (
     if (!sent.delivered) {
       return { delivered: false, reason: sent.reason } satisfies Posted;
     }
-    const chat = yield* ensureChannelChat({ agent, channel, thread }).pipe(Effect.orDie);
+    const chat = yield* ensureChannelChat({ agent, channel, thread: sent.thread ?? thread }).pipe(Effect.orDie);
     yield* appendToChat(agent, chat, text, sent.properties);
     return { delivered: true, chat } satisfies Posted;
   }).pipe(Effect.orDie);

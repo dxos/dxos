@@ -30,6 +30,7 @@ import { ensureChannelChat } from './ensure-channel-chat.ts';
 import {
   TEST_HANDLE_LABEL,
   TEST_MIRRORED_BACKEND_KIND,
+  TEST_PENDING_DM_BACKEND_KIND,
   makeChannelCapabilities,
   makeTestChannel,
   makeTestChannelBackend,
@@ -42,6 +43,7 @@ const CLOSED_DMS = '300';
 
 const backend = makeTestChannelBackend({ refuse: [CLOSED_DMS] });
 const mirrored = makeTestChannelBackend({ mirrored: true });
+const pendingDirect = makeTestChannelBackend({ pendingDirect: true });
 
 // Deliveries into a Composer chat wake it; this suite checks where they go, not the turn that follows.
 const brain = makeTestBrain({ wake: 'record' });
@@ -54,7 +56,10 @@ const TestLayer = AssistantTestLayer({
   // plugin-thread's channel operations resolve the backend from the capability registry.
   extraServices: Layer.mergeAll(
     testSpaceLayer,
-    Layer.succeed(Capability.Service, makeChannelCapabilities(backend.provider, mirrored.provider)),
+    Layer.succeed(
+      Capability.Service,
+      makeChannelCapabilities(backend.provider, mirrored.provider, pendingDirect.provider),
+    ),
     brain.layer,
   ),
   types: [
@@ -112,6 +117,7 @@ describe('Relay', () => {
   beforeEach(() => {
     backend.posts.length = 0;
     mirrored.posts.length = 0;
+    pendingDirect.posts.length = 0;
     brain.wakes.length = 0;
   });
 
@@ -255,6 +261,45 @@ describe('Relay', () => {
           text: 'Josiah will review it today.',
         });
         expect((yield* Database.load(relayRef)).status).toBe('reported');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'keys a direct chat by the thread the backend reports, when the first post opens the DM',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { agentRef, channel } = yield* setupAgent({ kind: TEST_PENDING_DM_BACKEND_KIND });
+        const josiah = yield* resolve('Josiah', '200');
+
+        const delivered = yield* Operation.invoke(RelayOperation.SendMessage, {
+          agent: agentRef,
+          recipient: josiah,
+          text: 'Hello.',
+        });
+        expect(delivered).toMatchObject({ delivered: true, via: 'channel' });
+        expect(pendingDirect.posts).toEqual([{ channel: channel.id, thread: 'dm-200', text: 'Hello.' }]);
+
+        // Keyed by the opened DM, where the recipient's replies arrive, not by the pending thread id.
+        expect(delivered.chat).toBeDefined();
+        if (delivered.chat) {
+          const dmChat = yield* Database.load(delivered.chat);
+          expect(AgentChannels.conversationOf(dmChat)).toEqual({ channelId: channel.id, thread: 'dm-200' });
+          expect(ChatParticipant.get(dmChat)).toBe((yield* Database.load(josiah)).id);
+        }
+
+        // A second delivery posts into the opened DM through the same chat.
+        const again = yield* Operation.invoke(RelayOperation.SendMessage, {
+          agent: agentRef,
+          recipient: josiah,
+          text: 'Still there?',
+        });
+        const chatId = (ref: typeof again.chat) =>
+          ref ? Database.load(ref).pipe(Effect.map(({ id }) => id)) : Effect.void;
+        expect(yield* chatId(again.chat)).toBe(yield* chatId(delivered.chat));
+        expect(pendingDirect.posts.at(-1)).toEqual({ channel: channel.id, thread: 'dm-200', text: 'Still there?' });
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

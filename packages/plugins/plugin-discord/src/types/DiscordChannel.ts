@@ -18,11 +18,11 @@ export const BACKEND_KIND = 'org.dxos.channel.backend.discord';
 
 /**
  * Prefix of the thread id of a DM the agent asked for but EDGE's bot has not opened yet (`dm:<Discord user id>`):
- * opening one is a Discord call only the bot host makes. EDGE's `space-objects.ts` mirrors it.
+ * the bot opens it on the first message sent to it, and the send's receipt names the DM channel.
  */
 export const PENDING_DM_PREFIX = 'dm:';
 
-/** The thread id of a DM with a Discord user that the bot host opens on its first post. */
+/** The thread id of a DM with a Discord user that the bot opens on the first message sent to it. */
 export const pendingDmThread = (userId: string): string => `${PENDING_DM_PREFIX}${userId}`;
 
 /** The Discord user a pending-DM thread id names, or `undefined` for any other thread. */

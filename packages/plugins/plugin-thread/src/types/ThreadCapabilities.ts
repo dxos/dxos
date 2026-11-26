@@ -67,7 +67,7 @@ export interface ChannelBackendProvider {
   /** Whether the channel is read-only. Defaults to "channel has foreign-key Obj.Meta". */
   readOnly?: (channel: Channel.Channel) => boolean;
   /**
-   * Whether a host (EDGE's Discord bot) posts what an agent writes into its chat for a conversation;
+   * Whether a host posts what an agent writes into its chat for a conversation;
    * an agent then appends there instead of sending, since only the host holds the account's credentials.
    */
   mirrored?: boolean;
