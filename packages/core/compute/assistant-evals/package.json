@@ -28,8 +28,14 @@
   },
   "dependencies": {
     "@dxos/app-toolkit": "workspace:*",
+    "@dxos/echo-doc": "workspace:*",
     "@dxos/edge-client": "workspace:*",
-    "@dxos/keys": "workspace:*"
+    "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/plugin-attention": "workspace:*",
+    "@dxos/plugin-presenter": "workspace:*",
+    "@dxos/plugin-sheet": "workspace:*",
+    "@dxos/react-ui-attention": "workspace:*"
   },
   "devDependencies": {
     "@bufbuild/protobuf": "catalog:",

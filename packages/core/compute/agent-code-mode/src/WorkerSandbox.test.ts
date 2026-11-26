@@ -18,10 +18,13 @@ import { DXN } from '@dxos/keys';
 
 import { EffectDialect } from './dialect-effect.ts';
 import { PlainDialect } from './dialect-plain.ts';
-import type { Dialect, SandboxOperation } from './Dialect.ts';
-import { EVAL_TOOL_NAME, makeEvalToolkit } from './eval-tool.ts';
+import type { Dialect, LookupOperation as FindOperation, SandboxOperation } from './Dialect.ts';
+import { EVAL_TOOL_NAME, STATE_TRAILER, makeEvalToolkit } from './eval-tool.ts';
 import type * as Sandbox from './Sandbox.ts';
 import * as WorkerSandbox from './WorkerSandbox.ts';
+
+/** What the code printed, without the trailer every result the model reads ends with. */
+const untrailed = (text: string): string => text.replace(`\n\n${STATE_TRAILER}`, '');
 
 const TASK_TYPENAME = 'com.example.type.task';
 const PERSON_TYPENAME = 'com.example.type.person';
@@ -123,6 +126,19 @@ const LookupOperation: SandboxOperation = {
   invoke: (input: unknown) => Effect.sync(() => ({ object: Schema.decodeUnknownSync(Lookup.input)(input) })),
 };
 
+/** Bound to no skill when the evaluation begins: reachable only through `lookupOperation`, as a just-enabled skill's. */
+const Late = Operation.make({
+  meta: { key: DXN.make('com.example.operation.late'), name: 'Late' },
+  input: Schema.Struct({ title: Schema.String }),
+  output: Schema.Number,
+});
+
+const LATE_KEY = String(Late.meta.key);
+
+/** The producer's lookup, which re-reads the conversation's skills; here it knows `Late` alone. */
+const lookupLate: FindOperation = (key) =>
+  Effect.succeed(key.replace(/^dxn:/, '') === LATE_KEY.replace(/^dxn:/, '') ? Late : undefined);
+
 /** Stands in for an MCP server's tool: no operation backs it, so the worker must not resolve one for it. */
 const WeatherTool: SandboxOperation = {
   name: 'get_weather',
@@ -167,6 +183,11 @@ const hostOperations = (db: Database.Database): Operation.OperationService => {
       );
     },
   };
+  handlers[LATE_KEY] = (input) =>
+    Schema.decodeUnknownEffect(Late.input)(input).pipe(
+      Effect.map(({ title }) => title.length * 2),
+      Effect.orDie,
+    );
   const run = (key: string, input: unknown) => handlers[key]?.(input) ?? Effect.die(new Error(`No handler: ${key}`));
   return {
     invoke: (op, ...[input]) =>
@@ -363,6 +384,14 @@ describe('worker sandbox', () => {
       expect(scored).toEqual(['Review the PR']);
     }, 60_000);
 
+    test('invokes an operation of a skill enabled after the evaluation began, through the host lookup', async () => {
+      const { runWith, runWithLookup } = await setup();
+      const code = `yield* print('late', yield* Operation.invoke((yield* Database.resolve('${LATE_KEY}')), { title: 'abc' }));`;
+      expect(await runWithLookup(EffectDialect, code, lookupLate)).toEqual('late 6');
+      // Without a lookup the worker cannot know the operation, and the resolve fails as before.
+      expect(await runWith(EffectDialect, code)).toContain('Entity not found');
+    }, 60_000);
+
     test('calls a tool no operation backs through Tools, and never resolves it as an operation', async () => {
       const { runWith } = await setup();
 
@@ -510,7 +539,17 @@ const setup = async () => {
   /** Runs against a sandbox pointed at `entry`, for the cases where the entry itself is the subject. */
   const runWithEntry = (entry: URL, code: string) => runOn(makeSandbox(entry), PlainDialect, code);
 
-  const runOn = (sandbox: Sandbox.Sandbox, dialect: Dialect, code: string, timeout?: Duration.Input) =>
+  /** Runs with the host able to look up an operation no skill bound when the evaluation began. */
+  const runWithLookup = (dialect: Dialect, code: string, lookupOperation: FindOperation) =>
+    runOn(sandbox, dialect, code, undefined, lookupOperation);
+
+  const runOn = (
+    sandbox: Sandbox.Sandbox,
+    dialect: Dialect,
+    code: string,
+    timeout?: Duration.Input,
+    lookupOperation?: FindOperation,
+  ) =>
     EffectEx.runPromise(
       Effect.gen(function* () {
         const toolkit = makeEvalToolkit({
@@ -518,6 +557,7 @@ const setup = async () => {
           sandbox,
           runtime,
           operations: [ScoreOperation, FileOperation, WeatherTool, LookupOperation],
+          ...(lookupOperation !== undefined ? { lookupOperation } : {}),
           timeout,
         });
         const result = yield* callTool(yield* toolkit.handlers, {
@@ -528,9 +568,9 @@ const setup = async () => {
           providerExecuted: false,
         });
         // A failed call's text is what the model is shown in place of a result.
-        return result.error ?? Schema.decodeUnknownSync(Schema.String)(JSON.parse(String(result.result)));
+        return untrailed(result.error ?? Schema.decodeUnknownSync(Schema.String)(JSON.parse(String(result.result))));
       }),
     );
 
-  return { db, run, runWith, runWithEntry };
+  return { db, run, runWith, runWithEntry, runWithLookup };
 };

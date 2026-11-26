@@ -79,6 +79,13 @@ export const SandboxHostRpcs = RpcGroup.make(
     payload: Schema.Struct({ report: WorkingSetReport }),
     success: Schema.Void,
   }),
+  // An operation of a skill the code enabled after the evaluation began; null when no bound skill provides it.
+  Rpc.make('Sandbox.lookupOperation', {
+    payload: Schema.Struct({ key: Schema.String }),
+    success: Schema.NullOr(
+      Schema.Struct({ key: Schema.String, name: Schema.String, description: Schema.optional(Schema.String) }),
+    ),
+  }),
   // A type the worker's registry does not hold (on EDGE, a published type); null when the host has none.
   Rpc.make('Sandbox.resolveType', {
     payload: Schema.Struct({ uri: Schema.String }),
@@ -123,6 +130,8 @@ export type SandboxInit = {
   }[];
   /** Keys of the skills the conversation has bound; see `BindingsContext.skills`. */
   readonly skills?: readonly string[];
+  /** The enabled skills' instructions; see `BindingsContext.skillDocs`. */
+  readonly skillDocs?: Readonly<Record<string, string>>;
   /** The operations the conversation's skills bind, as the model is told about them. */
   readonly operations: readonly {
     readonly key: string;

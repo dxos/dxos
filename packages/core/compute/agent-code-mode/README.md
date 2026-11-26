@@ -26,9 +26,11 @@ process; the process's queue, alarms and hydration are unchanged. Before every m
    description and input schema, the `Operation` definition behind it (none for an MCP tool), and a
    function that runs it through the same handlers as a tool call. The Skill Manager's lookups
    join them.
-3. Builds the system prompt: the dialect's API, the Skill Manager's lookups and the enabled skills
-   with their operations, the conversation's MCP tools, and its objects and instructions. No other
-   skill, operation or type is listed.
+3. Builds the system prompt: the dialect's API, the Skill Manager's lookups, the enabled skills, the
+   conversation's MCP tools, and its objects and instructions. The plain dialect states each enabled
+   skill with its instructions and operations; the Effect dialect names each one and serves its
+   instructions as `DOCS['skills/<key>.md']` and its operations through `search`. No other skill,
+   operation or type is listed.
 4. Calls the model. A text answer ends the request; an `eval` call runs in the sandbox and the loop
    repeats, up to `maxTurns`.
 
@@ -50,6 +52,9 @@ process; the process's queue, alarms and hydration are unchanged. Before every m
   `ensureReplySent` reads that record to see a reply sent from code. The model never sees it.
 
 ## Dialects
+
+A producer writes the Effect dialect unless it is given one, or its sandbox names another in
+`Sandbox.defaultDialect`: `WorkerdSandbox` does, with plain, since its isolate holds no database.
 
 ### Plain ([`dialect-plain.ts`](./src/dialect-plain.ts))
 
@@ -87,11 +92,12 @@ demand ([`src/docs`](./src/docs)), including the generated `catalog/types.md` an
 
 ## What the model is told: the enabled skills and the Skill Manager
 
-Code mode states the skills enabled in the conversation, each with its instructions and its
-operations' inputs, and the Skill Manager's lookups (`@dxos/assistant-toolkit`'s
-`SkillManagerSkill.makeForCodeMode()`). Nothing else that is available is stated: no other skill,
-no other operation, no types. An enabled skill's rules apply to every request it touches, so they
-are in the prompt rather than looked up; a channel agent that had to look up how to reply did not.
+Code mode states the skills enabled in the conversation and the Skill Manager's lookups
+(`@dxos/assistant-toolkit`'s `SkillManagerSkill.makeForCodeMode()`). The plain dialect states each
+enabled skill with its instructions and its operations' inputs. The Effect dialect names each one
+and points at its instructions in `DOCS['skills/<key>.md']`, which the model reads on demand, so its
+prompt does not carry them. Nothing else that is available is stated: no other skill, no other
+operation, no types.
 Listing every skill, operation and type, each operation as a tool, is what tool calling does, which
 runs when code mode is off (the default; `Settings.codeMode` turns it on); there the Skill
 Manager lists every skill in its instructions.
@@ -109,7 +115,7 @@ The model looks the rest up from code, a level of detail at a time:
 | `querySkills`     | Every skill, saying whether it is enabled here and whether an agent may enable it; `query` narrows.  | `keys`: the skill's instructions and its operations.                           |
 | `queryOperations` | `query` searches the operations of the skills it can use by what they do; `skill` lists one skill's. | `keys`: each operation's full description and input, refs as `Ref<typename>`.  |
 | `queryTypes`      | Every type's typename, DXN and kind; `query` searches type and field names.                          | `typenames`: their fields, every variant of a union spelled out.               |
-| `enableSkills`    |                                                                                                      | Enables skills an agent may enable; their operations from the next model call. |
+| `enableSkills`    |                                                                                                      | Enables skills an agent may enable; see below for when their operations resolve. |
 
 A typical request uses the enabled skills directly. One that needs more: `queryOperations({ query })`
 to find an operation, `queryOperations({ keys })` for its input, `enableSkills` if its skill is not
@@ -119,6 +125,12 @@ enabled, then the call.
   conversation's MCP tools, and no other operation: `ops` and `Database.resolve` resolve no other.
   That limits which operations code can run, not what it can reach: it reads and writes the
   workspace's database directly.
+- In the Effect dialect, an operation of a skill the program has just enabled resolves in that same
+  program: `Database.resolve` misses it (or finds only its stored record), re-reads the
+  conversation's skills and finds it there. A worker sandbox asks the host over
+  `Sandbox.lookupOperation`. The plain dialect's `ops` is fixed when the call begins, so its
+  operations arrive with the next call. Either way the skill's instructions are stated from the next
+  model call.
 - The conversation's MCP tools are stated in the prompt, since no skill names them.
 - These are ordinary operations answered by the host's handlers, the same ones tool calling uses,
   so every host that runs code mode must register the Skill Manager's handlers.

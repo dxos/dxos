@@ -17,9 +17,12 @@ import { DXN } from '@dxos/keys';
 
 import { EffectDialect } from './dialect-effect.ts';
 import type { SandboxOperation } from './Dialect.ts';
-import { EVAL_TOOL_NAME, makeEvalToolkit } from './eval-tool.ts';
+import { EVAL_TOOL_NAME, STATE_TRAILER, makeEvalToolkit } from './eval-tool.ts';
 import * as WorkerSandbox from './WorkerSandbox.ts';
 import * as WorkerSandboxBrowser from './WorkerSandboxBrowser.ts';
+
+/** What the code printed, without the trailer every result the model reads ends with. */
+const untrailed = (text: string): string => text.replace(`\n\n${STATE_TRAILER}`, '');
 
 const TASK_TYPENAME = 'com.example.type.task';
 const PERSON_TYPENAME = 'com.example.type.person';
@@ -205,7 +208,7 @@ const setup = async () => {
           providerExecuted: false,
         });
         // A failed call's text is what the model is shown in place of a result.
-        return result.error ?? Schema.decodeUnknownSync(Schema.String)(JSON.parse(String(result.result)));
+        return untrailed(result.error ?? Schema.decodeUnknownSync(Schema.String)(JSON.parse(String(result.result))));
       }),
     );
 

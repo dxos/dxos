@@ -14,7 +14,7 @@ import { makeRegistry } from '@dxos/echo-client';
 import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { SheetOperationHandlerSet } from '../operations/node.ts';
-import skill from './sheet-skill.ts';
+import * as SheetSkill from './SheetSkill.ts';
 
 describe('Sheet skill', () => {
   // EDGE resolves a skill's tools only against the records of the headless entry's handlers, as built here.
@@ -25,7 +25,7 @@ describe('Sheet skill', () => {
         .filter((handler) => !handler.meta.skipRegistry)
         .map((handler) => Operation.serialize(handler, { skipValidation: true })),
     });
-    const tools = skill.make().tools;
+    const tools = SheetSkill.make().tools;
 
     const unresolved = await Effect.gen(function* () {
       const resolver = yield* ToolResolverService;

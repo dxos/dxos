@@ -33,8 +33,10 @@ import { EDGE_URLS } from '@dxos/config';
 import { Database, Feed, Obj, Ref, Registry, Tag, type Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN, type SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
+import * as ChatRequest from '@dxos/plugin-assistant/ChatRequest';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
@@ -49,6 +51,7 @@ import { trim } from '@dxos/util';
 import * as Observe from './Observe.ts';
 import * as Scorer from './Scorer.ts';
 import { getDefaultSkills } from './skills.ts';
+import * as Transcript from './Transcript.ts';
 import * as Usage from './Usage.ts';
 
 const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-opus-5.default');
@@ -72,6 +75,7 @@ const GRADE_GRACE_MILLIS = 5 * 60 * 1_000;
 
 /** Distinguishes the open sessions of concurrently running rows, variants and files. */
 let nextRunId = 0;
+let nextTranscript = 0;
 
 /**
  * Tags a failure as coming specifically from the agent's own `RunInstructions` invocation —
@@ -227,6 +231,7 @@ const runAgentSession = <I>(
   seededChat?: Ref.Ref<Agent.Session>,
   conversation?: Conversation<I>,
   transcript: Scorer.Turn[] = [],
+  requestContext?: ChatRequest.Context,
 ) =>
   harness.runPromise(
     Effect.gen(function* () {
@@ -248,10 +253,10 @@ const runAgentSession = <I>(
           });
       // Each turn's reply is every assistant text since its prompt: a turn may span several messages.
       let seen = 0;
-      const turn = (text: string, said = text) =>
+      const turn = (text: string, said = text, attached?: ChatRequest.Context) =>
         Effect.gen(function* () {
           transcript.push({ role: 'user', text: said });
-          yield* Agent.submitPrompt(agent.chat, text);
+          yield* Agent.submitPrompt(agent.chat, ChatRequest.createPromptContent({ message: text, context: attached }));
           yield* Agent.waitForCompletion(agent.chat);
           const messages = yield* TrajectoryStore.messages(agent.feed);
           const reply = messages
@@ -266,7 +271,10 @@ const runAgentSession = <I>(
         });
 
       const opening = conversation?.opening(input);
-      let reply = yield* opening === undefined ? turn(prompt) : turn(`${prompt}\n\n${opening}`, opening);
+      // The request context rides the opening prompt only, as the app attaches it to the message it was captured for.
+      let reply = yield* opening === undefined
+        ? turn(prompt, prompt, requestContext)
+        : turn(`${prompt}\n\n${opening}`, opening, requestContext);
       for (let turns = 1; conversation && turns < conversation.maxTurns; turns++) {
         const next = yield* conversation.reply({ input, transcript });
         if (next === undefined) {
@@ -319,6 +327,8 @@ export type Conversation<I> = {
 };
 
 export interface CreateEvalRunnerOptions<I, O> {
+  /** The eval's title, which names each run's transcript (with the variant's name). */
+  name?: string;
   instructions: string;
   input: Schema.Schema<I>;
   output: Schema.Schema<O>;
@@ -407,6 +417,11 @@ export interface CreateEvalRunnerOptions<I, O> {
 export type SeedResult = {
   objects?: Ref.Ref<Obj.Unknown>[];
   chat?: Ref.Ref<Agent.Session>;
+  /**
+   * What the app captures at submit time alongside the opening prompt (e.g. the user's selection in
+   * the document they are viewing), delivered exactly as the chat delivers it. Agent sessions only.
+   */
+  context?: ChatRequest.Context;
 };
 
 export type VariantConfig =
@@ -414,6 +429,8 @@ export type VariantConfig =
   | {
       model?: DXN.DXN;
       makeTurnProducer?: MakeTurnProducer;
+      /** The variant's display name, which names its transcript. */
+      name?: string;
     };
 
 /**
@@ -477,7 +494,12 @@ export function createEvalRunner<I, O>(
     }
   });
 
-  const execute = async (input: I, variant: VariantConfig, record: (call: AiUsage.Call) => void) => {
+  const execute = async (
+    input: I,
+    variant: VariantConfig,
+    record: (call: AiUsage.Call) => void,
+    calls: readonly AiUsage.Call[],
+  ) => {
     const model = variant?.model ?? options.model ?? DEFAULT_MODEL;
     const makeTurnProducer = variant?.makeTurnProducer ?? options.makeTurnProducer;
     const timeoutMillis = options.timeout ?? DEFAULT_EVAL_TIMEOUT_MILLIS;
@@ -531,6 +553,12 @@ export function createEvalRunner<I, O>(
           options.agentSession === true || makeTurnProducer !== undefined || options.conversation !== undefined;
         // Filled as the session runs, so a timed-out conversation is still graded on what was said.
         const transcript: Scorer.Turn[] = [];
+        // A misconfigured eval, not an agent that failed: raised outside the step, so `expect: 'failure'` cannot pass it.
+        if (seeded.context !== undefined && !asSession) {
+          return yield* Effect.die(
+            new Error('A seeded request context needs an agent session (`agentSession: true`).'),
+          );
+        }
         const agentStep = Effect.tryPromise({
           try: (): Promise<O> =>
             asSession
@@ -543,6 +571,7 @@ export function createEvalRunner<I, O>(
                   seeded.chat,
                   options.conversation,
                   transcript,
+                  seeded.context,
                 ).then((reply) => {
                   // The reply is free text, so only a scenario whose output admits a string can run this way.
                   if (!Schema.is(options.output)(reply)) {
@@ -579,7 +608,7 @@ export function createEvalRunner<I, O>(
           Database.Service,
           FeedTraceSink.FeedTraceSink,
         );
-        const provideRun = Scorer.sessionServices({ durationMillis, transcript });
+        const provideRun = Scorer.sessionServices({ durationMillis, transcript, modelCalls: calls });
 
         // Graded one dimension at a time: `Scorer.shared` memoizes a completed exit, so two
         // dimensions naming one query must not be in flight together.
@@ -635,11 +664,23 @@ export function createEvalRunner<I, O>(
       calls.push(call);
       run.generation(call);
     };
+    // The running test's name carries the eval's and the variant's, so it names the transcript.
+    // Named from the options, not the running test: evalite runs variants concurrently, and vitest's
+    // global `expect` state then names whichever test touched it last. The sequence keeps names apart.
+    const name = [options.name ?? 'eval', variant?.name, `#${nextTranscript++}`].filter(Boolean).join(' — ');
+    let outcome: Transcript.Outcome = { error: new Error('The run did not finish.') };
     try {
-      return await execute(input, variant, record);
+      const output = await execute(input, variant, record, calls);
+      outcome = { output };
+      return output;
+    } catch (error) {
+      outcome = { error };
+      throw error;
     } finally {
       Usage.report(calls, { traceId: run.traceId, experimentId: experiment.id, experimentName: experiment.name });
       await run.finish();
+      // A transcript that cannot be written must not fail a run that has already been graded.
+      await Transcript.write({ name, calls, outcome }).catch((error) => log.warn('transcript not written', { error }));
     }
   };
 }
