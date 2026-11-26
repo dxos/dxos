@@ -174,3 +174,9 @@ event T-9: PR-2 is ready for review, and auto-merge is on.
   date: 2026-11-26T19:37Z
   by: agent:claude-code
 ```
+
+```mdl
+event T-10: The review of PR-2 found a self-grant and a consent gap. Both are fixed and pushed.
+  date: 2026-11-26T20:40Z
+  by: agent:claude-code
+```
