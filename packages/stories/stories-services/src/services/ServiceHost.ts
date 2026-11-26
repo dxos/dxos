@@ -34,7 +34,7 @@ export const Provider = Capability.make<Service.AnyProvider>()('org.dxos.stories
 /** A host could not load a plugin; `context` names the host and the reference. */
 export class PluginLoadError extends BaseError.extend('PluginLoadError', 'Failed to load the plugin.') {}
 
-/** The other host sent no catalog in time; `context` names this host. */
+/** The connection to another host was not set up in time; `context` names this host and the step that did not finish. */
 export class HostConnectError extends BaseError.extend('HostConnectError', 'The host did not answer.') {}
 
 /** Where a contract is bound for this host's consumers. */
@@ -70,7 +70,7 @@ export type Options = {
   readonly features?: Readonly<Record<string, unknown>>;
   /** Loads a plugin by reference: a module URL in a browser host, a name in a test. */
   readonly loadPlugin?: (reference: string) => Promise<Plugin.Plugin>;
-  /** How long a new peer has to answer, in milliseconds; a test shortens it. */
+  /** How long connecting to a peer may take from start to first catalog, in milliseconds; a test shortens it. */
   readonly connectTimeout?: number;
   /** What this host can reach; a frame host reports what its sandbox refuses. */
   readonly probe?: (ungranted: string) => Promise<HostControl.Probe>;
@@ -251,7 +251,20 @@ export class ServiceHost {
   async connect(port: MessagePort, options: { readonly grant?: readonly string[] } = {}): Promise<string> {
     const link = Link.make(port);
     const scope = await EffectEx.runPromise(Scope.make());
-    const timeout = this.#options.connectTimeout ?? CONNECT_TIMEOUT;
+    const deadline = Date.now() + (this.#options.connectTimeout ?? CONNECT_TIMEOUT);
+    // Every step draws on the one deadline, so a slow handshake leaves the later steps less, not a fresh allowance.
+    const step = <A, E>(reason: string, effect: Effect.Effect<A, E>): Promise<A> =>
+      EffectEx.runPromise(
+        effect.pipe(
+          Effect.timeoutOption(Math.max(0, deadline - Date.now())),
+          Effect.flatMap(
+            Option.match({
+              onNone: () => Effect.fail(new HostConnectError({ context: { host: this.id, reason } })),
+              onSome: (value) => Effect.succeed(value),
+            }),
+          ),
+        ),
+      );
     let peer: Peer | undefined;
     try {
       const router = await EffectEx.runPromise(RpcRouter.make);
@@ -260,25 +273,31 @@ export class ServiceHost {
       });
       // The client's construction waits for the peer's handshake, so the deadline has to cover it:
       // a worker or frame that never starts its host would otherwise hang the connection for good.
-      const call = await EffectEx.runPromise(
-        Link.call(HostControl.Contract.group, link.open()).pipe(Scope.provide(scope), Effect.timeoutOption(timeout)),
+      const call = await step(
+        'no handshake',
+        Link.call(HostControl.Contract.group, link.open()).pipe(Scope.provide(scope)),
       );
-      if (Option.isNone(call)) {
-        throw new HostConnectError({ context: { host: this.id, reason: 'no handshake' } });
-      }
       const connected: Peer = {
         link,
         scope,
         router,
         grant: options.grant === undefined ? undefined : new Set([HostControl.Contract.key, ...options.grant]),
         served: new Map(),
-        control: Service.toStub(HostControl.Contract, call.value),
+        control: Service.toStub(HostControl.Contract, call),
         stubs: new Map(),
       };
       peer = connected;
       this.#peers.add(connected);
-      await this.#serve(connected, HostControl.Contract, this.#control(connected));
-      await this.#enqueue(async () => void (await this.#reconcile()));
+      await step(
+        'not served',
+        Effect.tryPromise({
+          try: async () => {
+            await this.#serve(connected, HostControl.Contract, this.#control(connected));
+            await this.#enqueue(async () => void (await this.#reconcile()));
+          },
+          catch: (cause) => new HostConnectError({ cause, context: { host: this.id, reason: 'not served' } }),
+        }),
+      );
 
       // A peer is addressed by the id in its catalog, so the connection is not ready before one arrives.
       let arrived: (id: string) => void = () => {};
@@ -300,11 +319,10 @@ export class ServiceHost {
         ),
       );
 
-      const id = await EffectEx.runPromise(Effect.promise(() => first).pipe(Effect.timeoutOption(timeout)));
-      if (Option.isNone(id)) {
-        throw new HostConnectError({ context: { host: this.id, reason: 'no catalog' } });
-      }
-      return id.value;
+      return await step(
+        'no catalog',
+        Effect.promise(() => first),
+      );
     } catch (err) {
       if (peer) {
         this.#peers.delete(peer);
