@@ -495,8 +495,7 @@ export interface LocationOptions {
  */
 export interface Manager {
   /**
-   * The process the caller runs in. Fails when this manager is not scoped to a process (e.g. the app-level
-   * aggregate manager).
+   * The process the caller runs in, read from {@link CurrentProcess}. Fails outside a process.
    */
   readonly current: Effect.Effect<Process, NoCurrentProcessError>;
 
@@ -587,15 +586,26 @@ export class ManagerService extends Context.Service<ManagerService, Manager>()(
   '@dxos/compute/Process.ManagerService',
 ) {}
 
-/** Raised by {@link current} when the ambient {@link ManagerService} is not scoped to a process. */
+/** Raised by {@link current} outside a process. */
 export class NoCurrentProcessError extends BaseError.extend('NoCurrentProcessError', 'Not running inside a process') {}
 
 /**
- * The process the calling code runs in, read from the ambient {@link ManagerService}.
+ * The process the calling fiber runs in; none outside a process. Each process handle sets it on the context its
+ * handlers run with, so code finds its process without asking its caller for a process-scoped service.
  */
-export const current: Effect.Effect<Process, NoCurrentProcessError, ManagerService> = Effect.flatMap(
-  ManagerService,
-  (manager) => manager.current,
+export const CurrentProcess: Context.Reference<Option.Option<Process>> = Context.Reference<Option.Option<Process>>(
+  '@dxos/compute/Process/CurrentProcess',
+  { defaultValue: () => Option.none() },
+);
+
+/**
+ * The process the calling code runs in, read from {@link CurrentProcess}.
+ */
+export const current: Effect.Effect<Process, NoCurrentProcessError> = Effect.flatMap(CurrentProcess, (process) =>
+  Option.match(process, {
+    onNone: () => Effect.fail(new NoCurrentProcessError()),
+    onSome: Effect.succeed,
+  }),
 );
 
 /**

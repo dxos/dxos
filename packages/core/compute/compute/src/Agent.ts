@@ -568,13 +568,15 @@ export interface DelegateResult {
 
 /**
  * Manages agents and sessions: a global singleton. Implementation lives in `@dxos/agent-runtime`.
+ * No member asks its caller for a service: session verbs use the session's database, and the current-process verbs
+ * find their caller through {@link Process.CurrentProcess}.
  */
 export interface ServiceApi {
   /**
    * Opens a session: gets or spawns the `SessionProcess` bound to it (its spawn target), which reads the
    * feed, the steering instructions and the model from the session.
    */
-  open: (session: Session, options?: OpenSessionOptions) => Effect.Effect<void, never, Database.Service>;
+  open: (session: Session, options?: OpenSessionOptions) => Effect.Effect<void>;
 
   /**
    * Hydrates session processes persisted by a previous run.
@@ -583,29 +585,29 @@ export interface ServiceApi {
   hydrate: () => Effect.Effect<void>;
 
   /** The context objects bound to the session. */
-  getContext: (session: Session) => Effect.Effect<Ref.Ref<Obj.Unknown>[], never, Database.Service>;
+  getContext: (session: Session) => Effect.Effect<Ref.Ref<Obj.Unknown>[]>;
 
   /** Binds context objects to the session. */
-  addContext: (session: Session, context: Ref.Ref<Obj.Unknown>[]) => Effect.Effect<void, never, Database.Service>;
+  addContext: (session: Session, context: Ref.Ref<Obj.Unknown>[]) => Effect.Effect<void>;
 
   /** Submits a turn: a plain user prompt, or pre-built content blocks (e.g. synthetic context + prompt). */
   submitPrompt: (
     session: Session,
     prompt: string | ContentBlock.Any[],
     options?: SubmitPromptOptions,
-  ) => Effect.Effect<void, never, Database.Service>;
+  ) => Effect.Effect<void>;
 
   /**
    * True while the session is working on a turn (running, or waiting on a tool call or alarm); false
    * when it is idle awaiting input, or terminal.
    */
-  running: (session: Session) => Effect.Effect<Atom.Atom<boolean>, never, Database.Service>;
+  running: (session: Session) => Effect.Effect<Atom.Atom<boolean>>;
 
   /** Waits until the session has completed its work. */
-  waitForCompletion: (session: Session) => Effect.Effect<void, never, Database.Service>;
+  waitForCompletion: (session: Session) => Effect.Effect<void>;
 
   /** Terminates the session's process and clears its durable storage. */
-  terminate: (session: Session) => Effect.Effect<void, never, Database.Service>;
+  terminate: (session: Session) => Effect.Effect<void>;
 
   /**
    * Subscribes to the session's ephemeral trace events (e.g. streaming partial messages): replays
@@ -615,47 +617,40 @@ export interface ServiceApi {
    * `runPromise(Effect.forEach(subscribe))`), use {@link Effect.forkDetach} so the
    * stream survives after the parent scope closes; interrupt it on dispose.
    */
-  subscribeEphemeral: (
-    session: Session,
-    options?: Process.SubscribeEphemeralOptions,
-  ) => Stream.Stream<Trace.Message, never, Database.Service>;
+  subscribeEphemeral: (session: Session, options?: Process.SubscribeEphemeralOptions) => Stream.Stream<Trace.Message>;
 
   /** The session the calling process works for, named by its {@link Process.SessionAnnotation}. */
-  readonly currentSession: Effect.Effect<Session, NoCurrentSessionError, Process.ManagerService | Database.Service>;
+  readonly currentSession: Effect.Effect<Session, NoCurrentSessionError>;
 
   /**
    * The feed the calling process's conversation runs on: its session's, or the bare feed an invocation names (a
    * conversation with no session object).
    */
-  readonly currentFeed: Effect.Effect<Feed.Feed, NoCurrentSessionError, Process.ManagerService | Database.Service>;
+  readonly currentFeed: Effect.Effect<Feed.Feed, NoCurrentSessionError>;
 
   /**
    * The agent the calling process works for, named by its {@link Process.AgentAnnotation}; none for a
    * standalone session.
    */
-  readonly currentAgent: Effect.Effect<Option.Option<Agent>, never, Process.ManagerService | Database.Service>;
+  readonly currentAgent: Effect.Effect<Option.Option<Agent>>;
 
   /**
    * The thread the calling process works for, named by its {@link Process.ThreadAnnotation}; none for work
    * on the session's main thread.
    */
-  readonly currentThread: Effect.Effect<Option.Option<Thread>, never, Process.ManagerService>;
+  readonly currentThread: Effect.Effect<Option.Option<Thread>>;
 
   /** Enqueues a message into the current session's input queue. */
-  enqueueMessage: (
-    options: EnqueueMessageOptions,
-  ) => Effect.Effect<void, NoCurrentSessionError, Process.ManagerService | Database.Service>;
+  enqueueMessage: (options: EnqueueMessageOptions) => Effect.Effect<void, NoCurrentSessionError>;
 
   /** Schedules a self-wake of the current session. */
-  setAlarm: (
-    options: SetAlarmOptions,
-  ) => Effect.Effect<void, NoCurrentSessionError, Process.ManagerService | Database.Service>;
+  setAlarm: (options: SetAlarmOptions) => Effect.Effect<void, NoCurrentSessionError>;
 
   /** Sessions with a live process, found from the annotations of the processes this service manages. */
-  listSessions: (options?: ListSessionsOptions) => Effect.Effect<readonly URI.URI[], never, Process.ManagerService>;
+  listSessions: (options?: ListSessionsOptions) => Effect.Effect<readonly URI.URI[]>;
 
   /** Agents with a live process, found from the annotations of the processes this service manages. */
-  listAgents: () => Effect.Effect<readonly URI.URI[], never, Process.ManagerService>;
+  listAgents: () => Effect.Effect<readonly URI.URI[]>;
 
   /**
    * Spawns a process for agent work, stamped with the session, agent and thread annotations of the caller
@@ -664,20 +659,16 @@ export interface ServiceApi {
   spawn: <I, O, Rpcs extends Rpc.Any = never>(
     definition: Operation.Durable<I, O, any, Rpcs>,
     options?: SpawnOptions,
-  ) => Effect.Effect<Process.Process<I, O, Rpcs>, never, Process.ManagerService>;
+  ) => Effect.Effect<Process.Process<I, O, Rpcs>>;
 
   /**
    * Delegates work to a thread of the current session, to another session of the current agent, or to
    * another agent.
    */
-  delegate: (
-    request: DelegateRequest,
-  ) => Effect.Effect<DelegateResult, NoCurrentSessionError, Process.ManagerService | Database.Service>;
+  delegate: (request: DelegateRequest) => Effect.Effect<DelegateResult, NoCurrentSessionError>;
 
   /** Waits until a thread of the current session has finished, and returns what it answered. */
-  waitForThread: (
-    thread: Thread,
-  ) => Effect.Effect<string, NoCurrentSessionError, Process.ManagerService | Database.Service>;
+  waitForThread: (thread: Thread) => Effect.Effect<string, NoCurrentSessionError>;
 }
 
 /** The agent service; see {@link ServiceApi}. */
@@ -718,36 +709,32 @@ export const terminate = (session: Session) => Service.use((service) => service.
 export const subscribeEphemeral = (
   session: Session,
   options?: Process.SubscribeEphemeralOptions,
-): Stream.Stream<Trace.Message, never, Service | Database.Service> =>
+): Stream.Stream<Trace.Message, never, Service> =>
   Stream.unwrap(Effect.map(Service, (service) => service.subscribeEphemeral(session, options)));
 
 /** The session the calling process works for. */
-export const currentSession: Effect.Effect<
-  Session,
-  NoCurrentSessionError,
-  Service | Process.ManagerService | Database.Service
-> = Effect.flatMap(Service, (service) => service.currentSession);
+export const currentSession: Effect.Effect<Session, NoCurrentSessionError, Service> = Effect.flatMap(
+  Service,
+  (service) => service.currentSession,
+);
 
 /** The feed the calling process's conversation runs on. */
-export const currentFeed: Effect.Effect<
-  Feed.Feed,
-  NoCurrentSessionError,
-  Service | Process.ManagerService | Database.Service
-> = Effect.flatMap(Service, (service) => service.currentFeed);
+export const currentFeed: Effect.Effect<Feed.Feed, NoCurrentSessionError, Service> = Effect.flatMap(
+  Service,
+  (service) => service.currentFeed,
+);
 
 /** The agent the calling process works for; none for a standalone session. */
-export const currentAgent: Effect.Effect<
-  Option.Option<Agent>,
-  never,
-  Service | Process.ManagerService | Database.Service
-> = Effect.flatMap(Service, (service) => service.currentAgent);
+export const currentAgent: Effect.Effect<Option.Option<Agent>, never, Service> = Effect.flatMap(
+  Service,
+  (service) => service.currentAgent,
+);
 
 /** The thread the calling process works for; none for the session's main thread. */
-export const currentThread: Effect.Effect<
-  Option.Option<Thread>,
-  never,
-  Service | Process.ManagerService
-> = Effect.flatMap(Service, (service) => service.currentThread);
+export const currentThread: Effect.Effect<Option.Option<Thread>, never, Service> = Effect.flatMap(
+  Service,
+  (service) => service.currentThread,
+);
 
 /** Enqueues a message into the current session's input queue. */
 export const enqueueMessage = (options: EnqueueMessageOptions) =>
@@ -766,7 +753,7 @@ export const listAgents = () => Service.use((service) => service.listAgents());
 export const spawn = <I, O, Rpcs extends Rpc.Any = never>(
   definition: Operation.Durable<I, O, any, Rpcs>,
   options?: SpawnOptions,
-): Effect.Effect<Process.Process<I, O, Rpcs>, never, Service | Process.ManagerService> =>
+): Effect.Effect<Process.Process<I, O, Rpcs>, never, Service> =>
   Effect.flatMap(Service, (service) => service.spawn(definition, options));
 
 /** Delegates work to a thread, another session of the current agent, or another agent. */

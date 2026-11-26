@@ -36,6 +36,13 @@
   .dx-listbox-content:focus {
     outline: none;
   }
+  /*
+   * Content-sized rows: a height-bound content has no free space to grow `auto` rows past a row's `min-height` (one
+   * block), so a described row would lose its second line instead of the list scrolling.
+   */
+  .dx-listbox-content {
+    grid-auto-rows: max-content;
+  }
 
   /* A picker's choice stays marked after focus leaves the list, and is drawn inside the row so no viewport clips it. */
   .dx-listbox[data-selection-style='outline'] .dx-row:is([aria-selected='true'], [data-selected]) {

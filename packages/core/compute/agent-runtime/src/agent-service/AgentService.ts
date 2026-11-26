@@ -20,6 +20,7 @@ import * as Agent from '@dxos/compute/Agent';
 import type * as Hook from '@dxos/compute/Hook';
 import type * as Instructions from '@dxos/compute/Instructions';
 import * as Process from '@dxos/compute/Process';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Skill from '@dxos/compute/Skill';
 import * as Trace from '@dxos/compute/Trace';
 import * as Trajectory from '@dxos/compute/Trajectory';
@@ -143,6 +144,12 @@ export interface Options {
   systemPrompt?: string;
 
   /**
+   * Resolves a calling process's services (its database) for the current-process verbs. Read at call time, since the
+   * resolver can be contributed after the service is built; the one in the layer's context when absent.
+   */
+  serviceResolver?: () => ServiceResolver.ServiceResolver | undefined;
+
+  /**
    * Produces each turn. Defaults to DXOS's own `AiSession`; substituting it swaps the engine while
    * the process keeps ownership of the queue, alarms, redelivery, delegation and hydration.
    */
@@ -201,6 +208,33 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
     Agent.Service,
     Effect.gen(function* () {
       const processManager = yield* Process.ManagerService;
+      const ambientResolver = yield* Effect.serviceOption(ServiceResolver.ServiceResolver);
+
+      /** Runs `effect` against the calling process's database, resolved as the runtime resolves it for that process. */
+      const withCurrentDatabase = <A, E>(
+        effect: Effect.Effect<A, E, Database.Service>,
+      ): Effect.Effect<A, E | Agent.NoCurrentSessionError> =>
+        Effect.gen(function* () {
+          // An operation that declares `Database.Service` already runs against its process's database.
+          const ambient = yield* Effect.serviceOption(Database.Service);
+          if (Option.isSome(ambient)) {
+            return yield* Effect.provideService(effect, Database.Service, ambient.value);
+          }
+          const process = yield* Process.current.pipe(Effect.mapError(() => new Agent.NoCurrentSessionError()));
+          const resolver = opts?.serviceResolver?.() ?? Option.getOrUndefined(ambientResolver);
+          if (resolver === undefined) {
+            return yield* Effect.fail(new Agent.NoCurrentSessionError());
+          }
+          const database = yield* ServiceResolver.resolve(Database.Service, {
+            space: process.environment.space,
+            conversation: process.environment.conversation,
+            process: process.pid,
+          }).pipe(
+            Effect.provideService(ServiceResolver.ServiceResolver, resolver),
+            Effect.mapError(() => new Agent.NoCurrentSessionError()),
+          );
+          return yield* Effect.provideService(effect, Database.Service, database);
+        }).pipe(Effect.scoped);
 
       // Spaces an edge session has been opened on this run. One remote runtime spans them all and
       // cannot enumerate them, so this is what `hydrate` has to walk.
@@ -485,7 +519,9 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
           return yield* Effect.fail(new Agent.NoCurrentSessionError());
         }
         // An invocation that names its conversation by feed (`Operation.withInvocationOptions`) carries the feed's URI.
-        const target = yield* Database.resolve(uri.value);
+        const target = yield* Database.resolve(uri.value).pipe(
+          Effect.mapError(() => new Agent.NoCurrentSessionError()),
+        );
         if (Obj.instanceOf(Agent.Session, target)) {
           return target;
         }
@@ -494,14 +530,16 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
           return yield* Effect.fail(new Agent.NoCurrentSessionError());
         }
         return session;
-      });
+      }).pipe(withCurrentDatabase);
 
       const currentFeed = Effect.gen(function* () {
         const uri = yield* currentAnnotation(Process.SessionAnnotation);
         if (Option.isNone(uri)) {
           return yield* Effect.fail(new Agent.NoCurrentSessionError());
         }
-        const target = yield* Database.resolve(uri.value);
+        const target = yield* Database.resolve(uri.value).pipe(
+          Effect.mapError(() => new Agent.NoCurrentSessionError()),
+        );
         if (Obj.instanceOf(Feed.Feed, target)) {
           return target;
         }
@@ -509,7 +547,7 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
           return yield* Database.load(target.feed).pipe(Effect.mapError(() => new Agent.NoCurrentSessionError()));
         }
         return yield* Effect.fail(new Agent.NoCurrentSessionError());
-      });
+      }).pipe(withCurrentDatabase);
 
       /** The live process of the current session, which owns its queue and alarms. */
       const currentHost = Effect.gen(function* () {
@@ -542,7 +580,7 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
       const delegateToSession = (
         request: Agent.DelegateRequest,
         target: URI.URI | undefined,
-      ): Effect.Effect<Agent.DelegateResult, Agent.NoCurrentSessionError, Process.ManagerService | Database.Service> =>
+      ): Effect.Effect<Agent.DelegateResult, Agent.NoCurrentSessionError, Database.Service> =>
         Effect.gen(function* () {
           const caller = yield* currentSession;
           const runtime = yield* Effect.context<Database.Service>();
@@ -612,7 +650,7 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
           if (Option.isNone(uri)) {
             return Option.none();
           }
-          return yield* Database.resolve(uri.value, Agent.Agent).pipe(Effect.option);
+          return yield* Database.resolve(uri.value, Agent.Agent).pipe(withCurrentDatabase, Effect.option);
         }),
         currentThread: Effect.map(
           currentAnnotation(Process.ThreadAnnotation),
@@ -625,31 +663,43 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
             host.rpc.setAlarm({ at: DateTime.toUtc(at), message }).pipe(Effect.orDie),
           ),
         listSessions: (listOptions) =>
-          Effect.map(
-            Process.ManagerService.use((manager) => manager.list()),
-            (processes) =>
-              uniqueAnnotations(
-                processes.filter(
-                  (process) =>
-                    listOptions?.agent === undefined ||
-                    Option.getOrUndefined(
-                      Annotation.getDictionary(process.params.annotations, Process.AgentAnnotation),
-                    ) === listOptions.agent,
-                ),
-                Process.SessionAnnotation,
+          Effect.map(processManager.list(), (processes) =>
+            uniqueAnnotations(
+              processes.filter(
+                (process) =>
+                  listOptions?.agent === undefined ||
+                  Option.getOrUndefined(
+                    Annotation.getDictionary(process.params.annotations, Process.AgentAnnotation),
+                  ) === listOptions.agent,
               ),
+              Process.SessionAnnotation,
+            ),
           ),
         listAgents: () =>
-          Effect.map(
-            Process.ManagerService.use((manager) => manager.list()),
-            (processes) => uniqueAnnotations(processes, Process.AgentAnnotation),
-          ),
+          Effect.map(processManager.list(), (processes) => uniqueAnnotations(processes, Process.AgentAnnotation)),
         // TODO(dmaretskyi): Stamp the caller's session, agent and thread annotations (F-12.2).
         spawn: (definition, spawnOptions) =>
-          Process.ManagerService.use((manager) => manager.spawn(definition, spawnOptions)),
+          Effect.gen(function* () {
+            const caller = yield* Effect.option(Process.current);
+            // The caller's guard still applies when the spawn names another parent, so a child never escapes it.
+            const callerGuard = yield* Effect.serviceOption(Process.GuardService);
+            const guards = [Option.getOrUndefined(callerGuard), spawnOptions?.guard].filter(
+              (guard) => guard !== undefined,
+            );
+            const guard = guards.reduce<Process.Guard | undefined>(
+              (combined, next) => (combined === undefined ? next : Process.bothGuards(combined, next)),
+              undefined,
+            );
+            return yield* processManager.spawn(definition, {
+              // The caller is the parent unless the spawn names its own.
+              ...(Option.isSome(caller) ? { parentProcessId: caller.value.pid } : {}),
+              ...spawnOptions,
+              ...(guard !== undefined ? { guard } : {}),
+            });
+          }),
         delegate: (request) =>
           request.target.kind === 'session'
-            ? delegateToSession(request, request.target.session)
+            ? withCurrentDatabase(delegateToSession(request, request.target.session))
             : Effect.die(new Error(`Agent.delegate to a ${request.target.kind} is not implemented.`)),
       };
 
@@ -667,17 +717,45 @@ export const serviceFromHandles = (
     options?: Agent.OpenSessionOptions,
   ) => Effect.Effect<SessionHandle, never, Database.Service>,
 ): Agent.ServiceApi => ({
-  open: (chat, options) => Effect.asVoid(handleFor(chat, options)),
+  open: (chat, options) => withSessionDatabase(chat, Effect.asVoid(handleFor(chat, options))),
   hydrate: () => Effect.void,
-  getContext: (chat) => Effect.flatMap(handleFor(chat), (handle) => handle.getContext()),
-  addContext: (chat, context) => Effect.flatMap(handleFor(chat), (handle) => handle.addContext(context)),
+  getContext: (chat) =>
+    withSessionDatabase(
+      chat,
+      Effect.flatMap(handleFor(chat), (handle) => handle.getContext()),
+    ),
+  addContext: (chat, context) =>
+    withSessionDatabase(
+      chat,
+      Effect.flatMap(handleFor(chat), (handle) => handle.addContext(context)),
+    ),
   submitPrompt: (chat, prompt, options) =>
-    Effect.flatMap(handleFor(chat), (handle) => handle.submitPrompt(prompt, options)),
-  running: (chat) => Effect.map(handleFor(chat), (handle) => handle.running),
-  waitForCompletion: (chat) => Effect.flatMap(handleFor(chat), (handle) => handle.waitForCompletion()),
-  terminate: (chat) => Effect.flatMap(handleFor(chat), (handle) => handle.terminate()),
+    withSessionDatabase(
+      chat,
+      Effect.flatMap(handleFor(chat), (handle) => handle.submitPrompt(prompt, options)),
+    ),
+  running: (chat) =>
+    withSessionDatabase(
+      chat,
+      Effect.map(handleFor(chat), (handle) => handle.running),
+    ),
+  waitForCompletion: (chat) =>
+    withSessionDatabase(
+      chat,
+      Effect.flatMap(handleFor(chat), (handle) => handle.waitForCompletion()),
+    ),
+  terminate: (chat) =>
+    withSessionDatabase(
+      chat,
+      Effect.flatMap(handleFor(chat), (handle) => handle.terminate()),
+    ),
   subscribeEphemeral: (chat, options) =>
-    Stream.unwrap(Effect.map(handleFor(chat), (handle) => handle.subscribeEphemeral(options))),
+    Stream.unwrap(
+      withSessionDatabase(
+        chat,
+        Effect.map(handleFor(chat), (handle) => handle.subscribeEphemeral(options)),
+      ),
+    ),
   currentSession: Effect.die(new Error('Agent.currentSession is not implemented.')),
   currentFeed: Effect.die(new Error('Agent.currentFeed is not implemented.')),
   currentAgent: Effect.die(new Error('Agent.currentAgent is not implemented.')),
@@ -692,13 +770,23 @@ export const serviceFromHandles = (
 });
 
 /** The value of `annotation` on the calling process; none outside a process. */
-const currentAnnotation = <T>(
-  annotation: Annotation.Annotation<T>,
-): Effect.Effect<Option.Option<T>, never, Process.ManagerService> =>
+const currentAnnotation = <T>(annotation: Annotation.Annotation<T>): Effect.Effect<Option.Option<T>> =>
   Process.current.pipe(
     Effect.map((process) => Annotation.getDictionary(process.params.annotations, annotation)),
     Effect.orElseSucceed(() => Option.none<T>()),
   );
+
+/** Runs `effect` against the database the session lives in. */
+const withSessionDatabase = <A, E>(
+  session: Agent.Session,
+  effect: Effect.Effect<A, E, Database.Service>,
+): Effect.Effect<A, E> =>
+  Effect.suspend(() => {
+    const database = Obj.getDatabase(session);
+    return database === undefined
+      ? Effect.die(new Error('The session is not in a database.'))
+      : effect.pipe(Effect.provide(Database.layer(database)));
+  });
 
 /** The distinct values of `annotation` across `processes`. */
 const uniqueAnnotations = <T>(processes: readonly Process.Process[], annotation: Annotation.Annotation<T>): T[] => [

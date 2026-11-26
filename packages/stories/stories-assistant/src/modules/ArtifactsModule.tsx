@@ -2,12 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { memo, useEffect, useMemo, useState } from 'react';
 
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
+import * as ObjectCard from '@dxos/app-toolkit/ObjectCard';
 import { Filter, Obj, type Ref } from '@dxos/echo';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as Presentation from '@dxos/plugin-presenter/Presentation';
@@ -15,29 +16,46 @@ import * as Sheet from '@dxos/plugin-sheet/Sheet';
 import { type Space, useObject, useQuery } from '@dxos/react-client/echo';
 import { AttendableContainer } from '@dxos/react-ui-attention';
 import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-/**
- * The artifacts an agent makes in the story's space — sheets (with their charts), presentations and documents — one
- * tab each, newest first, each drawn by its plugin's own article surface. Each new artifact takes the panel as it
- * arrives; between arrivals the viewer's pick holds.
- */
-export const ArtifactsModule = () => {
-  const space = Hooks.useActiveSpace();
-  return space ? <ArtifactsPanel space={space} /> : null;
+export type ArtifactsModuleData = {
+  /**
+   * How the artifacts are shown: one at a time through its plugin's article surface, picked from a tab per artifact
+   * (`tabs`, the default), or all at once as a mosaic of cards (`cards`).
+   */
+  view?: 'tabs' | 'cards';
 };
 
-/** The kinds of object shown as artifacts. */
+/**
+ * The artifacts an agent makes in the story's space — sheets (with their charts), presentations and documents — newest
+ * first. As tabs, each new artifact takes the panel as it arrives and between arrivals the viewer's pick holds; as
+ * cards, each new artifact adds a card.
+ */
+export const ArtifactsModule = ({ data }: Surface.ComponentProps<ArtifactsModuleData>) => {
+  const space = Hooks.useActiveSpace();
+  if (!space) {
+    return null;
+  }
+
+  return data.view === 'cards' ? <ArtifactCards space={space} /> : <ArtifactsPanel space={space} />;
+};
+
 const ARTIFACTS = Filter.or(
   Filter.type(Sheet.Sheet),
   Filter.type(Presentation.Presentation),
   Filter.type(Markdown.Document),
 );
 
-const ArtifactsPanel = ({ space }: { space: Space }) => {
+/** The space's artifacts, newest first. */
+const useArtifacts = (space: Space) => {
   const all = useQuery(space.db, ARTIFACTS);
-  const artifacts = useMemo(() => [...all].sort((left, right) => (left.id < right.id ? 1 : -1)), [all]);
+  return useMemo(() => [...all].sort((left, right) => (left.id < right.id ? 1 : -1)), [all]);
+};
+
+const ArtifactsPanel = ({ space }: { space: Space }) => {
+  const artifacts = useArtifacts(space);
   const [picked, setPicked] = useState<string | undefined>();
   const [newest, setNewest] = useState<string | undefined>();
   // A new artifact is shown as it arrives, replacing the viewer's pick, so the panel follows the agent's work.
@@ -51,12 +69,10 @@ const ArtifactsPanel = ({ space }: { space: Space }) => {
   const selected = artifacts.find((object) => object.id === (picked ?? newest));
 
   return (
-    <Panel.Root>
+    <Panel.Root data-testid='artifacts-module.tabs'>
       <Panel.Header>
         <Toolbar.Root>
-          {artifacts.length === 0 ? (
-            <Toolbar.Text>Artifacts the agent creates appear here.</Toolbar.Text>
-          ) : (
+          {artifacts.length > 0 && (
             <Toolbar.ToggleGroup
               type='single'
               value={selected?.id ?? ''}
@@ -82,6 +98,46 @@ const ArtifactsPanel = ({ space }: { space: Space }) => {
     </Panel.Root>
   );
 };
+
+const ArtifactCards = ({ space }: { space: Space }) => {
+  const artifacts = useArtifacts(space);
+  return (
+    <Panel.Root data-testid='artifacts-module.cards'>
+      <Panel.Header asChild>
+        <Toolbar.Root>
+          <Toolbar.Text>Artifacts</Toolbar.Text>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body asChild>
+        <ScrollArea.Root classNames='dx-grow'>
+          <ScrollArea.Viewport>
+            <div className='flex flex-col gap-2 p-2'>
+              {artifacts.map((object) => (
+                <ArtifactCard key={object.id} object={object} />
+              ))}
+            </div>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Body>
+    </Panel.Root>
+  );
+};
+
+/** One artifact as a card: its icon and label, then whatever preview its type contributes. */
+const ArtifactCard = memo(({ object }: { object: Obj.Unknown }) => {
+  const [snapshot] = useObject(object);
+  const cardData = useMemo<AppSurface.ObjectCardData>(() => ({ subject: object }), [object]);
+  return (
+    <ObjectCard.Root data-testid='artifacts-module.card' data-artifact={kindOf(object)}>
+      <ObjectCard.Header subject={snapshot} lines={2}>
+        {Obj.getLabel(snapshot)}
+      </ObjectCard.Header>
+      <Surface.Surface type={AppSurface.CardContent} data={cardData} limit={1} />
+    </ObjectCard.Root>
+  );
+});
+
+ArtifactCard.displayName = 'ArtifactCard';
 
 type ArtifactKind = 'sheet' | 'presentation' | 'document';
 

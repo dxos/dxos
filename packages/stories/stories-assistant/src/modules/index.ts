@@ -11,10 +11,12 @@ import { AgentModule } from './AgentModule.tsx';
 import { AgentStateModule } from './AgentStateModule.tsx';
 import { ArtifactsModule } from './ArtifactsModule.tsx';
 import { ChatModule } from './ChatModule.tsx';
+import { ChatPlaneModule } from './ChatPlaneModule.tsx';
 import { ContextModule } from './ContextModule.tsx';
 import { GraphModule } from './GraphModule.tsx';
 import { ProfileModule } from './ProfileModule.tsx';
 import { ProjectModule } from './ProjectModule.tsx';
+import { ReplayModule } from './ReplayModule.tsx';
 import { ResearchInputModule } from './ResearchInputModule.tsx';
 import { ResearchOutputModule } from './ResearchOutputModule.tsx';
 import { TasksModule } from './TasksModule.tsx';
@@ -35,10 +37,12 @@ export const StoryRole = {
   AgentState: Role.make<Record<string, unknown>>('org.dxos.storybook.role.agentState'),
   Artifacts: Role.make<Record<string, unknown>>('org.dxos.storybook.role.artifacts'),
   Chat: Role.make<Record<string, unknown>>('org.dxos.storybook.role.chat'),
+  ChatPlane: Role.make<Record<string, unknown>>('org.dxos.storybook.role.chatPlane'),
   Context: Role.make<Record<string, unknown>>('org.dxos.storybook.role.context'),
   Graph: Role.make<Record<string, unknown>>('org.dxos.storybook.role.graph'),
   Profile: Role.make<Record<string, unknown>>('org.dxos.storybook.role.profile'),
   Project: Role.make<Record<string, unknown>>('org.dxos.storybook.role.project'),
+  Replay: Role.make<Record<string, unknown>>('org.dxos.storybook.role.replay'),
   ResearchInput: Role.make<Record<string, unknown>>('org.dxos.storybook.role.researchInput'),
   ResearchOutput: Role.make<Record<string, unknown>>('org.dxos.storybook.role.researchOutput'),
   Tasks: Role.make<Record<string, unknown>>('org.dxos.storybook.role.tasks'),
@@ -79,6 +83,11 @@ export const moduleSurfaces: Surface.Definition[] = [
     component: ChatModule,
   }),
   Surface.create({
+    id: 'role.chatPlane',
+    filter: Surface.makeFilter(StoryRole.ChatPlane),
+    component: ChatPlaneModule,
+  }),
+  Surface.create({
     id: 'role.context',
     filter: Surface.makeFilter(StoryRole.Context),
     component: ContextModule,
@@ -97,6 +106,11 @@ export const moduleSurfaces: Surface.Definition[] = [
     id: 'role.project',
     filter: Surface.makeFilter(StoryRole.Project),
     component: ProjectModule,
+  }),
+  Surface.create({
+    id: 'role.replay',
+    filter: Surface.makeFilter(StoryRole.Replay),
+    component: ReplayModule,
   }),
   Surface.create({
     id: 'role.researchInput',
@@ -121,4 +135,9 @@ export const moduleSurfaces: Surface.Definition[] = [
 ];
 
 export { AgentModule } from './AgentModule.tsx';
+export type { ArtifactsModuleData } from './ArtifactsModule.tsx';
+export type { ChatModuleData } from './ChatModule.tsx';
+export type { ChatPlaneModuleData } from './ChatPlaneModule.tsx';
+export type { ReplayArgs, ReplayModuleData } from './ReplayModule.tsx';
 export { SpaceTemplateToolbar } from './SpaceTemplateToolbar.tsx';
+export type { TasksModuleData } from './TasksModule.tsx';

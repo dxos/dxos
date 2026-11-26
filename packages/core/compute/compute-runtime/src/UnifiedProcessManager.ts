@@ -57,8 +57,7 @@ export const layer: Layer.Layer<
     };
 
     return {
-      // The aggregate spans every runtime and belongs to none of their processes.
-      current: Effect.fail(new Process.NoCurrentProcessError()),
+      current: Process.current,
       processTree,
       processTreeAtom: aggregate,
       // A filter naming a space re-reads that space from the remote runtime first: the remote half of

@@ -443,6 +443,33 @@ export const Grow: Story = {
   },
 };
 
+/**
+ * A row that resizes with no commit of the list's own — a surface or widget inside it filling in late —
+ * is measured before the next frame paints.
+ *
+ * `Grow` changes a row through the model, which commits; this one changes only the DOM, the way a
+ * nested surface does. A list that measures only after its own commits never sees it, so a list
+ * pinned to its end sits a row short until something unrelated re-renders it.
+ */
+export const Resize: Story = {
+  args: { count: 200, exact: false },
+  play: async ({ canvasElement }) => {
+    await settle();
+    const { sizer } = probe(canvasElement);
+    const before = sizer.offsetHeight;
+    const content = canvasElement.querySelector<HTMLElement>(`[data-index="${GROWN}"] > div`);
+    if (!content) {
+      throw new Error(`row ${GROWN} should be mounted at the top`);
+    }
+
+    content.style.height = `${content.offsetHeight + 100}px`;
+    // Two frames: the first lays out the resize, so the second reads what that frame painted.
+    await settle(2);
+
+    await expect(sizer.offsetHeight - before).toEqual(100);
+  },
+};
+
 /** A jump lands, and both edge invariants still hold once it has. */
 export const Jump: Story = {
   play: async ({ canvasElement }) => {
