@@ -10,19 +10,28 @@ import * as Layer from 'effect/Layer';
 
 import * as Operation from '@dxos/compute/Operation';
 import type * as Process from '@dxos/compute/Process';
-import { Check } from '@dxos/permission';
+import { Check, type Requirement } from '@dxos/permission';
+
+/** Whether an authority admits a call; a refusal names the first requirement it refused and why. */
+export type Verdict =
+  | { readonly _tag: 'Admitted' }
+  | {
+      readonly _tag: 'Refused';
+      readonly requirement: Requirement.Requirement;
+      readonly reason: Check.Reason;
+      readonly message: string;
+    };
 
 /**
- * Decides whether an authority admits an operation that declares requirements; refuses by dying with
- * `Operation.OperationDeniedError`. The process manager checks every call a process makes against each authority the
- * process is held to.
+ * Decides whether an authority admits an operation that declares requirements. The process manager checks every call a
+ * process makes against each authority the process is held to, and asks for consent where a refusal allows it.
  */
 export interface Api {
   readonly check: (params: {
     readonly authority: Process.Authority;
     readonly op: Operation.Definition.Any;
     readonly input: unknown;
-  }) => Effect.Effect<void>;
+  }) => Effect.Effect<Verdict>;
 }
 
 export class Service extends Context.Service<Service, Api>()('@dxos/compute-runtime/Verifier') {}
@@ -50,15 +59,24 @@ export const make = ({ source }: Options = {}): Api => ({
     for (const requirement of Operation.getRequirements(op)) {
       const result = yield* Check.check({ principal: authority.principal, requirement, args: input, source: grants });
       if (Check.isDenied(result)) {
-        return yield* Effect.die(
-          new Operation.OperationDeniedError({
-            message: `Operation "${op.meta.key}" denied: ${Check.describeReason(result.reason)}`,
-            context: { key: op.meta.key, command: requirement.command, reason: result.reason.kind },
-          }),
-        );
+        return {
+          _tag: 'Refused',
+          requirement,
+          reason: result.reason,
+          message: `Operation "${op.meta.key}" denied: ${Check.describeReason(result.reason)}`,
+        } satisfies Verdict;
       }
     }
+    return { _tag: 'Admitted' } satisfies Verdict;
   }),
 });
+
+/** Admits or refuses the calls the running process makes; the process manager provides it to every process. */
+export interface AdmissionApi {
+  /** Dies with `Operation.OperationDeniedError` when the process's authorities refuse the call and no consent admits it. */
+  readonly admit: (op: Operation.Definition.Any, input: unknown) => Effect.Effect<void>;
+}
+
+export class Admission extends Context.Service<Admission, AdmissionApi>()('@dxos/compute-runtime/Verifier.Admission') {}
 
 export const layer = (options?: Options): Layer.Layer<Service> => Layer.succeed(Service, make(options));

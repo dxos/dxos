@@ -502,11 +502,10 @@ export interface OpenSessionOptions {
    */
   readonly location?: AgentLocation;
   /**
-   * Admits the operations the session and its tool calls invoke that declare requirements
-   * (`Process.SpawnOptions.guard`). Bound at spawn, so a session opened with a different guard
-   * runs on a fresh process. A guard is a closure and never reaches an `edge` process.
+   * Who the session acts as and the grants it holds (`Process.SpawnOptions.authority`); its tool calls are held to it.
+   * Read when the session's process is spawned; a running process keeps the authority it was spawned with.
    */
-  readonly guard?: Process.Guard;
+  readonly authority?: Process.Authority;
 }
 
 /** Raised when the calling process works for no session. */

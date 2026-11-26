@@ -40,6 +40,7 @@ import { log } from '@dxos/log';
 import { type Grant } from '@dxos/permission';
 import { markWork } from '@dxos/util';
 
+import * as Consent from './Consent.ts';
 import { type ProcessIdGenerator, UUIDProcessIdGenerator } from './process-id.ts';
 import { ProcessManagerService } from './process-manager-service.ts';
 import { type PersistedProcess, ProcessStore } from './process-store.ts';
@@ -294,32 +295,30 @@ export interface ImplOpts {
   runtimeName?: Trace.RuntimeName;
 }
 
+/**
+ * An authority a process is held to, with the process that owns it. Read through the owner while it is live, so a
+ * grant to an ancestor reaches the calls its children make; the copy stands in once the owner is gone, and after a
+ * restart, when the owner is not known.
+ */
+type HeldAuthority = {
+  readonly owner: Process.ID | undefined;
+  readonly authority: Process.Authority;
+};
+
 /** The authorities a live process is held to: its own (which `grant` extends) and those it inherited. */
 type HeldAuthorities = {
   readonly own: Process.Authority | undefined;
-  readonly inherited: readonly Process.Authority[];
+  readonly inherited: readonly HeldAuthority[];
 };
 
-/** What a process passes to the children it spawns, whatever parent they name. */
+/** The process that spawns a child, whatever parent the child names: its authorities bind the child too. */
 type Spawner = {
-  readonly guard: Process.Guard | undefined;
-  readonly authorities: readonly Process.Authority[];
+  readonly pid: Process.ID;
 };
-
-/** One guard that admits only what every given guard admits; undefined when none is given. */
-const combineGuards = (guards: readonly (Process.Guard | undefined)[]): Process.Guard | undefined =>
-  [...new Set(guards)]
-    .filter((candidate): candidate is Process.Guard => candidate !== undefined)
-    .reduce<Process.Guard | undefined>(
-      (combined, next) => (combined === undefined ? next : Process.bothGuards(combined, next)),
-      undefined,
-    );
 
 export class Impl implements Manager {
   readonly #idGenerator: ProcessIdGenerator;
   readonly #handles = new Map<Process.ID, ProcessHandle.Impl<any, any, any>>();
-  /** Guards of live processes, kept beside the handles because a guard is a closure and is never persisted. */
-  readonly #guards = new Map<Process.ID, Process.Guard>();
   /** Authorities of live processes: each one's own (which {@link grant} extends) and those it inherited. */
   readonly #authorities = new Map<Process.ID, HeldAuthorities>();
   readonly #verifier: Verifier.Api;
@@ -393,8 +392,8 @@ export class Impl implements Manager {
                 ...options,
                 parentProcessId: 'parentProcessId' in options ? options.parentProcessId : pid,
               },
-              // A detached child must not shed the guard or the authorities of the process that spawned it.
-              { guard: this.#guards.get(pid), authorities: this.#heldAuthorities(pid) },
+              // A detached child must not shed the authorities of the process that spawned it.
+              { pid },
             ),
       handles: ({ location, ...options } = {}) =>
         location?.kind === 'edge'
@@ -483,7 +482,6 @@ export class Impl implements Manager {
       return;
     }
     this.#handles.delete(pid);
-    this.#guards.delete(pid);
     this.#authorities.delete(pid);
     const clearStorage = this.#inMemory.get(pid);
     this.#inMemory.delete(pid);
@@ -524,7 +522,6 @@ export class Impl implements Manager {
           }
         }
         this.#handles.clear();
-        this.#guards.clear();
         this.#authorities.clear();
         for (const clearStorage of this.#inMemory.values()) {
           yield* clearStorage;
@@ -551,18 +548,84 @@ export class Impl implements Manager {
     });
   }
 
-  /** Every authority the process is held to: those it inherited, then its own. */
-  #heldAuthorities(pid: Process.ID): readonly Process.Authority[] {
+  /** Every authority the process is held to, each read through its owner while that is live: inherited, then its own. */
+  #heldAuthorities(pid: Process.ID): readonly HeldAuthority[] {
     const held = this.#authorities.get(pid);
-    return held === undefined ? [] : [...held.inherited, ...(held.own !== undefined ? [held.own] : [])];
+    if (held === undefined) {
+      return [];
+    }
+    const inherited = held.inherited.map(({ owner, authority }) => ({
+      owner,
+      authority: (owner !== undefined ? this.#authorities.get(owner)?.own : undefined) ?? authority,
+    }));
+    return held.own !== undefined ? [...inherited, { owner: pid, authority: held.own }] : inherited;
   }
 
-  /** A guard that needs every authority the process holds, read when each call is checked, so added grants apply. */
-  #authorityGuard(pid: Process.ID): Process.Guard {
+  /**
+   * The admission check of a process: every authority it is held to must admit a call that declares requirements. A
+   * refusal of a consentable requirement is put to the process's {@link Consent.Service}, when one resolves; granted
+   * permissions are added to the refusing authority's owner, so they hold for later calls too.
+   */
+  #admission(pid: Process.ID, scope: Scope.Scope, context: ServiceResolver.ResolutionContext): Verifier.AdmissionApi {
+    const deny = (op: Operation.Definition.Any, message: string, details: Record<string, unknown> = {}) =>
+      Effect.die(new Operation.OperationDeniedError({ message, context: { key: op.meta.key, ...details } }));
     return {
-      check: (op, input) =>
-        Effect.forEach(this.#heldAuthorities(pid), (authority) => this.#verifier.check({ authority, op, input }), {
-          discard: true,
+      admit: (op, input) =>
+        Effect.gen({ self: this }, function* () {
+          if (Operation.getRequirements(op).length === 0) {
+            return;
+          }
+          const held = this.#heldAuthorities(pid);
+          if (held.length === 0) {
+            return yield* deny(
+              op,
+              `Operation "${op.meta.key}" requires permissions and the invoking process holds none`,
+            );
+          }
+          for (const { owner, authority } of held) {
+            const verdict = yield* this.#verifier.check({ authority, op, input });
+            if (verdict._tag === 'Admitted') {
+              continue;
+            }
+            const refusal = { command: verdict.requirement.command, reason: verdict.reason.kind };
+            if (!verdict.requirement.consentable) {
+              return yield* deny(op, verdict.message, refusal);
+            }
+            const consent = yield* ServiceResolver.resolve(Consent.Service, context).pipe(
+              Effect.provideService(ServiceResolver.ServiceResolver, this.#serviceResolver),
+              Effect.provideService(Scope.Scope, scope),
+              Effect.option,
+            );
+            if (Option.isNone(consent)) {
+              return yield* deny(op, verdict.message, refusal);
+            }
+            const answer = yield* consent.value.ask({
+              principal: authority.principal,
+              requirement: verdict.requirement,
+              op,
+              input,
+            });
+            if (answer._tag === 'Declined') {
+              return yield* deny(op, `Operation "${op.meta.key}" was declined`, { ...refusal, reason: 'declined' });
+            }
+            if (answer._tag === 'Grant') {
+              if (owner === undefined || !this.#handles.has(owner)) {
+                return yield* deny(op, verdict.message, refusal);
+              }
+              yield* this.grant(owner, answer.grants);
+              const recheck = yield* this.#verifier.check({
+                authority: this.#authorities.get(owner)?.own ?? authority,
+                op,
+                input,
+              });
+              if (recheck._tag === 'Refused') {
+                return yield* deny(op, recheck.message, {
+                  command: recheck.requirement.command,
+                  reason: recheck.reason.kind,
+                });
+              }
+            }
+          }
         }),
     };
   }
@@ -624,22 +687,19 @@ export class Impl implements Manager {
         ...(parentHandle !== undefined ? parentHandle.environment : {}),
         ...options?.environment,
       };
-      const parentGuard =
-        options?.parentProcessId !== undefined ? this.#guards.get(options.parentProcessId) : undefined;
-      const closureGuard = combineGuards([spawner?.guard, parentGuard, options?.guard]);
-      // A child is held to its spawner's and parent's authorities as they stand now, so a later grant to either
-      // never reaches it; its own comes last.
+      // A child is held to its spawner's and its parent's authorities, read through their owners; its own comes last.
       const inherited = [
-        ...new Set([
-          ...(spawner?.authorities ?? []),
-          ...(options?.parentProcessId !== undefined ? this.#heldAuthorities(options.parentProcessId) : []),
-        ]),
+        ...new Map(
+          [
+            ...(spawner !== undefined ? this.#heldAuthorities(spawner.pid) : []),
+            ...(options?.parentProcessId !== undefined ? this.#heldAuthorities(options.parentProcessId) : []),
+          ].map((held) => [held.owner ?? held.authority, held] as const),
+        ).values(),
       ];
       const authority = options?.authority;
       if (authority !== undefined || inherited.length > 0) {
         this.#authorities.set(id, { own: authority, inherited });
       }
-      const guard = combineGuards([closureGuard, this.#authorities.has(id) ? this.#authorityGuard(id) : undefined]);
 
       const resolutionContext: LayerSpec.LayerContext = {
         space: environment.space,
@@ -717,14 +777,12 @@ export class Impl implements Manager {
         ),
       );
 
-      if (guard !== undefined) {
-        builtinCtx = builtinCtx.pipe(Context.add(Process.GuardService, guard));
-      }
+      builtinCtx = builtinCtx.pipe(Context.add(Verifier.Admission, this.#admission(id, scope, resolutionContext)));
       builtinCtx = Context.merge(builtinCtx, this.#childServices(id, origin, tracer));
 
       const builtinTagKeys = new Set([
         Process.EnvironmentService.key,
-        Process.GuardService.key,
+        Verifier.Admission.key,
         StorageService.key,
         Scope.Scope.key,
         Trace.TraceService.key,
@@ -842,10 +900,6 @@ export class Impl implements Manager {
       );
       handleRef = handle;
       this.#handles.set(id, handle);
-      // Only the closures are kept for children: authorities reach them through `#authorities`.
-      if (closureGuard !== undefined) {
-        this.#guards.set(id, closureGuard);
-      }
       this.#refreshProcessTree();
 
       // Write the initial durable record, spawn event included, before running onSpawn: one write
@@ -861,7 +915,7 @@ export class Impl implements Manager {
           parentId: Option.getOrNull(parentOption),
           ...(origin !== undefined ? { origin } : {}),
           ...(authority !== undefined ? { authority } : {}),
-          ...(inherited.length > 0 ? { inheritedAuthorities: inherited } : {}),
+          ...(inherited.length > 0 ? { inheritedAuthorities: inherited.map((held) => held.authority) } : {}),
           state: Process.State.RUNNING,
           alarmDueAt: null,
           events: [{ _tag: 'spawn', seq: spawnSeq }],
@@ -956,16 +1010,20 @@ export class Impl implements Manager {
         ),
       );
 
-      // Authorities are data, so a rehydrated process is held to the same ones; a guard closure is not restored.
+      // Authorities are data, so a rehydrated process is held to the same ones; which process owned an inherited one is
+      // not known after a restart, so its copy stands.
       if (record.authority !== undefined || (record.inheritedAuthorities?.length ?? 0) > 0) {
-        this.#authorities.set(id, { own: record.authority, inherited: record.inheritedAuthorities ?? [] });
-        builtinCtx = builtinCtx.pipe(Context.add(Process.GuardService, this.#authorityGuard(id)));
+        this.#authorities.set(id, {
+          own: record.authority,
+          inherited: (record.inheritedAuthorities ?? []).map((authority) => ({ owner: undefined, authority })),
+        });
       }
+      builtinCtx = builtinCtx.pipe(Context.add(Verifier.Admission, this.#admission(id, scope, resolutionContext)));
       builtinCtx = Context.merge(builtinCtx, this.#childServices(id, origin, tracer));
 
       const builtinTagKeys = new Set([
         Process.EnvironmentService.key,
-        Process.GuardService.key,
+        Verifier.Admission.key,
         StorageService.key,
         Scope.Scope.key,
         Trace.TraceService.key,

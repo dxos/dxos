@@ -2143,12 +2143,12 @@ describe('reentrancy', () => {
             onSpawn: () => Effect.void,
             onInput: () =>
               Effect.gen(function* () {
-                const guard = yield* Effect.serviceOption(Process.GuardService);
-                if (Option.isNone(guard)) {
-                  seen.push('no guard');
+                const admission = yield* Effect.serviceOption(Verifier.Admission);
+                if (Option.isNone(admission)) {
+                  seen.push('no admission');
                   return;
                 }
-                const exit = yield* guard.value.check(Exec, undefined).pipe(Effect.exit);
+                const exit = yield* admission.value.admit(Exec, undefined).pipe(Effect.exit);
                 seen.push(Exit.isSuccess(exit) ? 'admitted' : 'refused');
               }),
             onAlarm: () => Effect.void,

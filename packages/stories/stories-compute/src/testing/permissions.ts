@@ -5,7 +5,6 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Verifier } from '@dxos/compute-runtime';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import type * as Process from '@dxos/compute/Process';
@@ -50,7 +49,7 @@ export type PermissionId = PermissionOption['id'];
 
 /**
  * Copies of plugin-space's database operations that declare what they need. The shared definitions
- * stay undeclared, since every Composer process without a guard would otherwise refuse them.
+ * stay undeclared, since every Composer process without an authority would otherwise refuse them.
  */
 export const QueryObjects = SpaceOperation.QueryObjects.pipe(Operation.requires(Requirement.make(SpaceRead)));
 export const GetObjects = SpaceOperation.GetObjects.pipe(Operation.requires(Requirement.make(SpaceRead)));
@@ -134,9 +133,7 @@ export const makePermissionDemoSkill = (): Skill.Skill =>
     tools: Skill.toolDefinitions({ operations: [QueryObjects, GetObjects, UpdateObject, SandboxExec] }),
   });
 
-const verifier = Verifier.make();
-
-export type MakeGuardOptions = {
+export type MakeAuthorityOptions = {
   /** The identity granting the permissions: the story's own HALO DID. */
   issuer: string;
   /** The principal the agent process acts as. */
@@ -144,18 +141,20 @@ export type MakeGuardOptions = {
   permissions: readonly PermissionId[];
 };
 
-/** One grant from `issuer` to `audience` for exactly the checked permissions, and the guard that holds it. */
-export const makeGuard: (options: MakeGuardOptions) => Effect.Effect<{ grant: Grant.Grant; guard: Process.Guard }> =
-  Effect.fnUntraced(function* ({ issuer, audience, permissions }: MakeGuardOptions) {
-    const grant = yield* Grant.make({
-      issuer: Principal.identity(issuer),
-      audience,
-      permissions: PERMISSION_OPTIONS.filter(({ id }) => permissions.includes(id)).map(({ permission }) =>
-        Permission.make({ subject: Subject.any(), command: permission.command }),
-      ),
-    });
-    // `createSession` takes a guard rather than an authority, so the grant is checked through the runtime's verifier.
-    const authority: Process.Authority = { principal: audience, grants: [grant] };
-    const guard: Process.Guard = { check: (op, input) => verifier.check({ authority, op, input }) };
-    return { grant, guard };
+/** One grant from `issuer` to `audience` for exactly the checked permissions, and the authority that holds it. */
+export const makeAuthority: (
+  options: MakeAuthorityOptions,
+) => Effect.Effect<{ grant: Grant.Grant; authority: Process.Authority }> = Effect.fnUntraced(function* ({
+  issuer,
+  audience,
+  permissions,
+}: MakeAuthorityOptions) {
+  const grant = yield* Grant.make({
+    issuer: Principal.identity(issuer),
+    audience,
+    permissions: PERMISSION_OPTIONS.filter(({ id }) => permissions.includes(id)).map(({ permission }) =>
+      Permission.make({ subject: Subject.any(), command: permission.command }),
+    ),
   });
+  return { grant, authority: { principal: audience, grants: [grant] } };
+});

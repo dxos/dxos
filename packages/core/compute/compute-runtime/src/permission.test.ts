@@ -20,6 +20,7 @@ import * as Trace from '@dxos/compute/Trace';
 import { Database, DXN } from '@dxos/echo';
 import { Grant, Permission, Policy, Principal, Requirement, Subject } from '@dxos/permission';
 
+import * as Consent from './Consent.ts';
 import * as OperationProcess from './OperationProcess.ts';
 import * as ProcessManager from './ProcessManager.ts';
 import * as ProcessOperationInvoker from './ProcessOperationInvoker.ts';
@@ -41,6 +42,9 @@ const Sandbox = Permission.define({ command: '/sandbox', name: 'Use the sandbox'
 /** Sending email. */
 const EmailSend = Permission.define({ command: '/email/send', name: 'Send email' });
 
+/** Posting to a channel: consentable, so a process that lacks it is asked rather than refused outright. */
+const ChannelPost = Permission.define({ command: '/channel/post', name: 'Post to a channel', consentable: true });
+
 /** Declares nothing, so it runs in any process. */
 const Echo = Operation.make({
   meta: { key: DXN.make('com.example.operation.test.permission.echo'), name: 'Echo' },
@@ -61,6 +65,34 @@ const SendEmail = Operation.make({
   input: Schema.Struct({ to: Schema.String }),
   output: Schema.String,
 }).pipe(Operation.requires(Requirement.make(EmailSend, { policy: [Policy.like('.args.to', '*@dxos.org')] })));
+
+/** Requires {@link ChannelPost}, which a person can approve. */
+const Post = Operation.make({
+  meta: { key: DXN.make('com.example.operation.test.permission.post'), name: 'Post' },
+  input: Schema.Struct({ text: Schema.String }),
+  output: Schema.String,
+}).pipe(Operation.requires(Requirement.make(ChannelPost)));
+
+/** Invokes `Post` twice, so a test can see whether the second call is asked about again. */
+const PostTwice = Operation.make({
+  meta: { key: DXN.make('com.example.operation.test.permission.postTwice'), name: 'Post twice' },
+  input: Schema.Struct({ text: Schema.String }),
+  output: Schema.String,
+});
+
+/** How the test's consent answers, and the requests put to it. */
+const consent = {
+  answer: (): Effect.Effect<Consent.Answer> => Effect.succeed({ _tag: 'Declined' }),
+  asked: [] as string[],
+};
+
+const consentLayer = Layer.succeed(Consent.Service, {
+  ask: ({ requirement }) =>
+    Effect.suspend(() => {
+      consent.asked.push(requirement.command);
+      return consent.answer();
+    }),
+});
 
 /** Declares nothing itself and invokes `Exec`, so the nested call is checked against this process's authority. */
 const RunScript = Operation.make({
@@ -102,6 +134,12 @@ const handlers = OperationHandlerSet.make(
   Exec.pipe(Operation.withHandler(({ command }) => Effect.succeed(`ran ${command}`))),
   SendEmail.pipe(Operation.withHandler(({ to }) => Effect.succeed(`sent to ${to}`))),
   RunScript.pipe(Operation.withHandler(({ command }) => Operation.invoke(Exec, { command }))),
+  Post.pipe(Operation.withHandler(({ text }) => Effect.succeed(`posted ${text}`))),
+  PostTwice.pipe(
+    Operation.withHandler(({ text }) =>
+      Operation.invoke(Post, { text }).pipe(Effect.andThen(Operation.invoke(Post, { text }))),
+    ),
+  ),
   WaitThenExec.pipe(
     Operation.withHandler(({ command }) =>
       Deferred.await(gate).pipe(Effect.andThen(Operation.invoke(Exec, { command }))),
@@ -139,7 +177,8 @@ const TestLayer = ProcessOperationInvoker.layer
     ),
     Layer.provideMerge(RemoteProcessManager.layerNoop),
     Layer.provideMerge(RemoteTraceMonitor.layerNoop),
-    Layer.provide(ServiceResolver.layerRequirements(Database.Service)),
+    Layer.provide(ServiceResolver.layerRequirements(Database.Service, Consent.Service)),
+    Layer.provide(consentLayer),
     Layer.provide(TestDatabaseLayer({ types: [] })),
     Layer.provide(KeyValueStore.layerMemory),
     Layer.provideMerge(OperationHandlerSet.provide(handlers)),
@@ -324,6 +363,50 @@ describe('operation permissions', () => {
       expect(Exit.isFailure(refused)).toBe(true);
       yield* Deferred.succeed(gate, undefined);
       expect(denial(yield* Process.awaitOutput(bare).pipe(Effect.exit))).toContain('holds none');
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'a consentable call the authority refuses runs once the person allows it',
+    Effect.fn(function* ({ expect }) {
+      consent.asked = [];
+      consent.answer = () => Effect.succeed({ _tag: 'Once' });
+      const exit = yield* run(Post, { text: 'hi' }, { authority: yield* authorityFor() });
+      expect(exit).toEqual(Exit.succeed('posted hi'));
+      expect(consent.asked).toEqual([ChannelPost.command]);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'a permission the person grants holds for the calls that follow, which are not asked about again',
+    Effect.fn(function* ({ expect }) {
+      consent.asked = [];
+      consent.answer = () =>
+        Effect.map(grantTo(ChannelPost), (grant): Consent.Answer => ({ _tag: 'Grant', grants: [grant] }));
+      const exit = yield* run(PostTwice, { text: 'hi' }, { authority: yield* authorityFor() });
+      expect(exit).toEqual(Exit.succeed('posted hi'));
+      expect(consent.asked).toEqual([ChannelPost.command]);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'a consentable call the person declines is refused',
+    Effect.fn(function* ({ expect }) {
+      consent.asked = [];
+      consent.answer = () => Effect.succeed({ _tag: 'Declined' });
+      const exit = yield* run(Post, { text: 'hi' }, { authority: yield* authorityFor() });
+      expect(denial(exit)).toContain('was declined');
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'a call whose requirement is not consentable is refused without asking',
+    Effect.fn(function* ({ expect }) {
+      consent.asked = [];
+      consent.answer = () => Effect.succeed({ _tag: 'Once' });
+      const exit = yield* run(Exec, { command: 'ls' }, { authority: yield* authorityFor() });
+      expect(denial(exit)).toContain('no grant covers');
+      expect(consent.asked).toEqual([]);
     }, Effect.provide(TestLayer)),
   );
 });

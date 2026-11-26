@@ -13,7 +13,6 @@ import { AiContext } from '@dxos/assistant';
 import * as AgentSkill from '@dxos/assistant-toolkit/AgentSkill';
 import * as DelegationSkill from '@dxos/assistant-toolkit/DelegationSkill';
 import * as AgentSetup from '@dxos/assistant/AgentSetup';
-import { Verifier } from '@dxos/compute-runtime';
 import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -123,47 +122,41 @@ export const makeCrmSkill = (): Skill.Skill =>
     tools: Skill.toolDefinitions({ operations: [SetOrganizationStatus] }),
   });
 
-/** Who granted the agents their permissions; the guard trusts it because the story's runtime attests its grants. */
+/** Who granted the agents their permissions; the runtime trusts it because the story placed the grants. */
 const ISSUER = Principal.process('story://crm/owner');
 
 /** The principal an agent's processes act as. */
 const principalOf = (agent: string) => Principal.process(`agent://crm/${agent}`);
 
-const verifier = Verifier.make();
-
-/**
- * The agent's sessions' standing guard: its grants, checked by the runtime's verifier. `SessionGuard` still takes a
- * guard rather than an authority, since a chat's consent prompt is a guard too.
- */
-const makeAgentGuard = Effect.fnUntraced(function* (agent: string, permissions: readonly Permission.Definition[]) {
+/** The agent's authority: its principal and one grant holding exactly these permissions. */
+const makeAgentAuthority = Effect.fnUntraced(function* (agent: string, permissions: readonly Permission.Definition[]) {
   const grant = yield* Grant.make({
     issuer: ISSUER,
     audience: principalOf(agent),
     permissions: permissions.map(({ command }) => Permission.make({ subject: Subject.any(), command })),
   });
-  const authority: Process.Authority = { principal: principalOf(agent), grants: [grant] };
-  return { check: (op, input) => verifier.check({ authority, op, input }) } satisfies Process.Guard;
+  return { principal: principalOf(agent), grants: [grant] } satisfies Process.Authority;
 });
 
-/** Gives each agent's sessions the grants that agent holds; built once, since a new guard restarts the session. */
+/** Gives each agent's sessions the authority that agent holds. */
 export const CrmPermissionsPlugin = Plugin.define(
   Plugin.makeMeta({ key: DXN.make('com.example.plugin.crmPermissions'), name: 'CRM permissions' }),
 ).pipe(
   Plugin.addModule({
-    id: 'com.example.plugin.crmPermissions.module.guards',
+    id: 'com.example.plugin.crmPermissions.module.authorities',
     activatesOn: ActivationEvents.Startup,
-    provides: [AssistantCapabilities.SessionGuard, Capabilities.OperationHandler],
+    provides: [AssistantCapabilities.SessionAuthority, Capabilities.OperationHandler],
     activate: Effect.fnUntraced(function* () {
-      const guards = new Map<string, Process.Guard>();
+      const authorities = new Map<string, Process.Authority>();
       for (const { name, permissions } of CRM_AGENTS) {
-        guards.set(name, yield* makeAgentGuard(name, permissions));
+        authorities.set(name, yield* makeAgentAuthority(name, permissions));
       }
-      const sessionGuard: AssistantCapabilities.SessionGuard = (session) => {
+      const sessionAuthority: AssistantCapabilities.SessionAuthority = (session) => {
         const parent = Obj.getParent(session);
-        return parent && Obj.instanceOf(Agent.Agent, parent) && parent.name ? guards.get(parent.name) : undefined;
+        return parent && Obj.instanceOf(Agent.Agent, parent) && parent.name ? authorities.get(parent.name) : undefined;
       };
       return [
-        Capability.contribute(AssistantCapabilities.SessionGuard, sessionGuard),
+        Capability.contribute(AssistantCapabilities.SessionAuthority, sessionAuthority),
         Capability.contribute(Capabilities.OperationHandler, CrmHandlers),
       ];
     }),

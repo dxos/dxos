@@ -37,6 +37,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { TestHelpers } from '@dxos/effect/testing';
 import { makeRecordingTracer } from '@dxos/effect/testing';
 import { DXN, EntityId, URI } from '@dxos/keys';
+import { Principal } from '@dxos/permission';
 import { Text } from '@dxos/schema';
 import { ContentBlock, Message, Organization, Task } from '@dxos/types';
 
@@ -330,8 +331,8 @@ const ScriptedTestLayer = (
   script: ScriptedLanguageModel.Script,
   {
     enableToolBackgrounding = false,
-    defaultGuard,
-  }: { enableToolBackgrounding?: boolean; defaultGuard?: AgentService.Options['defaultGuard'] } = {},
+    defaultAuthority,
+  }: { enableToolBackgrounding?: boolean; defaultAuthority?: AgentService.Options['defaultAuthority'] } = {},
 ) =>
   AssistantTestLayer({
     ...assistantTestLayerOptions,
@@ -339,7 +340,7 @@ const ScriptedTestLayer = (
     operationHandlers: [handlers, delegateHandlers],
     skills: [...assistantTestLayerOptions.skills, StallSkill, DelegateSkill],
     aiService: scriptedAiService(script),
-    agent: { enableToolBackgrounding, ...(defaultGuard ? { defaultGuard } : {}) },
+    agent: { enableToolBackgrounding, ...(defaultAuthority ? { defaultAuthority } : {}) },
   });
 
 const RESEARCH_PROMPT = `Research ${JSON.stringify(ResearchService.getTestData().organizations[0])}`;
@@ -570,7 +571,7 @@ describe('Agent Service', () => {
     );
 
     it.effect(
-      'a session spawned under a guard is reused by a caller that names no guard, not by one that names another',
+      'a session spawned with an authority is reused by a caller that names none, not by one that names another',
       Effect.fnUntraced(
         function* (_) {
           const processManager = yield* ProcessManager.ProcessManagerService;
@@ -585,16 +586,16 @@ describe('Agent Service', () => {
               .map(({ pid }) => String(pid));
           });
 
-          const guard: Process.Guard = { check: () => Effect.void };
-          yield* AgentService.bindSession(chat, { guard });
+          const authority: Process.Authority = { principal: Principal.process('process://test/first'), grants: [] };
+          yield* AgentService.bindSession(chat, { authority });
           const [pid] = yield* activePids;
 
-          // A caller that does not care which guard the chat runs under must not tear the guarded one down.
+          // A caller that does not care which authority the chat runs under must not tear the running one down.
           yield* AgentService.bindSession(chat);
           expect(yield* activePids).toEqual([pid]);
 
-          const other: Process.Guard = { check: () => Effect.void };
-          const regarded = yield* AgentService.bindSession(chat, { guard: other });
+          const other: Process.Authority = { principal: Principal.process('process://test/second'), grants: [] };
+          const regarded = yield* AgentService.bindSession(chat, { authority: other });
           expect(yield* activePids).not.toEqual([pid]);
 
           yield* regarded.terminate();
@@ -1747,30 +1748,30 @@ describe('Agent Service', () => {
           ),
         );
 
-        const guarded = new Set<string>();
+        const defaulted = new Set<string>();
         it.effect(
-          "runs the receiver on the default guard, not the caller's",
+          "runs the receiver on the default authority, not the caller's",
           Effect.fnUntraced(
             function* (_) {
               const alpha = yield* makeAgent('Alpha', [DelegateSkill]);
               const beta = yield* makeAgent('Beta');
 
               const caller = yield* AgentService.bindSession(alpha.chat, {
-                guard: { check: () => Effect.void },
+                authority: { principal: Principal.process('process://test/alpha'), grants: [] },
               });
               yield* caller.submitPrompt(`Tell ${Obj.getURI(beta.agent)}`);
               yield* caller.waitForCompletion();
               yield* waitForMessage(beta.feed, (message) => Message.extractText(message) === 'The plan is summarized.');
 
-              // The caller asked for its own guard, so only the receiver's spawn fell back to the default.
-              expect([...guarded]).toEqual([beta.chat.id]);
+              // The caller asked for its own authority, so only the receiver's spawn fell back to the default.
+              expect([...defaulted]).toEqual([beta.chat.id]);
             },
             Effect.provide(
               ScriptedTestLayer(makeScriptedModel(tellReplies).script, {
-                defaultGuard: (session) =>
+                defaultAuthority: (session) =>
                   Effect.sync(() => {
-                    guarded.add(session.id);
-                    return { check: () => Effect.void };
+                    defaulted.add(session.id);
+                    return { principal: Principal.process('process://test/receiver'), grants: [] };
                   }),
               }),
             ),

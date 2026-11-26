@@ -22,7 +22,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
-import { Assistant, AssistantCapabilities } from '#types';
+import { Assistant } from '#types';
 
 import { type AiServicePreset, LiveChatModel } from '../chat-model/index.ts';
 
@@ -85,11 +85,6 @@ export const useChatModel = ({
   }, [db, chat, feed]);
 
   const serviceResolver = Hooks.useCapability(Capabilities.ServiceResolver);
-  const sessionGuards = Hooks.useCapabilities(AssistantCapabilities.SessionGuard);
-  const standingGuard = useMemo(
-    () => (chat ? AssistantCapabilities.findSessionGuard(sessionGuards, chat) : undefined),
-    [sessionGuards, chat],
-  );
   // Primitives rather than the object, so an inline `sender` literal does not rebuild the chat model each render.
   const senderName = sender?.name;
   const senderDid = sender?.identityDid;
@@ -128,22 +123,8 @@ export const useChatModel = ({
       reportStruggles,
       sqlLayer,
       ...(thread !== undefined ? { thread } : {}),
-      ...(standingGuard !== undefined ? { standingGuard } : {}),
     });
-  }, [
-    runtime,
-    session,
-    registry,
-    preset,
-    chat,
-    feed,
-    db?.spaceId,
-    senderName,
-    senderDid,
-    reportStruggles,
-    thread,
-    standingGuard,
-  ]);
+  }, [runtime, session, registry, preset, chat, feed, db?.spaceId, senderName, senderDid, reportStruggles, thread]);
 
   // A remount (e.g. the user navigated to another page mid-turn) gets a fresh chat model whose
   // active/streaming state starts empty, while the agent process for the feed keeps running;

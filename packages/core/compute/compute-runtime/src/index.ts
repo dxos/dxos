@@ -3,6 +3,7 @@
 //
 
 export * from './errors.ts';
+export * as Consent from './Consent.ts';
 export * as FeedTraceSink from './FeedTraceSink.ts';
 export * from './functions-trace.ts';
 export * as LayerStack from './LayerStack.ts';

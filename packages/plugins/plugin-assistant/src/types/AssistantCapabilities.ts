@@ -163,20 +163,22 @@ export const SessionProcess = Capability.make<SessionProcessDefinition>()(
 );
 
 /**
- * The standing permissions of a local chat's agent process: a guard that admits operations without
- * asking the person. The first contribution that returns a guard for the session applies; an operation
- * it refuses falls back to the chat's consent prompt, so a requirement that is not consentable is refused.
+ * The authority a local chat's agent process acts with: its principal and the grants it holds. The first contribution
+ * that returns one for the session applies; a session none covers acts as itself with no grants. A call its grants do
+ * not cover is put to the person in the chat when the requirement is consentable, and refused otherwise.
  */
-export type SessionGuard = (session: ComputeAgent.Session) => Process.Guard | undefined;
+export type SessionAuthority = (session: ComputeAgent.Session) => Process.Authority | undefined;
 
-export const SessionGuard = Capability.make<SessionGuard>()(`${AssistantNamespace.key}.capability.sessionGuard`);
+export const SessionAuthority = Capability.make<SessionAuthority>()(
+  `${AssistantNamespace.key}.capability.sessionAuthority`,
+);
 
-/** The standing guard the contributed {@link SessionGuard}s give the session, if any. */
-export const findSessionGuard = (
-  guards: readonly SessionGuard[],
+/** The authority the contributed {@link SessionAuthority}s give the session, if any. */
+export const findSessionAuthority = (
+  authorities: readonly SessionAuthority[],
   session: ComputeAgent.Session,
-): Process.Guard | undefined =>
-  guards.reduce<Process.Guard | undefined>((found, guard) => found ?? guard(session), undefined);
+): Process.Authority | undefined =>
+  authorities.reduce<Process.Authority | undefined>((found, authority) => found ?? authority(session), undefined);
 
 /**
  * Slash commands the chat prompt completes and runs without the model. Each plugin contributes the

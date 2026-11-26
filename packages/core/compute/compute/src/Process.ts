@@ -381,19 +381,8 @@ export interface Process<_Input = any, _Output = any, _Rpcs extends Rpc.Any = an
 export type Any = Process<any, any, any>;
 
 /**
- * Admits or refuses an operation a process invokes, for operations that declare requirements
- * (`Operation.RequiresAnnotation`). Refuses by dying with `Operation.OperationDeniedError`.
- */
-export interface Guard {
-  readonly check: (op: Operation.Definition.Any, input: unknown) => Effect.Effect<void>;
-}
-
-/** The guard of the running process; absent when it was spawned without one. */
-export class GuardService extends Context.Service<GuardService, Guard>()('@dxos/compute/Process.GuardService') {}
-
-/**
- * Who a process acts as and the grants it holds. Data, unlike a {@link Guard}: it is persisted with the process, so a
- * rehydrated process keeps its limits, and it can be sent with a remote spawn.
+ * Who a process acts as and the grants it holds. Data: it is persisted with the process, so a rehydrated process keeps
+ * its limits, and it can be sent with a remote spawn.
  */
 export const Authority = Schema.Struct({
   /** The principal the process acts as: the audience its grants name. */
@@ -402,11 +391,6 @@ export const Authority = Schema.Struct({
   grants: Schema.Array(Grant.Grant),
 }).pipe(Schema.annotate({ title: 'Authority' }));
 export type Authority = Schema.Schema.Type<typeof Authority>;
-
-/** A guard that admits only what both admit, so a child spawned with its own guard never widens its parent's. */
-export const bothGuards = (first: Guard, second: Guard): Guard => ({
-  check: (op, input) => first.check(op, input).pipe(Effect.andThen(second.check(op, input))),
-});
 
 /**
  * Options for spawning a process.
@@ -439,16 +423,10 @@ export interface SpawnOptions {
   readonly environment?: Environment;
 
   /**
-   * Admits the operations this process invokes that declare requirements. Inherited by children;
-   * a child's own guard is combined with its parent's, never replaces it. Not persisted, so a
-   * rehydrated process holds none and refuses operations that declare requirements.
-   */
-  readonly guard?: Guard;
-
-  /**
    * Who the process acts as and the grants it holds. Every call the process makes that declares requirements must be
    * admitted by this authority and by each ancestor's (and, for a detached spawn, the spawner's), so a child never
-   * widens what it inherits. Persisted with the process; grants are added later through the host manager's `grant`.
+   * widens what it inherits. A process that holds none is refused every such call. Persisted with the process; grants
+   * are added later through the host manager's `grant`, or by consent.
    */
   readonly authority?: Authority;
 
@@ -542,7 +520,7 @@ export interface Manager {
    * definition stays local, supplying the codecs and RPC group the handle is typed by.
    *
    * A script operation spawns like a durable one: the runtime runs its code itself, so the run is a
-   * process like any other — a pid, a parent, its guard, children of its own.
+   * process like any other — a pid, a parent, its authority, children of its own.
    *
    * Dies when the location is a remote runtime that offers no process control.
    */

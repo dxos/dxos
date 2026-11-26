@@ -590,9 +590,15 @@ sources).
   revocations, memberships and consents.
 - `OperationProcess` checks after input validation: an operation with requirements in a process
   that holds nothing dies with `OperationDeniedError`, otherwise every authority must admit it.
-- `SpawnOptions.guard`, a `Process.Guard` closure, still exists for the chat's interactive consent
-  prompt and is combined with the authorities (both must admit); it goes once consent becomes a
-  grant added through `grant`.
+- Consent: when an authority refuses a consentable requirement, the process manager asks the
+  `Consent` service it resolves for the process. The answer admits the call once, declines it, or
+  returns grants that are added to the refusing authority's owner, so they hold for later calls.
+  A chat contributes `Consent` as a request card ("Allow", "Allow for this chat", "Deny"); "Allow
+  for this chat" mints a grant from the person's identity to the session's principal.
+- Next, not yet built: grants issued to principals (an agent's DID, a person) and kept in a store,
+  rather than carried by each process. A process then names only the principal it acts as, and the
+  verifier reads that principal's grants from the store, so consent, delegation and revocation are
+  writes every process acting for the principal sees.
 - `compute-runtime/src/permission.test.ts` covers it at the process-manager level: unannotated
   operations run anywhere; annotated ones are refused without an authority (spawned or via the
   invoker), allowed with a covering grant or a parent command, refused on an uncovered command or

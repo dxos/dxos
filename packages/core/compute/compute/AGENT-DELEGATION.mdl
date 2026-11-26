@@ -772,7 +772,7 @@ decision D-44: The model decides which receiver delegated work goes to: threads 
 ```
 
 ```mdl
-decision D-45: The first cut of cross-agent delegation finds the receiver by name among the agents in the caller's space, not through HALO contacts, and hands the message to that agent's primary session as a turn whose sender is the calling agent, with its text marked synthetic so the chat shows it as context rather than as the reader's words. The receiving session runs on its own agent's guard, which `AgentService` takes from its `defaultGuard` option when the open asks for none; the caller's guard never reaches it.
+decision D-45: The first cut of cross-agent delegation finds the receiver by name among the agents in the caller's space, not through HALO contacts, and hands the message to that agent's primary session as a turn whose sender is the calling agent, with its text marked synthetic so the chat shows it as context rather than as the reader's words. The receiving session runs on its own agent's authority, which `AgentService` takes from its `defaultAuthority` option when the open names none; the caller's authority never reaches it.
   date: 2026-11-26
   by: agent:claude-opus-5-5
   for: user:dmaretskyi
