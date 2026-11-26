@@ -726,15 +726,20 @@ export class Impl implements Manager {
         ...options?.environment,
       };
       // A child is held to its spawner's and its parent's authorities, read through their owners; its own comes last.
-      const inherited = [
-        ...new Map(
-          [
-            ...(spawner !== undefined ? this.#heldAuthorities(spawner.pid) : []),
-            ...(options?.parentProcessId !== undefined ? this.#heldAuthorities(options.parentProcessId) : []),
-          ].map((held) => [held.owner ?? held.authority, held] as const),
-        ).values(),
-      ];
-      const authority = options?.authority;
+      // A spawner that holds none may make no call that declares requirements, so neither may its child, whatever
+      // authority it asks for.
+      const spawnerHoldsNone = spawner !== undefined && this.#heldAuthorities(spawner.pid).length === 0;
+      const inherited = spawnerHoldsNone
+        ? []
+        : [
+            ...new Map(
+              [
+                ...(spawner !== undefined ? this.#heldAuthorities(spawner.pid) : []),
+                ...(options?.parentProcessId !== undefined ? this.#heldAuthorities(options.parentProcessId) : []),
+              ].map((held) => [held.owner ?? held.authority, held] as const),
+            ).values(),
+          ];
+      const authority = spawnerHoldsNone ? undefined : options?.authority;
       if (authority !== undefined || inherited.length > 0) {
         this.#authorities.set(id, { own: authority, inherited });
       }

@@ -399,6 +399,15 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
               }
               const cached = sessionCache.get(chat.id);
               if (cached) {
+                // A grant extends a live process's authority after it was cached, so the check reads the live one; a
+                // process the tree does not list (one on EDGE) keeps the authority it was cached with.
+                const cachedPid = cached.handle.pid;
+                const liveAuthority =
+                  authority === undefined
+                    ? undefined
+                    : ((yield* processManager.processTree)
+                        .find((process) => process.pid === cachedPid)
+                        ?.authorities?.at(-1) ?? cached.authority);
                 if (
                   cached.model === model &&
                   cached.harness === harness &&
@@ -407,7 +416,7 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
                   cached.location === location &&
                   cached.process === executable.key &&
                   // No authority asked for is no demand for a process without one, so it reuses any.
-                  (authority === undefined || sameAuthority(cached.authority, authority)) &&
+                  (authority === undefined || sameAuthority(liveAuthority, authority)) &&
                   !Process.isTerminal(cached.handle.status.state)
                 ) {
                   return cached.session;

@@ -428,6 +428,15 @@ describe('operation permissions', () => {
   );
 
   it.effect(
+    'a child that a process with no authority spawns is refused what its own grants would admit',
+    Effect.fn(function* ({ expect }) {
+      // Escalate spawns `Exec` with an authority that admits it; the spawner holds none.
+      const exit = yield* run(Escalate, { command: 'rm' });
+      expect(denial(exit)).toContain('holds none');
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
     'a process cannot grant itself what it was refused',
     Effect.fn(function* ({ expect }) {
       const exit = yield* run(SelfGrant, { command: 'ls' }, { authority: yield* authorityFor() });
