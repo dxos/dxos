@@ -797,7 +797,7 @@ feat F-9: Views, Objects and Tags
   req F-9.10: A group the scene model made (an element placing a `group` object, stored with no centre)
     draws as an Instance of its composite at true size: its members where they are, its box round them. Moved,
     it stores the origin its members are placed from, and it keeps placing the group's own object, so it can
-    be ungrouped.
+    be ungrouped. A group of a group draws its box round the inner group's members too.
 ```
 
 ```mdl
@@ -1879,6 +1879,15 @@ decision D-82: A placed composite with no centre is placed at the origin at true
   affects: [F-9.10]
   why: The scene model's Group stores no centre, since its members keep their places, and the 2D reader drew nothing for an element without one: the grouped elements disappeared. The first write then replaced the group's object with one the Instance node made for itself, which Ungroup refused.
   rejected: Storing a centre and a size on the group when it is made, which would have two frames to keep in step, the element's and its members'.
+```
+
+```mdl
+decision D-83: A placed composite's box counts a part that has no frame of its own by that part's own parts, to any depth, and a group with a centre and no size is placed from that centre. Fills in [D-82].
+  date: 2026-11-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-9.10]
+  why: A group holding a group that was never moved drew a box round its other members only and clipped the inner group away, and an inner group released from a moved one drew at a default size.
 ```
 
 ## Appendix: Extension Definitions

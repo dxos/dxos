@@ -1329,3 +1329,12 @@ decision D-123: An element is a group when the object it places is of kind `grou
   affects: [F-1.5]
   why: A canvas stores the kind it draws an element as, so a group moved in 2D states `instance`; read from the element's resolved kind, the command was disabled on a group that the intent would still take apart.
 ```
+
+```mdl
+decision D-124: Ungroup gives a member that is itself a group with no centre the ungrouped group's centre, since such a group places its members from the origin. Fills in [D-96].
+  date: 2026-11-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1.5]
+  why: Ungrouping a moved group moved its plain members and left a group inside it where it was before the move.
+```

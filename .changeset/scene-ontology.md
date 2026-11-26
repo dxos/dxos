@@ -7,4 +7,4 @@ Breaking: a stored drawing uses one set of names. `kind` tells an element, a nod
 
 In the 3D editor the select-all chord selects every element of the open layout, a selection's box stays round its element while it is dragged, the scale tool sizes an element in step with its handle's travel, and the inspector panel's titles and labels no longer select as text.
 
-In the 2D editor a group made through the scene model draws its members where they were (they disappeared before), and it can still be ungrouped after it is moved.
+In the 2D editor a group made through the scene model draws its members where they were (they disappeared before), and it can still be ungrouped after it is moved. A group of a group draws all of its members, and ungrouping a moved group takes a group inside it along.

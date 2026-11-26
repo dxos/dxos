@@ -289,12 +289,17 @@ const group = (
   };
 };
 
-/** An element moved out of a group placed at `center`: its position in the group's layout, offset by the group's. */
-const shifted = <E extends Element2D | Element3D>(element: E, center: E['center']): E => {
-  if (!center || !element.center) {
+/**
+ * An element moved out of a group placed at `center`: its position in the group's layout, offset by the group's. One
+ * with no centre is left unplaced, unless it is `atOrigin`: a group in the group, which places its members from the
+ * origin and so takes the offset whole.
+ */
+const shifted = <E extends Element2D | Element3D>(element: E, center: E['center'], atOrigin = false): E => {
+  if (!center || (!element.center && !atOrigin)) {
     return element;
   }
-  const add = (axis: 'x' | 'y' | 'z') => round(Reflect.get(element.center ?? {}, axis) + Reflect.get(center, axis));
+  const add = (axis: 'x' | 'y' | 'z') =>
+    round((Reflect.get(element.center ?? {}, axis) ?? 0) + Reflect.get(center, axis));
   return {
     ...element,
     center: 'z' in center ? { x: add('x'), y: add('y'), z: add('z') } : { x: add('x'), y: add('y') },
@@ -348,7 +353,10 @@ const ungroup = (
       ...Object.entries(own)
         .filter(([key]) => key !== intent.id)
         .map(([key, each]): [string, E] => [key, rebound(each)]),
-      ...Object.entries(inner).map(([key, each]): [string, E] => [key, shifted(each, center)]),
+      ...Object.entries(inner).map(([key, each]): [string, E] => [
+        key,
+        shifted(each, center, groupOf(model, parts, key) !== undefined),
+      ]),
     ]);
   const host: LayoutRecord =
     layout.dim === '3d' && parts.dim === '3d'

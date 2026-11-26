@@ -1,0 +1,15 @@
+diagram flow=down
+node Layout "Layout" ref="packages/common/scene/src/Scene.ts"
+node Element "Element" ref="packages/common/scene/src/Scene.ts"
+node Object "Model object" ref="packages/common/scene/src/Scene.ts"
+node Group "Group" ref="packages/common/scene/src/model-intent.ts"
+node Instance "Object instance" ref="packages/common/scene/src/element.ts"
+node View "View" ref="packages/common/scene/src/element.ts"
+node Hull "Hull" ref="packages/ui/react-ui-canvas/src/utils/hull-group.ts"
+edge Layout composes Element "elements"
+edge Element -> Object "object"
+edge Object -> Layout "parts"
+edge Group extends Element
+edge Instance extends Element
+edge View extends Element
+edge Hull extends Element

@@ -159,4 +159,27 @@ describe('applyModelIntent', () => {
     expect(ungrouped.doc.layouts[0].elements.bc?.source).toEqual({ node: 'b' });
     expect(Object.keys(ungrouped.doc.layouts[0].elements).sort()).toEqual(['a', 'ab', 'b', 'bc', 'c']);
   });
+
+  test('ungrouping a moved group takes a group inside it along, though that one has no centre of its own', () => {
+    const group = (from: Scene.SceneDocument, id: string, members: string[]) =>
+      applyModelIntent(from, { kind: 'group', model: 'm', layout: 'root', id, members }).doc;
+    const nested = group(group(doc(), 'inner', ['a', 'b']), 'outer', ['inner', 'c']);
+    // The outer group moved up by one: its centre is the origin its members are placed from.
+    const moved: Scene.SceneDocument = {
+      ...nested,
+      layouts: nested.layouts.map((layout) =>
+        layout.id === 'root' && layout.dim === '3d'
+          ? {
+              ...layout,
+              elements: { ...layout.elements, outer: { ...layout.elements.outer, center: { x: 0, y: 1, z: 0 } } },
+            }
+          : layout,
+      ),
+    };
+    const ungrouped = applyModelIntent(moved, { kind: 'ungroup', model: 'm', layout: 'root', id: 'outer' });
+    expect(ungrouped.problems).toEqual([]);
+    const root = ungrouped.doc.layouts.find((layout) => layout.id === 'root');
+    expect(root?.elements.c?.center).toEqual({ x: 4, y: 1, z: 0 });
+    expect(root?.elements.inner?.center).toEqual({ x: 0, y: 1, z: 0 });
+  });
 });

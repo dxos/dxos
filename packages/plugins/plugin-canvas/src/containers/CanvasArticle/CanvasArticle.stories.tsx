@@ -553,6 +553,59 @@ export const Group2D: Story = {
 };
 
 /**
+ * A group inside a group in 2D (A → B → C): A and B are grouped, then that group and C.
+ *
+ * Test:
+ * 1. Click A, shift-click B and Group: one group draws A and B.
+ * 2. Select all and Group: the outer group's box is round A, B and C, and the inner group draws inside it.
+ * 3. Ungroup puts the inner group and C back in the scene, the inner group still a group.
+ */
+export const GroupNested2D: Story = {
+  decorators: withScenes(EXEMPLARS.links),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const view = await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 });
+    const node = (id: string) => view.querySelector<HTMLElement>(`[data-node-id="${id}"]`);
+    const groups = () => [...view.querySelectorAll<HTMLElement>('[data-node-id^="group-"]')];
+    const width = (element: Element | null | undefined) => element?.getBoundingClientRect().width ?? 0;
+    await waitFor(() => expect(node('a')).not.toBeNull());
+    const group = await canvas.findByTestId('scene-action-group');
+
+    // 1. The first group holds A and B, and leaves C in the scene.
+    const user = userEvent.setup();
+    await user.click(node('a') ?? view);
+    await user.keyboard('{Shift>}');
+    await user.click(node('b') ?? view);
+    await user.keyboard('{/Shift}');
+    await user.click(group);
+    await waitFor(() => expect(groups()).toHaveLength(1));
+    const inner = groups()[0].dataset.nodeId;
+    await expect(groups()[0].querySelector('[data-node-id="c"]')).toBeNull();
+
+    // 2. The outer group spans all three: it is wider than the inner group, which is drawn inside it.
+    view.focus();
+    await user.keyboard('{Meta>}a{/Meta}');
+    await user.click(group);
+    await waitFor(() => expect(groups()).toHaveLength(2));
+    const outer = groups().find((candidate) => candidate.dataset.nodeId !== inner);
+    const nested = outer?.querySelector<HTMLElement>(`[data-node-id="${inner}"]`);
+    await expect(width(nested)).toBeGreaterThan(0);
+    await expect(width(outer)).toBeGreaterThan(width(nested));
+    for (const id of ['a', 'b', 'c']) {
+      await expect(width(outer?.querySelector(`[data-node-id="${id}"]`))).toBeGreaterThan(0);
+    }
+
+    // 3. Ungrouping the outer group leaves the inner one, with A and B still inside it.
+    const ungroup = await canvas.findByTestId<HTMLButtonElement>('scene-action-ungroup');
+    await waitFor(() => expect(ungroup.disabled).toBe(false));
+    await user.click(ungroup);
+    await waitFor(() => expect(groups().map((candidate) => candidate.dataset.nodeId)).toEqual([inner]));
+    await expect(width(groups()[0].querySelector('[data-node-id="a"]'))).toBeGreaterThan(0);
+    await expect(node('c')).not.toBeNull();
+  },
+};
+
+/**
  * Grouping in 3D (two cubes and a sphere): the selection becomes one group whose members stay where they were.
  *
  * Test:

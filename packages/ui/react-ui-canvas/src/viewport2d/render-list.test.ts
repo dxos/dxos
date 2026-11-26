@@ -205,6 +205,66 @@ describe('toRenderLists2D', () => {
     expect(after?.elements.a?.center).toEqual({ x: a.center.x + 64, y: a.center.y });
   });
 
+  test('a group of a group and an element draws its box round all of them, the inner group included', () => {
+    const { document } = DSL.readScenes(EXEMPLARS.links);
+    const layout = document.layouts.find((candidate) => candidate.dim === '2d');
+    const model = document.models[0];
+    expect(layout && model).toBeDefined();
+    if (!layout || !model) {
+      return;
+    }
+    const { a, c } = toRenderList2D(document, layout).nodes;
+    const group = (doc: Scene.SceneDocument, id: string, members: string[]) => {
+      const result = applyModelIntent(doc, { kind: 'group', model: model.id, layout: layout.id, id, members });
+      expect(result.problems).toEqual([]);
+      return result.doc;
+    };
+    const nested = group(group(document, 'inner', ['a', 'b']), 'outer', ['inner', 'c']);
+
+    const { lists } = toRenderLists2D(nested);
+    const root = lists.find((list) => list.id === layout.id);
+    const left = a.center.x - a.size.width / 2;
+    const right = c.center.x + c.size.width / 2;
+    // The outer group spans A to C: the inner group has no frame of its own, so its members give its extent.
+    expect(root?.nodes.outer).toMatchObject({
+      kind: 'instance',
+      center: { x: (left + right) / 2, y: a.center.y },
+      size: { width: right - left, height: a.size.height },
+    });
+    expect(lists.find((list) => list.id === `${layout.id}/outer`)?.nodes.inner).toMatchObject({
+      kind: 'instance',
+      composite: `${layout.id}/inner`,
+    });
+
+    // Ungrouped, the inner group and C are back in the layout, the inner group still a group.
+    const ungrouped = applyModelIntent(nested, { kind: 'ungroup', model: model.id, layout: layout.id, id: 'outer' });
+    expect(ungrouped.problems).toEqual([]);
+    const after = toRenderLists2D(ungrouped.doc).lists.find((list) => list.id === layout.id);
+    expect(Object.keys(after?.nodes ?? {}).sort()).toEqual(['c', 'inner']);
+    expect(after?.nodes.inner).toMatchObject({ kind: 'instance', composite: `${layout.id}/inner` });
+
+    // Ungrouped after the outer group moved down by 64, the inner group is drawn round its members, moved as far.
+    const moved: Scene.SceneDocument = {
+      ...nested,
+      layouts: nested.layouts.map((record) =>
+        record.id === layout.id && record.dim === '2d'
+          ? {
+              ...record,
+              elements: { ...record.elements, outer: { ...record.elements.outer, center: { x: 0, y: 64 } } },
+            }
+          : record,
+      ),
+    };
+    const released = applyModelIntent(moved, { kind: 'ungroup', model: model.id, layout: layout.id, id: 'outer' });
+    const inner = toRenderLists2D(released.doc).lists.find((list) => list.id === layout.id)?.nodes.inner;
+    const b = toRenderList2D(document, layout).nodes.b;
+    const innerRight = b.center.x + b.size.width / 2;
+    expect(inner).toMatchObject({
+      center: { x: (left + innerRight) / 2, y: a.center.y + 64 },
+      size: { width: innerRight - left, height: a.size.height },
+    });
+  });
+
   test("an element placing an object draws with the object's kind and size", () => {
     const {
       lists: [root],

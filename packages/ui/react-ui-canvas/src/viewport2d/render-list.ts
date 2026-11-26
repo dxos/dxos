@@ -72,17 +72,26 @@ const UNIT_SCALE = { x: 1, y: 1 };
 type ScaledFrame = { center: { x: number; y: number }; size: { width: number; height: number }; frame: Bounds };
 
 /**
- * Undefined for an element with a frame of its own and no scale, or whose parts have nothing with a frame. One with
- * no centre places its parts where they are, at their own size, as a group does and as 3D places such an element.
+ * Undefined for an element with a frame of its own (a centre, and no scale), or whose parts have nothing with a
+ * frame. One with no centre places its parts where they are, at their own size, as a group does and as 3D places such
+ * an element; a group with a centre and no size is placed from that centre, which is where ungrouping its own group
+ * leaves it. A part that is such an element itself (a group inside the group) spans its own parts, so `path` holds
+ * the layouts already entered and one is not entered again.
  */
-const scaledFrame = (doc: Scene.SceneDocument, element: Resolved2D): ScaledFrame | undefined => {
+const scaledFrame = (
+  doc: Scene.SceneDocument,
+  element: Resolved2D,
+  path: readonly string[] = [],
+): ScaledFrame | undefined => {
   const parts = element.parts === undefined ? undefined : findLayout(doc, element.parts);
-  if ((!element.scale && element.center) || parts?.dim !== '2d') {
+  const framed = element.center && !element.scale && !(element.fit === 'none' && !element.size);
+  if (framed || parts?.dim !== '2d' || path.includes(parts.id)) {
     return undefined;
   }
-  const boxes = Object.values(resolveLayout2D(doc, parts)).flatMap(({ center, size }) =>
-    center && size ? [{ x: center.x - size.width / 2, y: center.y - size.height / 2, ...size }] : [],
-  );
+  const boxes = Object.values(resolveLayout2D(doc, parts)).flatMap((part) => {
+    const { center, size } = scaledFrame(doc, part, [...path, parts.id]) ?? part;
+    return center && size ? [{ x: center.x - size.width / 2, y: center.y - size.height / 2, ...size }] : [];
+  });
   if (boxes.length === 0) {
     return undefined;
   }
