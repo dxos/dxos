@@ -677,7 +677,21 @@ A private package `packages/stories/stories-services` with one Storybook story a
 | ------------------- | ------------------------------------------------------------------------------------------------- | --------------------------------------- |
 | `notes`             | Provides `NoteStore` (`put`, `list`, property `count`, event `changed`); needs `localStorage`.    | App host, in memory                     |
 | `summarizer`        | Provides `Summarizer` (streamed `summarize`, property `status`); needs `aiGateway`.               | Mock remote host: a Web Worker          |
-| `panel`             | A surface that lists notes, summarizes one and shows where each contract resolved.                | App host                                |
+| `panel`             | The consumer: contributes the notes and summarizer story modules, which call the two services.    | App host                                |
+
+The story is laid out from story modules, as the stories in `stories-compute` and
+`stories-assistant` are (`StoryModules` in `@dxos/storybook-testing`):
+
+| Module             | Shows                                                                                         |
+| ------------------ | --------------------------------------------------------------------------------------------- |
+| `NotesModule`      | The notes, read and written through `NoteStore`.                                              |
+| `SummarizerModule` | A summarize action and its streamed result, through `Summarizer`.                             |
+| `HostsModule`      | Each host, the plugins installed in it, the install actions, and where each contract is bound. |
+| `LoggingModule`    | The shared log module, showing each service call and the binding that carried it.             |
+
+The first two are the consumer plugin's UI and call services only through `Service.get`. The mock
+EDGE host is a service container: a Web Worker that runs the same host code as the app, loads the
+summarizer plugin and serves its contract over a port.
 
 The story walks through five steps:
 
