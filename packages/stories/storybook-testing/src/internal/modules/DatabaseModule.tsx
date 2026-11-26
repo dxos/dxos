@@ -139,7 +139,7 @@ const DatabaseModuleContainer = ({ space, defaultView = 'graph' }: { space: Spac
             <div
               data-testid='database-module.selected'
               className={mx(
-                'flex absolute left-2 right-2 bottom-2 h-[8rem]',
+                'flex absolute left-2 right-2 bottom-2 h-1/2',
                 'overflow-hidden dx-base-surface border border-separator-subtle opacity-80',
               )}
             >
