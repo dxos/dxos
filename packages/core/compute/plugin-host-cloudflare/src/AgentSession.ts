@@ -118,18 +118,17 @@ export const make = ({
     addContext: (target, context) =>
       run('addContext', [sessionUri(target), context.map((ref) => String(ref.uri))]).pipe(Effect.asVoid),
 
-    submitPrompt: (target, prompt, options) =>
-      Effect.gen(function* () {
-        const encoded = typeof prompt === 'string' ? prompt : yield* content(prompt);
-        yield* run('submitPrompt', [
-          sessionUri(target),
-          encoded,
-          {
-            ...(options?.sender !== undefined ? { sender: options.sender } : {}),
-            ...(options?.thread !== undefined ? { thread: options.thread } : {}),
-          },
-        ]);
-      }),
+    submitPrompt: Effect.fnUntraced(function* (target, prompt, options) {
+      const encoded = typeof prompt === 'string' ? prompt : yield* content(prompt);
+      yield* run('submitPrompt', [
+        sessionUri(target),
+        encoded,
+        {
+          ...(options?.sender !== undefined ? { sender: options.sender } : {}),
+          ...(options?.thread !== undefined ? { thread: options.thread } : {}),
+        },
+      ]);
+    }),
 
     // A snapshot: a live atom would hold an RPC open past the invocation, which pins it (DX-1138).
     running: (target) => run('running', [sessionUri(target)]).pipe(Effect.map((running) => Atom.make(running))),
@@ -219,27 +218,26 @@ export const make = ({
         ),
       ),
 
-    delegate: ({ target, message, task, purpose }) =>
-      Effect.gen(function* () {
-        const encoded = message === undefined ? undefined : yield* content(message);
-        const result = yield* call('delegate', [
-          {
-            target:
-              target.kind === 'thread'
-                ? { kind: 'thread' }
-                : target.kind === 'session'
-                  ? { kind: 'session', ...(target.session !== undefined ? { session: String(target.session) } : {}) }
-                  : { kind: 'agent', agent: String(target.agent) },
-            ...(encoded !== undefined ? { message: encoded } : {}),
-            ...(task !== undefined ? { task: String(task.uri) } : {}),
-            ...(purpose !== undefined ? { purpose } : {}),
-          },
-        ]);
-        return {
-          ...(result.thread !== undefined ? { thread: decodeThread(result.thread) } : {}),
-          ...(result.session !== undefined ? { session: URI.make(result.session) } : {}),
-        };
-      }),
+    delegate: Effect.fnUntraced(function* ({ target, message, task, purpose }) {
+      const encoded = message === undefined ? undefined : yield* content(message);
+      const result = yield* call('delegate', [
+        {
+          target:
+            target.kind === 'thread'
+              ? { kind: 'thread' }
+              : target.kind === 'session'
+                ? { kind: 'session', ...(target.session !== undefined ? { session: String(target.session) } : {}) }
+                : { kind: 'agent', agent: String(target.agent) },
+          ...(encoded !== undefined ? { message: encoded } : {}),
+          ...(task !== undefined ? { task: String(task.uri) } : {}),
+          ...(purpose !== undefined ? { purpose } : {}),
+        },
+      ]);
+      return {
+        ...(result.thread !== undefined ? { thread: decodeThread(result.thread) } : {}),
+        ...(result.session !== undefined ? { session: URI.make(result.session) } : {}),
+      };
+    }),
 
     waitForThread: (thread) => call('waitForThread', [thread]),
   };
@@ -340,7 +338,7 @@ const makeControl = (session: PluginProtocol.AgentSession): RemoteProcessManager
           Effect.provideServiceEffect(RpcClient.Protocol, RpcClient.makeProtocolHttp(httpClient)),
         );
       }).pipe(
-        Effect.provide(Layer.provideMerge(FetchHttpClient.layer, RpcSerialization.layerNdjson)),
+        Effect.provide(RpcHttpLayer),
         Effect.provideService(FetchHttpClient.Fetch, (input, init) =>
           session.processRpc(spaceId, pid, new Request(input, init)),
         ),
@@ -351,3 +349,6 @@ const makeControl = (session: PluginProtocol.AgentSession): RemoteProcessManager
 
 /** Where a process RPC request is addressed; the session target, not the URL, routes it. */
 const PROCESS_RPC_URL = 'https://process.invalid/rpc';
+
+/** The HTTP client and NDJSON serialization a process's RPC client runs on; each call provides the process's fetch. */
+const RpcHttpLayer = Layer.provideMerge(FetchHttpClient.layer, RpcSerialization.layerNdjson);
