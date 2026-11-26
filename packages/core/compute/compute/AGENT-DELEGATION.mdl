@@ -390,7 +390,7 @@ test QA-1: An agent hands a change it may not make to an agent that may
     one CRM tool that requires `/crm/write`; only Ledger is granted it. Scout is refused, hands the request to Ledger,
     and Ledger makes the change on its own permissions.
   actors: human
-  covers: [F-3.2, F-3.3, F-15.4]
+  covers: [F-3.2, F-15.4]
   status: draft
   given:
     - the story `stories/stories-assistant/agents/Delegation` CrmAgents, with the `crmAgents` scripted model
@@ -806,15 +806,15 @@ decision D-44: The model decides which receiver delegated work goes to: threads 
 ```mdl
 decision D-45: The first cut of cross-agent delegation finds the receiver by name among the agents in the caller's space, not through HALO contacts, and hands the message to that agent's primary session as a turn whose sender is the calling agent, with its text marked synthetic so the chat shows it as context rather than as the reader's words. The receiving session runs on its own agent's authority, which `AgentService` takes from its `defaultAuthority` option when the open names none; the caller's authority never reaches it.
   date: 2026-11-26
-  by: agent:claude-opus-5-5
+  by: agent:claude-code
   for: user:dmaretskyi
   affects: [F-3.1, F-3.2, F-3.3]
 ```
 
 ```mdl
-decision D-46: QA-1 walks cross-agent delegation in the `agents/Delegation` story: two agents with different permissions, one refused and handing the change to the other, with each agent's and each process's permissions shown along the way.
+decision D-46: QA-1 walks cross-agent delegation in the `agents/Delegation` story: two agents with different permissions, one refused and handing the change to the other, with each agent's and each process's permissions shown along the way. It does not cover F-3.3: the first cut hands the request to the receiver's primary session (D-45), not a durable message to its `Agent` object.
   date: 2026-11-26
-  by: agent:claude-opus-5-5
+  by: agent:claude-code
   for: user:dmaretskyi
-  affects: [F-3.2, F-3.3, F-15.4]
+  affects: [F-3.2, F-15.4]
 ```

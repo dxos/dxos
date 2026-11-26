@@ -70,7 +70,12 @@ const ChatModuleContainer = ({
   suggestions = [],
   defaultDrawer,
 }: ChatModuleData & { space: Space }) => {
-  const chats = useQuery(space.db, Filter.type(Agent.Session));
+  const allChats = useQuery(space.db, Filter.type(Agent.Session));
+  // A panel for one agent selects and offers only that agent's sessions, so it never shows another agent's chat.
+  const chats = useMemo(
+    () => (agent ? allChats.filter((chat) => agentName(chat) === agent) : allChats),
+    [allChats, agent],
+  );
   const people = useQuery(space.db, Filter.type(Person.Person));
   const person = participant
     ? people.find(({ preferredName, fullName }) => preferredName === participant || fullName === participant)
@@ -81,21 +86,17 @@ const ChatModuleContainer = ({
   // The newest chat until the reader picks another; a template switch drops the id and lands on the
   // new space's own chat.
   const [selected, setSelected] = useState<string>();
-  const agentChat = agent ? chats.find((chat) => agentName(chat) === agent) : undefined;
   const chat =
-    chats.find(({ id }) => id === selected) ?? (participant ? participantChat : agent ? agentChat : chats.at(-1));
+    chats.find(({ id }) => id === selected) ?? (participant ? participantChat : agent ? chats[0] : chats.at(-1));
 
   // The picker edits the chat's own model, so the hook needs the chat it is rendered for.
   const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
   const { preset, ...chatProps } = AssistantHooks.usePresets(settings, chat);
 
-  // Every chat in the space, not the companion chats of one object: the story is a tour of the
-  // space, and its chats are the thing worth moving between. A panel for one agent offers only that agent's sessions.
+  // Every chat in the space, or of the panel's agent, not the companion chats of one object: the story is a tour of the
+  // space, and its chats are the thing worth moving between.
   const onSelect = useCallback((chat: Agent.Session) => setSelected(chat.id), []);
-  const switcher = useMemo(
-    () => ({ chats: agent ? chats.filter((chat) => agentName(chat) === agent) : [...chats], onSelect }),
-    [chats, agent, onSelect],
-  );
+  const switcher = useMemo(() => ({ chats: [...chats], onSelect }), [chats, onSelect]);
   const headerAgent = chat ? agentName(chat) : undefined;
 
   const registry = useRegistry();

@@ -14,10 +14,15 @@ const handler: Operation.WithHandler<typeof AgentDelegate> = AgentDelegate.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ agent: name, message }) {
       const agents = yield* Database.query(Filter.type(Agent.Agent)).run;
-      const receiver = agents.find((candidate) => candidate.name === name);
+      const matches = agents.filter((candidate) => candidate.name === name);
+      const [receiver] = matches;
       if (!receiver) {
         const known = agents.flatMap((candidate) => (candidate.name ? [candidate.name] : []));
         return `There is no agent named "${name}" in this space. Agents here: ${known.join(', ') || 'none'}.`;
+      }
+      // The receiver runs the request on its own permissions, so a name that could mean two agents is never guessed.
+      if (matches.length > 1) {
+        return `${matches.length} agents here are named "${name}", so the request was not handed off. Ask which one is meant.`;
       }
       const { session } = yield* Agent.delegate({
         target: { kind: 'agent', agent: Obj.getURI(receiver) },

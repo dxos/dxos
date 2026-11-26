@@ -440,9 +440,14 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
               });
               let activeProcess = processes.find((process) => !Process.isTerminal(process.status.state));
               if (activeProcess && authority !== undefined) {
-                // A running process keeps the authority it was spawned with, so one asked for under another is never adopted.
-                yield* activeProcess.terminate();
-                activeProcess = undefined;
+                // A running process keeps the authority it was spawned with, so one asked for under another is never
+                // adopted; one already running under the same authority is, so a remount does not cut its turn short.
+                const activePid = activeProcess.pid;
+                const listed = (yield* processManager.processTree).find((process) => process.pid === activePid);
+                if (!sameAuthority(listed?.authorities?.at(-1), authority)) {
+                  yield* activeProcess.terminate();
+                  activeProcess = undefined;
+                }
               }
 
               const agent = yield* Agent.loadForSession(chat);

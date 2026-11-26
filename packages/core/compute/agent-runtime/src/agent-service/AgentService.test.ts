@@ -1787,13 +1787,19 @@ describe('Agent Service', () => {
               const caller = yield* AgentService.bindSession(alpha.chat);
               yield* caller.submitPrompt(`Tell ${Obj.getURI(alpha.agent)}`);
               yield* caller.waitForCompletion();
-              expect(yield* replyTexts(caller.feed)).not.toContain('Handed off.');
+              const replies = yield* replyTexts(caller.feed);
+              expect(replies).toContain('Could not hand off.');
+              expect(replies).not.toContain('Handed off.');
             },
             Effect.provide(
               ScriptedTestLayer(
                 makeScriptedModel([
-                  { when: answersTool, turn: { parts: [text('Could not hand off.')] } },
-                  ...tellReplies.slice(1),
+                  // A successful hand-off answers with `Started session`, and only a refusal reaches this reply.
+                  {
+                    when: (request) => answersTool(request) && !latest(request).includes('Started session'),
+                    turn: { parts: [text('Could not hand off.')] },
+                  },
+                  ...tellReplies,
                 ]).script,
               ),
             ),

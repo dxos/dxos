@@ -672,6 +672,10 @@ const ChatThread = ({
   useInPlaceUpdates(model, messages);
   const streaming = useAtomValue(getChatModelState(chatModel).streaming);
   const retryable = useAtomValue(getChatModelState(chatModel).retryable);
+  const modelError = useAtomValue(getChatModelState(chatModel).error);
+  // Try again reruns the model's last request, so it is offered only while that request's own error is showing.
+  const canRetry =
+    retryable && !readonly && toastError !== undefined && Option.getOrUndefined(modelError) === toastError;
   useEffect(() => {
     // The answer streams above any prompts still waiting for the agent, which end the thread.
     const last = messages[messages.length - 1 - tail];
@@ -781,9 +785,9 @@ const ChatThread = ({
       >
         <Toast.Header icon='ph--warning--regular'>{t('ai-service-error.label')}</Toast.Header>
         <Toast.Description>{toastError?.message}</Toast.Description>
-        {((toastAction && onViewUsage) || (retryable && !readonly)) && (
+        {((toastAction && onViewUsage) || canRetry) && (
           <Toast.Footer>
-            {retryable && !readonly && (
+            {canRetry && (
               <Toast.ActionTrigger
                 data-testid='assistant.error.retry'
                 onClick={() => {

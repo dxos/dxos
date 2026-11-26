@@ -73,6 +73,19 @@ export const steps = [
         TEXT,
         { timeout: ANSWER_TIMEOUT },
       );
+      // A streaming prefix passes the check above, so the turn has ended only once the answer stops growing.
+      const answerLength = () =>
+        page.evaluate((text) => {
+          const body = document.body.innerText;
+          return body.slice(body.lastIndexOf(text) + text.length).trim().length;
+        }, TEXT);
+      for (let previous = -1, current = await answerLength(); current !== previous;) {
+        await page.waitForTimeout(3_000);
+        [previous, current] = [current, await answerLength()];
+      }
+      if (await page.locator(ERROR).isVisible()) {
+        throw new Error('the retried turn failed again');
+      }
       const count = await promptCount(page);
       if (count !== 1) {
         throw new Error(`the prompt shows ${count} times after retry`);
