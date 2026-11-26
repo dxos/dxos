@@ -2,25 +2,28 @@ diagram flow=down
 group local "Local host" {
   node Consumer "Consumer plugin"
   node Resolver "Service resolver" ref="packages/core/compute/compute/src/ServiceResolver.ts"
-  node LocalProvider "Local provider"
+  node LocalPlugin "Provider plugin"
   node Stub "Remote stub"
+  node LocalFeatures "Host features"
 }
 group shared "Shared by every host" {
   node Contract "Service contract"
   node Catalog "Service catalog" ref="packages/core/protocols/src/PluginProtocol.ts"
 }
 group remote "Remote host" {
-  node Server "Service server" ref="packages/core/compute/plugin-host-cloudflare/src/PluginHost.ts"
-  node RemoteProvider "Remote provider"
-  node Features "Host features"
+  node Server "Service server" ref="packages/core/mesh/rpc/src/RpcRouter.ts"
+  node RemotePlugin "Provider plugin"
+  node RemoteFeatures "Host features"
 }
 edge Consumer -> Resolver "get(contract)"
-edge Resolver -> LocalProvider "in-memory call"
+edge Consumer depends-on Contract "imports"
+edge Resolver -> LocalPlugin "in-memory call"
 edge Resolver -> Stub "no local provider"
 edge Stub -> Server "RPC"
-edge Server -> RemoteProvider "calls handler"
-edge RemoteProvider depends-on Features "needs"
-edge LocalProvider implements Contract
-edge RemoteProvider implements Contract
+edge Server -> RemotePlugin "calls handler"
+edge LocalPlugin depends-on LocalFeatures "needs"
+edge RemotePlugin depends-on RemoteFeatures "needs"
+edge LocalPlugin implements Contract
+edge RemotePlugin implements Contract
 edge Resolver depends-on Catalog "who provides?"
 edge Server -> Catalog "advertises"

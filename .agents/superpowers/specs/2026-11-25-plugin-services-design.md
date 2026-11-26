@@ -183,7 +183,11 @@ Four ways to get one mechanism. The third is the proposal.
 | Affinity     | The provider's lifetime: `application`, `space` or `process`.                            | Stateless and stateful session scopes        |
 | Kind         | `remote` (has schemas, may cross a wire) or `local` (in-memory only).                    | Remote and local interfaces                  |
 
-![Architecture: a consumer asks the resolver for a contract; the resolver binds a local provider in memory or a stub that calls a remote host.](diagrams/plugin-services-architecture.dx.svg)
+![Architecture: a consumer plugin imports a contract and asks the resolver for it; the resolver binds a provider plugin in the same host in memory, or a stub that calls a provider plugin in a remote host. Each provider plugin needs its own host's features.](diagrams/plugin-services-architecture.dx.svg)
+
+The consumer plugin and both provider plugins import the same contract and nothing else from each
+other. A provider plugin is the same bundle in either host; its host's features decide where its
+provider can activate.
 
 ### Contract
 
