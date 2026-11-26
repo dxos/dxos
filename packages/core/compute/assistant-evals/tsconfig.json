@@ -39,6 +39,9 @@
       "path": "../../../plugins/plugin-assistant"
     },
     {
+      "path": "../../../plugins/plugin-attention"
+    },
+    {
       "path": "../../../plugins/plugin-client"
     },
     {
@@ -103,6 +106,9 @@
     },
     {
       "path": "../../../sdk/types"
+    },
+    {
+      "path": "../../../ui/react-ui-attention"
     },
     {
       "path": "../../../ui/react-ui-table"
