@@ -317,6 +317,31 @@ The consumer plugin and both provider plugins import the same contract and nothi
 other. A provider plugin is the same bundle in either host; its host's features decide where its
 provider can activate.
 
+### How the design uses Effect
+
+Effect is the design's type system for services. The sections below rely on it in five ways.
+
+1. **A contract is schemas plus an RPC group.** Each method, property and event carries an Effect
+   `Schema`. The contract compiles them into one Effect `RpcGroup`, which is its only wire form.
+2. **A client is made of `Effect` and `Stream` values.** A method returns an `Effect`, a streaming
+   method a `Stream`, a property is `{ get: Effect, changes: Stream }`, and an event is a `Stream`.
+   Failures are in the typed error channel, so a consumer recovers by tag. A provider is written
+   as the same type, which is what lets the in-memory binding hand the consumer the provider's own
+   object.
+3. **A contract is a service tag, and a provider is a layer.** A handler writes `yield* Summarizer`
+   and an operation lists the contract in `services`, as both do for a layer-spec tag today. The
+   provider supplies a `Layer` of handlers whose requirements are other services.
+4. **A lifetime is a `Scope`.** A provider is built into the scope of its affinity; closing the
+   scope ends its streams and removes it from the router. A connection to another host has a scope
+   of its own, so disconnecting closes its clients and servers together.
+5. **The transport is Effect RPC on the existing router.** A provider registers its group on
+   `RpcRouter`, which already serves the client's own services. The design adds two protocols under
+   the same server and client: HTTP and Workers RPC.
+
+The host itself should also be Effect: layers for its parts and fibers for its work, so that
+interruption and resource safety come from the runtime. The spike's host is not; see
+[Where the spike differs from the design](#where-the-spike-differs-from-the-design).
+
 ### Contract
 
 A contract is data plus schemas. It imports no implementation, so a consumer depends on the
@@ -844,6 +869,11 @@ open: a script request to its own origin, and navigating itself.
 - Each host has its own plugin manager, including the app host. In the design the app host is the
   app's plugin manager, and the consumer plugin and the provider plugins share it.
 - There is no layer stack, no affinity and no space: a provider is built once per host.
+- A provider's `make` returns an `Effect` of the implementation in a `Scope`, not a `Layer`, so a
+  provider cannot require another service.
+- The host is an imperative class with a promise queue that runs Effects at its edges. Several
+  defects the review found (a timer left running, a swallowed failure, a scope left open) came
+  from that bookkeeping, which layers and fibers would have made unnecessary.
 - There is no `RpcRouter` in-process client and no strict mode. Each peer gets its own router,
   which is how a grant is enforced.
 - Versions are compared, but no test runs two versions of a contract.
