@@ -187,3 +187,9 @@ event T-10: The review of PR-2 found a self-grant and a consent gap. Both are fi
   date: 2026-11-26T20:40Z
   by: agent:claude-code
 ```
+
+```mdl
+event T-11: A second review round found two more permission gaps. Both are fixed and pushed.
+  date: 2026-11-26T21:45Z
+  by: agent:claude-code
+```
