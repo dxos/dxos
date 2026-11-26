@@ -95,7 +95,7 @@ const pluginOptions = (host: HostControl.Description): UiListbox.Option[] =>
     value: plugin.name,
     label: `${plugin.name}: ${pluginStatus(host, plugin)}`,
     icon: isActive(host, plugin) ? CONNECTED_ICON : DISCONNECTED_ICON,
-    description: `needs ${plugin.needs}`,
+    description: `deps: ${plugin.needs}`,
   }));
 
 export type HostModuleProps = {
