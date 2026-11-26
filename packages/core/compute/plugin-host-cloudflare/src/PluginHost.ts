@@ -169,6 +169,7 @@ export const make = (makePlugins: () => PluginActivation.Plugins, options: Optio
         ),
         scope.agent,
         spaceId,
+        async () => serviceContainer?.refreshWorkingSet(),
       );
       // Inside the try: it serializes the operation's schema, and a throw must still dispose the cancel listener.
       const func = wrapFunctionHandler(contextual, {

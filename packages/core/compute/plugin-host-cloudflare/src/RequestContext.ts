@@ -176,11 +176,14 @@ export const withAgentService = (
   handler: Handler,
   session: PluginProtocol.AgentSession | undefined,
   spaceId: SpaceId | undefined,
+  refreshWorkingSet?: () => Promise<void>,
 ): Handler =>
   session === undefined || spaceId === undefined
     ? handler
     : mapHandler(handler, (effect) =>
         Effect.flatMap(Effect.context<Database.Service>(), (database) =>
-          effect.pipe(Effect.provideService(Agent.Service, AgentSession.make({ session, spaceId, database }))),
+          effect.pipe(
+            Effect.provideService(Agent.Service, AgentSession.make({ session, spaceId, database, refreshWorkingSet })),
+          ),
         ),
       );

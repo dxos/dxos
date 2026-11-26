@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import type * as Context from 'effect/Context';
+import * as Context from 'effect/Context';
 import * as DateTime from 'effect/DateTime';
 import * as Effect from 'effect/Effect';
 import * as FetchHttpClient from 'effect/http/FetchHttpClient';
@@ -23,6 +23,7 @@ import type * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
 import { ProcessNotFoundError, type RemoteProcessManager } from '@dxos/compute-runtime';
+import { handOffWorkingSet } from '@dxos/compute-runtime/protocol';
 import { ProcessProtocolCodec, RemoteProcessHandle } from '@dxos/compute-runtime/remote-process';
 import * as Agent from '@dxos/compute/Agent';
 import type * as Operation from '@dxos/compute/Operation';
@@ -53,13 +54,17 @@ export const make = ({
   session,
   spaceId,
   database,
+  refreshWorkingSet,
 }: {
   session: PluginProtocol.AgentSession;
   spaceId: SpaceId;
   database: Context.Context<Database.Service>;
+  /** Brings the invocation's documents up to date with what the session's host wrote (as after a nested call). */
+  refreshWorkingSet?: () => Promise<void>;
 }): Agent.ServiceApi => {
   const registry = Registry.make();
   const control = makeControl(session);
+  const { db } = Context.get(database, Database.Service);
 
   /** Runs a verb on the session target; a failure keeps `NoCurrentSessionError`'s type and dies otherwise. */
   const call = <Verb extends PluginProtocol.AgentVerb>(
@@ -67,7 +72,9 @@ export const make = ({
     args: PluginProtocol.AgentVerbs[Verb]['args'],
   ): Effect.Effect<PluginProtocol.AgentVerbs[Verb]['result'], Agent.NoCurrentSessionError> =>
     Effect.tryPromise({
-      try: () => session.call(verb, args),
+      // The host reads what this invocation wrote (a task it delegates) and writes what it reads next (the session it
+      // delegates to), so each verb hands the working set over as a nested call does.
+      try: () => handOffWorkingSet(db, refreshWorkingSet, () => session.call(verb, args)),
       catch: (cause) => new AgentSessionError({ cause, context: { verb } }),
     }).pipe(
       Effect.orDie,
