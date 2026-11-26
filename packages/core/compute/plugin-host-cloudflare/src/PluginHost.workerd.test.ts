@@ -808,6 +808,12 @@ const sessionInSpace = async () => {
   return { host, env, spaceId, uri };
 };
 
+/** The handlers and serialization {@link serveEcho} serves with. */
+const EchoServerLayer = Layer.mergeAll(
+  EchoRpcs.toLayer({ echo: ({ text }) => Effect.succeed(text.toUpperCase()) }),
+  RpcSerialization.layerNdjson,
+);
+
 /** Serves {@link EchoRpcs} as a process host does: effect-rpc over HTTP. */
 const serveEcho = (request: Request): Promise<Response> =>
   EffectEx.runPromise(
@@ -817,12 +823,7 @@ const serveEcho = (request: Request): Promise<Response> =>
       const body = yield* Effect.promise(() => web.arrayBuffer());
       return new Response(body, { status: web.status, headers: web.headers });
     }).pipe(
-      Effect.provide(
-        Layer.mergeAll(
-          EchoRpcs.toLayer({ echo: ({ text }) => Effect.succeed(text.toUpperCase()) }),
-          RpcSerialization.layerNdjson,
-        ),
-      ),
+      Effect.provide(EchoServerLayer),
       Effect.provideService(HttpServerRequest.HttpServerRequest, HttpServerRequest.fromWeb(request)),
       Effect.scoped,
     ),
