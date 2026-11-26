@@ -400,9 +400,10 @@ export class ServiceHost {
                   : Stream.empty;
               }),
             ).pipe(
-              // A failure ends this provider's values only, so the next provider's can still arrive.
-              Stream.catchCause((cause) => {
-                log.warn('service stream failed', { key: contract.key, member, cause });
+              // A provider's failed call ends that provider's values only, so the next provider's can still
+              // arrive. Any other failure, and every defect, still ends the subscription.
+              Stream.catchTag('ServiceCallError', (error) => {
+                log.warn('service stream failed', { key: contract.key, member, error });
                 return Stream.empty;
               }),
             ),

@@ -41,6 +41,46 @@ const BrokenPlugin = Plugin.define(
   Plugin.make,
 );
 
+/** A plugin whose `NoteStore` count stream ends as `changes` says: by a failed call, or by a defect. */
+const faultyNotesPlugin = (key: string, changes: NoteStore.Client['count']['changes']) =>
+  Plugin.define(Plugin.makeMeta({ key: DXN.make(key), name: 'FaultyNotes' })).pipe(
+    Plugin.addModule({
+      id: 'provider',
+      provides: [ServiceHost.Provider],
+      activatesOn: ActivationEvents.Startup,
+      activate: () =>
+        Effect.succeed([
+          Capability.contribute(
+            ServiceHost.Provider,
+            Service.provide(NoteStore.Contract, {
+              make: () =>
+                Effect.sync(() => {
+                  const store: NoteStore.Client = {
+                    put: ({ text }) => Effect.succeed({ id: 'faulty', text }),
+                    list: () => Effect.succeed([]),
+                    clear: () => Effect.void,
+                    count: { get: Effect.succeed(0), changes },
+                    added: State.emitter<NoteStore.Note>().stream,
+                  };
+                  return store;
+                }),
+            }),
+          ),
+        ]),
+    }),
+    Plugin.make,
+  );
+
+const FailingNotesPlugin = faultyNotesPlugin(
+  'org.dxos.stories.services.plugin.failingNotes',
+  Stream.fail(new Service.ServiceCallError({ context: { key: NoteStore.Contract.key, member: 'count' } })),
+);
+
+const DyingNotesPlugin = faultyNotesPlugin(
+  'org.dxos.stories.services.plugin.dyingNotes',
+  Stream.die(new Error('provider defect')),
+);
+
 /** A second plugin that provides `NoteStore`, with a count no storage would give. */
 const OtherNotesPlugin = Plugin.define(
   Plugin.makeMeta({ key: DXN.make('org.dxos.stories.services.plugin.otherNotes'), name: 'OtherNotes' }),
@@ -78,6 +118,8 @@ const PLUGINS: Record<string, () => Plugin.Plugin> = {
   summarizer: SummarizerPlugin,
   broken: BrokenPlugin,
   otherNotes: OtherNotesPlugin,
+  failingNotes: FailingNotesPlugin,
+  dyingNotes: DyingNotesPlugin,
 };
 
 const loadPlugin = async (reference: string): Promise<Plugin.Plugin> => {
@@ -320,6 +362,32 @@ describe('plugin services', () => {
     await expect.poll(() => seen).toEqual([0, 42, 0]);
 
     await EffectEx.runPromise(Fiber.interrupt(fiber));
+  });
+
+  test('a subscription outlives a failed call and picks up the replacement provider', async ({ expect }) => {
+    const app = make('app', 'app');
+    await app.install('failingNotes');
+    const seen: number[] = [];
+    const fiber = Effect.runFork(
+      Stream.runForEach(app.client(NoteStore.Contract).count.changes, (count) => Effect.sync(() => seen.push(count))),
+    );
+    // The provider's stream has failed by now; the subscription must still be listening.
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(seen).toEqual([]);
+
+    await app.install('otherNotes');
+    await expect.poll(() => seen).toEqual([42]);
+    await EffectEx.runPromise(Fiber.interrupt(fiber));
+  });
+
+  test('a defect in a provider stream still ends the subscription', async ({ expect }) => {
+    const app = make('app', 'app');
+    await app.install('dyingNotes');
+    const exit = await Effect.runPromiseExit(
+      Stream.runDrain(app.client(NoteStore.Contract).count.changes).pipe(Effect.timeout('2 seconds')),
+    );
+    expect(exit._tag).toBe('Failure');
+    expect(String(exit)).toContain('provider defect');
   });
 
   test('an install reports only its own provider failing', async ({ expect }) => {
