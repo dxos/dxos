@@ -105,7 +105,7 @@ const DatabaseModuleContainer = ({ space, defaultView = 'graph' }: { space: Spac
         {view === 'graph' && <ForceGraph.Root classNames='flex-1 min-h-[50vh]' model={model} />}
 
         {view === 'object-tree' && (
-          <ScrollArea.Root classNames='flex-1 min-h-0'>
+          <ScrollArea.Root classNames='dx-grow'>
             <ScrollArea.Viewport>
               <ObjectsTree
                 db={space.db}
@@ -117,7 +117,7 @@ const DatabaseModuleContainer = ({ space, defaultView = 'graph' }: { space: Spac
         )}
 
         {view === 'cards' && (
-          <div className='relative flex-1 min-h-0'>
+          <div className='relative dx-grow'>
             <DatabaseCardsView
               space={space}
               filter={filter}
