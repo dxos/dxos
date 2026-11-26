@@ -7,7 +7,7 @@
  *
  * @mdl packages/core/compute/compute/docs/trajectory/LIGHT-THREADS.mdl test QA-1
  * @app storybook via `DX_STORIES=stories/stories-assistant moon run storybook-react:serve` on :9009,
- *   story `stories-stories-assistant-threads-lightthreads--default` in isolation mode
+ *   story `stories-stories-assistant-threads-threads--default` in isolation mode
  */
 
 const PROMPT = '[data-testid="assistant.prompt"] .cm-content';

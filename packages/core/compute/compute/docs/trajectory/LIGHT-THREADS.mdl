@@ -376,12 +376,12 @@ scenario T-7: A fork stays apart
 
 ```mdl
 test QA-1: Three prompts sent while the agent researches
-  desc: The scripted story `stories-assistant/threads/LightThreads` (Default) walked by a person.
+  desc: The scripted story `stories-assistant/threads/Threads` (Default) walked by a person.
   actors: human
   covers: [F-1.1, F-1.2, F-3.1, F-3.2, F-4.1, F-4.2, F-4.3, T-4]
   status: draft
   given:
-    - the story `stories/stories-assistant/threads/LightThreads` Default, with Parallel threads on
+    - the story `stories/stories-assistant/threads/Threads` Default, with Parallel threads on
   steps:
     - name: Start the research
       do: Send "Research the factorials of 5 to 9 and summarise them."
@@ -455,12 +455,12 @@ test QA-3: A live assistant draws while live Claude Code edits files
 
 ```mdl
 test QA-4: Three subagents compare savings plans
-  desc: The scripted story `stories-assistant/threads/Subagents` (Default) walked by a person.
+  desc: The scripted story `stories-assistant/threads/Delegation` (Default) walked by a person.
   actors: human
   covers: [F-8.1, F-8.2, F-8.3, F-8.4, T-6]
   status: draft
   given:
-    - the story `stories/stories-assistant/threads/Subagents` Default, with Parallel threads on
+    - the story `stories/stories-assistant/threads/Delegation` Default, with Parallel threads on
   steps:
     - name: Ask for a comparison
       do: Send "Compare three savings plans for $10,000 at 4%, 6% and 8% a year over 30 years."
@@ -504,14 +504,14 @@ test QA-5: Fork a chat at an earlier answer
 
 ```mdl
 test QA-6: Subagent threads open as columns
-  desc: The scripted story `stories-assistant/threads/Subagents` (LaunchKit) walked by a person. Each subagent thread renders as a
+  desc: The scripted story `stories-assistant/threads/Delegation` (LaunchKit) walked by a person. Each subagent thread renders as a
     column of its own beside the agent's conversation, holding its reasoning, the document it wrote and its slice of
     the trajectory, and closes once the subagent reports.
   actors: human
   covers: [F-8.1, F-8.2, F-8.3, F-8.4]
   status: draft
   given:
-    - the story `stories/stories-assistant/threads/Subagents` LaunchKit, with Parallel threads on and the `launchKit` scripted model
+    - the story `stories/stories-assistant/threads/Delegation` LaunchKit, with Parallel threads on and the `launchKit` scripted model
   steps:
     - name: Describe a complex task
       do: Click the chip "Plan the Composer 1.0 launch: we need a blog post, release notes, an FAQ and an announcement email."

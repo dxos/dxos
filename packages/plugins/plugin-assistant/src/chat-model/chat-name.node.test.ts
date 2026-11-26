@@ -18,7 +18,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { Message } from '@dxos/types';
 
 import UpdateChatName from '../operations/update-chat-name.ts';
-import { ChatModel } from './chat-model.ts';
+import { LiveChatModel } from './chat-model.ts';
 import { makeSpaceLayer, makeTestRuntime } from './testing/harness.ts';
 
 const { text, promptIncludes, scriptedAiService } = ScriptedLanguageModel;
@@ -49,7 +49,7 @@ const setup = Effect.fn(function* (session?: Agent.Session['session']) {
   const runtime = yield* Effect.context<Database.Service>();
   const aiSession = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
   const registry = yield* AtomRegistry.AtomRegistry;
-  const chatModel = new ChatModel(aiSession, yield* makeTestRuntime, feed, yield* makeSpaceLayer, {
+  const chatModel = new LiveChatModel(aiSession, yield* makeTestRuntime, feed, yield* makeSpaceLayer, {
     chat: Ref.make(chat),
     observableRegistry: registry,
   });

@@ -24,10 +24,10 @@ This session makes CI pass on the Agent module PR, answers its review, and lands
 
 ```mdl
 goal G-1: The Check workflow passes on the PR.
-  status: started
+  status: done
   notes:
     - Session verbs keep the live process. The storybook tests pass.
-    - The second commit for the review runs Check now.
+    - Check passes after the review commit and the merge of main.
 ```
 
 ```mdl
@@ -40,14 +40,15 @@ goal G-2: Each review comment has an answer.
 
 ```mdl
 goal G-3: The PR merges through the merge queue.
-  status: started
+  status: done
   notes:
     - Auto-merge is on, with squash.
 ```
 
 ```mdl
 goal G-4: The Agent verbs need no service requirements.
-  status: todo
+  status: review
+  blockedBy: [Q-2]
   notes:
     - A next PR adds a current-process context reference.
     - Session verbs get their database from the session.
@@ -58,8 +59,14 @@ goal G-4: The Agent verbs need no service requirements.
 ```mdl
 pr PR-1: One Agent module for agents, sessions and the service.
   ref: dxos/dxos#14677
-  status: landing
   goals: [G-1, G-2, G-3]
+```
+
+```mdl
+pr PR-2: The Agent verbs need no service requirements.
+  ref: dxos/dxos#14684
+  status: landing
+  goals: [G-4]
 ```
 
 ## Changelog
@@ -93,6 +100,24 @@ decision D-3: The rename from chat to session covers the API of the Agent module
   date: 2026-11-25
   by: agent:claude-code
   for: user:dmaretskyi
+```
+
+```mdl
+question Q-2: Can you remove the next PR from the merge queue, so the fix for the delegation stories can be pushed?
+  date: 2026-11-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  context: The queue holds the PR but runs nothing. A queued branch cannot take a push, and this session cannot dequeue.
+  options:
+    - Remove it from the queue: the fix goes out and the PR goes back in the queue.
+```
+
+```mdl
+decision D-4: The merge queue removed the PR itself after its checks failed, so the fix went out with no dequeue.
+  date: 2026-11-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  answers: Q-2
 ```
 
 ## Timeline
@@ -136,5 +161,71 @@ event T-6: Auto-merge is on for the PR.
 ```mdl
 event T-7: The PR had a merge conflict with main. A merge of main removes the conflict.
   date: 2026-11-25T11:10Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-8: Check passes on the PR. The PR is in the merge queue.
+  date: 2026-11-25T11:38Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-9: The PR is merged into main.
+  date: 2026-11-25T11:50Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-10: Work starts on the next PR, which removes the service requirements from the Agent verbs.
+  date: 2026-11-25T11:52Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-11: The Agent verbs need no service requirements. The tests pass for the next PR.
+  date: 2026-11-25T12:30Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-12: The next PR is open as a draft.
+  date: 2026-11-25T12:35Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-13: A review comment on the next PR is answered. The current-process reference holds the process.
+  date: 2026-11-25T13:10Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-14: The delegation PR is merged. A merge of main into the next PR removes its conflict.
+  date: 2026-11-25T15:45Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-15: The user asks to land the next PR. It is ready for review, and auto-merge is on.
+  date: 2026-11-25T16:01Z
+  by: user:dmaretskyi
+```
+
+```mdl
+event T-16: The merge queue drops the next PR. Two delegation stories fail. A tool cannot find its session database.
+  date: 2026-11-25T16:50Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-17: The fix is ready but cannot be pushed. The merge queue still holds the PR and runs nothing.
+  date: 2026-11-25T17:10Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-18: The fix for the delegation stories is on the PR. Auto-merge is on again.
+  date: 2026-11-25T17:20Z
   by: agent:claude-code
 ```

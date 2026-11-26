@@ -26,7 +26,7 @@ import { log } from '@dxos/log';
 /**
  * Effect 4 reshaped the AI errors the way it reshaped `HttpClientError`: one `AiError` wrapper
  * carrying the module and method, with a semantic `reason` as the payload. `HttpRequestError`
- * became `NetworkError` (and friends); the reasons have no `cause`, so a cause is rendered into
+ * became `NetworkError` (and friends); most reasons have no `cause`, so a cause is also rendered into
  * the reason's `description`.
  */
 const MODULE = 'ChatCompletionsClient';
@@ -34,28 +34,23 @@ const MODULE = 'ChatCompletionsClient';
 const describe = (detail: string, cause?: unknown): string =>
   cause === undefined ? detail : `${detail}: ${cause instanceof Error ? cause.message : String(cause)}`;
 
-/** The request record v4's `NetworkError` carries, projected from an `HttpClientRequest` when there is one. */
-const toErrorRequest = (request?: HttpClientRequest.HttpClientRequest): AiError.NetworkError['request'] => ({
-  method: (request?.method ?? 'POST') as AiError.NetworkError['request']['method'],
-  url: request?.url ?? '',
-  urlParams: [],
-  hash: undefined,
-  headers: {},
-});
-
 const isConnectionRefused = (cause: unknown): boolean =>
   Predicate.hasProperty(cause, 'code') && cause.code === 'ConnectionRefused';
 
-const networkError = (method: string, detail: string, options?: { request?: unknown; cause?: unknown }) =>
-  new AiError.AiError({
+const networkError = (method: string, detail: string, options?: { request?: unknown; cause?: unknown }) => {
+  const request = HttpClientRequest.isHttpClientRequest(options?.request) ? options.request : undefined;
+  return new AiError.AiError({
     module: MODULE,
     method,
     reason: new AiError.NetworkError({
       reason: 'TransportError',
-      request: toErrorRequest(HttpClientRequest.isHttpClientRequest(options?.request) ? options.request : undefined),
+      method: request?.method ?? 'POST',
+      url: request?.url ?? '',
       description: describe(detail, options?.cause),
+      cause: options?.cause,
     }),
   });
+};
 
 const unknownError = (method: string, detail: string, cause?: unknown) =>
   new AiError.AiError({

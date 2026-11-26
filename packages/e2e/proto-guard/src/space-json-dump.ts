@@ -80,6 +80,9 @@ export class SpacesDumper {
    */
   static checkIfSpacesMatchExpectedDataUsingQuery = async (client: Client, expected: SpacesDump): Promise<boolean> => {
     for (const space of client.spaces.get()) {
+      // A one-shot query answers from the index as it stands, which on a freshly opened snapshot lags until the space is ready and indexed.
+      await space.waitUntilReady();
+      await space.db.flush({ indexes: true });
       const types = await space.db
         .query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()))
         .run();

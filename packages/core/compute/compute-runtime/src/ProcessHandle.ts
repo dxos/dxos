@@ -5,7 +5,7 @@
 // @import-as-namespace
 
 import * as Cause from 'effect/Cause';
-import type * as Context from 'effect/Context';
+import * as Context from 'effect/Context';
 import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
@@ -227,7 +227,8 @@ export class Impl<I, O, R> implements Process.Process<I, O, any> {
     this.environment = environment;
     this.#handler = handler;
     this.#scope = scope;
-    this.#services = services;
+    // Handlers find their process through `Process.current`, which reads this reference.
+    this.#services = Context.add(services, Process.CurrentProcess, Option.some(this));
     this.#dispatchContext = dispatchContext;
     this.#registry = registry;
     this.#outputQueue = outputQueue;

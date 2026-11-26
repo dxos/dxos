@@ -64,6 +64,22 @@ describe('PluginHost', () => {
     expect(operations).toContain(String(Reply.meta.key));
   });
 
+  // EDGE runs a bundle's hooks only from its catalog: a hook left out of it never fires once operation-service stops
+  // serving the plugin.
+  test("lists the plugin's hooks on the operations it serves", async ({ expect }) => {
+    const { hooks } = await makeHost().describe();
+    expect(hooks).toEqual([
+      {
+        key: 'org.dxos.hook.hostTest.reply',
+        plugin: TEST_PLUGIN_KEY,
+        event: 'end-request',
+        skill: TestSkill.key,
+        operation: String(Reply.meta.key),
+        async: true,
+      },
+    ]);
+  });
+
   // EDGE speaks to a bundle at the version of the host it was published with (EDGE-PLUGINS F-6.9).
   test('reports the protocol version it speaks', async ({ expect }) => {
     expect((await makeHost().describe()).protocolVersion).toBe(PluginProtocol.PROTOCOL_VERSION);

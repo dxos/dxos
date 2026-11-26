@@ -49,6 +49,8 @@ const CARET_SELECTOR = 'input, textarea, select, [contenteditable="true"]';
 const CLICK_SLOP = 4;
 // How quickly the strip closes on the column it is heading for: the distance left shrinks by 63% in this time.
 const SCROLL_TIME_CONSTANT = 90;
+// The most time one frame advances the strip by, a frame at 60Hz, so a slow frame moves it a normal step, not a jump.
+const MAX_SCROLL_STEP = 17;
 
 type ChatPlaneSide = 'start' | 'end';
 
@@ -233,7 +235,8 @@ const ChatPlaneRoot = ({
         return;
       }
       const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      let previous = performance.now();
+      // Timed from the first frame, as the time before it is the selection's render, not motion.
+      let previous: number | undefined;
       // Kept apart from `scrollLeft`, which rounds to whole pixels and would stop short once a frame's step is under one.
       let position = viewport.scrollLeft;
       const step = (now: number) => {
@@ -251,7 +254,7 @@ const ChatPlaneRoot = ({
           const inset = group.left + viewport.scrollLeft - viewport.getBoundingClientRect().left;
           viewport.parentElement?.style.setProperty('--chat-plane-inset', `${inset}px`);
         }
-        const elapsed = now - previous;
+        const elapsed = previous === undefined ? 0 : Math.min(now - previous, MAX_SCROLL_STEP);
         previous = now;
         if (reduced || Math.abs(destination - position) < 1) {
           viewport.scrollLeft = destination;

@@ -86,11 +86,12 @@ describe('Graph', () => {
     });
     onTestFinished(() => cancel());
 
+    // `subscribe` computes the atom up front, so reading it is not a change.
     expect(registry.get(nodeKey)).toEqual(Option.none());
-    expect(count).toEqual(1);
+    expect(count).toEqual(0);
 
     expect(registry.get(nodeKey)).toEqual(Option.none());
-    expect(count).toEqual(1);
+    expect(count).toEqual(0);
 
     Graph.addNode(graph, { id: EXAMPLE_ID, type: EXAMPLE_TYPE });
     const node = registry.get(nodeKey);
@@ -99,10 +100,10 @@ describe('Graph', () => {
     expect(node.value.type).toEqual(EXAMPLE_TYPE);
     expect(node.value.data).toEqual(null);
     expect(node.value.properties).toEqual({});
-    expect(count).toEqual(2);
+    expect(count).toEqual(1);
 
     Graph.addNode(graph, { id: EXAMPLE_ID, type: EXAMPLE_TYPE });
-    expect(count).toEqual(2);
+    expect(count).toEqual(1);
   });
 
   test('getNodeOrThrow throws NotFoundError for a missing node', () => {
@@ -553,7 +554,8 @@ describe('Graph', () => {
     Graph.addNode(graph, { id: exampleId(2), type: EXAMPLE_TYPE });
     Graph.addEdge(graph, { source: exampleId(1), target: exampleId(2), relation: 'child' });
 
-    expect(count).toEqual(0);
+    // `subscribe` computes the atom up front, so the new edge notifies before the first read.
+    expect(count).toEqual(1);
     const children = registry.get(childrenKey);
     expect(children).has.length(1);
     expect(children[0].id).toEqual(exampleId(2));
@@ -635,7 +637,7 @@ describe('Graph', () => {
     });
     onTestFinished(() => cancel());
 
-    registry.get(graph.json());
+    json = registry.get(graph.json());
     expect(json).to.deep.equal({
       id: GraphNode.RootId,
       type: Node.RootType,

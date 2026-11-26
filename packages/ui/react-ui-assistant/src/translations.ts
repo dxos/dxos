@@ -23,8 +23,6 @@ export const translations = [
         'lane.waiting-on': 'Waiting for',
         'lane.done': 'Done',
         'lane.failed': 'Failed',
-        'lane.expand': 'Show all',
-        'lane.collapse': 'Show less',
         'just-now.label': 'just now',
         'rewind.label': 'Rewind to this prompt',
         'fork.label': 'Fork the conversation here',

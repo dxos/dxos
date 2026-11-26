@@ -25,4 +25,4 @@ export * from './useHomeSuggestions.ts';
 export * from './useProcessEphemeralStatus.ts';
 export * from './useSessionTimeline.ts';
 
-export { type ChatModel } from '../chat-model/index.ts';
+export { type ChatModel, type LiveChatModel } from '../chat-model/index.ts';

@@ -135,7 +135,7 @@ export const ToolboxPanel = ({ classNames, db, chatModel }: ToolboxPanelProps) =
   return (
     <Toolbox
       classNames={classNames}
-      skills={chatModel?.context.getSkills()}
+      skills={chatModel?.context?.getSkills()}
       services={serviceTools}
       functions={functions}
     />

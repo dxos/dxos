@@ -160,7 +160,9 @@ export const makeToolExecutionService = <E, R>(opts: {
                 // `handle` streams preliminary results before the final one; the toolkit
                 // interrupts the handler fiber once its effect settles, so the final result is
                 // always the last item emitted — `Stream.runLast` recovers exactly that value.
-                const resultStream = yield* toolkitHandler.handle(tool.name, input);
+                // `input` is the model's raw arguments, which `handle` decodes against the tool's own schema.
+                const params = yield* Schema.decodeUnknownEffect(Schema.Json)(input).pipe(Effect.orDie);
+                const resultStream = yield* toolkitHandler.handle(tool.name, params);
                 const lastResult = yield* Stream.runLast(resultStream);
                 const handlerResult = yield* Option.match(lastResult, {
                   onNone: () => Effect.die(new Error(`Tool "${tool.name}" handler produced no result`)),
@@ -174,7 +176,10 @@ export const makeToolExecutionService = <E, R>(opts: {
               // the model's raw arguments arrive. A malformed argument dies and is caught just below,
               // reaching the model as an error it can retry from.
               const decoded = yield* decodeToolParameters(tool, input).pipe(Effect.orDie);
-              return yield* opts.invoke(tool, decoded).pipe(Effect.catchDefect((defect) => Effect.fail(defect)));
+              return yield* opts.invoke(tool, decoded).pipe(
+                Effect.map(toJsonResult),
+                Effect.catchDefect((defect) => Effect.fail(defect)),
+              );
             });
           };
 
@@ -260,6 +265,13 @@ const EMPTY_PARAMETERS_SCHEMA = Schema.Record(Schema.String, Schema.Never);
  * Projects an `Operation.Definition` into an `AiTool`.
  * Exported for testing.
  */
+/**
+ * An operation's output as the JSON the toolkit must encode for the model: `Toolkit` rejects a
+ * result that is not JSON, and an operation with no output (`undefined`) reaches the model as `{}`.
+ */
+const toJsonResult = (value: unknown): Schema.Json =>
+  value === undefined ? {} : Schema.decodeUnknownSync(Schema.Json)(JSON.parse(JSON.stringify(value)));
+
 export const projectFunctionToTool = (fn: Operation.Definition.Any): Tool.Any => {
   if (toolCache.has(fn)) {
     return toolCache.get(fn)!;

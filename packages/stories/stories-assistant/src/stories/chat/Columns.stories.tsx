@@ -5,19 +5,24 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { ChatColumns } from '../../components/index.ts';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+
+import { type ChatPlaneModuleData, StoryRole } from '../../modules/index.ts';
 import { Scripts } from '../../scripts/index.ts';
 import { CalculatorSkill, createDecorators, storyParameters, submitPrompt } from '../../testing/index.ts';
 
 /**
  * A column per chat: every chat in the space is a conversation of its own, and the selected one rests at the center of
  * the strip with its prompt beneath it. Chats are added at either end and reordered by dragging. For one chat beside
- * the threads it delegates, see the threads Subagents stories.
+ * the threads it delegates, see the threads Delegation stories.
  */
-const meta: Meta<typeof ChatColumns> = {
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-assistant/chat/Columns',
-  component: ChatColumns,
+  render: ModuleContainer.Root,
   parameters: storyParameters,
+  args: {
+    layout: [[{ type: StoryRole.ChatPlane, data: { kind: 'chats' } satisfies ChatPlaneModuleData }]],
+  },
 };
 
 export default meta;

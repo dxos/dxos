@@ -16,6 +16,7 @@ import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as PluginManager from '@dxos/app-framework/PluginManager';
 import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import type * as Hook from '@dxos/compute/Hook';
 import type * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import type * as Skill from '@dxos/compute/Skill';
@@ -44,6 +45,8 @@ export type Activation = {
   readonly registeredTypes: readonly Type.AnyEntity[];
   /** Instantiate per invocation: `make()` mints ids with `crypto.getRandomValues()`, allowed only inside a request. */
   readonly skills: readonly Skill.Definition[];
+  /** The primary's lifecycle hooks. */
+  readonly hooks: readonly Hook.Definition[];
   readonly toolkits: readonly OpaqueToolkit.OpaqueToolkit[];
   /** The primary's operations: the only ones the release serves. */
   readonly operationHandlers: readonly Operation.WithHandler<Operation.Definition.Any>[];
@@ -102,6 +105,7 @@ export const activate = async (release: Plugins): Promise<Activation> => {
     ),
     // A plugin may contribute one skill twice; the MCP projection rejects a repeated prompt name.
     skills: dedupeBy(ofPrimary(AppCapabilities.SkillDefinition), ({ key }) => String(key)),
+    hooks: dedupeBy(ofPrimary(AppCapabilities.HookDefinition), ({ key }) => key),
     toolkits: manager.capabilities.getAll(AppCapabilities.Toolkit),
     operationHandlers,
     failures: manager.getFailed(),

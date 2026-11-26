@@ -71,7 +71,7 @@ export const steps = [
     setup: true,
     run: async ({ page }) => {
       await page.locator(PROMPT).first().waitFor({ state: 'visible', timeout: 120_000 });
-      await page.getByText('Artifacts the agent creates appear here.').waitFor({ state: 'visible', timeout: 30_000 });
+      await page.getByTestId('artifacts-module.tabs').waitFor({ state: 'visible', timeout: 30_000 });
     },
   },
   {

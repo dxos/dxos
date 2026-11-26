@@ -265,10 +265,49 @@ export const parseError = (err: unknown): Error => {
 };
 
 /**
+ * What the chat UI reads and acts through: the live model over an agent ({@link LiveChatModel}), or a fixed run
+ * replayed with no agent behind it (`ReplayChatModel`).
+ */
+export interface ChatModel {
+  /** Whether a reply is streaming. */
+  readonly streaming: Atom.Atom<boolean>;
+  /** Whether a request is in flight. */
+  readonly active: Atom.Atom<boolean>;
+  /** Messages of the current turn not yet in the feed. */
+  readonly messages: Atom.Atom<Message.Message[]>;
+  readonly error: Atom.Atom<Option.Option<Error>>;
+  /** Prompts sent from this chat that the agent has not taken up yet, in submit order. */
+  readonly outbox: Atom.Atom<readonly OutboxEntry[]>;
+  /** The feed folded into what the chat renders. */
+  readonly trajectory: Atom.Atom<TrajectoryView>;
+  /** The rows the thread renders. */
+  readonly thread: Atom.Atom<ThreadProjection>;
+  readonly mcpErrors: Atom.Atom<readonly Trace.PayloadType<typeof Trace.McpServerError>[]>;
+  /** What the running request is doing, for the activity line. */
+  readonly activity: Atom.Atom<Trace.PayloadType<typeof Trace.RequestPhase> | undefined>;
+  /** The skills and objects bound to the conversation; none for a model with no conversation behind it. */
+  readonly context: AiContext.Binder | undefined;
+  readonly registry: Registry.Registry | undefined;
+  getTools(): Promise<Record<string, any>>;
+  getSystemPrompt(): Promise<string>;
+  /** Shows a prompt at once and dispatches it; returns the outbox id, its thread row. */
+  send(request: ChatRequest, options?: ChatSendOptions): string;
+  removePrompt(id: string): void;
+  request(request: ChatRequest, submission?: PromptSubmission): Promise<void>;
+  enqueue(request: ChatRequest): Promise<void>;
+  /** Follows the agent's work while mounted; returns the unsubscribe. */
+  adopt(): () => void;
+  cancel(): Promise<void>;
+  retry(): Promise<void>;
+  dismissMcpErrors(): void;
+  updateName(session: Agent.Session): Promise<void>;
+}
+
+/**
  * Handles interactions with the AI service.
  * Uses AgentService to spawn a process-backed agent and subscribes to ephemeral trace events for streaming.
  */
-export class ChatModel {
+export class LiveChatModel implements ChatModel {
   readonly #registry: AtomRegistry.AtomRegistry;
 
   /** Pending messages (finalized, non-streaming). */

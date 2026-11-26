@@ -13,6 +13,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { flushSync } from 'react-dom';
 
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
@@ -312,12 +313,56 @@ export const useWindow = ({
     };
   }, [placement, axis, invalidate]);
 
+  // A row can resize with no commit of the list's own (a surface filling in late); the observer runs
+  // before paint, so re-measuring there lands the correction in the frame the row changed.
+  const rowObserver = useRef<{ observer: ResizeObserver; rows: Set<Element> }>(null);
+  useLayoutEffect(() => {
+    if (extents.exact) {
+      return;
+    }
+
+    const observer = new ResizeObserver((entries) => {
+      const resized = entries.some(({ target, borderBoxSize: [box] }) => {
+        if (!target.isConnected || !box) {
+          return false;
+        }
+        const actual = Math.round(axis === 'block' ? box.blockSize : box.inlineSize);
+        return actual !== placement.extentOf(Number(target.getAttribute('data-index')));
+      });
+      if (resized) {
+        flushSync(invalidate);
+      }
+    });
+    rowObserver.current = { observer, rows: new Set() };
+    return () => {
+      observer.disconnect();
+      rowObserver.current = null;
+    };
+  }, [placement, axis, invalidate, extents.exact]);
+
   // Measured after every commit, so a row that grows later — a font, a portaled widget, an image —
   // is not a special case but the same case arriving again (§8).
   useLayoutEffect(() => {
     const parent = windowRef.current;
     if (!parent) {
       return;
+    }
+
+    if (rowObserver.current) {
+      const { observer, rows } = rowObserver.current;
+      const mounted = new Set<Element>(parent.children);
+      for (const row of rows) {
+        if (!mounted.has(row)) {
+          observer.unobserve(row);
+          rows.delete(row);
+        }
+      }
+      for (const row of mounted) {
+        if (!rows.has(row)) {
+          observer.observe(row, { box: 'border-box' });
+          rows.add(row);
+        }
+      }
     }
 
     let changed = false;
@@ -400,14 +445,15 @@ export const useWindow = ({
   });
 
   const announced = useRef<string>('');
-  // The viewport is part of the key so the report taken before the first measurement is re-announced once it lands.
-  const state = `${visible.first}:${visible.last}:${first}:${last}:${count}:${placement.viewport}`;
+  const extent = windowExtentOf(placement, first, last);
+  // The viewport and the geometry are part of the key, so a measurement that lands, or a row that resizes, with the
+  // same rows mounted is still announced.
+  const state = `${visible.first}:${visible.last}:${first}:${last}:${count}:${placement.viewport}:${sizerExtent}:${offset}:${extent}`;
   if (onChange && announced.current !== state) {
     announced.current = state;
     // In render rather than an effect, so a readout never lags the frame it describes by one. The viewport is the
     // ResizeObserver's last reading: a DOM read here would force a layout mid-commit.
     const viewport = placement.viewport;
-    const extent = windowExtentOf(placement, first, last);
     queueMicrotask(() =>
       onChange({
         index: visible.first,
