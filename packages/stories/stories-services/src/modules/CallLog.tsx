@@ -31,8 +31,7 @@ export const CallLog = ({ contractKey }: CallLogProps) => {
     <Listbox.Root items={calls} classNames='dx-grow' data-testid={`calls-${name}`}>
       <Listbox.Label>Calls</Listbox.Label>
       <Listbox.Viewport>
-        {/* A list of a fixed height gives its rows no spare room, so each is sized to its two lines. */}
-        <Listbox.Content classNames='auto-rows-max'>
+        <Listbox.Content>
           {calls.map((call) => (
             <Listbox.Item key={call.value} id={call.value} />
           ))}
