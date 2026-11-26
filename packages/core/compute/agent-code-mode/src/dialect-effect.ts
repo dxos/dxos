@@ -46,6 +46,7 @@ export const EffectDialect: Dialect = {
   name: 'effect',
   database: true,
   skillInstructions: (key) => `DOCS[${JSON.stringify(skillDocName(key))}]`,
+  lookupOperations: true,
 
   // Named only: the model reads an operation's input in `DOCS['catalog/operations.md']`, which each evaluation rebuilds.
   operations: (operations) =>
@@ -57,7 +58,7 @@ export const EffectDialect: Dialect = {
     `const search = (query) => searchAll(DOCS, query);\n` +
     `return await runEffect(Effect.gen(function* () {\n${code}\n}));`,
 
-  bindings: ({ runtime, operations, skills, skillDocs, lookupOperation, print }: BindingsContext) => {
+  bindings: ({ runtime, operations, lookupOperation, skills, skillDocs, print }: BindingsContext) => {
     const describe = makeDescriber({ syntax: EFFECT_HINTS, skills });
     // A print built without `yield*` runs when the program ends: told nothing printed, a model runs it all again.
     const unyielded = new Set<Effect.Effect<void>>();
@@ -245,8 +246,8 @@ const operationKey = (definition: Operation.Definition.Any): string => String(de
 /**
  * `Database.resolve`, answering the turn's bound operations itself: a definition is code that lives
  * with its handler rather than an entity the registry holds, so the registry cannot resolve one.
- * Every other DXN — a type, an object — goes to the real resolver; a key it cannot answer may be an operation bound
- * since the evaluation began (a skill the program just enabled), which `lookupOperation` finds.
+ * Every other DXN — a type, an object — goes to the real resolver; a key it cannot find is then asked of
+ * `lookupOperation`, which knows the operations of a skill enabled since the evaluation began.
  */
 const resolveWith = (operations: readonly SandboxOperation[], lookupOperation?: LookupOperation) => {
   // Keyed without the `dxn:` prefix: the Skill Manager reports an operation by its registry key, which may omit it.
@@ -269,22 +270,8 @@ const resolveWith = (operations: readonly SandboxOperation[], lookupOperation?: 
     }
     const target = typeof ref === 'string' ? URI.make(toObjectURI(ref) ?? ref) : ref;
     const resolved = schema === undefined ? Database.resolve(target) : Database.resolve(target, schema);
-    // Asked only once the real resolver fails, since every type the program resolves would otherwise rebuild the
-    // conversation's operations first.
-    const lateBound = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
-      typeof ref !== 'string' || lookupOperation === undefined || schema !== undefined
-        ? effect
-        : effect.pipe(
-            Effect.catchCause((cause) =>
-              lookupOperation(ref).pipe(
-                Effect.flatMap((definition) =>
-                  definition === undefined ? Effect.failCause(cause) : Effect.succeed(definition),
-                ),
-              ),
-            ),
-          );
     // `Database.resolve` neither asks the type sources (EDGE's published types) nor finds a versionless type DXN.
-    return lateBound(
+    const entity =
       typeof target === 'string' && DXN.isDXN(target)
         ? Effect.gen(function* () {
             const { db } = yield* Database.Service;
@@ -293,8 +280,17 @@ const resolveWith = (operations: readonly SandboxOperation[], lookupOperation?: 
             );
             return type !== undefined && schema === undefined ? type : yield* resolved;
           })
-        : resolved,
-    );
+        : resolved;
+    return typeof ref === 'string' && schema === undefined && lookupOperation !== undefined
+      ? entity.pipe(
+          // The original failure, not the lookup's miss, is what tells the model what it named wrong.
+          Effect.catchCause((cause) =>
+            lookupOperation(bareKey(ref)).pipe(
+              Effect.flatMap((found) => (found === undefined ? Effect.failCause(cause) : Effect.succeed(found))),
+            ),
+          ),
+        )
+      : entity;
   };
 };
 

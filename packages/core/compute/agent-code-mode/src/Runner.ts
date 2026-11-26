@@ -36,14 +36,14 @@ export type Options = {
   /** Services the code runs against: the database it reads and writes, and `Operation.invoke`'s handler. */
   readonly runtime: Context.Context<Database.Service | Operation.Service>;
   readonly operations: readonly SandboxOperation[];
+  /** See `BindingsContext.lookupOperation`; in-process only, since a function does not cross to a worker. */
+  readonly lookupOperation?: LookupOperation;
   /** Dialects this runner serves; defaults to {@link DIALECTS}. */
   readonly dialects?: Partial<Record<Operation.ScriptDialect, Dialect>>;
   /** Keys of the skills the conversation has bound; see `BindingsContext.skills`. */
   readonly skills?: readonly string[];
   /** The enabled skills' instructions; see `BindingsContext.skillDocs`. */
   readonly skillDocs?: Readonly<Record<string, string>>;
-  /** Finds an operation bound after the evaluation began; see `BindingsContext.lookupOperation`. */
-  readonly lookupOperation?: LookupOperation;
   readonly maxOutput?: number;
   readonly timeout?: Duration.Input;
   /** Told which operations an evaluation ran; see `EvalToolkitOptions.onEvaluated`. */
@@ -91,9 +91,9 @@ export const make = (options: Options): Operation.ScriptRunner => {
           // and a process it spawns belong to that process rather than to whoever asked for the script.
           runtime: runtime === undefined ? options.runtime : Context.merge(options.runtime, runtime.context),
           operations: options.operations,
+          ...(options.lookupOperation !== undefined ? { lookupOperation: options.lookupOperation } : {}),
           ...(options.skills !== undefined ? { skills: options.skills } : {}),
           ...(options.skillDocs !== undefined ? { skillDocs: options.skillDocs } : {}),
-          ...(options.lookupOperation !== undefined ? { lookupOperation: options.lookupOperation } : {}),
           ...(options.onEvaluated !== undefined ? { onEvaluated: options.onEvaluated } : {}),
           ...(options.toolCallId !== undefined ? { toolCallId: options.toolCallId } : {}),
           ...(maxOutput !== undefined ? { maxOutput } : {}),

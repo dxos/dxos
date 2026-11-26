@@ -9,7 +9,7 @@ import * as Option from 'effect/Option';
 import * as Record from 'effect/Record';
 
 import { type MakeTurnProducer, type TurnProducer, type TurnRequest } from '@dxos/agent-runtime';
-import { type OpaqueToolkit, callTool } from '@dxos/ai';
+import { type OpaqueToolkit, type ToolExecutionService, type ToolResolverService, callTool } from '@dxos/ai';
 import {
   AiRequest,
   AiSession,
@@ -169,28 +169,13 @@ const runCodeModeTurn = ({
               // The prompt states the Skill Manager's lookups and the enabled skills, with their operations; the model
               // looks up every other skill, operation and type through the lookups. A bound Skill Manager is stated as
               // its code-mode form, since its own instructions list every skill, but its operations stay callable.
-              const lookups = SkillManagerSkill.makeForCodeMode();
+              const lookups = SkillManagerSkill.makeForCodeMode({ sameProgram: dialect.lookupOperations === true });
               const enabled = skills.filter(
                 (skill) => Obj.getMeta(skill).key?.replace(/^dxn:/, '') !== SkillManagerSkill.key,
               );
               const callable = ({ definition }: SandboxOperation) =>
                 !dialect.database || !definition || !Operation.isHiddenInCodeMode(definition);
               const operations = (yield* projectOperations([lookups, ...skills], mcps)).filter(callable);
-              // A skill the program enables is bound in the context at once, so its operations are callable in the same
-              // evaluation; they are read from the context only when `Database.resolve` cannot otherwise answer a key.
-              const iterationServices = yield* Effect.context<never>();
-              const lookupOperation: LookupOperation = (key) =>
-                Effect.gen(function* () {
-                  yield* Effect.promise(() => session.context.sync());
-                  const bound = yield* projectOperations([lookups, ...session.context.getSkills()]);
-                  const wanted = key.replace(/^dxn:/, '');
-                  return bound
-                    .filter(callable)
-                    .find(({ definition }) => definition?.meta.key.replace(/^dxn:/, '') === wanted)?.definition;
-                }).pipe(
-                  Effect.provide(iterationServices),
-                  Effect.orElseSucceed(() => undefined),
-                );
               labelCall = labelEvalCall(operations);
               // A dialect that serves skill instructions on demand gets them here, and the prompt names the skills only.
               const skillDocs = dialect.skillInstructions
@@ -202,14 +187,27 @@ const runCodeModeTurn = ({
                     ).pipe(Effect.orDie),
                   )
                 : undefined;
+              // The services `projectOperations` builds a toolkit against, held so a lookup made from the sandbox runs on them.
+              const projection = yield* Effect.context<ProjectionServices>();
+              // Re-reads the conversation's skills, so code that enabled one calls its operations in the same program.
+              const lookupOperation: LookupOperation = (key) =>
+                Effect.gen(function* () {
+                  yield* Effect.promise(() => session.context.sync());
+                  const current = yield* projectOperations([lookups, ...session.context.getSkills()]);
+                  const wanted = key.replace(/^dxn:/, '');
+                  return current
+                    .filter(callable)
+                    .find(({ definition }) => definition && String(definition.meta.key).replace(/^dxn:/, '') === wanted)
+                    ?.definition;
+                }).pipe(Effect.orDie, Effect.provideContext(projection));
               const evalOptions = {
                 dialect,
                 sandbox,
                 runtime,
                 operations,
+                lookupOperation,
                 skills: skills.flatMap((skill) => Obj.getMeta(skill).key ?? []),
                 ...(skillDocs ? { skillDocs } : {}),
-                lookupOperation,
                 maxOutput: options.maxOutput,
                 timeout: options.timeout,
                 onEvaluated: evaluations.add,
@@ -305,6 +303,9 @@ const runCodeModeTurn = ({
     Effect.provide(Operation.withInvocationOptions({ conversation: Obj.getURI(feed) })),
     Effect.withSpan('CodeMode.runTurn'),
   );
+
+/** What {@link projectOperations} builds its toolkit against. */
+type ProjectionServices = ToolResolverService | ToolExecutionService;
 
 /**
  * The request's evaluations by the `eval` call each answered, so a result written to the feed takes the operations

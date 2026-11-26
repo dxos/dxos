@@ -228,6 +228,12 @@ describe("code mode states the enabled skills and the Skill Manager's lookups", 
           const lists = dialect !== EffectDialect;
           expect(system.includes(querySkillsCall)).toBe(lists);
           expect(system.includes('yield* search(words)')).toBe(!lists);
+          // Only a dialect that looks operations up mid-program can call an enabled skill's at once.
+          expect(system).toContain(
+            lists
+              ? 'its instructions and operations are stated from your next eval call'
+              : 'its operations resolve right after that, in the same program',
+          );
           // Named by the tool name the Operations section lists, not a bare `queryTypes` another skill also offers.
           expect(system).toContain("find them, and their fields, with the Skill Manager's ");
           // The Effect dialect names the lookup by the DXN its code resolves, which a model otherwise guesses.
@@ -291,6 +297,61 @@ describe("code mode states the enabled skills and the Skill Manager's lookups", 
       { timeout: 30_000 },
     );
   });
+});
+
+describe('code mode calls an enabled skill in the program that enabled it', () => {
+  const { noted, handlers } = makeHandlers();
+
+  it.effect(
+    'effect dialect: enable, resolve and invoke in one eval; an unknown key still fails as before',
+    Effect.fnUntraced(
+      function* (_) {
+        const session = yield* AgentService.createSession({ skills: [ScoreSkill] });
+        yield* session.submitPrompt('Note "remember the docs".');
+        yield* session.waitForCompletion();
+
+        const messages = yield* TrajectoryStore.history(session.feed);
+        const results = messages
+          .flatMap((message) => message.blocks)
+          .filter((block): block is ContentBlock.ToolResult => block._tag === 'toolResult');
+        expect(results).toHaveLength(2);
+        expect(results[0].error).toBeUndefined();
+        expect(JSON.stringify(results[0].result)).toContain('noted');
+        expect(noted).toEqual(['remember the docs']);
+        // The real resolver's failure, not a lookup miss, names what the code got wrong.
+        expect(results[1].error).toContain('com.example.operation.missing');
+      },
+      Effect.provide(
+        AssistantTestLayer({
+          types: [Ticket, Feed.Feed, Skill.Skill],
+          operationHandlers: [SkillManagerSkill.Handlers, handlers],
+          skills: [ScoreSkill, NotesSkill],
+          agent: { makeTurnProducer: makeCodeModeTurnProducer({ dialect: EffectDialect }) },
+          aiService: scriptedAiService([
+            {
+              parts: [
+                toolCall(EVAL_TOOL_NAME, {
+                  code:
+                    `const Enable = yield* Database.resolve('${keyOf(EnableSkills)}');\n` +
+                    "yield* Operation.invoke(Enable, { keys: ['com.example.skill.notes'] });\n" +
+                    `const AddNote = yield* Database.resolve('${keyOf(AddNote)}');\n` +
+                    "yield* print(yield* Operation.invoke(AddNote, { text: 'remember the docs' }));",
+                }),
+              ],
+            },
+            {
+              parts: [
+                toolCall(EVAL_TOOL_NAME, { code: "yield* Database.resolve('dxn:com.example.operation.missing');" }),
+              ],
+            },
+            { parts: [text('Noted.')] },
+          ]),
+        }),
+      ),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 30_000 },
+  );
 });
 
 describe('toToolInput', () => {

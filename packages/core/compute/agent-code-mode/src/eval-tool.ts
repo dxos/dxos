@@ -72,12 +72,12 @@ export type EvalToolkitOptions = {
   /** Services the sandbox's code runs against — the database, and `Operation.invoke`'s handler. */
   readonly runtime: Context.Context<Database.Service | Operation.Service>;
   readonly operations: readonly SandboxOperation[];
+  /** See `BindingsContext.lookupOperation`. */
+  readonly lookupOperation?: LookupOperation;
   /** Keys of the skills the conversation has bound; see `BindingsContext.skills`. */
   readonly skills?: readonly string[];
   /** The enabled skills' instructions; see `BindingsContext.skillDocs`. */
   readonly skillDocs?: Readonly<Record<string, string>>;
-  /** Finds an operation bound after the evaluation began; see `BindingsContext.lookupOperation`. */
-  readonly lookupOperation?: LookupOperation;
   readonly maxOutput?: number;
   readonly timeout?: Duration.Input;
   /**
@@ -117,9 +117,9 @@ export const evaluate = Effect.fnUntraced(function* ({
   sandbox,
   runtime,
   operations,
+  lookupOperation,
   skills,
   skillDocs,
-  lookupOperation,
   maxOutput = DEFAULT_MAX_OUTPUT,
   timeout,
   onEvaluated,
@@ -142,9 +142,9 @@ export const evaluate = Effect.fnUntraced(function* ({
           recordingService(Context.get(runtime, Operation.Service), recorder),
         ),
         operations: recordInvocations(operations, recorder),
+        ...(lookupOperation !== undefined ? { lookupOperation } : {}),
         skills,
         skillDocs,
-        ...(lookupOperation !== undefined ? { lookupOperation } : {}),
         print: printer.print,
       },
       timeout,

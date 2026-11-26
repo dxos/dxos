@@ -36,7 +36,10 @@ export type SandboxField = FieldDescription;
 /** A type the workspace has registered, as the model is told about it. */
 export type SandboxType = TypeDescription;
 
-/** An operation's definition by key, or `undefined` when no skill the conversation has bound offers it. */
+/**
+ * Finds an operation the conversation can call now but that was not bound when the evaluation began — one whose skill
+ * the code itself just enabled. Its key is taken with or without `dxn:`; `undefined` when no bound skill provides it.
+ */
 export type LookupOperation = (key: string) => Effect.Effect<Operation.Definition.Any | undefined>;
 
 /** What a dialect is handed to build its bindings: the ECHO runtime, the skills' operations, and the turn's printer. */
@@ -48,6 +51,11 @@ export type BindingsContext = {
   readonly runtime: Context.Context<Database.Service | Operation.Service>;
   readonly operations: readonly SandboxOperation[];
   /**
+   * Consulted for an operation `operations` does not hold, so code can call one from a skill it enabled earlier in the
+   * same program. Absent where the host cannot re-read the conversation's skills mid-evaluation.
+   */
+  readonly lookupOperation?: LookupOperation;
+  /**
    * Keys of the skills the conversation has bound, so a printed object can say which of the skills its
    * type declares are missing. Absent where the host did not say, in which case none is called missing.
    */
@@ -57,12 +65,6 @@ export type BindingsContext = {
    * `Dialect.skillInstructions`) rather than in the system prompt.
    */
   readonly skillDocs?: Readonly<Record<string, string>>;
-  /**
-   * Finds an operation by key that was not bound when the evaluation began, such as one of a skill the program has
-   * just enabled, so the program can call it without waiting for the next evaluation. In-process only: a function
-   * does not cross to another thread.
-   */
-  readonly lookupOperation?: LookupOperation;
   /** Appends a line to this call's output — the only channel back to the model. */
   readonly print: (...values: unknown[]) => void;
 };
@@ -102,6 +104,12 @@ export interface Dialect {
    * out of its operations.
    */
   readonly database?: boolean;
+
+  /**
+   * Whether its bindings reach an operation through `BindingsContext.lookupOperation`, so the model can be told that a
+   * skill it enables is callable in the same program.
+   */
+  readonly lookupOperations?: boolean;
 }
 
 /** What a dialect is handed to write its instructions: the operations and the types the model may name. */
