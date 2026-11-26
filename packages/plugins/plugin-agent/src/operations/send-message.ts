@@ -66,7 +66,11 @@ const handler: Operation.WithHandler<typeof RelayOperation.SendMessage> = RelayO
           if (conversation && channel) {
             const sent = yield* postToChannel(agent, channel, conversation.thread, text);
             if (sent.delivered) {
-              // The backend may resolve a pending thread, so the message lands in another chat than this one.
+              // The backend may resolve a pending thread, so the message lands in another chat, which must belong to
+              // the recipient for the lookup above to find it next time.
+              if (sent.chat.id !== chat.id) {
+                Obj.update(sent.chat, (landed) => ChatParticipant.set(landed, recipient));
+              }
               return { delivered: true, via: 'channel', chat: Ref.make(sent.chat) };
             }
             reasons.push(sent.reason ?? `${channel.name ?? 'A channel'} refused the message.`);

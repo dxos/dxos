@@ -329,7 +329,17 @@ describe('Relay', () => {
           const chat = yield* Database.load(delivered.chat);
           expect(chat.id).not.toBe(pending.id);
           expect(AgentChannels.conversationOf(chat)).toEqual({ channelId: channel.id, thread: 'dm-200' });
+          expect(ChatParticipant.get(chat)).toBe(person.id);
         }
+
+        const again = yield* Operation.invoke(RelayOperation.SendMessage, {
+          agent: agentRef,
+          recipient: josiah,
+          text: 'Still there?',
+        });
+        const chatId = (ref: typeof again.chat) =>
+          ref ? Database.load(ref).pipe(Effect.map(({ id }) => id)) : Effect.void;
+        expect(yield* chatId(again.chat)).toBe(yield* chatId(delivered.chat));
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
