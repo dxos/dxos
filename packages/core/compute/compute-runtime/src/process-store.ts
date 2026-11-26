@@ -197,6 +197,11 @@ export class ProcessStore {
     return this.#modify(id, (record) => ({ ...record, authority }));
   }
 
+  /** Replaces the inherited authorities persisted with the given process. */
+  setInheritedAuthorities(id: Process.ID, inheritedAuthorities: readonly Process.Authority[]): Effect.Effect<void> {
+    return this.#modify(id, (record) => ({ ...record, inheritedAuthorities }));
+  }
+
   /** Updates the lifecycle state of the given process. */
   setState(id: Process.ID, state: Process.State): Effect.Effect<void> {
     return this.#modify(id, (record) => ({ ...record, state }));

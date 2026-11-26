@@ -97,8 +97,9 @@ const ask = Effect.fnUntraced(function* (chat: Agent.Session, title: string, pre
     blocks: [{ _tag: 'request', requestId, title, options: [...CONSENT_OPTIONS], ...(preview && { preview }) }],
   });
   pending.set(requestId, { chatId: chat.id, answer });
-  yield* Feed.append(feed, [message]);
-  return yield* Deferred.await(answer).pipe(
+  // The cleanup covers the post as well as the wait, so an interrupted post neither strands the entry nor the card.
+  return yield* Feed.append(feed, [message]).pipe(
+    Effect.andThen(Deferred.await(answer)),
     Effect.onInterrupt(() =>
       Effect.gen(function* () {
         resolve(message, requestId, undefined);
@@ -133,9 +134,12 @@ export const respond = Effect.fn(function* ({ chat, message, requestId, optionId
   if (!request || request.chatId !== chat.id || !option) {
     return false;
   }
+  // Claimed and settled before the first suspension, so a second answer is refused and the waiting call is answered
+  // with the option the card records even when recording it fails.
+  pending.delete(requestId);
+  yield* Deferred.succeed(request.answer, option.kind);
   resolve(message, requestId, optionId);
   const feed = yield* Database.load(chat.feed).pipe(Effect.orDie);
   yield* Feed.append(feed, [message]);
-  yield* Deferred.succeed(request.answer, option.kind);
   return true;
 });

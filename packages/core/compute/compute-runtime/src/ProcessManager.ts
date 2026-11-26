@@ -226,9 +226,10 @@ export interface Manager {
   ): Effect.Effect<Process.Process<I, O, Rpcs>>;
 
   /**
-   * Adds grants to a process's own authority (see `Process.SpawnOptions.authority`), persisted with it. Only the host
-   * holds this: the `Process.Manager` a process sees has no `grant`, so no process can widen itself. Its ancestors'
-   * authorities still apply. Dies when the process is not live or was spawned without an authority of its own.
+   * Adds grants to a process's own authority (see `Process.SpawnOptions.authority`), persisted with it, and to every
+   * copy of that authority its children inherited. The `Process.Manager` a process sees grants only to processes held
+   * to its own authorities, never to itself, so no process can widen past what it holds. Its ancestors' authorities
+   * still apply. Dies when the process is not live or was spawned without an authority of its own.
    */
   grant(pid: Process.ID, grants: readonly Grant.Grant[]): Effect.Effect<void>;
 
@@ -403,8 +404,11 @@ export class Impl implements Manager {
         location?.kind === 'edge'
           ? Effect.die(new Error('A process cannot attach to a remote process.'))
           : this.attach(childPid),
-      // A process can grant through its own manager too, itself included: see the TODO on `Process.Manager.grant`.
-      grant: (target, grants) => this.grant(target, grants),
+      // A target held to this process's authorities can never exceed them, so granting it cannot widen this process.
+      grant: (target, grants) =>
+        target !== pid && this.#inheritsFrom(target, pid)
+          ? this.grant(target, grants)
+          : Effect.die(new Error(`Process ${pid} may grant only to a process it spawned, not to ${target}.`)),
     };
     // The handler set is always present, so an operation process can look its handler up.
     let services = Context.make(Process.ManagerService, manager).pipe(
@@ -550,10 +554,33 @@ export class Impl implements Manager {
       }
       const own: Process.Authority = { ...held.own, grants: [...held.own.grants, ...grants] };
       this.#authorities.set(pid, { ...held, own });
+      // Inherited copies are read live only while their owner runs, so they must outlast it holding the new grants.
+      const heirs: Process.ID[] = [];
+      for (const [heir, heirHeld] of this.#authorities) {
+        if (heirHeld.inherited.some(({ owner }) => owner === pid)) {
+          this.#authorities.set(heir, {
+            ...heirHeld,
+            inherited: heirHeld.inherited.map((entry) => (entry.owner === pid ? { ...entry, authority: own } : entry)),
+          });
+          heirs.push(heir);
+        }
+      }
       this.#refreshProcessTree();
       // A no-op for a process kept in memory, which has no record.
       yield* this.#store.setAuthority(pid, own);
+      for (const heir of heirs) {
+        const inherited = this.#authorities.get(heir)?.inherited ?? [];
+        yield* this.#store.setInheritedAuthorities(
+          heir,
+          inherited.map(({ authority }) => authority),
+        );
+      }
     });
+  }
+
+  /** Whether `target` is held to an authority `owner` owns, so `target` can never exceed `owner`. */
+  #inheritsFrom(target: Process.ID, owner: Process.ID): boolean {
+    return this.#authorities.get(target)?.inherited.some((held) => held.owner === owner) ?? false;
   }
 
   /** The authorities the process is held to, as they stand now. */
@@ -596,46 +623,44 @@ export class Impl implements Manager {
             );
           }
           for (const { owner, authority } of held) {
-            const verdict = yield* this.#verifier.check({ authority, op, input });
-            if (verdict._tag === 'Admitted') {
-              continue;
-            }
-            const refusal = { command: verdict.requirement.command, reason: verdict.reason.kind };
-            if (!verdict.requirement.consentable) {
-              return yield* deny(op, verdict.message, refusal);
-            }
-            const consent = yield* ServiceResolver.resolve(Consent.Service, context).pipe(
-              Effect.provideService(ServiceResolver.ServiceResolver, this.#serviceResolver),
-              Effect.provideService(Scope.Scope, scope),
-              Effect.option,
-            );
-            if (Option.isNone(consent)) {
-              return yield* deny(op, verdict.message, refusal);
-            }
-            const answer = yield* consent.value.ask({
-              principal: authority.principal,
-              requirement: verdict.requirement,
-              op,
-              input,
-            });
-            if (answer._tag === 'Declined') {
-              return yield* deny(op, `Operation "${op.meta.key}" was declined`, { ...refusal, reason: 'declined' });
-            }
-            if (answer._tag === 'Grant') {
-              if (owner === undefined || !this.#handles.has(owner)) {
+            // Each consent covers the one requirement it was asked for, so the others are still checked after it.
+            const allowedOnce: number[] = [];
+            const asked = new Set<number>();
+            while (true) {
+              const current = (owner !== undefined ? this.#authorities.get(owner)?.own : undefined) ?? authority;
+              const verdict = yield* this.#verifier.check({ authority: current, op, input, except: allowedOnce });
+              if (verdict._tag === 'Admitted') {
+                break;
+              }
+              const refusal = { command: verdict.requirement.command, reason: verdict.reason.kind };
+              if (!verdict.requirement.consentable || asked.has(verdict.index)) {
                 return yield* deny(op, verdict.message, refusal);
               }
-              yield* this.grant(owner, answer.grants);
-              const recheck = yield* this.#verifier.check({
-                authority: this.#authorities.get(owner)?.own ?? authority,
+              asked.add(verdict.index);
+              const consent = yield* ServiceResolver.resolve(Consent.Service, context).pipe(
+                Effect.provideService(ServiceResolver.ServiceResolver, this.#serviceResolver),
+                Effect.provideService(Scope.Scope, scope),
+                Effect.option,
+              );
+              if (Option.isNone(consent)) {
+                return yield* deny(op, verdict.message, refusal);
+              }
+              const answer = yield* consent.value.ask({
+                principal: current.principal,
+                requirement: verdict.requirement,
                 op,
                 input,
               });
-              if (recheck._tag === 'Refused') {
-                return yield* deny(op, recheck.message, {
-                  command: recheck.requirement.command,
-                  reason: recheck.reason.kind,
-                });
+              if (answer._tag === 'Declined') {
+                return yield* deny(op, `Operation "${op.meta.key}" was declined`, { ...refusal, reason: 'declined' });
+              }
+              if (answer._tag === 'Once') {
+                allowedOnce.push(verdict.index);
+              } else {
+                if (owner === undefined || !this.#handles.has(owner)) {
+                  return yield* deny(op, verdict.message, refusal);
+                }
+                yield* this.grant(owner, answer.grants);
               }
             }
           }

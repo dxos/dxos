@@ -563,9 +563,12 @@ export interface Manager {
    * authorities still apply, so a grant never lets a child exceed its parent. Dies when the process is not live, was
    * spawned without an authority of its own, or runs on a remote runtime.
    *
-   * TODO(dmaretskyi): Not secure as a grant path: anything that holds this manager, a running process included, can add
-   *  any grant to any process, itself too. Limit it later, e.g. by keeping it off the manager a process sees, by
-   *  verifying that the issuer may grant what it grants, or by moving grants into a store keyed by principal.
+   * The manager a process sees grants only to processes held to that process's authorities, never to itself or an
+   * ancestor, so no process can widen past what it holds.
+   *
+   * TODO(dmaretskyi): Not yet secure as a grant path: the host's manager adds any grant to any process, and the issuer of
+   *  a grant is not checked to hold what it grants. Limit it later, e.g. by verifying the issuer, or by moving grants
+   *  into a store keyed by principal.
    *
    * @experimental
    */

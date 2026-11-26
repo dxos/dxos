@@ -18,6 +18,8 @@ export type Verdict =
   | {
       readonly _tag: 'Refused';
       readonly requirement: Requirement.Requirement;
+      /** The requirement's position among those the operation declares. */
+      readonly index: number;
       readonly reason: Check.Reason;
       readonly message: string;
     };
@@ -31,6 +33,8 @@ export interface Api {
     readonly authority: Process.Authority;
     readonly op: Operation.Definition.Any;
     readonly input: unknown;
+    /** Positions of requirements already admitted another way, such as a one-time consent, which the check skips. */
+    readonly except?: readonly number[];
   }) => Effect.Effect<Verdict>;
 }
 
@@ -50,18 +54,22 @@ export type Options = {
  * issuer roots its own grant; chains among them are still checked.
  */
 export const make = ({ source }: Options = {}): Api => ({
-  check: Effect.fnUntraced(function* ({ authority, op, input }) {
+  check: Effect.fnUntraced(function* ({ authority, op, input, except = [] }) {
     const held = Check.fromGrants({
       grants: authority.grants,
       trusted: [...new Set(authority.grants.map((grant) => grant.issuer))],
     });
     const grants = source ? Check.merge(held, source) : held;
-    for (const requirement of Operation.getRequirements(op)) {
+    for (const [index, requirement] of Operation.getRequirements(op).entries()) {
+      if (except.includes(index)) {
+        continue;
+      }
       const result = yield* Check.check({ principal: authority.principal, requirement, args: input, source: grants });
       if (Check.isDenied(result)) {
         return {
           _tag: 'Refused',
           requirement,
+          index,
           reason: result.reason,
           message: `Operation "${op.meta.key}" denied: ${Check.describeReason(result.reason)}`,
         } satisfies Verdict;
