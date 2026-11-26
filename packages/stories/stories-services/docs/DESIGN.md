@@ -575,7 +575,7 @@ edge FrameHost owns FrameWorker
 | Host        | Boundary                                    | Protects against                                               | For                                                |
 | ----------- | ------------------------------------------- | -------------------------------------------------------------- | -------------------------------------------------- |
 | Worker host | A thread at the app's origin                | A hang, a crash, work that blocks the main thread              | Trusted plugins with heavy or background services  |
-| Frame host  | A sandboxed iframe on its own origin        | Code that reads the app's memory, storage or identity, or that sends data out by a request (not by navigating itself; see below) | Plugins the person does not trust     |
+| Frame host  | A sandboxed iframe on its own origin        | Code that reads the app's memory, storage or identity, or that sends data to another origin by a request (two paths stay open; see below) | Plugins the person does not trust     |
 | EDGE host   | A `workerd` isolate with no outbound access | The same, on EDGE                                              | Providers that need EDGE's features                |
 
 - **A worker alone is not a trust boundary.** A worker the app creates runs at the app's origin, so
@@ -586,21 +586,28 @@ edge FrameHost owns FrameWorker
   start a worker of its own, which shares the frame's origin and gives both boundaries.
 - **A content security policy limits what the frame can send out, but not all of it.** The frame's
   document is served with `default-src 'none'` and its own origin as the only script source. That
-  refuses `fetch`, sockets and every subresource request, images included; `connect-src` alone
-  would leave images open. It does not stop the frame navigating itself to another URL, which can
-  carry granted data in the address. An EDGE isolate has no such path, since `globalOutbound: null`
-  removes all of it. Closing it on the client is not designed here.
+  refuses `fetch`, sockets, images and every other request except a script from the frame's own
+  origin; `connect-src` alone would leave images open. Two paths stay open:
+  - **A script request to the frame's own origin.** This is how the frame's code loads, so the
+    policy has to allow it, and the request's URL can carry granted data to whoever serves that
+    origin. It is safe only if the origin serves a published bundle and nothing the plugin's
+    author controls.
+  - **Navigating itself.** The frame can set its own address to any URL, which can carry granted
+    data, and the policy does not govern it.
+
+  An EDGE isolate has neither path, since `globalOutbound: null` removes all of it. Closing them on
+  the client is not designed here.
 - **An opaque origin does not work.** The first draft used `sandbox` without `allow-same-origin`,
   which gives the frame an opaque origin. The spike showed that such a frame cannot load module
   scripts: they are fetched with `Origin: null`, and a server answers that only if it allows every
   origin. A frame host therefore needs a real second origin, such as one per plugin under a
   dedicated domain, and the plugin's bundle has to be served to that origin.
 - **An isolated host is given contracts, not features.** A frame host has none of the app's
-  storage, and its policy refuses every request it makes. What it is meant to use is the contracts
+  storage, and its policy refuses its requests to other origins. What it is meant to use is the contracts
   the app host serves on its port: ECHO through the client service groups, limited to the spaces
   it was granted, and a key-value contract scoped to the plugin. This is the EDGE arrangement,
   where a bundle reaches everything through `env` bindings. Unlike an EDGE isolate, a frame keeps
-  one path the contracts do not cover: it can navigate itself, as the next point says.
+  the two paths above, which the contracts do not cover.
 - **A grant says what an isolated plugin may use.** A plugin's manifest lists the contracts it
   uses and the network hosts it calls. The person approves the list at install. The app host's
   router enforces it per port with RPC middleware, and writes the hosts into the frame's content
@@ -778,8 +785,8 @@ The probe, run in each child host:
 | Frame  | Isolated            | Isolated            | Refused | Refused       | Refused                  |
 
 This is the claim of "Isolation on the client" measured: the worker reads the app's IndexedDB, and
-the frame reaches none of the five. The probe does not try the frame navigating itself, which the
-policy does not stop.
+the frame reaches none of the five. The probe does not try the two paths the frame's policy leaves
+open: a script request to its own origin, and navigating itself.
 
 ### Answers
 
@@ -805,10 +812,11 @@ policy does not stop.
 7. **Loading in a worker without an import map: not answered.** Storybook's dev server rewrites
    bare imports, so the worker and the frame loaded plugins by URL with no import map and no
    `vendor/` rewrite. The built form, where the import map matters, was not run.
-8. **A sandboxed frame serving a contract, out of reach of the app's storage and with its requests
-   refused: yes, on a second origin.** See the probe table. The frame is served from the same dev
-   server under the other loopback name. The probe tries `fetch` and an image request. It does not
-   try the frame navigating itself, which the policy does not stop, so this is not a claim that
+8. **A sandboxed frame serving a contract, out of reach of the app's storage and with `fetch` and
+   image requests refused: yes, on a second origin.** See the probe table. The frame is served
+   from the same dev server under the other loopback name. The probe tries `fetch` and an image
+   request. It does not try a script request to the frame's own origin, which the policy allows,
+   or the frame navigating itself, which the policy does not govern, so this is not a claim that
    the frame has no way to send data out.
 9. **Cost of one more host: about 0.2 s to start, memory not measured.** One warm run: 205 ms
    from starting the worker to its catalog arriving, 233 ms for the frame, and about 30 ms to
@@ -850,7 +858,7 @@ Phases run in order. Each ends with a test that proves its exit criterion. The t
 | 0     | The spike above.                                                                                                                                            | dxos       | The six questions have written answers; this document is revised.                                        |
 | 1     | `@dxos/compute/Service`: contract, provider, client, in-memory binding, strict mode. The layer stack and router move into app-framework's core. `Capabilities.Service`, `AppCapability.service`, `useService`, manifest `services`. | dxos       | A layer spec and a provider resolve side by side in one `LayerStack`, with no process-manager plugin loaded. |
 | 2     | Providers register on `RpcRouter`; HTTP and Workers RPC transports for it; `Catalog.services`; protocol version 3.                                           | dxos       | One contract passes the same test suite on all four bindings.                                            |
-| 3     | Client isolation: a worker host and a frame host, supervised by the app host; loading from `vendor/`; grants enforced on the port. | dxos       | A plugin with no app-host modules runs in a frame host in Composer, cannot reach the app's storage, and has every request refused. Self-navigation is either prevented or recorded as a known gap. |
+| 3     | Client isolation: a worker host and a frame host, supervised by the app host; loading from `vendor/`; grants enforced on the port. | dxos       | A plugin with no app-host modules runs in a frame host in Composer, cannot reach the app's storage, and has every request to another origin refused. Each of the two open paths (a script request to its own origin, self-navigation) is prevented or recorded as a known gap. |
 | 4     | EDGE's nine host services as contracts in `@dxos/protocols`. Version 3 bundles use them; `HostServiceAdapter` and the bundle's proxy are removed.            | dxos, edge | The agent and MCP suites pass on version 3 bundles with typed contracts; version 2 bundles still run.     |
 | 5     | A layer stack in PluginHost. Cross-plugin calls on EDGE: a contract index in registry-service, router resolution, EDGE-PLUGINS decisions.                    | dxos, edge | Sample plugin A calls a contract of sample plugin B on EDGE (T-20's counterpart for services).            |
 | 6     | Host features and derived placement; the plugins service; the app host reads the space's plugin map.                                                        | dxos, edge | An operation with no `on` runs where its services resolve, in a test with a local and a remote host.      |
@@ -862,9 +870,10 @@ Phases run in order. Each ends with a test that proves its exit criterion. The t
   the process-manager plugin, which is a refactor of that one module.
 - **Phase 3 needs only this repository** and nothing from EDGE, so it can run while the EDGE
   phases wait.
-- **Phase 3 has to decide how a frame is kept from navigating itself.** The policy that refuses
-  its requests does not cover it. Until that is decided, a frame host limits what an untrusted
-  plugin can read, and does not guarantee that what it was granted stays on the device.
+- **Phase 3 has to close, or accept, the frame's two open paths.** A script request to its own
+  origin and navigating itself can both carry data out, and the policy that refuses its other
+  requests covers neither. Until that is decided, a frame host limits what an untrusted plugin can
+  read, and does not guarantee that what it was granted stays on the device.
 - **Phase 4 is the first that removes code**, and the first that needs both repositories. It uses
   `pnpm link-packages` from the edge checkout, never a published build.
 - **Phase 4 waits for operation-service to go.** The Plugin Runtime project is removing
