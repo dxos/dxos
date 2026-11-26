@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
@@ -27,14 +26,11 @@ import {
 } from '../services/bot-gateway.ts';
 import { makeEdgeDiscordBot } from '../services/edge-discord-bot.ts';
 
-/** Resolves the service that acts through the channel's bot. */
-export type DiscordBotResolver = Effect.Effect<DiscordBot.Service, DiscordChannelError, Capability.Service>;
-
 export type DiscordChannelBackendOptions = {
   /** Where the EDGE client for the bot routes comes from; the app's client by default. */
   edgeClient?: EdgeClientResolver;
-  /** The bot service sends go through; the host's when it provides one, else one over `edgeClient`. */
-  bot?: DiscordBotResolver;
+  /** The bot sends go through: the one EDGE serves an operation handler, else one over `edgeClient`. */
+  bot?: DiscordBot.Service;
 };
 
 /**
@@ -44,15 +40,13 @@ export type DiscordChannelBackendOptions = {
  */
 export const makeDiscordChannelBackend = ({
   edgeClient = appEdgeClient,
-  bot = Effect.flatMap(Effect.serviceOption(DiscordBot.DiscordBotService), (service) =>
-    Option.isSome(service) ? Effect.succeed(service.value) : Effect.map(edgeClient, makeEdgeDiscordBot),
-  ),
+  bot,
 }: DiscordChannelBackendOptions = {}): ThreadCapabilities.ChannelBackendProvider => {
   /** Acts as the channel's bot; the receipt names the Discord channel the post landed in (a DM's, once opened). */
   const act = (channel: Channel.Channel, action: DiscordBot.Action) =>
     Effect.gen(function* () {
       const { config, spaceId } = yield* loadConfig(channel);
-      const service = yield* bot;
+      const service = bot ?? makeEdgeDiscordBot(yield* edgeClient);
       const posted = yield* service.act(
         {
           applicationId: config.applicationId,

@@ -8,7 +8,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 import * as ChannelBackend from '@dxos/plugin-thread/ChannelBackend';
 
-import { DiscordChannel } from '#types';
+import { DiscordBot, DiscordChannel } from '#types';
 
 import { makeDiscordChannelBackend } from '../../capabilities/channel-backend.ts';
 
@@ -17,7 +17,12 @@ const handler: Operation.WithHandler<typeof DiscordChannel.BackendOperation.Send
     Operation.withHandler(
       Effect.fnUntraced(function* ({ channel: channelRef, thread, text }) {
         const channel = yield* Database.load(channelRef);
-        return yield* ChannelBackend.sendThrough(makeDiscordChannelBackend(), channel, thread, text);
+        return yield* ChannelBackend.sendThrough(
+          makeDiscordChannelBackend({ bot: yield* DiscordBot.DiscordBotService }),
+          channel,
+          thread,
+          text,
+        );
       }),
     ),
   );

@@ -97,7 +97,7 @@ describe('Discord channel backend', () => {
   it.effect('names a pending DM from the discord identity without calling the bot', () =>
     Effect.gen(function* () {
       const bot = fakeBot();
-      const backend = makeDiscordChannelBackend({ bot: Effect.succeed(bot.service) });
+      const backend = makeDiscordChannelBackend({ bot: bot.service });
       const { channel } = yield* makeChannel(MANAGED_ACCESS_TOKEN);
       const josiah = Person.make({
         fullName: 'Josiah',
@@ -146,7 +146,7 @@ describe('Discord channel backend', () => {
   it.effect("a send to a pending DM opens it through the bot's act and reports the DM channel as the thread", () =>
     Effect.gen(function* () {
       const bot = fakeBot();
-      const backend = makeDiscordChannelBackend({ bot: Effect.succeed(bot.service) });
+      const backend = makeDiscordChannelBackend({ bot: bot.service });
       // Kai's token stays on EDGE; the bot posts with it, so a managed token sends too.
       const { channel } = yield* makeChannel(MANAGED_ACCESS_TOKEN);
       const spaceId = yield* Database.spaceId;
@@ -170,7 +170,7 @@ describe('Discord channel backend', () => {
   it.effect('posts into a thread, and with no thread into the first listed Discord channel', () =>
     Effect.gen(function* () {
       const bot = fakeBot();
-      const backend = makeDiscordChannelBackend({ bot: Effect.succeed(bot.service) });
+      const backend = makeDiscordChannelBackend({ bot: bot.service });
       const { channel } = yield* makeChannel();
       yield* (backend.threads?.send(channel, 'thread-1', text('in thread')) ?? Effect.void).pipe(withCapabilities);
       yield* backend.send(channel, text('hi')).pipe(withCapabilities);
@@ -184,7 +184,7 @@ describe('Discord channel backend', () => {
   it.effect('fails with the reason the bot gave', () =>
     Effect.gen(function* () {
       const bot = fakeBot({ fail: 'Discord will not let the bot message this user.' });
-      const backend = makeDiscordChannelBackend({ bot: Effect.succeed(bot.service) });
+      const backend = makeDiscordChannelBackend({ bot: bot.service });
       const { channel } = yield* makeChannel();
       const exit = yield* backend.send(channel, text('hi')).pipe(withCapabilities, Effect.exit);
       expect(Exit.isFailure(exit) ? String(exit.cause) : undefined).toContain('will not let the bot message');
