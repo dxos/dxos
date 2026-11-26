@@ -199,3 +199,9 @@ event T-12: A session on EDGE now refuses an authority, because EDGE drops it.
   date: 2026-11-26T22:05Z
   by: agent:claude-code
 ```
+
+```mdl
+event T-13: Four stories crashed on the agent header tooltip. The header now shows it only with permissions.
+  date: 2026-11-26T22:50Z
+  by: agent:claude-code
+```
