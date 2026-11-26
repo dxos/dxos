@@ -137,6 +137,10 @@ export const CrmAgentsScripted: Story = {
 
     const record = await accountRecord(canvasElement);
     await expectStatus(record, 'prospect');
+    // Each agent's session sits under its agent, so the collapsed tree names each agent once.
+    const objects = within(await canvas.findByTestId('database-module'));
+    await waitFor(() => expect(objects.getAllByText(LEDGER)).toHaveLength(1), { timeout: 10_000 });
+    await expect(objects.getAllByText(SCOUT)).toHaveLength(1);
     // Visible, not only present: a highlighter that collapses to no width keeps its text in the DOM.
     await expect(record.firstElementChild?.getBoundingClientRect().width ?? 0).toBeGreaterThan(0);
 

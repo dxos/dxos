@@ -458,8 +458,9 @@ export class ObjectsTreeModel {
         ? get(this.#spaceQuery)
         : get(this.#idsQueryFamily([...ids].filter((id) => EntityId.isValid(id)).join(',')));
     // Unfiltered, an object with a parent shows only under it; a search or an id set lists its matches wherever they sit.
+    // Read through the parent atom: an object is often parented after it is added, which changes no query result.
     const objects = entities.filter(
-      (entity) => Obj.isObject(entity) && (filtered || ids !== undefined || Obj.getParent(entity) === undefined),
+      (entity) => Obj.isObject(entity) && (filtered || ids !== undefined || get(Obj.parentAtom(entity)) === undefined),
     );
     return {
       entities: filtered ? objects : objects.slice(0, limit),
