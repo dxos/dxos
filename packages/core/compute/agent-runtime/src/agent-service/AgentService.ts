@@ -193,6 +193,11 @@ export interface Options {
   mcpEndpoint?: McpEndpointOf;
   /** Lifecycle hooks the agent process can run (see `SessionProcessOptions.hooks`). */
   hooks?: () => readonly Hook.Definition[];
+  /**
+   * The guard a local session's process is spawned with when the open asks for none, such as a session another
+   * agent delegated to: it runs on its own agent's permissions rather than with no guard at all.
+   */
+  defaultGuard?: (session: Agent.Session) => Effect.Effect<Process.Guard | undefined, never, Database.Service>;
 }
 
 /**
@@ -358,6 +363,11 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
         }
       });
 
+      const defaultGuardFor = (
+        chat: Agent.Session,
+      ): Effect.Effect<Process.Guard | undefined, never, Database.Service> =>
+        opts?.defaultGuard ? opts.defaultGuard(chat) : Effect.succeed(undefined);
+
       const getHandle = (
         chat: Agent.Session,
         options?: Agent.OpenSessionOptions,
@@ -429,6 +439,9 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
               }
 
               const agent = yield* Agent.loadForSession(chat);
+              // Only a fresh spawn takes the default: an adopted process keeps the guard it was spawned with.
+              const spawnGuard =
+                guard ?? (!activeProcess && location === 'local' ? yield* defaultGuardFor(chat) : undefined);
               let handle: AgentHandle;
               if (activeProcess) {
                 // `hydrate` returns the live handle; the listed one may be a dormant view whose
@@ -439,7 +452,7 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
                   location: processLocation,
                   name: 'Agent',
                   target,
-                  ...(guard !== undefined ? { guard } : {}),
+                  ...(spawnGuard !== undefined ? { guard: spawnGuard } : {}),
                   // Stamp the host marker so the harness control surface is discoverable by annotation
                   // lookup (set once at spawn, immutable — the identity plane).
                   annotations: Annotation.buildDictionary((dictionary) => {
@@ -504,7 +517,7 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
                 instructions,
                 location,
                 process: executable.key,
-                guard,
+                guard: spawnGuard,
                 handle,
                 session,
               });
@@ -580,6 +593,7 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
       const delegateToSession = (
         request: Agent.DelegateRequest,
         target: URI.URI | undefined,
+        sender?: Agent.PromptSender,
       ): Effect.Effect<Agent.DelegateResult, Agent.NoCurrentSessionError, Database.Service> =>
         Effect.gen(function* () {
           const caller = yield* currentSession;
@@ -636,9 +650,32 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
                 },
               ];
           const handle = yield* handleFor(receiver);
-          yield* handle.submitPrompt(prompt);
+          yield* handle.submitPrompt(prompt, sender ? { sender } : undefined);
           return { session: Obj.getURI(receiver) };
         }).pipe(Effect.scoped);
+
+      /**
+       * Hands work to another agent: its primary session takes the message (or the task) as a turn from the caller's
+       * agent, and runs on that agent's own permissions, never the caller's.
+       */
+      const delegateToAgent = (
+        request: Agent.DelegateRequest,
+        target: URI.URI,
+      ): Effect.Effect<Agent.DelegateResult, Agent.NoCurrentSessionError, Database.Service> =>
+        Effect.gen(function* () {
+          const caller = yield* currentSession;
+          const receiver = yield* Database.resolve(target, Agent.Agent).pipe(Effect.orDie);
+          const session = yield* Agent.loadSession(receiver);
+          if (!session) {
+            return yield* Effect.die(new Error(`Agent ${receiver.name ?? target} has no session to delegate to.`));
+          }
+          const callerAgent = yield* Agent.loadForSession(caller);
+          if (callerAgent?.id === receiver.id) {
+            return yield* Effect.die(new Error('An agent cannot delegate to itself; delegate to a session instead.'));
+          }
+          const sender = { name: callerAgent?.name ?? caller.name ?? 'Another agent' };
+          return yield* delegateToSession(request, Obj.getURI(session), sender);
+        });
 
       const service: Agent.ServiceApi = {
         ...serviceFromHandles(handleFor),
@@ -697,10 +734,16 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
               ...(guard !== undefined ? { guard } : {}),
             });
           }),
-        delegate: (request) =>
-          request.target.kind === 'session'
-            ? withCurrentDatabase(delegateToSession(request, request.target.session))
-            : Effect.die(new Error(`Agent.delegate to a ${request.target.kind} is not implemented.`)),
+        delegate: (request) => {
+          switch (request.target.kind) {
+            case 'session':
+              return withCurrentDatabase(delegateToSession(request, request.target.session));
+            case 'agent':
+              return withCurrentDatabase(delegateToAgent(request, request.target.agent));
+            case 'thread':
+              return Effect.die(new Error('Agent.delegate to a thread is not implemented.'));
+          }
+        },
       };
 
       return service;

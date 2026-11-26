@@ -718,7 +718,10 @@ export class LiveChatModel implements ChatModel {
       const fiber = this.#observeFiber;
       if (fiber) {
         this.#observeFiber = undefined;
-        void this._runtime.runPromise(Fiber.interrupt(fiber));
+        // A runtime disposed first (the story or app tearing down) has already interrupted the fiber, and rejects.
+        this._runtime
+          .runPromise(Fiber.interrupt(fiber))
+          .catch((err) => log.verbose('observer already stopped with its runtime', { error: err }));
       }
     };
   }

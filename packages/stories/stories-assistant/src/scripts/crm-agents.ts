@@ -3,20 +3,22 @@
 //
 
 import { ScriptedScene } from '@dxos/ai/testing';
+import * as DelegationSkill from '@dxos/assistant-toolkit/DelegationSkill';
 import * as Operation from '@dxos/compute/Operation';
 
 import { CRM_ACCOUNT, CRM_WRITE, LEDGER, SCOUT, SetOrganizationStatus } from '../testing/crm.ts';
 import { composerAsides, threadPrompt } from '../testing/scripted.ts';
 
 const SET_STATUS = Operation.toolName(SetOrganizationStatus);
+const AGENT_DELEGATE = Operation.toolName(DelegationSkill.Operations.AgentDelegate);
 
 /** What the reader asks Scout, which holds no grant to change the CRM. */
 export const SCOUT_REQUEST = `${CRM_ACCOUNT} signed the contract. Mark them active in the CRM.`;
 
-/** What Scout says once its call is refused; the story waits for it. */
-export const SCOUT_REFUSED = `I do not hold ${CRM_WRITE}, so I cannot change the CRM. ${LEDGER} holds it`;
+/** What Scout says once it has handed the request on; the story waits for it. */
+export const SCOUT_DELEGATED = `I do not hold ${CRM_WRITE}, so I handed the change to ${LEDGER}`;
 
-/** What the reader asks Ledger, which holds the grant. */
+/** What Scout asks Ledger, which holds the grant. */
 export const LEDGER_REQUEST = `Mark ${CRM_ACCOUNT} active in the CRM: they signed the contract.`;
 
 /** What Ledger says once the record is changed. */
@@ -37,15 +39,23 @@ const scout = ScriptedScene.conversation(SCOUT, [
   ScriptedScene.turn(
     'assistant',
     [
-      ScriptedScene.reasoning('The CRM refused the change: I hold no grant for it. Ledger keeps the CRM.'),
-      ScriptedScene.text(`${SCOUT_REFUSED}: this needs delegating to ${LEDGER}.`),
+      ScriptedScene.reasoning(
+        `The CRM refused the change: I hold no grant for it. ${LEDGER} keeps the CRM and holds it.`,
+      ),
+      ScriptedScene.text(`I cannot change the CRM myself. Handing this to ${LEDGER}.`),
+      ScriptedScene.toolCall(AGENT_DELEGATE, { agent: LEDGER, message: LEDGER_REQUEST }),
     ],
     { delay: '1200 millis' },
   ),
+  ScriptedScene.turn('tool', new RegExp(`Handed the request to ${LEDGER}`)),
+  ScriptedScene.turn('assistant', [ScriptedScene.text(`${SCOUT_DELEGATED}, which works it in its own session.`)], {
+    delay: '800 millis',
+  }),
 ]);
 
 const ledger = ScriptedScene.conversation(LEDGER, [
-  ScriptedScene.turn('user', LEDGER_REQUEST),
+  // Scout's request, as the turn the delegation opens in Ledger's session.
+  ScriptedScene.turn('user', new RegExp(LEDGER_REQUEST.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))),
   ScriptedScene.turn(
     'assistant',
     [
@@ -58,5 +68,5 @@ const ledger = ScriptedScene.conversation(LEDGER, [
   ScriptedScene.turn('assistant', [ScriptedScene.text(LEDGER_DONE)], { delay: '800 millis' }),
 ]);
 
-/** Two agents with different permissions asked for the same change: Scout is refused, Ledger makes it. */
+/** Scout is refused the change it lacks a grant for and hands it to Ledger, which makes it. */
 export const crmAgents = ScriptedScene.make([scout, ledger], { asides: composerAsides, promptOf: threadPrompt });

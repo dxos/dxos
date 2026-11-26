@@ -17,6 +17,7 @@ import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 
 import { AssistantCapabilities, AssistantOptions } from '#types';
 
+import { consentGuard } from '../util/consent-guard.ts';
 import { resolveTurnProducer } from './turn-producers.ts';
 
 //
@@ -62,6 +63,13 @@ const makeAgentServiceSpec = (codeModeTurnProducer: AssistantOptions.AssistantPl
               return { limit: values.parallelThreadLimit, ...(tenants.length > 0 ? { tenants } : {}) };
             },
             hooks: () => manager.getAll(AppCapabilities.HookDefinition),
+            // The guard the chat's own UI opens with, so a session another agent delegated to runs on its agent's
+            // grants, and the UI later shares the process instead of respawning it.
+            defaultGuard: (session) =>
+              consentGuard(
+                session,
+                AssistantCapabilities.findSessionGuard(manager.getAll(AssistantCapabilities.SessionGuard), session),
+              ),
             mcpEndpoint: (connection) =>
               ConnectorSpec.mcpEndpoint(manager.getAll(ConnectorSpec.Connector).flat(), connection),
           });

@@ -255,6 +255,7 @@ const Delegate = Operation.make({
     purpose: Schema.String,
     task: Schema.optional(Ref.Ref(Task.Task)),
     session: Schema.optional(Schema.String),
+    agent: Schema.optional(Schema.String),
     message: Schema.optional(Schema.String),
   }),
   output: Schema.String,
@@ -264,9 +265,12 @@ const Delegate = Operation.make({
 const delegateHandlers = OperationHandlerSet.make(
   Delegate.pipe(
     Operation.withHandler(
-      Effect.fnUntraced(function* ({ purpose, task, session, message }) {
+      Effect.fnUntraced(function* ({ purpose, task, session, agent, message }) {
         const result = yield* Agent.delegate({
-          target: { kind: 'session', ...(session !== undefined ? { session: URI.make(session) } : {}) },
+          target:
+            agent !== undefined
+              ? { kind: 'agent', agent: URI.make(agent) }
+              : { kind: 'session', ...(session !== undefined ? { session: URI.make(session) } : {}) },
           purpose,
           ...(task !== undefined ? { task } : {}),
           ...(message !== undefined ? { message: [{ _tag: 'text', text: message }] } : {}),
@@ -324,7 +328,10 @@ const makeScriptedModel = (replies: readonly Reply[]) => {
 
 const ScriptedTestLayer = (
   script: ScriptedLanguageModel.Script,
-  { enableToolBackgrounding = false }: { enableToolBackgrounding?: boolean } = {},
+  {
+    enableToolBackgrounding = false,
+    defaultGuard,
+  }: { enableToolBackgrounding?: boolean; defaultGuard?: AgentService.Options['defaultGuard'] } = {},
 ) =>
   AssistantTestLayer({
     ...assistantTestLayerOptions,
@@ -332,7 +339,7 @@ const ScriptedTestLayer = (
     operationHandlers: [handlers, delegateHandlers],
     skills: [...assistantTestLayerOptions.skills, StallSkill, DelegateSkill],
     aiService: scriptedAiService(script),
-    agent: { enableToolBackgrounding },
+    agent: { enableToolBackgrounding, ...(defaultGuard ? { defaultGuard } : {}) },
   });
 
 const RESEARCH_PROMPT = `Research ${JSON.stringify(ResearchService.getTestData().organizations[0])}`;
@@ -1678,6 +1685,121 @@ describe('Agent Service', () => {
           TestHelpers.provideTestContext,
         ),
       );
+
+      describe('to another agent', () => {
+        /** An agent with its primary session, bound to `skills`, run locally. */
+        const makeAgent = (name: string, skills: readonly Skill.Skill[] = []) =>
+          Effect.gen(function* () {
+            const instructions = yield* Database.add(Instructions.make({ text: '' }));
+            const agent = yield* Database.add(Obj.make(Agent.Agent, { name, instructions: Ref.make(instructions) }));
+            const feed = yield* Database.add(Feed.make());
+            const chat = yield* Database.add(
+              Agent.makeSession({ feed: Ref.make(feed), remote: false, [Obj.Parent]: agent }),
+            );
+            const runtime = yield* Effect.context<Database.Service>();
+            const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
+            yield* Effect.promise(() => binder.bind({ skills: skills.map(Skill.makeRef) }));
+            yield* Database.flush();
+            return { agent, chat, feed };
+          }).pipe(Effect.scoped);
+
+        const tellReplies: readonly Reply[] = [
+          {
+            when: (request) => answersTool(request) && latest(request).includes('Started session'),
+            turn: { parts: [text('Handed off.')] },
+          },
+          { when: saying('Summarize the plan.'), turn: { parts: [text('The plan is summarized.')] } },
+          {
+            when: saying('Tell'),
+            turn: (request) => ({
+              parts: [
+                toolCall(Operation.toolName(Delegate), {
+                  purpose: 'Summary',
+                  agent: named(request, 'Tell'),
+                  message: 'Summarize the plan.',
+                }),
+              ],
+            }),
+          },
+        ];
+
+        it.effect(
+          "sends the message to the other agent's session, as a turn from the caller's agent",
+          Effect.fnUntraced(
+            function* (_) {
+              const alpha = yield* makeAgent('Alpha', [DelegateSkill]);
+              const beta = yield* makeAgent('Beta');
+
+              const caller = yield* AgentService.bindSession(alpha.chat);
+              yield* caller.submitPrompt(`Tell ${Obj.getURI(beta.agent)}`);
+              yield* caller.waitForCompletion();
+              expect(yield* replyTexts(caller.feed)).toContain('Handed off.');
+
+              yield* waitForMessage(beta.feed, (message) => Message.extractText(message) === 'The plan is summarized.');
+              const prompts = (yield* TrajectoryStore.messages(beta.feed)).filter(
+                (message) => message.sender.role === 'user',
+              );
+              expect(prompts.map(Message.extractText)).toEqual(['Summarize the plan.']);
+              expect(prompts[0]?.sender.name).toBe('Alpha');
+            },
+            Effect.provide(ScriptedTestLayer(makeScriptedModel(tellReplies).script)),
+            TestHelpers.provideTestContext,
+          ),
+        );
+
+        const guarded = new Set<string>();
+        it.effect(
+          "runs the receiver on the default guard, not the caller's",
+          Effect.fnUntraced(
+            function* (_) {
+              const alpha = yield* makeAgent('Alpha', [DelegateSkill]);
+              const beta = yield* makeAgent('Beta');
+
+              const caller = yield* AgentService.bindSession(alpha.chat, {
+                guard: { check: () => Effect.void },
+              });
+              yield* caller.submitPrompt(`Tell ${Obj.getURI(beta.agent)}`);
+              yield* caller.waitForCompletion();
+              yield* waitForMessage(beta.feed, (message) => Message.extractText(message) === 'The plan is summarized.');
+
+              // The caller asked for its own guard, so only the receiver's spawn fell back to the default.
+              expect([...guarded]).toEqual([beta.chat.id]);
+            },
+            Effect.provide(
+              ScriptedTestLayer(makeScriptedModel(tellReplies).script, {
+                defaultGuard: (session) =>
+                  Effect.sync(() => {
+                    guarded.add(session.id);
+                    return { check: () => Effect.void };
+                  }),
+              }),
+            ),
+            TestHelpers.provideTestContext,
+          ),
+        );
+
+        it.effect(
+          'refuses to delegate to its own agent',
+          Effect.fnUntraced(
+            function* (_) {
+              const alpha = yield* makeAgent('Alpha', [DelegateSkill]);
+              const caller = yield* AgentService.bindSession(alpha.chat);
+              yield* caller.submitPrompt(`Tell ${Obj.getURI(alpha.agent)}`);
+              yield* caller.waitForCompletion();
+              expect(yield* replyTexts(caller.feed)).not.toContain('Handed off.');
+            },
+            Effect.provide(
+              ScriptedTestLayer(
+                makeScriptedModel([
+                  { when: answersTool, turn: { parts: [text('Could not hand off.')] } },
+                  ...tellReplies.slice(1),
+                ]).script,
+              ),
+            ),
+            TestHelpers.provideTestContext,
+          ),
+        );
+      });
 
       it.effect(
         'fails outside a session',

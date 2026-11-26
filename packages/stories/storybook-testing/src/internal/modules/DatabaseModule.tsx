@@ -27,7 +27,12 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-type DatabaseView = 'graph' | 'object-tree' | 'cards';
+export type DatabaseView = 'graph' | 'object-tree' | 'cards';
+
+export type DatabaseModuleData = {
+  /** The view the module opens on; the graph by default. */
+  view?: DatabaseView;
+};
 
 const VIEW_OPTIONS: { value: DatabaseView; icon: string; label: string }[] = [
   {
@@ -47,18 +52,18 @@ const VIEW_OPTIONS: { value: DatabaseView; icon: string; label: string }[] = [
   },
 ];
 
-export const DatabaseModule = () => {
+export const DatabaseModule = ({ data }: { data?: DatabaseModuleData }) => {
   const space = Hooks.useActiveSpace();
   if (!space) {
     return null;
   }
 
-  return <DatabaseModuleContainer space={space} />;
+  return <DatabaseModuleContainer space={space} defaultView={data?.view} />;
 };
 
-const DatabaseModuleContainer = ({ space }: { space: Space }) => {
+const DatabaseModuleContainer = ({ space, defaultView = 'graph' }: { space: Space; defaultView?: DatabaseView }) => {
   const [filter, setFilter] = useState<Filter.Any>();
-  const [view, setView] = useState<DatabaseView>('graph');
+  const [view, setView] = useState<DatabaseView>(defaultView);
   const [open, setOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<EntityId | null>(null);
 

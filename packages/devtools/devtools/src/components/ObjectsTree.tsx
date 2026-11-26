@@ -457,7 +457,10 @@ export class ObjectsTreeModel {
       ids === undefined
         ? get(this.#spaceQuery)
         : get(this.#idsQueryFamily([...ids].filter((id) => EntityId.isValid(id)).join(',')));
-    const objects = entities.filter((entity) => Obj.isObject(entity));
+    // Unfiltered, an object with a parent shows only under it; a search or an id set lists its matches wherever they sit.
+    const objects = entities.filter(
+      (entity) => Obj.isObject(entity) && (filtered || ids !== undefined || Obj.getParent(entity) === undefined),
+    );
     return {
       entities: filtered ? objects : objects.slice(0, limit),
       complete: filtered || objects.length <= limit,

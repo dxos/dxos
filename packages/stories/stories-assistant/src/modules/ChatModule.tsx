@@ -19,6 +19,7 @@ import * as AssistantHooks from '@dxos/plugin-assistant/Hooks';
 import { type Space, useObject, useQuery, useRegistry } from '@dxos/react-client/echo';
 import { MenuBuilder } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
+import * as Icon from '@dxos/react-ui/Icon';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Popover from '@dxos/react-ui/Popover';
 import * as StoryModules from '@dxos/storybook-testing/StoryModules';
@@ -85,9 +86,13 @@ const ChatModuleContainer = ({
   const { preset, ...chatProps } = AssistantHooks.usePresets(settings, chat);
 
   // Every chat in the space, not the companion chats of one object: the story is a tour of the
-  // space, and its chats are the thing worth moving between.
+  // space, and its chats are the thing worth moving between. A panel for one agent offers only that agent's sessions.
   const onSelect = useCallback((chat: Agent.Session) => setSelected(chat.id), []);
-  const switcher = useMemo(() => ({ chats: [...chats], onSelect }), [chats, onSelect]);
+  const switcher = useMemo(
+    () => ({ chats: agent ? chats.filter((chat) => agentName(chat) === agent) : [...chats], onSelect }),
+    [chats, agent, onSelect],
+  );
+  const headerAgent = chat ? agentName(chat) : undefined;
 
   const registry = useRegistry();
   const runtime = Hooks.useProcessManagerRuntime();
@@ -138,8 +143,18 @@ const ChatModuleContainer = ({
 
   return (
     <Chat.Root chat={chat} chatModel={chatModel} defaultDrawer={defaultDrawer}>
-      <Panel.Root data-testid={participant ? `chat-panel-${participant}` : 'chat-module'}>
-        <Panel.Header>
+      <Panel.Root
+        data-testid={participant ? `chat-panel-${participant}` : agent ? `chat-panel-${agent}` : 'chat-module'}
+      >
+        <Panel.Header classNames='flex flex-col'>
+          {headerAgent && (
+            <div className='flex items-center gap-2 px-2 py-1 border-b border-separator'>
+              <Icon.Icon icon='ph--robot--regular' classNames='w-4 h-4 text-fg-subtle' />
+              <span className='font-medium truncate' data-testid='chat-module.agent'>
+                {headerAgent}
+              </span>
+            </div>
+          )}
           <Chat.Toolbar attendableId={chat.id} alwaysActive switcher={switcher} customActions={customActions} />
         </Panel.Header>
         <Panel.Body asChild>

@@ -11,6 +11,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { AiContext } from '@dxos/assistant';
 import * as AgentSkill from '@dxos/assistant-toolkit/AgentSkill';
+import * as DelegationSkill from '@dxos/assistant-toolkit/DelegationSkill';
 import * as AgentSetup from '@dxos/assistant/AgentSetup';
 import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
@@ -29,7 +30,7 @@ import { trim } from '@dxos/util';
 //
 // Two agents in one space with different permissions: Scout researches accounts and holds no grant to change
 // them; Ledger keeps the CRM and holds `/crm/write`. A request that needs the CRM changed reaches Scout, which
-// cannot do it itself — the case cross-agent delegation exists for.
+// cannot do it itself and hands it to Ledger.
 //
 
 /** The command that changing an organization's CRM record requires. */
@@ -39,16 +40,24 @@ export const SCOUT = 'Scout';
 export const LEDGER = 'Ledger';
 
 /** Each agent, what it does, and the commands it holds grants for. */
-export const CRM_AGENTS: readonly { name: string; instructions: string; commands: readonly string[] }[] = [
+export const CRM_AGENTS: readonly {
+  name: string;
+  instructions: string;
+  commands: readonly string[];
+  /** Whether the agent can hand work to another agent (the delegation skill). */
+  delegates: boolean;
+}[] = [
   {
     name: SCOUT,
     instructions: 'You research accounts. You cannot change the CRM yourself; Ledger can.',
     commands: [],
+    delegates: true,
   },
   {
     name: LEDGER,
     instructions: 'You keep the CRM: you change the status of organizations when asked.',
     commands: [CRM_WRITE],
+    delegates: false,
   },
 ];
 
@@ -101,7 +110,8 @@ export const makeCrmSkill = (): Skill.Skill =>
     instructions: Template.make({
       source: trim`
         You work on the organizations in the CRM. A tool call can be refused for lack of permission: when it is,
-        say which permission is missing and which agent holds it, and do not retry the call.
+        do not retry the call; hand the request to the agent that holds the permission if you can delegate,
+        otherwise say which permission is missing and which agent holds it.
       `,
     }),
     tools: Skill.toolDefinitions({ operations: [SetOrganizationStatus] }),
@@ -152,11 +162,12 @@ export const CrmPermissionsPlugin = Plugin.define(
 /** Seeds the account and creates both agents, each with a local chat bound to the CRM skill. */
 export const seedCrmAgents = async ({ db }: { db: Database.Database }): Promise<void> => {
   db.add(Organization.make({ name: CRM_ACCOUNT, status: 'prospect' }));
-  const skill = db.add(makeCrmSkill());
+  const crm = db.add(makeCrmSkill());
+  const delegation = db.add(DelegationSkill.make());
   const runtime = await EffectEx.runPromise(
     Effect.context<Database.Service>().pipe(Effect.provide(Database.layer(db))),
   );
-  for (const { name, instructions } of CRM_AGENTS) {
+  for (const { name, instructions, delegates } of CRM_AGENTS) {
     const agent = await EffectEx.runPromise(
       AgentSetup.makeInitialized({ name, instructions }, AgentSkill.make()).pipe(Effect.provide(Database.layer(db))),
     );
@@ -171,7 +182,8 @@ export const seedCrmAgents = async ({ db }: { db: Database.Database }): Promise<
     });
     const feed = await chat.feed.load();
     const binder = new AiContext.Binder({ feed, runtime });
-    await binder.use((binder) => binder.bind({ skills: [Ref.make(skill)] }));
+    const skills = delegates ? [crm, delegation] : [crm];
+    await binder.use((binder) => binder.bind({ skills: skills.map((skill) => Ref.make(skill)) }));
   }
   await db.flush({ indexes: true });
 };

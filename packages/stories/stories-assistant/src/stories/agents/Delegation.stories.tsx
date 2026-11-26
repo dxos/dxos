@@ -9,10 +9,11 @@ import { ScriptedScene } from '@dxos/ai/testing';
 import * as Agent from '@dxos/compute/Agent';
 import { type Database, Filter } from '@dxos/echo';
 import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import type * as StoryModules from '@dxos/storybook-testing/StoryModules';
 import { Organization } from '@dxos/types';
 
 import { type ChatModuleData, StoryRole } from '../../modules/index.ts';
-import { LEDGER_DONE, LEDGER_REQUEST, SCOUT_REFUSED, SCOUT_REQUEST, Scripts } from '../../scripts/index.ts';
+import { LEDGER_DONE, SCOUT_DELEGATED, SCOUT_REQUEST, Scripts } from '../../scripts/index.ts';
 import {
   CRM_ACCOUNT,
   CrmPermissionsPlugin,
@@ -24,13 +25,13 @@ import {
 } from '../../testing/index.ts';
 
 /**
- * Two agents in one space with different permissions. Scout researches accounts and holds no grant to change the
- * CRM; Ledger keeps the CRM and holds `/crm/write`. Both have the same CRM tool, and each agent's sessions run under a
- * guard holding only that agent's grants, so the same call is refused for Scout and admitted for Ledger.
+ * Two agents in one space with different permissions, and the first one handing work to the second. Scout researches
+ * accounts and holds no grant to change the CRM; Ledger keeps the CRM and holds `/crm/write`. Both have the same CRM
+ * tool, and each agent's sessions run under a guard holding only that agent's grants, so the same call is refused for
+ * Scout and admitted for Ledger. Scout, refused, hands the request to Ledger with `delegate-to-agent`; Ledger works it
+ * in its own session, on its own grants (`packages/core/compute/compute/AGENT-DELEGATION.mdl`, F-3).
  *
- * A request for a CRM change that reaches Scout is the case cross-agent delegation exists for
- * (`packages/core/compute/compute/AGENT-DELEGATION.mdl`, F-3): Scout cannot make the change, and Ledger can. Until
- * Scout can hand the work to Ledger, the reader asks Ledger in its own chat.
+ * Each agent's chat is a plank headed by the agent's name; the space's object tree is on the right.
  */
 const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-assistant/agents/Delegation',
@@ -73,7 +74,14 @@ const crmAgents: Story = {
         {
           type: StoryRole.Chat,
           id: `chat-${LEDGER}`,
-          data: { agent: LEDGER, hue: 'emerald', suggestions: [LEDGER_REQUEST] } satisfies ChatModuleData,
+          data: { agent: LEDGER, hue: 'emerald' } satisfies ChatModuleData,
+        },
+      ],
+      [
+        {
+          type: StoryRole.Database,
+          id: 'objects',
+          data: { view: 'object-tree' } satisfies StoryModules.DatabaseModuleData,
         },
       ],
     ],
@@ -84,24 +92,33 @@ const crmAgents: Story = {
  * Scout and Ledger side by side, scripted (offline), for a person or a recorded walkthrough to drive.
  *
  * Test:
- * 1. Click the chip in Scout's chat that asks to mark the account active: the CRM refuses Scout's call, and Scout says
- *    it lacks `/crm/write` and that Ledger holds it.
- * 2. Click the chip in Ledger's chat that asks for the same change: Ledger's call is admitted and the account is active.
+ * 1. Each chat plank is headed by its agent's name, and its session picker lists only that agent's sessions.
+ * 2. Click the chip in Scout's chat that asks to mark the account active: the CRM refuses Scout's call, and Scout
+ *    hands the request to Ledger.
+ * 3. Ledger's chat takes the request as a turn from Scout, makes the change, and the account is active.
+ * 4. The object tree on the right shows both agents, their sessions and the account.
  */
 export const CrmAgents: Story = { ...crmAgents };
 
-/** {@link CrmAgents} driven by a play function: Scout is refused, Ledger makes the change. */
+/** {@link CrmAgents} driven by a play function: Scout is refused and delegates, Ledger makes the change. */
 export const CrmAgentsScripted: Story = {
   ...crmAgents,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    // Each plank is headed by its own agent, once both agents' chats have loaded.
+    await waitFor(
+      () =>
+        expect(
+          [...canvasElement.querySelectorAll('[data-testid="chat-module.agent"]')].map((header) => header.textContent),
+        ).toEqual([SCOUT, LEDGER]),
+      { timeout: 60_000 },
+    );
 
     await userEvent.click(await canvas.findByRole('button', { name: SCOUT_REQUEST }, { timeout: 60_000 }));
-    await canvas.findAllByText(new RegExp(SCOUT_REFUSED), {}, { timeout: 60_000 });
-    await expect(await accountStatus()).toBe('prospect');
+    await canvas.findAllByText(new RegExp(SCOUT_DELEGATED), {}, { timeout: 60_000 });
 
-    await userEvent.click(await canvas.findByRole('button', { name: LEDGER_REQUEST }, { timeout: 30_000 }));
-    await canvas.findAllByText(LEDGER_DONE, {}, { timeout: 60_000 });
+    const ledger = within(await canvas.findByTestId(`chat-panel-${LEDGER}`));
+    await ledger.findAllByText(LEDGER_DONE, {}, { timeout: 60_000 });
     await waitFor(async () => expect(await accountStatus()).toBe('active'), { timeout: 10_000 });
   },
 };
