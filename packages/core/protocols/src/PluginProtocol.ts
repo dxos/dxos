@@ -100,7 +100,7 @@ export type InvokeRequest = {
 export type InvocationScope = {
   /** Mints the caller's credentials; bound by EDGE to this caller and space. */
   readonly accessTokenService?: EdgeFunctionEnv.AccessTokenService;
-  /** URI of the chat or feed of the agent turn that made the call; handlers get its `HarnessService`. Version 2. */
+  /** URI of the chat or feed of the agent turn that made the call; handlers run in its session. Version 2. */
   readonly conversation?: string;
   /** The conversation a channel reply is routed back to, when it differs from `conversation`. Version 2. */
   readonly origin?: string;
@@ -124,7 +124,23 @@ export type InvocationScope = {
   readonly operations?: OperationHost;
   /** The caller's working set, which the invocation's database opens from; a host built before it ignores it. */
   readonly workingSet?: WorkingSetService;
+  /**
+   * The live session of the conversation the invocation works for, bound by EDGE to that one session; a host built
+   * before it ignores it.
+   */
+  readonly agent?: AgentSession;
 };
+
+/**
+ * Drives one live agent session: `rpc` is a `HarnessControl` RPC of the session process (`enqueueMessage`, `setAlarm`)
+ * and `payload` its payload in encoded (JSON) form. A failure rejects.
+ */
+export interface AgentSession {
+  call(rpc: AgentSessionRpc, payload: unknown): Promise<void>;
+}
+
+/** The session RPCs an {@link AgentSession} serves. */
+export type AgentSessionRpc = 'enqueueMessage' | 'setAlarm';
 
 /** An identity EDGE verified. */
 export type Caller = {

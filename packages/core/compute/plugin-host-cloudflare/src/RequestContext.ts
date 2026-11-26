@@ -4,11 +4,14 @@
 
 // @import-as-namespace
 
+import * as DateTime from 'effect/DateTime';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as KeyValueStore from 'effect/persistence/KeyValueStore';
 import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
+import * as Schema from 'effect/Schema';
 
+import type { HarnessControl } from '@dxos/assistant';
 import * as Agent from '@dxos/compute/Agent';
 import * as Cancellation from '@dxos/compute/Cancellation';
 import type * as Operation from '@dxos/compute/Operation';
@@ -18,6 +21,7 @@ import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Obj } from '@dxos/echo';
 import { messageOf } from '@dxos/errors';
+import { invariant } from '@dxos/invariant';
 import { type SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { PluginProtocol, TraceProtocol } from '@dxos/protocols';
@@ -176,11 +180,15 @@ export const withCancellation = (handler: Handler, signal: AbortSignal): Handler
  * `SessionAnnotation`, and the process supplies `Agent.Service` and `Process.ManagerService` to an operation that
  * declares them (a hook such as `ensureReplySent`). The body still runs with every service the wrappers outside it
  * provide. The runtimes are imported only for an invocation with a conversation.
+ *
+ * The session's process lives on EDGE, not here: its control verbs (`Agent.enqueueMessage`, `Agent.setAlarm`) reach it
+ * through `live`, which EDGE binds to that one session. Without it they fail as for a caller with no live session.
  */
 export const withSession = (
   handler: Handler,
   conversation: string | undefined,
   spaceId: SpaceId | undefined,
+  live?: PluginProtocol.AgentSession,
 ): Handler =>
   conversation === undefined
     ? handler
@@ -205,9 +213,12 @@ export const withSession = (
                   : Effect.succeed(agents.service),
               ),
             );
-            const { OperationProcess, stack } = yield* Effect.promise(() => sessionStack(inProcess, resolver));
+            const { OperationProcess, HarnessControl, stack } = yield* Effect.promise(() =>
+              sessionStack(inProcess, resolver),
+            );
             return yield* Effect.gen(function* () {
-              agents.service = yield* Agent.Service;
+              const service = yield* Agent.Service;
+              agents.service = live === undefined ? service : withLiveSession(service, live, HarnessControl);
               const process = yield* Process.spawn(OperationProcess.make(handler), input, {
                 environment: { conversation: session, ...(spaceId === undefined ? {} : { space: spaceId }) },
                 annotations: Annotation.buildDictionary((dictionary) => {
@@ -224,7 +235,8 @@ const sessionStack = async (handler: Handler, resolver: ServiceResolver.ServiceR
   const [
     { OperationProcess, ProcessManager, RemoteProcessManager, RemoteTraceMonitor, UnifiedProcessManager },
     { AgentService },
-  ] = await Promise.all([import('@dxos/compute-runtime'), import('@dxos/agent-runtime')]);
+    { HarnessControl },
+  ] = await Promise.all([import('@dxos/compute-runtime'), import('@dxos/agent-runtime'), import('@dxos/assistant')]);
   const stack = AgentService.layer().pipe(
     Layer.provideMerge(UnifiedProcessManager.layer),
     Layer.provide(ProcessManager.layer({ runtimeName: Trace.CommonRuntimeName.edgeWorkerLoader })),
@@ -236,5 +248,26 @@ const sessionStack = async (handler: Handler, resolver: ServiceResolver.ServiceR
     Layer.provide(Trace.layerNoop),
     Layer.provide(Layer.succeed(AtomRegistry.AtomRegistry, AtomRegistry.make())),
   );
-  return { OperationProcess, stack };
+  return { OperationProcess, HarnessControl, stack };
+};
+
+/** `service` with its control verbs sent to the live session, each payload its `HarnessControl` RPC's in JSON form. */
+const withLiveSession = (
+  service: Agent.ServiceApi,
+  live: PluginProtocol.AgentSession,
+  control: typeof HarnessControl,
+): Agent.ServiceApi => {
+  const call = (rpc: PluginProtocol.AgentSessionRpc, payload: unknown): Effect.Effect<void> => {
+    const schema = control.requests.get(rpc)?.payloadSchema;
+    invariant(schema, `No session RPC ${rpc}.`);
+    return Schema.encodeUnknownEffect(Schema.toCodecJson(schema))(payload).pipe(
+      Effect.flatMap((encoded) => Effect.tryPromise(() => live.call(rpc, encoded))),
+      Effect.orDie,
+    );
+  };
+  return {
+    ...service,
+    enqueueMessage: ({ content }) => call('enqueueMessage', { content }),
+    setAlarm: ({ at, message }) => call('setAlarm', { at: DateTime.toUtc(at), message }),
+  };
 };

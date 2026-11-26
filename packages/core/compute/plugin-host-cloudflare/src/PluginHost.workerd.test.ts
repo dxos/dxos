@@ -38,6 +38,8 @@ import {
   InspectEvent,
   MakeFeed,
   Nest,
+  Nudge,
+  NUDGE_AT,
   OtherSkill,
   RecordThenDelegate,
   ResolveRegistry,
@@ -246,6 +248,36 @@ describe('PluginHost', () => {
         error: { message: expect.stringContaining('Agent/Service') },
       });
     });
+
+    // The session's process lives on EDGE: its control verbs go to the session EDGE binds, encoded as its RPCs take them.
+    test(
+      'drives the live session EDGE binds to the invocation, and no other',
+      { timeout: 20_000 },
+      async ({ expect }) => {
+        const spaceId = SpaceId.random();
+        const env = makeSpaceEnv(spaceId);
+        const host = makeHost();
+        const made = await host.invoke({ operationKey: String(MakeFeed.meta.key), spaceId, input: {} }, env);
+        invariant(made.ok, 'the feed was not made');
+        const { id } = Schema.decodeUnknownSync(Schema.Struct({ id: Schema.String }))(made.output);
+        const calls: [string, unknown][] = [];
+        const agent: PluginProtocol.AgentSession = {
+          call: async (rpc, payload) => {
+            calls.push([rpc, payload]);
+          },
+        };
+
+        const nudge = { operationKey: String(Nudge.meta.key), spaceId, input: { text: 'Reply in the thread.' } };
+        const conversation = `echo://${spaceId}/${id}`;
+        expect(await host.invoke(nudge, env, { conversation, agent })).toEqual({ ok: true, output: {} });
+        expect(calls).toEqual([
+          ['enqueueMessage', { content: [{ _tag: 'text', text: 'Reply in the thread.' }] }],
+          ['setAlarm', { at: new Date(NUDGE_AT).toISOString(), message: 'Reply in the thread.' }],
+        ]);
+        // Without a bound session there is no live process to drive.
+        expect(await host.invoke(nudge, env, { conversation })).toMatchObject({ ok: false });
+      },
+    );
   });
 
   // A skill bound by registry URI resolves only through the invocation's registry, as on operation-service.

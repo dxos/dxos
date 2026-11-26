@@ -3,6 +3,7 @@
 //
 
 import * as Context from 'effect/Context';
+import * as DateTime from 'effect/DateTime';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
@@ -285,6 +286,27 @@ const CurrentFeedHandler = CurrentFeed.pipe(
   ),
 );
 
+/** When {@link Nudge} wakes its session. */
+export const NUDGE_AT = 1_700_000_000_000;
+
+/** Drives the live session the invocation works for, as a hook that follows up on a turn does. */
+export const Nudge = Operation.make({
+  meta: { key: DXN.make('com.example.operation.hostTest.nudge'), name: 'Nudge' },
+  services: [Agent.Service],
+  input: Schema.Struct({ text: Schema.String }),
+  output: Schema.Struct({}),
+});
+
+const NudgeHandler = Nudge.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(function* ({ text }) {
+      yield* Agent.enqueueMessage({ content: [{ _tag: 'text', text }] });
+      yield* Agent.setAlarm({ at: DateTime.makeUnsafe(NUDGE_AT), message: text });
+      return {};
+    }),
+  ),
+);
+
 /** Makes a person, as an operation that returns an ECHO object does. */
 export const MakePerson = Operation.make({
   meta: { key: DXN.make('com.example.operation.hostTest.makePerson'), name: 'Make person' },
@@ -350,6 +372,7 @@ export const TestPlugin = Plugin.define(Plugin.makeMeta({ key: DXN.make(TEST_PLU
             HiddenHandler,
             MakeFeedHandler,
             CurrentFeedHandler,
+            NudgeHandler,
           ),
         ),
       ),
