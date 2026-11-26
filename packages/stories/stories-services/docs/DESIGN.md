@@ -746,7 +746,8 @@ draft PR that is not merged.
 
 The spike is built and runs. `src/services/hosts.test.ts` has 8 passing tests with hosts joined by a
 `MessageChannel` in Node, and the story `stories/stories-services/Services` was walked through all
-five steps in a browser.
+five steps in a browser. Its `Calls` variant drives steps 1 to 4 with a play function, which the
+Storybook test runner passes.
 
 ### What was observed
 

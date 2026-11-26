@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 import * as ModuleSurfacesPlugin from '@dxos/storybook-testing/ModuleSurfacesPlugin';
@@ -41,4 +42,61 @@ type Story = StoryObj<typeof meta>;
  */
 export const Default: Story = {
   decorators: StoryHarness.decorators({ plugins: [consumerPlugin()], Wrapper: ServicesProvider }),
+};
+
+const TIMEOUT = { timeout: 30_000 };
+
+/**
+ * The same story, driven: one consumer calls `NoteStore` and `Summarizer` while the summarizer's
+ * provider moves from nowhere, to the mock EDGE host, to the app. The frame step is left to
+ * `Default`, since it needs the dev server under a second loopback name.
+ */
+export const Calls: Story = {
+  decorators: StoryHarness.decorators({ plugins: [consumerPlugin()], Wrapper: ServicesProvider }),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+    const binding = (id: string, expected: string) =>
+      waitFor(async () => expect((await canvas.findByTestId(id)).textContent).toContain(expected), TIMEOUT);
+    const summarize = async (host: string) => {
+      await userEvent.click(await canvas.findByTestId('summarizer-run'));
+      const output = await canvas.findByTestId('summarizer-output');
+      // The first token names the host that answered; the last marks the end of the stream.
+      await waitFor(() => expect(output.textContent).toMatch(new RegExp(`^\\[${host}\\].*\\.\\.\\.$`)), TIMEOUT);
+    };
+
+    await step('Call a service provided in the app: bound in memory', async () => {
+      await binding('notes-binding', 'memory → app');
+      await userEvent.click(await canvas.findByTestId('notes-clear'));
+      await userEvent.click(await canvas.findByTestId('notes-add'));
+      await waitFor(
+        async () =>
+          expect((await canvas.findByTestId('notes-list')).textContent).toContain('Plugins share only a contract.'),
+        TIMEOUT,
+      );
+    });
+
+    await step('Call a service nobody provides: a typed error', async () => {
+      await binding('summarizer-binding', 'no provider');
+      await userEvent.click(await canvas.findByTestId('summarizer-run'));
+      await waitFor(
+        async () =>
+          expect((await canvas.findByTestId('summarizer-error')).textContent).toContain('ServiceNotAvailableError'),
+        TIMEOUT,
+      );
+    });
+
+    await step('Install the provider in the mock EDGE host: the call crosses a port', async () => {
+      await userEvent.click(await canvas.findByTestId('toggle-edge'));
+      await userEvent.click(await canvas.findByTestId('install-edge', {}, TIMEOUT));
+      await binding('summarizer-binding', 'port → edge');
+      await summarize('edge');
+    });
+
+    await step('Install the provider in the app: the same client rebinds in memory', async () => {
+      await userEvent.click(await canvas.findByTestId('toggle-app-gateway'));
+      await userEvent.click(await canvas.findByTestId('install-app'));
+      await binding('summarizer-binding', 'memory → app');
+      await summarize('app');
+    });
+  },
 };
