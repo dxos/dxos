@@ -109,7 +109,7 @@ export const make = (makePlugins: () => PluginActivation.Plugins, options: Optio
     if (spaceId !== undefined && !SpaceId.isValid(spaceId)) {
       throw new InvalidRequestError({ message: `Invalid spaceId: ${spaceId}` });
     }
-    if (scope.conversation !== undefined && spaceId === undefined) {
+    if ((scope.conversation !== undefined || scope.agent !== undefined) && spaceId === undefined) {
       throw new InvalidRequestError({ message: 'A conversation is read from a space, and the request names none.' });
     }
 
@@ -154,7 +154,7 @@ export const make = (makePlugins: () => PluginActivation.Plugins, options: Optio
         pid,
         idSeed: scope.idSeed,
       });
-      const contextual = RequestContext.withConversation(
+      const contextual = RequestContext.withAgentService(
         RequestContext.withCancellation(
           withCapabilities(
             HostServices.withHostServices(
@@ -166,7 +166,8 @@ export const make = (makePlugins: () => PluginActivation.Plugins, options: Optio
           ),
           cancellation.signal,
         ),
-        scope.conversation,
+        scope.agent,
+        spaceId,
       );
       // Inside the try: it serializes the operation's schema, and a throw must still dispose the cancel listener.
       const func = wrapFunctionHandler(contextual, {

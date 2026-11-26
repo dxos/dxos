@@ -18,12 +18,12 @@ import type * as Scope from 'effect/Scope';
 import { type Client } from '@dxos/client';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { ProcessNotFoundError, RemoteCommandRejectedError, type RemoteProcessManager } from '@dxos/compute-runtime';
+import { ProcessProtocolCodec } from '@dxos/compute-runtime/remote-process';
 import { Context as DxosContext } from '@dxos/context';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { EdgeCallFailedError } from '@dxos/protocols';
 
 import { createEdgeClient } from './edge-client.ts';
-import { decodeEvent, decodeSnapshot, toSpawnRequest } from './process-snapshot.ts';
 
 /**
  * 4xx statuses that are not a refusal: an expired credential (re-authenticated on the next call), a
@@ -79,17 +79,19 @@ const callProcess = <A>(request: () => Promise<A>): Effect.Effect<A> =>
  */
 export const make = (getEdgeClient: () => EdgeHttpClient): RemoteProcessManager.Control => ({
   spawn: ({ spaceId, ...request }: RemoteProcessManager.SpawnRequest) =>
-    call(() => getEdgeClient().spawnProcess(DxosContext.default(), spaceId, toSpawnRequest(request))).pipe(
-      Effect.map((response) => decodeSnapshot(response.info)),
-    ),
+    call(() =>
+      getEdgeClient().spawnProcess(DxosContext.default(), spaceId, ProcessProtocolCodec.toSpawnRequest(request)),
+    ).pipe(Effect.map((response) => ProcessProtocolCodec.decodeSnapshot(response.info))),
 
   list: ({ spaceId, ...query }: RemoteProcessManager.ListRequest) =>
     call(() => getEdgeClient().listProcesses(DxosContext.default(), spaceId, query)).pipe(
-      Effect.map((response) => response.processes.map(decodeSnapshot)),
+      Effect.map((response) => response.processes.map(ProcessProtocolCodec.decodeSnapshot)),
     ),
 
   status: ({ spaceId, pid }: RemoteProcessManager.ProcessTarget) =>
-    callProcess(() => getEdgeClient().getProcess(DxosContext.default(), spaceId, pid)).pipe(Effect.map(decodeSnapshot)),
+    callProcess(() => getEdgeClient().getProcess(DxosContext.default(), spaceId, pid)).pipe(
+      Effect.map(ProcessProtocolCodec.decodeSnapshot),
+    ),
 
   submitInput: ({
     spaceId,
@@ -117,10 +119,10 @@ export const make = (getEdgeClient: () => EdgeHttpClient): RemoteProcessManager.
   readEvents: ({ spaceId, pid, cursor }: RemoteProcessManager.ProcessTarget & { readonly cursor: number }) =>
     callProcess(() => getEdgeClient().readProcessEvents(DxosContext.default(), spaceId, pid, cursor)).pipe(
       Effect.map((response): RemoteProcessManager.EventPage => ({
-        events: response.events.map(decodeEvent),
+        events: response.events.map(ProcessProtocolCodec.decodeEvent),
         cursor: response.cursor,
         truncated: response.truncated,
-        snapshot: decodeSnapshot(response.info),
+        snapshot: ProcessProtocolCodec.decodeSnapshot(response.info),
       })),
     ),
 

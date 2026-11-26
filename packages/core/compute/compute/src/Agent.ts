@@ -671,37 +671,6 @@ export interface ServiceApi {
   waitForThread: (thread: Thread) => Effect.Effect<string, NoCurrentSessionError>;
 }
 
-/**
- * The {@link ServiceApi} of an operation run away from its session's process, as a plugin host runs one for the
- * conversation an invocation names: it knows that conversation's session and feed, and every other verb dies.
- */
-export const conversationService = ({ session, feed }: { session?: Session; feed: Feed.Feed }): ServiceApi => {
-  const unavailable = (verb: string) =>
-    new Error(`Agent.${verb} is not available to an operation invoked for a conversation.`);
-  return {
-    open: () => Effect.die(unavailable('open')),
-    hydrate: () => Effect.void,
-    getContext: () => Effect.die(unavailable('getContext')),
-    addContext: () => Effect.die(unavailable('addContext')),
-    submitPrompt: () => Effect.die(unavailable('submitPrompt')),
-    running: () => Effect.die(unavailable('running')),
-    waitForCompletion: () => Effect.die(unavailable('waitForCompletion')),
-    terminate: () => Effect.die(unavailable('terminate')),
-    subscribeEphemeral: () => Stream.die(unavailable('subscribeEphemeral')),
-    currentSession: session === undefined ? Effect.fail(new NoCurrentSessionError()) : Effect.succeed(session),
-    currentFeed: Effect.succeed(feed),
-    currentAgent: Effect.succeed(Option.none()),
-    currentThread: Effect.succeed(Option.none()),
-    enqueueMessage: () => Effect.die(unavailable('enqueueMessage')),
-    setAlarm: () => Effect.die(unavailable('setAlarm')),
-    listSessions: () => Effect.succeed([]),
-    listAgents: () => Effect.succeed([]),
-    spawn: () => Effect.die(unavailable('spawn')),
-    delegate: () => Effect.die(unavailable('delegate')),
-    waitForThread: () => Effect.die(unavailable('waitForThread')),
-  };
-};
-
 /** The agent service; see {@link ServiceApi}. */
 export class Service extends Context.Service<Service, ServiceApi>()('@dxos/compute/Agent/Service') {}
 

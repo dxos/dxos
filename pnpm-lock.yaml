@@ -6561,6 +6561,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../protocols
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../../sdk/types
       effect:
         specifier: 4.1.5
         version: 4.1.5
