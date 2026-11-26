@@ -127,16 +127,15 @@ export type RespondOptions = {
 };
 
 /** Hands a person's answer to the consent request waiting on it; false when nothing is waiting on that request. */
-export const respond = ({ chat, message, requestId, optionId }: RespondOptions) =>
-  Effect.gen(function* () {
-    const request = pending.get(requestId);
-    const option = CONSENT_OPTIONS.find((option) => option.id === optionId);
-    if (!request || request.chatId !== chat.id || !option) {
-      return false;
-    }
-    resolve(message, requestId, optionId);
-    const feed = yield* Database.load(chat.feed).pipe(Effect.orDie);
-    yield* Feed.append(feed, [message]);
-    yield* Deferred.succeed(request.answer, option.kind);
-    return true;
-  });
+export const respond = Effect.fn(function* ({ chat, message, requestId, optionId }: RespondOptions) {
+  const request = pending.get(requestId);
+  const option = CONSENT_OPTIONS.find((option) => option.id === optionId);
+  if (!request || request.chatId !== chat.id || !option) {
+    return false;
+  }
+  resolve(message, requestId, optionId);
+  const feed = yield* Database.load(chat.feed).pipe(Effect.orDie);
+  yield* Feed.append(feed, [message]);
+  yield* Deferred.succeed(request.answer, option.kind);
+  return true;
+});

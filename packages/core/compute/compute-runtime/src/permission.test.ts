@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, it } from '@effect/vitest';
+import { beforeEach, describe, it } from '@effect/vitest';
 import * as Cause from 'effect/Cause';
 import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
@@ -80,11 +80,16 @@ const PostTwice = Operation.make({
   output: Schema.String,
 });
 
-/** How the test's consent answers, and the requests put to it. */
-const consent = {
-  answer: (): Effect.Effect<Consent.Answer> => Effect.succeed({ _tag: 'Declined' }),
-  asked: [] as string[],
+/** How the test's consent answers, and the requests put to it; reset before each test so no answer leaks into the next. */
+const consent: { answer: () => Effect.Effect<Consent.Answer>; asked: string[] } = {
+  answer: () => Effect.succeed({ _tag: 'Declined' }),
+  asked: [],
 };
+
+beforeEach(() => {
+  consent.answer = () => Effect.succeed({ _tag: 'Declined' });
+  consent.asked = [];
+});
 
 const consentLayer = Layer.succeed(Consent.Service, {
   ask: ({ requirement }) =>
@@ -374,7 +379,6 @@ describe('operation permissions', () => {
   it.effect(
     'a consentable call the authority refuses runs once the person allows it',
     Effect.fn(function* ({ expect }) {
-      consent.asked = [];
       consent.answer = () => Effect.succeed({ _tag: 'Once' });
       const exit = yield* run(Post, { text: 'hi' }, { authority: yield* authorityFor() });
       expect(exit).toEqual(Exit.succeed('posted hi'));
@@ -385,7 +389,6 @@ describe('operation permissions', () => {
   it.effect(
     'a permission the person grants holds for the calls that follow, which are not asked about again',
     Effect.fn(function* ({ expect }) {
-      consent.asked = [];
       consent.answer = () =>
         Effect.map(grantTo(ChannelPost), (grant): Consent.Answer => ({ _tag: 'Grant', grants: [grant] }));
       const exit = yield* run(PostTwice, { text: 'hi' }, { authority: yield* authorityFor() });
@@ -397,7 +400,6 @@ describe('operation permissions', () => {
   it.effect(
     'a consentable call the person declines is refused',
     Effect.fn(function* ({ expect }) {
-      consent.asked = [];
       consent.answer = () => Effect.succeed({ _tag: 'Declined' });
       const exit = yield* run(Post, { text: 'hi' }, { authority: yield* authorityFor() });
       expect(denial(exit)).toContain('was declined');
@@ -407,7 +409,6 @@ describe('operation permissions', () => {
   it.effect(
     'a call whose requirement is not consentable is refused without asking',
     Effect.fn(function* ({ expect }) {
-      consent.asked = [];
       consent.answer = () => Effect.succeed({ _tag: 'Once' });
       const exit = yield* run(Exec, { command: 'ls' }, { authority: yield* authorityFor() });
       expect(denial(exit)).toContain('no grant covers');
