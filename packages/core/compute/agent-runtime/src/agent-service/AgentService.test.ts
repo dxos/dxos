@@ -19,7 +19,7 @@ import * as Tracer from 'effect/Tracer';
 import { expect } from 'vitest';
 
 import { LanguageModelFixture, ScriptedLanguageModel } from '@dxos/ai/testing';
-import { AiContext, type HarnessControlRpcs, TrajectoryStore } from '@dxos/assistant';
+import { AiContext, TrajectoryStore } from '@dxos/assistant';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { OperationProcess } from '@dxos/compute-runtime';
 import * as Agent from '@dxos/compute/Agent';
@@ -44,6 +44,7 @@ import { AssistantTestLayer, waitForMessage } from '../testing/index.ts';
 import * as ResearchService from '../testing/ResearchService.ts';
 import * as AgentService from './AgentService.ts';
 import { type DelegationStrategy } from './delegation-strategy.ts';
+import { type SessionControlRpc } from './session-control.ts';
 import { SESSION_PROCESS_KEY } from './session-process.ts';
 
 EntityId.dangerouslyDisableRandomness();
@@ -1094,7 +1095,7 @@ describe('Agent Service', () => {
           const target = Obj.getURI(session.chat);
           // `list` erases the RPC group to `any`, which Effect 4 resolves to an `unknown` requirement
           // on every call; naming the group restores it.
-          const handles: readonly Process.Process<string | readonly ContentBlock.Any[], void, HarnessControlRpcs>[] =
+          const handles: readonly Process.Process<string | readonly ContentBlock.Any[], void, SessionControlRpc>[] =
             yield* processManager.list({
               target,
               key: SESSION_PROCESS_KEY,
@@ -1525,7 +1526,7 @@ describe('Agent Service', () => {
           function* (_) {
             const processManager = yield* ProcessManager.ProcessManagerService;
             const session = yield* AgentService.createSession();
-            const handles: readonly Process.Process<string | readonly ContentBlock.Any[], void, HarnessControlRpcs>[] =
+            const handles: readonly Process.Process<string | readonly ContentBlock.Any[], void, SessionControlRpc>[] =
               yield* processManager.list({ target: Obj.getURI(session.chat), key: SESSION_PROCESS_KEY });
             const [handle] = handles;
 

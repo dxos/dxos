@@ -6,6 +6,7 @@ export * as AssistantPlugin from '#meta';
 export * from '#skills';
 export * from '#types';
 export * as Chat from './Chat.ts';
+export * as ChatRequest from './ChatRequest.ts';
 export * as ChatPlane from './ChatPlane.ts';
 export * as Extensions from './Extensions.ts';
 export * as Hooks from './Hooks.ts';

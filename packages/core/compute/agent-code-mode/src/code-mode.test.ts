@@ -26,9 +26,19 @@ import { Message } from '@dxos/types';
 import { EffectDialect } from './dialect-effect.ts';
 import { PlainDialect } from './dialect-plain.ts';
 import type { Dialect, SandboxOperation } from './Dialect.ts';
-import { DEFAULT_MAX_OUTPUT, EVAL_TOOL_NAME, type Evaluation, evaluate, makeEvalToolkit } from './eval-tool.ts';
+import {
+  DEFAULT_MAX_OUTPUT,
+  EVAL_TOOL_NAME,
+  type Evaluation,
+  STATE_TRAILER,
+  evaluate,
+  makeEvalToolkit,
+} from './eval-tool.ts';
 import { makeCodeModeTurnProducer } from './producer.ts';
 import * as Sandbox from './Sandbox.ts';
+
+/** What the code printed, without the trailer every result the model reads ends with. */
+const untrailed = (text: string): string => text.replace(`\n\n${STATE_TRAILER}`, '');
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -164,9 +174,9 @@ const runEvalResult = Effect.fnUntraced(function* (code: string, dialect: Dialec
   });
   if (result.error !== undefined) {
     expect(result.result).toBeUndefined();
-    return { output: result.error, ok: false };
+    return { output: untrailed(result.error), ok: false };
   }
-  return { output: Schema.decodeUnknownSync(Schema.String)(JSON.parse(String(result.result))), ok: true };
+  return { output: untrailed(Schema.decodeUnknownSync(Schema.String)(JSON.parse(String(result.result)))), ok: true };
 });
 
 /** Runs `code` through the eval tool exactly as a turn would, returning what it printed. */
@@ -811,6 +821,66 @@ describe('code mode output', () => {
         expect(output).toMatch(/^No output: the code ran without error but printed nothing\. Print the values/);
         expect(output).toContain(`It ran ${SCORE_KEY}; what they did is done, so do not run them again.`);
         expect(yield* runEval('return null;')).toEqual('null');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'search is an effect that finds a bound operation, and a lookup it cannot reach adds nothing',
+    Effect.fnUntraced(
+      function* (_) {
+        const { output, ok } = yield* runEvalResult("yield* print(yield* search('score urgency'));", EffectDialect);
+        expect(ok).toBe(true);
+        expect(output).toContain('[catalog/operations.md]');
+        expect(output).toContain(SCORE_KEY);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'a guessed module helper fails naming what does exist',
+    Effect.fnUntraced(
+      function* (_) {
+        const { output, ok } = yield* runEvalResult('yield* print(Obj.getDXN({}));', EffectDialect);
+        expect(ok).toBe(false);
+        expect(output).toContain(
+          "`Obj.getDXN` does not exist. An object's id is `obj.id` and its URI `Obj.getURI(obj)`.",
+        );
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'every result the model reads, failed or not, ends saying the program state is gone',
+    Effect.fnUntraced(
+      function* (_) {
+        const runtime = yield* Effect.context<Database.Service | Operation.Service>();
+        const toolkit = makeEvalToolkit({
+          dialect: PlainDialect,
+          sandbox: Sandbox.inProcess,
+          runtime,
+          operations: [],
+        });
+        const call = (code: string) =>
+          Effect.gen(function* () {
+            return yield* callTool(yield* toolkit.handlers, {
+              _tag: 'toolCall',
+              toolCallId: 'trailer',
+              name: EVAL_TOOL_NAME,
+              input: JSON.stringify({ code }),
+              providerExecuted: false,
+            });
+          });
+        const ran = yield* call("print('hello');");
+        expect(String(ran.result)).toContain(STATE_TRAILER);
+        const failed = yield* call("throw new Error('boom');");
+        expect(failed.error).toMatch(/boom[\s\S]*\[The program has ended/);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

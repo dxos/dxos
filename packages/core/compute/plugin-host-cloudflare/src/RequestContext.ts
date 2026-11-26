@@ -5,13 +5,16 @@
 // @import-as-namespace
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
+import * as Agent from '@dxos/compute/Agent';
 import * as Cancellation from '@dxos/compute/Cancellation';
 import type * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
-import { Obj } from '@dxos/echo';
+import { Database, type Entity, Feed, Obj } from '@dxos/echo';
 import { messageOf } from '@dxos/errors';
+import { URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { PluginProtocol, TraceProtocol } from '@dxos/protocols';
 
@@ -31,6 +34,35 @@ export const mapHandler = (handler: Handler, transform: (effect: HandlerEffect) 
   ...handler,
   handler: (input: unknown) => transform(handler.handler(input)),
 });
+
+/**
+ * Gives the handler the conversation's `Agent.Service`, rebuilt from the session or feed `conversation` names, since the
+ * caller's own service does not cross RPC: an operation that binds to the current session (`AiContext.bindCurrent`)
+ * reads its feed from it.
+ */
+export const withConversation = (handler: Handler, conversation: string | undefined): Handler =>
+  conversation === undefined
+    ? handler
+    : mapHandler(handler, (effect) => effect.pipe(Effect.provide(conversationLayer(conversation))));
+
+/** A hosted agent names its session; a brain wake names the feed itself. */
+const conversationLayer = (conversation: string) =>
+  Layer.effect(
+    Agent.Service,
+    Database.resolve(URI.make(conversation)).pipe(
+      Effect.orDie,
+      Effect.flatMap((object: Entity.Unknown) =>
+        Obj.instanceOf(Agent.Session, object)
+          ? Database.load(object.feed).pipe(
+              Effect.orDie,
+              Effect.map((feed) => Agent.conversationService({ session: object, feed })),
+            )
+          : Obj.instanceOf(Feed.Feed, object)
+            ? Effect.succeed(Agent.conversationService({ feed: object }))
+            : Effect.die(new Error(`The conversation is not a session or a feed: ${object.id}`)),
+      ),
+    ),
+  );
 
 /**
  * Forwards an invocation's trace messages to the caller's sink, and tracks the RPC calls so they are drained before the

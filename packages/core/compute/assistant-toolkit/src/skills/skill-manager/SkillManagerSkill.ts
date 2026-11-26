@@ -88,7 +88,12 @@ export const make = () =>
  * skill, operation and type. Its MCP connection operations are left out: they are an enabled skill's to give, as under
  * tool calling, so a conversation that does not bind the Skill Manager cannot add or turn on an MCP server.
  */
-export const makeForCodeMode = () =>
+export const makeForCodeMode = ({
+  sameProgram = false,
+}: {
+  /** Whether the dialect resolves an enabled skill's operations in the program that enabled it. */
+  sameProgram?: boolean;
+} = {}) =>
   Skill.make({
     key,
     name,
@@ -105,7 +110,11 @@ export const makeForCodeMode = () =>
           one skill's (\`skill\`). Look an operation up by passing its key in \`keys\` before calling it: that gives
           its input. Call it the way the Operations section calls the stated ones, by its \`key\` or its \`tool\` name.
         - An operation whose skill is not enabled cannot be called yet. Enable the skill with Enable skills (only one
-          you may enable); its instructions and operations are stated from your next eval call.
+          you may enable); ${
+            sameProgram
+              ? 'its operations resolve right after that, in the same program, and its instructions are stated from your next eval call.'
+              : 'its instructions and operations are stated from your next eval call.'
+          }
         - Query types searches the registered types (\`query\`); pass \`typenames\` to get their fields.
       `,
     }),

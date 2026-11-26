@@ -15,6 +15,7 @@ export default defineConfig({
     SheetRange: 'src/types/SheetRange.ts',
     SheetUtil: 'src/types/SheetUtil.ts',
     skills: 'src/skills/index.ts',
+    SheetSkill: 'src/skills/SheetSkill.ts',
     LegacySheet: 'src/types/LegacySheet.ts',
     Sheet: 'src/types/Sheet.ts',
     SheetCapabilities: 'src/types/SheetCapabilities.ts',

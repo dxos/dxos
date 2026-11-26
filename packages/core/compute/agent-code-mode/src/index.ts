@@ -9,7 +9,7 @@ export * as WorkerSandboxBrowser from './WorkerSandboxBrowser.ts';
 export * as WorkerSandboxWorkerd from './WorkerSandboxWorkerd.ts';
 export * as WorkerdSandbox from './WorkerdSandbox.ts';
 export * as Wire from './Wire.ts';
-export { type BindingsContext, type Dialect, type SandboxOperation } from './Dialect.ts';
+export { type BindingsContext, type Dialect, type LookupOperation, type SandboxOperation } from './Dialect.ts';
 export { EFFECT_API, EffectDialect } from './dialect-effect.ts';
 export { PlainDialect } from './dialect-plain.ts';
 export { EVAL_TOOL_NAME, EvalTool, type EvaluateOptions, evaluate, makeEvalToolkit } from './eval-tool.ts';

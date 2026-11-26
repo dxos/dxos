@@ -10,7 +10,6 @@ import * as Schema from 'effect/Schema';
 import { expect } from 'vitest';
 
 import { AgentService } from '@dxos/agent-runtime';
-import { HarnessControl } from '@dxos/assistant';
 import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
@@ -19,6 +18,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { Message } from '@dxos/types';
 
 import { AssistantTestLayer, waitForMessage } from '../testing/index.ts';
+import { SessionControlRpcs } from './session-control.ts';
 import { AgentInput, SESSION_PROCESS_KEY, type SessionProcessDefinition, makeInputMessage } from './session-process.ts';
 
 const ECHO_PROCESS_KEY = 'com.example.process.echo';
@@ -30,7 +30,7 @@ const EchoProcess: SessionProcessDefinition = Operation.makeDurable({
   output: Schema.Void,
   types: [Agent.Session, Feed.Feed, Message.Message],
   services: [Database.Service],
-  rpcs: HarnessControl,
+  rpcs: SessionControlRpcs,
 }).pipe(
   Operation.withDurableHandler((ctx) =>
     Effect.gen(function* () {
@@ -42,7 +42,7 @@ const EchoProcess: SessionProcessDefinition = Operation.makeDurable({
           Message.make({ sender: { role: 'assistant' }, blocks: [{ _tag: 'text', text: `echo: ${text}` }] }),
         ]);
       return {
-        rpcHandlers: yield* HarnessControl.toHandlers({
+        rpcHandlers: yield* SessionControlRpcs.toHandlers({
           setAlarm: () => Effect.void,
           enqueueMessage: () => Effect.void,
         }),

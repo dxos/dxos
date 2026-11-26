@@ -24,14 +24,14 @@ The session board has a `/board` command and can copy Composer tasks into its go
 
 ```mdl
 goal G-1: The `/board` command runs the status board skill.
-  status: review
+  status: done
   notes:
     - Verbs are start, sync and build.
 ```
 
 ```mdl
 goal G-2: Board goals copy the status of Composer tasks.
-  status: review
+  status: done
   blockedBy: [Q-1]
   notes:
     - A goal links to a task with the task field.
@@ -41,7 +41,7 @@ goal G-2: Board goals copy the status of Composer tasks.
 
 ```mdl
 goal G-3: Session board - /board command and Composer task sync
-  status: started
+  status: review
   task: echo://BPBG3HN4O2XTMB5MRDZQXJBAXA7LAH4IA/01M89B396BC09BFRAGB2S52FSH
 ```
 
@@ -50,7 +50,6 @@ goal G-3: Session board - /board command and Composer task sync
 ```mdl
 pr PR-1: Add the board command and the Composer task sync.
   ref: dxos/dxos#14683
-  status: landing
   goals: [G-1, G-2]
 ```
 
@@ -168,5 +167,11 @@ event T-12: The sync skips tasks with no echo URI and merges many files in one p
 ```mdl
 event T-13: The merge queue removed [PR-1] after two Subagents story tests failed.
   date: 2026-11-25T13:52Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-14: [PR-1] merged into main.
+  date: 2026-11-25T14:21Z
   by: agent:claude-code
 ```

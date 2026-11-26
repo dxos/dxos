@@ -114,6 +114,7 @@ export const make = (options: Options): Sandbox.Sandbox => ({
         space,
         types: registrySnapshot(db),
         skills: context.skills,
+        skillDocs: context.skillDocs,
         operations: context.operations.map((operation) => ({
           key: String(operation.definition?.meta.key ?? operation.name),
           name: operation.name,
@@ -150,6 +151,7 @@ export const make = (options: Options): Sandbox.Sandbox => ({
             'Sandbox.workingSetPut': ({ report }) =>
               workingSet === undefined ? Effect.void : Effect.promise(() => workingSet.put(report)),
             'Sandbox.resolveType': ({ uri }) => resolveType(context, uri),
+            'Sandbox.lookupOperation': ({ key }) => lookupOperation(context, key),
             'Sandbox.complete': ({ value, failure, heads }) =>
               Effect.sync(() => {
                 written = heads;
@@ -294,12 +296,44 @@ const invokeDefinition = (
   heads: Wire.Heads,
   refresh: Effect.Effect<void, Wire.WireError> | undefined,
 ) => {
-  const definition = context.operations.find(
+  const bound = context.operations.find(
     (candidate) => candidate.definition !== undefined && String(candidate.definition.meta.key) === key,
   )?.definition;
-  if (definition === undefined) {
-    return Effect.succeed({ _tag: 'Error' as const, message: `Unknown operation: ${key}` });
-  }
+  // An operation the worker looked up (a skill the code enabled since it began) is found the same way here.
+  const found =
+    bound !== undefined || context.lookupOperation === undefined ? Effect.succeed(bound) : context.lookupOperation(key);
+  return found.pipe(
+    Effect.flatMap((definition) =>
+      definition === undefined
+        ? Effect.succeed({ _tag: 'Error' as const, message: `Unknown operation: ${key}` })
+        : invokeFound(context, definition, input, heads, refresh),
+    ),
+  );
+};
+
+/** The answer to the worker's `Sandbox.lookupOperation`: what its stand-in definition carries. */
+const lookupOperation = (context: BindingsContext, key: string) =>
+  context.lookupOperation === undefined
+    ? Effect.succeed(null)
+    : context.lookupOperation(key).pipe(
+        Effect.map((definition) =>
+          definition === undefined
+            ? null
+            : {
+                key: String(definition.meta.key),
+                name: definition.meta.name ?? Operation.toolName(definition),
+                ...(definition.meta.description !== undefined ? { description: definition.meta.description } : {}),
+              },
+        ),
+      );
+
+const invokeFound = (
+  context: BindingsContext,
+  definition: Operation.Definition.Any,
+  input: unknown,
+  heads: Wire.Heads,
+  refresh: Effect.Effect<void, Wire.WireError> | undefined,
+) => {
   const { db } = Context.get(context.runtime, Database.Service);
   // The worker's writes are read first, and the operation's are written before the reply.
   const catchUp = refresh === undefined ? Wire.catchUp(db, heads) : refresh;

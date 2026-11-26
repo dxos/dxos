@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
@@ -11,7 +13,9 @@ import { Sheet, SheetOperation } from '#types';
 
 const operations = [SheetOperation.Create, SheetOperation.GetValues, SheetOperation.SetValues, SheetOperation.AddChart];
 
-const make = () =>
+export const key = Sheet.SKILL_KEY;
+
+export const make = () =>
   Skill.make({
     key: Sheet.SKILL_KEY,
     name: 'Sheet',
@@ -47,10 +51,3 @@ const make = () =>
       `,
     }),
   });
-
-const skill: Skill.Definition = {
-  key: Sheet.SKILL_KEY,
-  make,
-};
-
-export default skill;

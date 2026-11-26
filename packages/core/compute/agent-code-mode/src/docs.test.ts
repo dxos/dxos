@@ -16,8 +16,11 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { DXN } from '@dxos/keys';
 
 import { EffectDialect } from './dialect-effect.ts';
-import { EVAL_TOOL_NAME, makeEvalToolkit } from './eval-tool.ts';
+import { EVAL_TOOL_NAME, STATE_TRAILER, makeEvalToolkit } from './eval-tool.ts';
 import * as Sandbox from './Sandbox.ts';
+
+/** What the code printed, without the trailer every result the model reads ends with. */
+const untrailed = (text: string): string => text.replace(`\n\n${STATE_TRAILER}`, '');
 
 /**
  * Every snippet `DOCS` shows the model, run through the Effect dialect against a real database:
@@ -89,7 +92,7 @@ const run = Effect.fnUntraced(function* (code: string) {
     providerExecuted: false,
   });
   expect(result.error).toBeUndefined();
-  return Schema.decodeUnknownSync(Schema.String)(JSON.parse(String(result.result)));
+  return untrailed(Schema.decodeUnknownSync(Schema.String)(JSON.parse(String(result.result))));
 });
 
 /** The objects every snippet below is written against, under the names the docs give them. */

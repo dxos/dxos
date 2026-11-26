@@ -12,7 +12,7 @@ import { Obj, Ref, Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
 
-import { EffectDialect } from './dialect-effect.ts';
+import { EffectDialect, renderCatalog, searchDocs } from './dialect-effect.ts';
 import { renderTypes } from './Dialect.ts';
 import { STATIC_DOCS, loadDocs } from './docs/index.ts';
 import { conciseError } from './eval-tool.ts';
@@ -114,23 +114,22 @@ describe('prompt', () => {
       input: Schema.Struct({ task: Ref.Ref(Task) }),
       output: Schema.Void,
     });
-    const instructions = EffectDialect.instructions({
-      types: [],
-      operations: [
-        {
-          name: 'close',
-          description: 'Closes a task.',
-          // What the tool projection states: a URI string, which `Operation.invoke` would reject.
-          parameters: { type: 'object', properties: { task: { type: 'string' } } },
-          definition: Close,
-          invoke: () => Effect.void,
-        },
-      ],
-    });
-    expect(instructions).toContain('input: { task: Ref<com.example.type.task> }');
-    expect(instructions).not.toContain('"type":"string"');
-    expect(instructions).toContain("yield* Database.resolve('dxn:com.example.operation.close')");
-    expect(instructions).toContain('`catalog/operations.md`');
+    const close = {
+      name: 'close',
+      description: 'Closes a task.',
+      // What the tool projection states: a URI string, which `Operation.invoke` would reject.
+      parameters: { type: 'object', properties: { task: { type: 'string' } } },
+      definition: Close,
+      invoke: () => Effect.void,
+    };
+    const instructions = EffectDialect.instructions({ types: [], operations: [close] });
+    // The prompt has the model discover operations; the catalog it reads documents each one.
+    expect(instructions).not.toContain('Closes a task.');
+    expect(instructions).toContain('yield* search(words)');
+    const catalog = renderCatalog({ operations: [close], types: [] })['catalog/operations.md'];
+    expect(catalog).toContain('input: { task: Ref<com.example.type.task> }');
+    expect(catalog).not.toContain('"type":"string"');
+    expect(catalog).toContain("yield* Database.resolve('dxn:com.example.operation.close')");
   });
 
   test('the prompt and the README list every doc', async ({ expect }) => {
@@ -162,5 +161,19 @@ describe('prompt', () => {
 
   test('a short failure is unchanged', () => {
     expect(conciseError('boom')).toEqual('boom');
+  });
+
+  test('search returns the passages that mention the most words, each headed by its file', ({ expect }) => {
+    const docs = {
+      'catalog/operations.md':
+        '# Operations\n\n- `addArtifact` — Files an artifact on a task.\n  input: { task }\n- `update` — Updates a task.',
+      'skills/project.md':
+        '# Projects\n\n## Artifacts\n\nFile a task artifact with addArtifact.\n\n## Setup\n\nBind a repo.',
+    };
+    const found = searchDocs(docs, 'task artifact');
+    expect(found.indexOf('[catalog/operations.md]\n- `addArtifact`')).toBeGreaterThanOrEqual(0);
+    expect(found).toContain('[skills/project.md]\n## Artifacts');
+    expect(found).not.toContain('Bind a repo');
+    expect(searchDocs(docs, 'zebra')).toContain('Nothing in DOCS mentions');
   });
 });

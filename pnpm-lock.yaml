@@ -5266,12 +5266,30 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../../sdk/app-toolkit
+      '@dxos/echo-doc':
+        specifier: workspace:*
+        version: link:../../echo/echo-doc
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../mesh/edge-client
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
+      '@dxos/plugin-attention':
+        specifier: workspace:*
+        version: link:../../../plugins/plugin-attention
+      '@dxos/plugin-presenter':
+        specifier: workspace:*
+        version: link:../../../plugins/plugin-presenter
+      '@dxos/plugin-sheet':
+        specifier: workspace:*
+        version: link:../../../plugins/plugin-sheet
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-attention
     devDependencies:
       '@bufbuild/protobuf':
         specifier: 'catalog:'

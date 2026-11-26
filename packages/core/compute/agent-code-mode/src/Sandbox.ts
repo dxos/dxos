@@ -53,6 +53,11 @@ export type EvaluateParams = {
  */
 export interface Sandbox {
   readonly evaluate: (params: EvaluateParams) => Effect.Effect<unknown, EvaluationError>;
+  /**
+   * The dialect a producer uses with this sandbox when it is given none. Set by a sandbox that
+   * cannot host the default (Effect) dialect, whose bindings are live ECHO objects (see `Dialect`).
+   */
+  readonly defaultDialect?: Dialect;
 }
 
 /** The ambient {@link Sandbox}, so a deployment chooses the execution seam without touching the producer. */

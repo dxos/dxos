@@ -7,7 +7,6 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Account from '@dxos/app-toolkit/Account';
-import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { createDidFromIdentityKey } from '@dxos/credentials';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
@@ -91,11 +90,10 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         }
 
         if (result.admitted) {
-          // Direct admission (e.g. fresh test Account just created): nothing
-          // to recover, the identity is already local. Provision the agent and
-          // dismiss the dialog.
+          // Direct admission (e.g. fresh test Account just created): nothing to recover, the identity is
+          // already local. The onboarding manager dismisses this dialog off the back of the new identity;
+          // closing it here as well would dismiss a space-join dialog the manager opened after it.
           void invokePromise(ClientOperation.CreateAgent);
-          await invokePromise(LayoutOperation.UpdateDialog, { state: false });
           return;
         }
 
@@ -217,8 +215,8 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
           setError(outcome);
           return;
         }
+        // The onboarding manager has already dismissed this dialog off the back of the new identity.
         void invokePromise(ClientOperation.CreateAgent);
-        await invokePromise(LayoutOperation.UpdateDialog, { state: false });
       } catch (err) {
         log.catch(err);
         setError('email');
