@@ -5,9 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { Model } from '@dxos/ai';
 import { ScriptedScene } from '@dxos/ai/testing';
 import * as Agent from '@dxos/compute/Agent';
-import { type Database, Filter } from '@dxos/echo';
 import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 import type * as StoryModules from '@dxos/storybook-testing/StoryModules';
 import { Organization } from '@dxos/types';
@@ -16,9 +16,10 @@ import { type ChatModuleData, StoryRole } from '../../modules/index.ts';
 import { LEDGER_DONE, SCOUT_DELEGATED, SCOUT_REQUEST, Scripts } from '../../scripts/index.ts';
 import {
   CRM_ACCOUNT,
+  CRM_AGENTS,
+  CRM_WRITE,
   CrmPermissionsPlugin,
   LEDGER,
-  PLAYGROUND_MODEL,
   SCOUT,
   createDecorators,
   seedCrmAgents,
@@ -44,28 +45,41 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// Captured when the space is seeded, so the play can read the account's status rather than read it off the page.
-let storyDb: Database.Database | undefined;
-
-const accountStatus = async () => {
-  const organizations = storyDb ? await storyDb.query(Filter.type(Organization.Organization)).run() : [];
-  return organizations.find(({ name }) => name === CRM_ACCOUNT)?.status;
+/**
+ * The account's record as the object tree shows it once selected, so the play reads what the reader sees; the panel
+ * follows the object, so a later read sees a later change.
+ */
+const accountRecord = async (canvasElement: HTMLElement): Promise<HTMLElement> => {
+  const objects = within(await within(canvasElement).findByTestId('database-module'));
+  await userEvent.click(await objects.findByText(CRM_ACCOUNT, {}, { timeout: 10_000 }));
+  return objects.findByTestId('database-module.selected', {}, { timeout: 10_000 });
 };
 
-/** Each agent's chat as a plank headed by its name, then the space's object tree. */
+const expectStatus = (record: HTMLElement, status: string) =>
+  waitFor(() => expect(record.textContent).toMatch(new RegExp(`"status":\\s*"${status}"`)), { timeout: 10_000 });
+
+const permissionsOf = (agent: string): readonly string[] =>
+  CRM_AGENTS.find(({ name }) => name === agent)?.commands ?? [];
+
+/** Each agent's chat as a plank headed by its name (its permissions on hover), then the space's object tree. */
 const LAYOUT = [
   [
     {
       type: StoryRole.Chat,
       id: `chat-${SCOUT}`,
-      data: { agent: SCOUT, hue: 'amber', suggestions: [SCOUT_REQUEST] } satisfies ChatModuleData,
+      data: {
+        agent: SCOUT,
+        permissions: permissionsOf(SCOUT),
+        hue: 'amber',
+        suggestions: [SCOUT_REQUEST],
+      } satisfies ChatModuleData,
     },
   ],
   [
     {
       type: StoryRole.Chat,
       id: `chat-${LEDGER}`,
-      data: { agent: LEDGER, hue: 'emerald' } satisfies ChatModuleData,
+      data: { agent: LEDGER, permissions: permissionsOf(LEDGER), hue: 'emerald' } satisfies ChatModuleData,
     },
   ],
   [
@@ -81,10 +95,7 @@ const crmAgents: Story = {
   decorators: createDecorators({
     types: [Agent.Agent, Organization.Organization],
     plugins: [CrmPermissionsPlugin()],
-    onReady: async ({ db }) => {
-      storyDb = db;
-      await seedCrmAgents({ db });
-    },
+    onReady: ({ db }) => seedCrmAgents({ db }),
     scripted: ScriptedScene.play(Scripts.crmAgents),
   }),
   args: { layout: LAYOUT },
@@ -116,27 +127,35 @@ export const CrmAgentsScripted: Story = {
       { timeout: 60_000 },
     );
 
+    // Hovering an agent's name shows the grants it holds; the tooltip opens in a portal outside the canvas.
+    const ledgerHeader = within(await canvas.findByTestId(`chat-panel-${LEDGER}`)).getByTestId(
+      'chat-module.agent-header',
+    );
+    await userEvent.hover(ledgerHeader);
+    await within(document.body).findByText(`Permissions: ${CRM_WRITE}`, {}, { timeout: 10_000 });
+    await userEvent.unhover(ledgerHeader);
+
+    const record = await accountRecord(canvasElement);
+    await expectStatus(record, 'prospect');
+
     await userEvent.click(await canvas.findByRole('button', { name: SCOUT_REQUEST }, { timeout: 60_000 }));
     await canvas.findAllByText(new RegExp(SCOUT_DELEGATED), {}, { timeout: 60_000 });
 
     const ledger = within(await canvas.findByTestId(`chat-panel-${LEDGER}`));
     await ledger.findAllByText(LEDGER_DONE, {}, { timeout: 60_000 });
-    await waitFor(async () => expect(await accountStatus()).toBe('active'), { timeout: 10_000 });
+    await expectStatus(record, 'active');
   },
 };
 
 /**
- * {@link CrmAgents} on a real model (DeepSeek V4 Pro through EDGE) rather than the script: Scout decides for itself
+ * {@link CrmAgents} on a real model (Claude Sonnet 5 through EDGE) rather than the script: Scout decides for itself
  * to hand the refused change to Ledger. Live AI, so excluded from CI.
  */
 export const CrmAgentsLive: Story = {
   decorators: createDecorators({
     types: [Agent.Agent, Organization.Organization],
     plugins: [CrmPermissionsPlugin()],
-    onReady: async ({ db }) => {
-      storyDb = db;
-      await seedCrmAgents({ db, model: PLAYGROUND_MODEL });
-    },
+    onReady: ({ db }) => seedCrmAgents({ db, model: Model.claudeSonnet5.id }),
   }),
   args: { layout: LAYOUT },
   tags: ['!test'],

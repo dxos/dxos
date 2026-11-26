@@ -11,7 +11,7 @@ import { QueryBuilder } from '@dxos/echo-query';
 import { type EntityId } from '@dxos/keys';
 import * as ForceGraph from '@dxos/plugin-explorer/ForceGraph';
 import * as ExplorerHooks from '@dxos/plugin-explorer/Hooks';
-import { type Space, useFlush, useQuery } from '@dxos/react-client/echo';
+import { type Space, useFlush, useObject, useQuery } from '@dxos/react-client/echo';
 import { type ChatEditorProps } from '@dxos/react-ui-chat';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { type EditorController, QueryEditor } from '@dxos/react-ui-query';
@@ -92,9 +92,11 @@ const DatabaseModuleContainer = ({ space, defaultView = 'graph' }: { space: Spac
     space.db,
     selectedId ? Query.select(Filter.id(selectedId)) : Query.select(Filter.nothing()),
   );
+  // A snapshot, so the panel re-renders when the selected object changes rather than only when another is selected.
+  const [selectedSnapshot] = useObject(selectedObject);
 
   return (
-    <Panel.Root classNames='relative h-full'>
+    <Panel.Root classNames='relative h-full' data-testid='database-module'>
       <Panel.Header>
         <DatabaseSearchBar space={space} view={view} onSubmit={handleSubmit} onViewChange={handleViewChange} />
       </Panel.Header>
@@ -104,7 +106,11 @@ const DatabaseModuleContainer = ({ space, defaultView = 'graph' }: { space: Spac
         {view === 'object-tree' && (
           <ScrollArea.Root classNames='h-full'>
             <ScrollArea.Viewport>
-              <ObjectsTree db={space.db} onSelect={(entity) => setSelectedId(entity.id)} />
+              <ObjectsTree
+                db={space.db}
+                selected={selectedId ?? undefined}
+                onSelect={(entity) => setSelectedId(entity.id)}
+              />
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         )}
@@ -129,14 +135,15 @@ const DatabaseModuleContainer = ({ space, defaultView = 'graph' }: { space: Spac
           </div>
         ) : (
           (view === 'object-tree' || view === 'cards') &&
-          selectedObject && (
+          selectedSnapshot && (
             <div
+              data-testid='database-module.selected'
               className={mx(
                 'flex absolute left-2 right-2 bottom-2 h-[8rem]',
                 'overflow-hidden dx-base-surface border border-separator-subtle opacity-80',
               )}
             >
-              <JsonHighlighter classNames='text-sm' data={selectedObject} />
+              <JsonHighlighter classNames='text-sm' data={selectedSnapshot} />
             </div>
           )
         )}

@@ -637,8 +637,11 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
           }
           yield* Database.flush();
 
+          // Delegated text comes from another session or agent, never the reader, so it shows as context, not their words.
           const prompt: ContentBlock.Any[] = request.message
-            ? [...request.message]
+            ? request.message.map((block) =>
+                block._tag === 'text' ? { ...block, disposition: 'synthetic' as const } : block,
+              )
             : [
                 {
                   _tag: 'text',

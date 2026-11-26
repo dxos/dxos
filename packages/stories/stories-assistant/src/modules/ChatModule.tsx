@@ -22,12 +22,15 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Popover from '@dxos/react-ui/Popover';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
 import * as StoryModules from '@dxos/storybook-testing/StoryModules';
 import { Person } from '@dxos/types';
 
 export type ChatModuleData = {
   /** Name of the agent whose chat the panel shows, when the space holds several agents. */
   agent?: string;
+  /** The commands the agent holds grants for, shown on hovering its name. */
+  permissions?: readonly string[];
   /**
    * Name (preferred or full) of the person this panel speaks as: the panel shows the agent's chat with
    * them (see plugin-agent's `ChatParticipant`) and attributes every prompt to them.
@@ -60,6 +63,7 @@ export const ChatModule = ({ data }: Surface.ComponentProps<ChatModuleData>) => 
 const ChatModuleContainer = ({
   space,
   agent,
+  permissions,
   participant,
   hue,
   initialPrompt,
@@ -148,12 +152,26 @@ const ChatModuleContainer = ({
       >
         <Panel.Header classNames='flex flex-col'>
           {headerAgent && (
-            <div className='flex items-center gap-2 px-2 py-1 border-b border-separator'>
-              <Icon.Icon icon='ph--robot--regular' classNames='w-4 h-4 text-fg-subtle' />
-              <span className='font-medium truncate' data-testid='chat-module.agent'>
-                {headerAgent}
-              </span>
-            </div>
+            <Tooltip.Trigger
+              asChild
+              content={
+                permissions === undefined
+                  ? undefined
+                  : permissions.length > 0
+                    ? `Permissions: ${permissions.join(', ')}`
+                    : 'No permissions'
+              }
+            >
+              <div
+                className='flex items-center gap-2 px-2 py-1 border-b border-separator'
+                data-testid='chat-module.agent-header'
+              >
+                <Icon.Icon icon='ph--robot--regular' classNames='w-4 h-4 text-fg-subtle' />
+                <span className='font-medium truncate' data-testid='chat-module.agent'>
+                  {headerAgent}
+                </span>
+              </div>
+            </Tooltip.Trigger>
           )}
           <Chat.Toolbar attendableId={chat.id} alwaysActive switcher={switcher} customActions={customActions} />
         </Panel.Header>
