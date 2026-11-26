@@ -3,13 +3,17 @@
 //
 
 import {
+  type LayerId,
   type LayoutIntent,
   type ModelIntent,
+  type Node,
   Scene,
   type ViewId,
   applyIntent,
+  applyModelIntent,
   findLayout,
   isContainerKind,
+  isInstanceNode,
   layoutChanges,
 } from '@dxos/scene';
 
@@ -28,10 +32,19 @@ import {
   expandHulls,
   fitHulls,
   gridPitch,
+  groupPlacement,
   moveToHull,
   reseat,
+  ungroupPlacement,
 } from '../utils/index.ts';
-import { type WriteContext, fromRenderList2D, objectPlacing, toRenderList2D, toRenderLists2D } from './render-list.ts';
+import {
+  type WriteContext,
+  fromRenderList2D,
+  fromRenderLists2D,
+  objectPlacing,
+  toRenderList2D,
+  toRenderLists2D,
+} from './render-list.ts';
 
 /**
  * One write a 2D engine change makes: an intent on a layout (`created` when the engine opened a layout the document has
@@ -353,4 +366,107 @@ export const applyLayoutWrites = (
     }
   };
   writes.length > 1 && onTransaction ? onTransaction(apply) : apply();
+};
+
+//
+// Group and Ungroup: the model's intents, placed as the 2D editor places a group.
+//
+
+/** What a new group is called: its element, the object and parts layout it places, and the layer it goes on. */
+export type GroupNames = { id: string; parts: string; name?: string; layer?: LayerId };
+
+const byId = <T extends { id: string }>(items: readonly T[]): Record<string, T> =>
+  Object.fromEntries(items.map((item) => [item.id, item]));
+
+/**
+ * The model's `group` intent for a selection of `list`: the reducer makes the group, and the 2D editor says where it
+ * stands (over the selection's bounds) and how its members follow its frame. None where the selection is not one to
+ * group (no node, a locked node, a View).
+ */
+export const groupIntent2D = (
+  list: RenderList2D,
+  selection: Iterable<string>,
+  model: string,
+  { id, parts, name, layer }: GroupNames,
+): ModelIntent | undefined => {
+  const members = [...selection];
+  const placement = groupPlacement(list, members, { layer });
+  if (!placement) {
+    return undefined;
+  }
+  const instance: Node = { ...placement.instance, id, composite: parts };
+  const { elements } = fromRenderList2D({
+    id: list.id,
+    nodes: { [id]: instance, ...byId(placement.nodes) },
+    links: byId(placement.links),
+  }).layout;
+  // The reducer names the object the element places, so the one the list would write for it is left out.
+  const { [id]: placing, ...placed } = elements;
+  const { id: _id, object: _object, ...fields } = placing;
+  return {
+    kind: 'group',
+    model,
+    layout: list.id,
+    id,
+    members,
+    parts,
+    ...(name !== undefined ? { name } : {}),
+    ...(Object.keys(placement.layers).length > 0 ? { layers: placement.layers } : {}),
+    placing: fields,
+    placed,
+  };
+};
+
+/**
+ * The model's `ungroup` intent for the instance `id` of `layout`, its members as the instance draws them: its part
+ * overrides applied, placed by its frame and its parts' constraints, on its layer. `ids` names each member put back.
+ */
+export const ungroupIntent2D = (
+  lists: RenderLists2D,
+  layout: string,
+  id: string,
+  model: string,
+  ids?: Readonly<Record<string, string>>,
+): ModelIntent | undefined => {
+  const list = lists[layout];
+  const instance = list?.nodes[id];
+  const composite = instance && isInstanceNode(instance) ? lists[instance.composite] : undefined;
+  if (!list || !instance || !isInstanceNode(instance) || !composite) {
+    return undefined;
+  }
+  const { nodes, links } = ungroupPlacement(list, instance, composite);
+  const placed = fromRenderList2D({ id: layout, nodes: byId(nodes), links: byId(links) }).layout.elements;
+  return { kind: 'ungroup', model, layout, id, placed, ...(ids ? { ids } : {}) };
+};
+
+/**
+ * Lists after a model intent on the document they are, for an editor that holds lists and no document: `intent` is
+ * given the model's id. A node, a link and a list the intent left as it was is the one passed in, so nothing else is
+ * redrawn. Nothing where there is no intent or the model refuses it.
+ */
+export const listsAfterIntent = (
+  lists: RenderLists2D,
+  root: ViewId,
+  intent: (model: string) => ModelIntent | undefined,
+): RenderLists2D | undefined => {
+  const doc = fromRenderLists2D(Object.values(lists), { root });
+  const built = intent(doc.models[0].id);
+  const result = built && applyModelIntent(doc, built);
+  if (!result || result.problems.length > 0) {
+    return undefined;
+  }
+  const kept = <T>(before: Readonly<Record<string, T>>, after: Readonly<Record<string, T>>): Record<string, T> =>
+    Object.fromEntries(
+      Object.entries(after).map(([key, value]) => [key, same(before[key], value) ? before[key] : value]),
+    );
+  return Object.fromEntries(
+    toRenderLists2D(result.doc).lists.map((next): [string, RenderList2D] => {
+      const before = lists[next.id];
+      if (!before) {
+        return [next.id, next];
+      }
+      const merged = { ...next, nodes: kept(before.nodes, next.nodes), links: kept(before.links, next.links) };
+      return [next.id, same(before, merged) ? before : merged];
+    }),
+  );
 };

@@ -46,7 +46,6 @@ import {
   classedLink,
   classedNode,
   clipboardBounds,
-  composeSelection,
   compositeBounds,
   compositeViews,
   contentBounds,
@@ -66,12 +65,12 @@ import {
   reorderElement,
   restackZ,
   topOfView,
-  ungroupInstance,
   unionBounds,
   updateElement,
   withEndMarker,
   zoomAt,
 } from '../utils/index.ts';
+import { groupIntent2D, listsAfterIntent, ungroupIntent2D } from '../viewport2d/index.ts';
 import { type CanvasAtoms, type HistoryEntry, type LinkEnd } from './atoms.ts';
 import { type DrawState, drawStateVersions } from './draw-state.ts';
 import { type DrawScene, readonlyCapabilities } from './draw.ts';
@@ -347,19 +346,28 @@ export const createCanvasController = ({
       }
       const base = draw();
       const current = registry.get(base.scene);
+      const views = registry.get(store.views);
       const instanceId = newId('instance');
-      const composition = composeSelection(current, registry.get(atoms.selection), {
-        compositeId: newId('object'),
-        instanceId,
-        name: `Group ${compositeViews(registry.get(store.views)).length + 1}`,
+      const names = {
+        id: instanceId,
+        parts: newId('object'),
+        name: `Group ${compositeViews(views).length + 1}`,
         layer: activeLayer(current, registry.get(atoms.layer)),
-        anonymous: true,
-      });
-      if (!composition) {
+      };
+      // The model makes the group, as it does in every editor; these lists are the document it makes it in.
+      const next = listsAfterIntent({ ...views, [current.id]: current }, roots()[0] ?? current.id, (model) =>
+        groupIntent2D(current, registry.get(atoms.selection), model, names),
+      );
+      const grouped = next?.[current.id];
+      const composite = next?.[names.parts];
+      if (!grouped || !composite) {
         return undefined;
       }
-      const { composite, edit } = composition;
-      applyWithRecords(base, edit, (views) => ({ ...views, [composite.id]: composite }));
+      applyWithRecords(
+        base,
+        () => grouped,
+        (after) => ({ ...after, [composite.id]: composite }),
+      );
       // The edit may drop the Instance, which leaves the definition an orphan, already gone.
       if (!registry.get(base.scene).nodes[instanceId]) {
         return undefined;
@@ -372,22 +380,31 @@ export const createCanvasController = ({
         return [];
       }
       const base = draw();
-      const views = registry.get(store.views);
-      // Each Instance is exploded into the scene the ones before it left, so their new nodes stack in order.
-      let scene = registry.get(base.scene);
-      const edits: SceneEdit[] = [];
+      const current = registry.get(base.scene);
+      const root = roots()[0] ?? current.id;
+      // Each Instance is taken apart in the lists the ones before it left, so their new nodes stack in order.
+      let lists: RenderLists2D = { ...registry.get(store.views), [current.id]: current };
       const created: NodeId[] = [];
       for (const id of registry.get(atoms.selection)) {
-        const instance = scene.nodes[id];
-        const composite = instance && isInstanceNode(instance) ? views[instance.composite] : undefined;
-        if (instance && isInstanceNode(instance) && composite) {
-          const exploded = ungroupInstance(scene, instance, composite, newId);
-          edits.push(exploded.edit);
-          created.push(...exploded.created);
-          scene = exploded.edit(scene);
+        const instance = lists[current.id]?.nodes[id];
+        const composite = instance && isInstanceNode(instance) ? lists[instance.composite] : undefined;
+        if (!composite) {
+          continue;
+        }
+        // Fresh ids, since a definition that stays keeps its own.
+        const nodes = Object.keys(composite.nodes).map((key): [string, string] => [key, newId('node')]);
+        const links = Object.keys(composite.links).map((key): [string, string] => [key, newId('link')]);
+        const from = lists;
+        const next = listsAfterIntent(from, root, (model) =>
+          ungroupIntent2D(from, current.id, id, model, Object.fromEntries([...nodes, ...links])),
+        );
+        if (next) {
+          lists = next;
+          created.push(...nodes.map(([, created]) => created));
         }
       }
-      if (edits.length === 0 || !applyWithRecords(base, chainEdits(edits))) {
+      const ungrouped = lists[current.id];
+      if (created.length === 0 || !ungrouped || !applyWithRecords(base, () => ungrouped)) {
         return [];
       }
       select(created);

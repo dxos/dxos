@@ -35,7 +35,7 @@ import {
 } from '@dxos/scene';
 
 import { type RenderList2D, type RenderLists2D, pruneOrphaned } from '../model/index.ts';
-import { type SceneEdit, chainEdits, deleteElements, insertLink, insertNode, updateElement } from './edits.ts';
+import { type SceneEdit, updateElement } from './edits.ts';
 import { unionBounds } from './hit.ts';
 import { elementLayer, viewLayers } from './layers.ts';
 import { topZ } from './order.ts';
@@ -425,32 +425,32 @@ export const instancePorts = (frame: Bounds, composite: RenderList2D, fit?: Inst
     });
 };
 
-export type ComposeOptions = {
-  /** The new composite scene's id. */
-  compositeId: ViewId;
-  /** The instance node that replaces the selection. */
-  instanceId: NodeId;
-  name?: string;
-  /** The layer the instance goes on. */
-  layer?: LayerId;
-  /** Marks the composite anonymous, as the Group command makes it. */
-  anonymous?: boolean;
+/**
+ * How the 2D editor places a group of a selection: the instance that takes the selection's place over its bounds,
+ * and the members as the group's own list holds them. The model's `group` intent makes the group; this is only where
+ * it stands and how its members follow its frame.
+ */
+export type GroupPlacement = {
+  /** The instance, less its id and the composite it draws, which the group names. */
+  instance: Omit<PlacedComposite, 'id' | 'composite'>;
+  /** The selected nodes, about the centre of their bounds, laid out to follow the frame. */
+  nodes: Node[];
+  /** The links wholly inside the selection, moved with them. */
+  links: Link[];
+  /** The layers the members are on, which the group's list declares. */
+  layers: NonNullable<RenderList2D['layers']>;
 };
 
-/** What grouping a selection as an object makes: the composite, and the edit that puts an instance in its place. */
-export type Composition = { composite: RenderList2D; edit: SceneEdit };
-
 /**
- * Groups the selected nodes as an object (`compose`): they and the links wholly inside the selection move into a new
- * composite scene, re-centred on their bounds, and one instance replaces them in place. A link crossing the selection's
- * edge stays, re-attached to a port of the instance that the inner node it left now exposes. Keyed tracks of the
- * moved nodes move with them. None when no node is selected or a selected node is locked.
+ * Where a group of the selected nodes stands: they and the links wholly inside the selection are re-centred on their
+ * bounds, and one instance takes their place. A link crossing the selection's edge ends on a port of the instance that
+ * the inner node it left exposes. None when no node is selected, or a selected node is locked or a View.
  */
-export const composeSelection = (
+export const groupPlacement = (
   scene: RenderList2D,
   ids: Iterable<string>,
-  { compositeId, instanceId, name, layer, anonymous }: ComposeOptions,
-): Composition | undefined => {
+  { layer }: { layer?: LayerId } = {},
+): GroupPlacement | undefined => {
   const selected = new Set(ids);
   const nodes = Object.values(scene.nodes).filter((node) => selected.has(node.id));
   const bounds = unionBounds(nodes.map(nodeBounds));
@@ -473,9 +473,8 @@ export const composeSelection = (
   const exposed = new Set(
     crossing.flatMap((link) => [link.source, link.target].map(endpointNode).filter((id) => id && inside.has(id))),
   );
-
   const layers = viewLayers(scene);
-  // The Object stands exactly where the selection did and resizes as it would have: one shape becomes an Object of
+  // The group stands exactly where the selection did and resizes as it would have: one shape becomes a group of
   // itself, its part following the frame on both axes, so nothing is drawn around it and its handles are its own.
   // Several shapes keep their proportions of the frame (`scale`), which fills it rather than letterboxing them in it.
   const constrain: PartLayout = nodes.length === 1 ? { x: 'stretch', y: 'stretch' } : { x: 'scale', y: 'scale' };
@@ -499,105 +498,64 @@ export const composeSelection = (
   );
   const used = new Set([...childNodes, ...childLinks].map((element) => element.layer));
   const composite: RenderList2D = {
-    id: compositeId,
-    name: name ?? 'Object',
-    kind: 'composite',
-    ...(anonymous ? { anonymous: true } : {}),
+    id: '',
     nodes: Object.fromEntries(childNodes.map((node) => [node.id, node])),
     links: Object.fromEntries(childLinks.map((link) => [link.id, link])),
-    layers: Object.fromEntries(layers.filter((entry) => used.has(entry.id)).map((entry) => [entry.id, entry])),
-  };
-  const instance: PlacedComposite = {
-    kind: 'instance',
-    id: instanceId,
-    z: topZ(Object.values(scene.nodes)),
-    center: centre,
-    size: { width: bounds.width, height: bounds.height },
-    composite: compositeId,
-    // The frame is the selection's own box and the parts fill it, so the Object draws where the shapes drew and no
-    // second rectangle appears around them.
-    fit: 'none',
-    ports: instancePorts(bounds, composite),
-    ...(layer !== undefined ? { layer } : {}),
-  };
-  const reattach = (end: Endpoint): Endpoint => {
-    const node = endpointNode(end);
-    return node !== undefined && inside.has(node) ? { node: instanceId, port: node } : end;
   };
   return {
-    composite,
-    edit: chainEdits([
-      insertNode(instance),
-      // Re-attached before the nodes go, since deleting a node takes the links on it.
-      ...crossing.map((link) =>
-        updateElement(link.id, { source: reattach(link.source), target: reattach(link.target) }),
-      ),
-      deleteElements([...inside]),
-    ]),
+    instance: {
+      kind: 'instance',
+      z: topZ(Object.values(scene.nodes)),
+      center: centre,
+      size: { width: bounds.width, height: bounds.height },
+      // The frame is the selection's own box and the parts fill it, so the group draws where the shapes drew and no
+      // second rectangle appears around them.
+      fit: 'none',
+      ports: instancePorts(bounds, composite),
+      ...(layer !== undefined ? { layer } : {}),
+    },
+    nodes: childNodes,
+    links: childLinks,
+    layers: Object.fromEntries(layers.filter((entry) => used.has(entry.id)).map((entry) => [entry.id, entry])),
   };
 };
 
-/** What ungrouping an instance makes: the edit that places its parts, and the ids of the nodes it creates. */
-export type Ungrouping = { edit: SceneEdit; created: NodeId[] };
-
 /**
- * Ungroups an instance: the composite's nodes and links, with the instance's part overrides, are placed where the instance
- * draws them under fresh ids (`createId`), and links on the instance's ports re-attach to the nodes behind them. The
- * definition is left as it is, for any other instance.
+ * The parts of an instance as it draws them, for the model's `ungroup` to put back: the composite's nodes and links
+ * with the instance's part overrides, placed and sized as the instance places them (constraints and all, so ungrouping
+ * leaves the picture where it was), on the instance's layer and over what the scene already holds.
  */
-export const ungroupInstance = (
+export const ungroupPlacement = (
   scene: RenderList2D,
   instance: PlacedComposite,
   composite: RenderList2D,
-  createId: (prefix: string) => string,
-): Ungrouping => {
-  // The parts are placed exactly as the instance draws them, constraints and all, so ungrouping leaves the picture
-  // where it was rather than snapping back to the composite's own proportions.
+): { nodes: Node[]; links: Link[] } => {
   const { view, transform } = instancePlacement(instance, composite);
-  const ids = new Map(Object.keys(view.nodes).map((id) => [id, createId('node')]));
   const map = (point: Point) => toInstance(transform, point);
-  const mapEnd = (end: Endpoint): Endpoint =>
-    'point' in end ? { point: map(end.point) } : { ...end, node: ids.get(end.node) ?? end.node };
+  const mapEnd = (end: Endpoint): Endpoint => ('point' in end ? { point: map(end.point) } : end);
   let z = topZ(Object.values(scene.nodes));
-  const created: Node[] = Object.values(view.nodes).map((node) => {
+  const nodes: Node[] = Object.values(view.nodes).map((node) => {
     const { exposed: _, constrain: __, ...rest } = node;
     z = topZ([{ id: '', z }]);
     return {
       ...rest,
-      id: ids.get(node.id) ?? node.id,
       z,
       center: map(node.center),
       size: { width: node.size.width * transform.scale, height: node.size.height * transform.scale },
       ...(instance.layer !== undefined ? { layer: instance.layer } : {}),
     };
   });
-  const linked: Link[] = Object.values(view.links).map((source) => {
+  const links: Link[] = Object.values(view.links).map((source) => {
     const { constrain: _, ...rest } = source;
     return {
       ...rest,
-      id: createId('link'),
       source: mapEnd(source.source),
       target: mapEnd(source.target),
       ...(source.points ? { points: source.points.map(map) } : {}),
       ...(instance.layer !== undefined ? { layer: instance.layer } : {}),
     };
   });
-  const onInstance = (end: Endpoint): Endpoint =>
-    'node' in end && end.node === instance.id
-      ? { node: (end.port && ids.get(end.port)) ?? ids.values().next().value ?? end.node }
-      : end;
-  const reattached = Object.values(scene.links)
-    .filter((link) => endpointNode(link.source) === instance.id || endpointNode(link.target) === instance.id)
-    .map((link) => updateElement(link.id, { source: onInstance(link.source), target: onInstance(link.target) }));
-  return {
-    edit: chainEdits([
-      ...created.map(insertNode),
-      ...linked.map(insertLink),
-      ...reattached,
-      deleteElements([instance.id]),
-    ]),
-    created: created.map(({ id }) => id),
-  };
+  return { nodes, links };
 };
 
 const isPointValue = (value: unknown): value is Point =>

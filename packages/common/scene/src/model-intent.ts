@@ -10,6 +10,8 @@ import {
   type Arrangement,
   type Element2D,
   type Element3D,
+  ElementRecord2D,
+  ElementRecord3D,
   type LayoutRecord,
   type LayoutRecord2D,
   type LayoutRecord3D,
@@ -20,6 +22,9 @@ import {
 } from './Scene.ts';
 import { NamedStyle2D, NamedStyle3D } from './style.ts';
 import { type Problem } from './validate.ts';
+
+/** The fields of an element an editor states for a group: checked against the layout's element before it is stored. */
+export type ElementFields = Readonly<Record<string, unknown>>;
 
 /** One edit to a model's objects; `extract` also edits the layout its elements come from. */
 export type ModelIntent =
@@ -46,8 +51,27 @@ export type ModelIntent =
       readonly id: string;
       readonly members: readonly string[];
       readonly arrange?: Arrangement;
+      /** The id of the group's object and its parts layout; one made from the layout's and the group's otherwise. */
+      readonly parts?: string;
+      /** The parts layout's name. */
+      readonly name?: string;
+      /** The layers the parts layout declares, where its members are on layers of their own. */
+      readonly layers?: LayoutRecord['layers'];
+      /** What the placing element states beside the object it places: an editor that frames a group says where. */
+      readonly placing?: ElementFields;
+      /** A member as the parts layout holds it, where an editor moves it there (about the frame's centre, say). */
+      readonly placed?: Readonly<Record<string, ElementFields>>;
     }
-  | { readonly kind: 'ungroup'; readonly model: string; readonly layout: string; readonly id: string }
+  | {
+      readonly kind: 'ungroup';
+      readonly model: string;
+      readonly layout: string;
+      readonly id: string;
+      /** A member as it is put back, where the editor that drew the group says; by the group's placement otherwise. */
+      readonly placed?: Readonly<Record<string, ElementFields>>;
+      /** The id a member is put back under; its own otherwise, or a free one where the definition stays. */
+      readonly ids?: Readonly<Record<string, string>>;
+    }
   /** Sets the model's named style `id` (a new one from a selection, or an edit); with no style, removes it. */
   | { readonly kind: 'style'; readonly model: string; readonly id: string; readonly style?: unknown };
 
@@ -249,6 +273,9 @@ const toPort = (end: ElementEndpoint, taken: ReadonlySet<string>, id: string): E
  * Groups elements of a layout into an anonymous composite (decision 17) that one new element places with no fit, so
  * they stay where they are; a link from outside ends at the group, on the port named by the element it bound.
  */
+const isElement2D = Schema.is(ElementRecord2D);
+const isElement3D = Schema.is(ElementRecord3D);
+
 const group = (
   doc: SceneDocument,
   model: ModelRecord,
@@ -268,10 +295,16 @@ const group = (
   if (layout.elements[intent.id] !== undefined) {
     return problem(`The layout already has an element "${intent.id}".`);
   }
-  const compositeId = freeKey(
-    (key) => doc.layouts.some((record) => record.id === key) || model.objects[key] !== undefined,
-    `${layout.id}/${intent.id}`,
-  );
+  // A View in a group would be repeated wherever the group is placed, and a locked element may not leave its layout.
+  const held = [...ids].find((id) => layout.elements[id].locked || containerIn(doc, model, layout, id) === 'view');
+  if (held !== undefined) {
+    return problem(`"${held}" cannot be grouped: it is locked, or a View.`);
+  }
+  const taken = (key: string) => doc.layouts.some((record) => record.id === key) || model.objects[key] !== undefined;
+  if (intent.parts !== undefined && taken(intent.parts)) {
+    return problem(`The document already has "${intent.parts}".`);
+  }
+  const compositeId = intent.parts ?? freeKey(taken, `${layout.id}/${intent.id}`);
   const nextModel = withObject(model, { id: compositeId, kind: 'group', parts: compositeId });
   if (!nextModel) {
     return problem(`A group does not fit a ${model.dim} model.`);
@@ -281,18 +314,37 @@ const group = (
     model: model.id,
     kind: 'composite' as const,
     anonymous: true,
+    ...(intent.name !== undefined ? { name: intent.name } : {}),
+    ...(intent.layers !== undefined ? { layers: intent.layers } : {}),
     ...(intent.arrange ? { arrange: intent.arrange } : {}),
   };
-  const instance = { id: intent.id, object: compositeId, fit: 'none' as const };
+  const instance = { id: intent.id, object: compositeId, fit: 'none' as const, ...intent.placing };
+  // A member is stored as its editor gives it, where it gives one that is an element of this layout.
+  const members = <E extends Element2D | Element3D>(
+    inside: Readonly<Record<string, E>>,
+    is: (value: unknown) => value is E,
+  ): Record<string, E> =>
+    Object.fromEntries(
+      Object.entries(inside).map(([key, each]): [string, E] => {
+        const given = intent.placed?.[key] && { ...intent.placed[key], id: key };
+        return [key, is(given) ? given : each];
+      }),
+    );
   let parts: LayoutRecord;
   let host: LayoutRecord;
   if (layout.dim === '3d') {
+    if (!isElement3D(instance)) {
+      return problem('The group is not placed as an element of a 3D layout.');
+    }
     const result = split<Element3D>(layout.elements, ids, intent.id, () => instance, toPort);
-    parts = { ...composite, dim: '3d', elements: result.inside } satisfies LayoutRecord3D;
+    parts = { ...composite, dim: '3d', elements: members(result.inside, isElement3D) } satisfies LayoutRecord3D;
     host = { ...layout, model: layout.model ?? model.id, elements: result.outside };
   } else {
+    if (!isElement2D(instance)) {
+      return problem('The group is not placed as an element of a 2D layout.');
+    }
     const result = split<Element2D>(layout.elements, ids, intent.id, () => instance, toPort);
-    parts = { ...composite, dim: '2d', elements: result.inside } satisfies LayoutRecord2D;
+    parts = { ...composite, dim: '2d', elements: members(result.inside, isElement2D) } satisfies LayoutRecord2D;
     host = { ...layout, model: layout.model ?? model.id, elements: result.outside };
   }
   return {
@@ -354,7 +406,11 @@ const released = <E extends Element2D | Element3D>(
     : { ...element, ...placed };
 };
 
-/** Undoes `group`: the group's elements return to the layout where they are drawn, and links to its ports rebind. */
+/**
+ * Undoes `group`: the group's elements return to the layout where they are drawn, and links to its ports rebind. An
+ * Object's instance is taken apart the same way, but its definition stays for the library, as a group's does while
+ * another element still places it; the members are then copies, under ids of their own.
+ */
 const ungroup = (
   doc: SceneDocument,
   model: ModelRecord,
@@ -368,47 +424,69 @@ const ungroup = (
   const element = layout.elements[intent.id];
   const object = element?.object === undefined ? undefined : model.objects[element.object];
   const parts = object?.parts === undefined ? undefined : doc.layouts.find((record) => record.id === object.parts);
-  const grouping = isGrouping(containerIn(doc, model, layout, intent.id));
-  if (!element || !object || !grouping || !parts || parts.dim !== layout.dim) {
+  const container = containerIn(doc, model, layout, intent.id);
+  if (!element || !object || container === undefined || container === 'view' || !parts || parts.dim !== layout.dim) {
     return problem(`"${intent.id}" is not a group.`);
   }
-  const fromPort = (end: ElementEndpoint | undefined) =>
-    end && end.node === intent.id && end.port !== undefined ? { node: end.port } : end;
-  const rebound = <E extends Element2D | Element3D>(each: E): E =>
-    each.source || each.target ? { ...each, source: fromPort(each.source), target: fromPort(each.target) } : each;
   const placedElsewhere = doc.layouts.some((record) =>
     Object.values(record.elements).some((other) => other.object === object.id && other !== element),
   );
+  const kept = placedElsewhere || container === 'object';
+  // A member keeps its id where the definition goes with the group; a copy of one that stays takes a free id.
+  const used = new Set(Object.keys(layout.elements).filter((key) => key !== intent.id));
+  const ids = new Map<string, string>();
+  for (const key of Object.keys(parts.elements)) {
+    const id = intent.ids?.[key] ?? (kept ? freeKey((candidate) => used.has(candidate), `${intent.id}-${key}`) : key);
+    used.add(id);
+    ids.set(key, id);
+  }
+  const renamed = (end: ElementEndpoint | undefined) =>
+    end && end.node !== undefined ? { ...end, node: ids.get(end.node) ?? end.node } : end;
+  const fromPort = (end: ElementEndpoint | undefined) =>
+    end && end.node === intent.id && end.port !== undefined ? { node: ids.get(end.port) ?? end.port } : end;
+  const rebound = <E extends Element2D | Element3D>(each: E): E =>
+    each.source || each.target ? { ...each, source: fromPort(each.source), target: fromPort(each.target) } : each;
   const drawn = resolveLayout(doc, parts);
   const merged = <E extends Element2D | Element3D>(
     own: Readonly<Record<string, E>>,
     inner: Readonly<Record<string, E>>,
     placement: Placement,
+    is: (value: unknown) => value is E,
   ): Record<string, E> =>
     Object.fromEntries([
       ...Object.entries(own)
         .filter(([key]) => key !== intent.id)
         .map(([key, each]): [string, E] => [key, rebound(each)]),
-      ...Object.entries(inner).map(([key, each]): [string, E] => [
-        key,
-        released(each, drawn[key], placement, isGrouping(containerIn(doc, model, parts, key))),
-      ]),
+      ...Object.entries(inner).map(([key, each]): [string, E] => {
+        const given = intent.placed?.[key];
+        const member = is(given)
+          ? given
+          : released(each, drawn[key], placement, isGrouping(containerIn(doc, model, parts, key)));
+        const id = ids.get(key) ?? key;
+        return [
+          id,
+          member.source || member.target
+            ? { ...member, id, source: renamed(member.source), target: renamed(member.target) }
+            : { ...member, id },
+        ];
+      }),
     ]);
   const host: LayoutRecord =
     layout.dim === '3d' && parts.dim === '3d'
-      ? { ...layout, elements: merged(layout.elements, parts.elements, layout.elements[intent.id] ?? {}) }
+      ? { ...layout, elements: merged(layout.elements, parts.elements, layout.elements[intent.id] ?? {}, isElement3D) }
       : layout.dim === '2d' && parts.dim === '2d'
-        ? { ...layout, elements: merged(layout.elements, parts.elements, layout.elements[intent.id] ?? {}) }
+        ? {
+            ...layout,
+            elements: merged(layout.elements, parts.elements, layout.elements[intent.id] ?? {}, isElement2D),
+          }
         : layout;
   return {
     doc: {
       ...doc,
       layouts: doc.layouts
-        .filter((record) => placedElsewhere || record.id !== parts.id)
+        .filter((record) => kept || record.id !== parts.id)
         .map((record) => (record.id === layout.id ? host : record)),
-      models: doc.models.map((record) =>
-        record.id === model.id && !placedElsewhere ? withoutObject(model, object.id) : record,
-      ),
+      models: doc.models.map((record) => (record.id === model.id && !kept ? withoutObject(model, object.id) : record)),
     },
     problems: [],
   };

@@ -315,4 +315,145 @@ describe('applyModelIntent', () => {
     // B stated no size of its own: it takes the one its object gave it, at the group's scale.
     expect(root?.elements.b).toMatchObject({ center: { x: 410, y: 20 }, size: { width: 200, height: 150 } });
   });
+
+  describe('a group placed by its editor', () => {
+    const size = { width: 100, height: 50 };
+    const flat = (): Scene.SceneDocument => ({
+      scenes: [],
+      layouts: [
+        {
+          id: 'root',
+          dim: '2d',
+          model: 'm2',
+          elements: {
+            a: { id: 'a', kind: 'rect', center: { x: 0, y: 0 }, size },
+            b: { id: 'b', kind: 'rect', center: { x: 200, y: 0 }, size },
+            c: { id: 'c', kind: 'rect', center: { x: 500, y: 0 }, size },
+            ab: { id: 'ab', kind: 'link', source: { node: 'a' }, target: { node: 'b' } },
+            bc: { id: 'bc', kind: 'link', source: { node: 'b' }, target: { node: 'c' } },
+          },
+        },
+      ],
+      models: [{ id: 'm2', dim: '2d', objects: {} }],
+    });
+    const layoutOf = (doc: Scene.SceneDocument, id: string) => doc.layouts.find((layout) => layout.id === id);
+
+    // The 2D editor frames a group over its members, which it stores about the frame's centre.
+    const framed = () =>
+      applyModelIntent(flat(), {
+        kind: 'group',
+        model: 'm2',
+        layout: 'root',
+        id: 'g',
+        members: ['a', 'b'],
+        parts: 'obj',
+        name: 'Group 1',
+        placing: { kind: 'instance', center: { x: 100, y: 0 }, size: { width: 300, height: 50 } },
+        placed: {
+          a: { id: 'a', kind: 'rect', center: { x: -100, y: 0 }, size, exposed: true },
+          b: { id: 'b', kind: 'rect', center: { x: 100, y: 0 }, size, exposed: true },
+        },
+      });
+
+    test('group takes the frame and the members its editor gives it, and names the parts layout as asked', () => {
+      const grouped = framed();
+      expect(grouped.problems).toEqual([]);
+      expect(layoutOf(grouped.doc, 'root')?.elements.g).toEqual({
+        id: 'g',
+        object: 'obj',
+        fit: 'none',
+        kind: 'instance',
+        center: { x: 100, y: 0 },
+        size: { width: 300, height: 50 },
+      });
+      expect(layoutOf(grouped.doc, 'obj')).toMatchObject({ kind: 'composite', anonymous: true, name: 'Group 1' });
+      expect(layoutOf(grouped.doc, 'obj')?.elements).toMatchObject({
+        a: { center: { x: -100, y: 0 }, exposed: true },
+        b: { center: { x: 100, y: 0 } },
+        ab: { source: { node: 'a' }, target: { node: 'b' } },
+      });
+      expect(grouped.doc.models[0].objects.obj).toEqual({ id: 'obj', kind: 'group', parts: 'obj' });
+      expect(layoutOf(grouped.doc, 'root')?.elements.bc?.source).toEqual({ node: 'g', port: 'b' });
+    });
+
+    test('group refuses a locked member and a View, since a group cannot hold a place to drill into', () => {
+      const locked = flat();
+      const withLocked: Scene.SceneDocument = {
+        ...locked,
+        layouts: locked.layouts.map((layout) =>
+          layout.dim === '2d'
+            ? { ...layout, elements: { ...layout.elements, a: { ...layout.elements.a, locked: true } } }
+            : layout,
+        ),
+      };
+      const intent = { kind: 'group', model: 'm2', layout: 'root', id: 'g', members: ['a', 'b'] } as const;
+      expect(applyModelIntent(withLocked, intent).problems).toHaveLength(1);
+
+      const withView: Scene.SceneDocument = {
+        ...locked,
+        layouts: [
+          ...locked.layouts.map((layout) =>
+            layout.dim === '2d'
+              ? { ...layout, elements: { ...layout.elements, a: { id: 'a', object: 'inner', center: { x: 0, y: 0 } } } }
+              : layout,
+          ),
+          { id: 'inner', dim: '2d', elements: {} },
+        ],
+        models: [{ id: 'm2', dim: '2d', objects: { inner: { id: 'inner', kind: 'view', parts: 'inner' } } }],
+      };
+      expect(applyModelIntent(withView, intent).problems).toHaveLength(1);
+    });
+
+    test('ungroup puts back the members as its editor drew them, under the ids it gives', () => {
+      const grouped = framed().doc;
+      const ungrouped = applyModelIntent(grouped, {
+        kind: 'ungroup',
+        model: 'm2',
+        layout: 'root',
+        id: 'g',
+        placed: {
+          a: { id: 'a', kind: 'rect', center: { x: 0, y: 10 }, size },
+          b: { id: 'b', kind: 'rect', center: { x: 200, y: 10 }, size },
+        },
+        ids: { a: 'node-1', b: 'node-2', ab: 'link-1' },
+      });
+      expect(ungrouped.problems).toEqual([]);
+      const root = layoutOf(ungrouped.doc, 'root');
+      expect(Object.keys(root?.elements ?? {}).sort()).toEqual(['bc', 'c', 'link-1', 'node-1', 'node-2']);
+      expect(root?.elements['node-1']).toMatchObject({ id: 'node-1', center: { x: 0, y: 10 } });
+      // Links follow the members to their new ids: the one inside, and the one that ended on the group's port.
+      expect(root?.elements['link-1']).toMatchObject({
+        id: 'link-1',
+        source: { node: 'node-1' },
+        target: { node: 'node-2' },
+      });
+      expect(root?.elements.bc?.source).toEqual({ node: 'node-2' });
+      expect(layoutOf(ungrouped.doc, 'obj')).toBeUndefined();
+      expect(ungrouped.doc.models[0].objects.obj).toBeUndefined();
+    });
+
+    test("ungroup on an Object's instance puts its members in the layout and keeps the definition", () => {
+      const grouped = framed().doc;
+      // Named, the group is an Object: its parts layout is no longer anonymous and its object no longer a group.
+      const named: Scene.SceneDocument = {
+        ...grouped,
+        layouts: grouped.layouts.map((layout) =>
+          layout.id === 'obj' && layout.dim === '2d' ? { ...layout, anonymous: undefined, name: 'Pair' } : layout,
+        ),
+        models: grouped.models.map((model) =>
+          model.dim === '2d' ? { ...model, objects: { obj: { id: 'obj', kind: 'rect', parts: 'obj' } } } : model,
+        ),
+      };
+      const ungrouped = applyModelIntent(named, { kind: 'ungroup', model: 'm2', layout: 'root', id: 'g' });
+      expect(ungrouped.problems).toEqual([]);
+      const root = layoutOf(ungrouped.doc, 'root');
+      expect(root?.elements.g).toBeUndefined();
+      // The definition stays for the library, so its members are copied out under ids of their own.
+      expect(layoutOf(ungrouped.doc, 'obj')?.elements.a).toBeDefined();
+      expect(ungrouped.doc.models[0].objects.obj).toBeDefined();
+      const copied = Object.keys(root?.elements ?? {}).filter((id) => !['c', 'bc'].includes(id));
+      expect(copied).toHaveLength(3);
+      expect(copied).not.toContain('a');
+    });
+  });
 });

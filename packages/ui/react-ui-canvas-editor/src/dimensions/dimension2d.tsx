@@ -41,13 +41,16 @@ import {
   createCanvasAtoms,
   fromViewportIntent,
   getElement,
+  groupIntent2D,
   instanceCounts,
   isAnonymous,
   mergeLayers,
   putLayer,
   removeLayer,
   rootLayoutOf,
+  toRenderLists2D,
   toViewportDocument,
+  ungroupIntent2D,
   useCanvasDocument,
   useCanvasGesture,
   useCanvasServices,
@@ -630,6 +633,17 @@ export const createDimension2D =
       shortcuts: !options.standalone,
       commands,
       edits,
+      // A group stands over its members' bounds and they follow its frame, as the engine draws one.
+      grouping: {
+        group: ({ document, model, layout, selection, id }) => {
+          const list = toRenderLists2D(document).lists.find((candidate) => candidate.id === layout);
+          return list && groupIntent2D(list, selection, model, { id, parts: `${layout}/${id}` });
+        },
+        ungroup: ({ document, model, layout, id }) => {
+          const lists = Object.fromEntries(toRenderLists2D(document).lists.map((list) => [list.id, list]));
+          return ungroupIntent2D(lists, layout, id, model) ?? { kind: 'ungroup', model, layout, id };
+        },
+      },
       inspector,
       MenuLead,
       aids: {

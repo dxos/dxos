@@ -1901,6 +1901,14 @@ decision D-84: The 2D reader draws an element by its container (org.dxos.scene#D
   why: The writer made a second object for a definition the model had already named, which Ungroup then refused, and Make object drew as a View because nothing but the element's own kind said what it was.
 ```
 
+```mdl
+decision D-85: Group and Ungroup in the 2D engine are the model's `group` and `ungroup` intents (org.dxos.scene#D-128), in the standalone editor as in a host: the engine gives where the group stands (`groupPlacement`) and how an instance draws its parts (`ungroupPlacement`), and `composeSelection` and `ungroupInstance` are removed. A group made in a host is framed over its members and they follow its frame, as in the standalone editor. Fills in [D-84].
+  date: 2026-11-26
+  by: user:richburdon
+  affects: [F-9.2, F-9.3]
+  why: A group made in a host was placed from the origin and drew letterboxed when resized, while one made in the standalone editor stretched with its frame; one implementation gives both the same group.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl

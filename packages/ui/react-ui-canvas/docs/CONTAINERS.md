@@ -74,7 +74,10 @@ are shown.
 
 ### 3.1 Group
 
-Made by the Group command, which runs the model's `group` intent in a host with a model (plugin-canvas, 2D and 3D).
+Made by the Group command, which runs the model's `group` intent in every editor. The model owns the records. An
+editor that draws a group its own way gives the intent the placement.
+
+In 3D the model places the group itself: its members stay in their coordinates.
 
 ```ts
 // layout root
@@ -83,23 +86,18 @@ bc: { kind: 'link', source: { node: 'g', port: 'b' }, target: { node: 'c' } }
 // model m
 'root/g': { id: 'root/g', kind: 'group', parts: 'root/g' }
 // layout root/g
-{ kind: 'composite', anonymous: true, model: 'm', elements: { a, b, ab } } // members keep their coordinates
+{ kind: 'composite', anonymous: true, model: 'm', elements: { a, b, ab } }
 ```
 
-Moved or resized on the 2D canvas, the element states the origin and scale its members are placed by:
+In 2D the engine frames the group over its members (`groupPlacement`), and they follow its frame when it is resized:
 
 ```ts
-g: { id: 'g', kind: 'instance', object: 'root/g', composite: 'root/g', fit: 'none',
-     center: { x: 0, y: 64 }, scale: { x: 1, y: 1 } }
+g: { id: 'g', kind: 'instance', object: 'root/g', composite: 'root/g', fit: 'none', center, size, ports }
+// layout root/g: members about the frame's centre, each with `constrain` and, where a link crosses, `exposed`
 ```
 
-A group the standalone 2D editor makes (`composeSelection`) has a frame of its own and members relative to its
-centre. It places the same kind of object, so every reader treats it as the same group:
-
-```ts
-g: { id: '<instance id>', kind: 'instance', object: '<object id>', composite: '<object id>', fit: 'none', center, size }
-'<object id>': { kind: 'group', parts: '<object id>' }
-```
+A `.dx` group, and a 2D group stored before the engine framed it, has no frame. Moved on the canvas it states the
+origin and scale its members are placed by (`center`, `scale`), which reads the same way.
 
 ### 3.2 Object
 
@@ -186,7 +184,7 @@ An Object may not be placed inside its own parts (`placesCycle`), and an Object 
 | Edit a member       | Open the group                     | Open the Object                  | Drill in                 | In place           |
 | Double-click, 2D    | Opens in isolation                 | Opens in isolation               | Drills in                | Not established    |
 | Double-click, 3D    | Not established                    | Drills into the parts            | No `view` node in 3D     | No hull in 3D      |
-| Ungroup             | Yes                                | No                               | No                       | Yes                |
+| Ungroup             | Yes                                | In 2D, leaving the definition    | No                       | Yes                |
 | Chrome              | None                               | None in 2D, a frame in 3D        | A frame and a label      | A border           |
 | A link from outside | Ends on a port named by the member | Ends on the instance             | Ends on the view node    | Ends on the member |
 | Drawn in 3D         | Its members, boxed when selected   | An item, its parts fitted inside | Not built                | Not built          |
@@ -213,19 +211,21 @@ Accepted by Rich on 2026-11-26.
 | 1, 2 | Built | `containerOf` in `scene/src/document.ts`; `toNode` in `viewport2d/render-list.ts`; `three/render-list.ts` |
 | 3 | Built | `fromRenderList2D` and `objectPlacing`; `layoutWrites`; plugin-canvas `layout-writer.ts`, `import/tldraw.ts` |
 | 4 | Built | `extract` marks its parts layout a composite |
-| 5 | Partly | Group is offered for one element. The standalone 2D editor still has its own `composeSelection` and `ungroupInstance` |
+| 5 | Built | `group` and `ungroup` in `scene/src/model-intent.ts`; `groupIntent2D`, `ungroupIntent2D` and `listsAfterIntent` in `viewport2d/writes.ts`; `composeSelection` and `ungroupInstance` are removed |
 | 6 | Built | A hull's object is of kind `hull`; `ungroup` accepts it |
 | 7 | Built | `objectEntries` in the editor |
 | 8 | Changed | No bulk rewrite: `containerOf` reads the old shape, a write retypes the object, and `retypeContainers` does a whole document |
 | 9 | Built | `SceneRenderer3D` outlines a selected group's members and boxes them |
 
-Two decisions were not built as written.
+One decision was not built as written.
 
-- **5, the standalone editor.** Its Ungroup also carries per-instance part overrides, the instance's layer and fresh
-  ids for a named Object placed more than once. The model's reducer has none of these, so replacing it is its own
-  change. Both implementations now store the same object kind, and the model's Ungroup takes either group apart.
 - **8, the migration.** A stored layout and model migrate one object at a time, and what an object is was said on
   the records round it, which such a migration cannot see.
+
+How decision 5 is built: the model's reducer keeps the structure (the object, the parts layout, the links, the ids),
+and the 2D engine gives the placement, since its constraint solver draws a group's members. `groupPlacement` says
+where a group stands, and `ungroupPlacement` how an instance draws its parts. The standalone editor holds lists and no
+document, so `listsAfterIntent` runs the intent on the document its lists are.
 
 Consequences to know:
 
@@ -233,10 +233,12 @@ Consequences to know:
   `view`.
 - Make object draws as an Object where it drew as a View, and its frame is its members' drawn bounds.
 - Ungrouping a resized group keeps its members' size.
+- A group made in the plugin's 2D canvas stretches its members when it is resized, where it drew them letterboxed.
+- Ungroup takes an Object's instance apart in 2D and leaves the definition.
 
 ## 8. Open
 
-1. Move the standalone 2D editor onto the model's Group and Ungroup, and delete `composeSelection`.
-2. Double-click on a group in 3D and on a hull in 2D is not established.
-3. A hull is not drawn in 3D.
-4. `SPEC-2D.mdl` has no feature that states what a hull is.
+1. Double-click on a group in 3D and on a hull in 2D is not established.
+2. A hull is not drawn in 3D.
+3. `SPEC-2D.mdl` has no feature that states what a hull is.
+4. An Object's instance is not taken apart in 3D: the model does not apply the fit of its parts.

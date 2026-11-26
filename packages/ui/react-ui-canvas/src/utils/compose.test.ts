@@ -8,8 +8,8 @@ import { type InstanceNode, type Node, type PlacedComposite, isInstanceNode, sid
 
 import { ViewBuilder } from '../builder/index.ts';
 import { type RenderList2D } from '../model/index.ts';
+import { groupIntent2D, listsAfterIntent, ungroupIntent2D } from '../viewport2d/index.ts';
 import {
-  composeSelection,
   compositeBounds,
   copyComposite,
   instanceCounts,
@@ -21,7 +21,6 @@ import {
   promotedBy,
   removeComposite,
   retargetInstance,
-  ungroupInstance,
 } from './compose.ts';
 import { nodeBounds } from './shapes.ts';
 
@@ -43,6 +42,60 @@ const counter = () => {
   return (prefix: string) => `${prefix}-${next++}`;
 };
 
+type ComposeOptions = { compositeId: string; instanceId: string; name?: string; anonymous?: boolean };
+
+/**
+ * Groups a selection as the editor does, through the model's `group` intent, and gives back the composite and the
+ * scene with the instance in place. A group is anonymous; left unasked for, the composite is named, as an Object is.
+ */
+const grouped = (
+  parent: RenderList2D,
+  ids: readonly string[],
+  { compositeId, instanceId, name, anonymous }: ComposeOptions,
+): { composite: RenderList2D; edit: (scene: RenderList2D) => RenderList2D } | undefined => {
+  const next = listsAfterIntent({ [parent.id]: parent }, parent.id, (model) =>
+    groupIntent2D(parent, ids, model, { id: instanceId, parts: compositeId, name: name ?? 'Object' }),
+  );
+  const composite = next?.[compositeId];
+  const grouped = next?.[parent.id];
+  if (!composite || !grouped) {
+    return undefined;
+  }
+  const { anonymous: _, ...named } = composite;
+  // The edit puts this group's instance into whatever scene it is given, as grouping a second selection does.
+  const edit = (target: RenderList2D): RenderList2D => {
+    if (target === parent) {
+      return grouped;
+    }
+    const again = listsAfterIntent({ [target.id]: target }, target.id, (model) =>
+      groupIntent2D(target, ids, model, { id: instanceId, parts: compositeId, name: name ?? 'Object' }),
+    );
+    return again?.[target.id] ?? target;
+  };
+  return { composite: anonymous ? composite : named, edit };
+};
+
+/** Ungroups an instance as the editor does, through the model's `ungroup` intent, under ids from `createId`. */
+const ungrouped = (
+  parent: RenderList2D,
+  instance: PlacedComposite,
+  composite: RenderList2D,
+  createId: (prefix: string) => string,
+): { edit: (scene: RenderList2D) => RenderList2D } => {
+  const lists = {
+    [parent.id]: { ...parent, nodes: { ...parent.nodes, [instance.id]: instance } },
+    [composite.id]: composite,
+  };
+  const ids = Object.fromEntries([
+    ...Object.keys(composite.nodes).map((key) => [key, createId('node')]),
+    ...Object.keys(composite.links).map((key) => [key, createId('link')]),
+  ]);
+  const next = listsAfterIntent(lists, parent.id, (model) =>
+    ungroupIntent2D(lists, parent.id, instance.id, model, ids),
+  );
+  return { edit: (scene) => next?.[parent.id] ?? scene };
+};
+
 const instanceOf = (parent: RenderList2D, id: string): PlacedComposite => {
   const node = parent.nodes[id];
   if (!node || !isInstanceNode(node)) {
@@ -51,9 +104,9 @@ const instanceOf = (parent: RenderList2D, id: string): PlacedComposite => {
   return node;
 };
 
-describe('composeSelection', () => {
+describe('group', () => {
   test('the selection becomes a composite, re-centred, and one instance replaces it in place', ({ expect }) => {
-    const composition = composeSelection(scene, ['a', 'b', 'ab'], { compositeId: 'obj', instanceId: 'i' });
+    const composition = grouped(scene, ['a', 'b', 'ab'], { compositeId: 'obj', instanceId: 'i' });
     if (!composition) {
       throw new Error('no composition');
     }
@@ -76,7 +129,7 @@ describe('composeSelection', () => {
 
   test('a locked node is not grouped', ({ expect }) => {
     const locked = { ...scene, nodes: { ...scene.nodes, a: { ...scene.nodes.a, locked: true } } };
-    expect(composeSelection(locked, ['a', 'b'], { compositeId: 'obj', instanceId: 'i' })).toBeUndefined();
+    expect(grouped(locked, ['a', 'b'], { compositeId: 'obj', instanceId: 'i' })).toBeUndefined();
   });
 });
 
@@ -113,12 +166,12 @@ describe('instances', () => {
 
 describe('compose and ungroup', () => {
   test('ungrouping an instance puts the nodes back where they were drawn, links re-attached', ({ expect }) => {
-    const composition = composeSelection(scene, ['a', 'b', 'ab'], { compositeId: 'obj', instanceId: 'i' });
+    const composition = grouped(scene, ['a', 'b', 'ab'], { compositeId: 'obj', instanceId: 'i' });
     if (!composition) {
       throw new Error('no composition');
     }
     const parent = composition.edit(scene);
-    const restored = ungroupInstance(parent, instanceOf(parent, 'i'), composition.composite, counter()).edit(parent);
+    const restored = ungrouped(parent, instanceOf(parent, 'i'), composition.composite, counter()).edit(parent);
     const nodes = Object.values(restored.nodes).sort((left, right) => left.center.x - right.center.x);
     expect(nodes.map(nodeBounds)).toEqual([box(0), box(200), box(400)]);
     expect(restored.nodes.i).toBeUndefined();
@@ -137,7 +190,7 @@ describe('compose and ungroup', () => {
   });
 
   test('make unique copies the definition under fresh ids and renames the part overrides and ports', ({ expect }) => {
-    const composition = composeSelection(scene, ['a', 'b', 'ab'], { compositeId: 'obj', instanceId: 'i' });
+    const composition = grouped(scene, ['a', 'b', 'ab'], { compositeId: 'obj', instanceId: 'i' });
     if (!composition) {
       throw new Error('no composition');
     }
@@ -154,8 +207,8 @@ describe('compose and ungroup', () => {
 });
 
 describe('anonymous Objects', () => {
-  const group = composeSelection(scene, ['a', 'b'], { compositeId: 'g', instanceId: 'i', anonymous: true });
-  const named = composeSelection(scene, ['c'], { compositeId: 'n', instanceId: 'j', name: 'Named' });
+  const group = grouped(scene, ['a', 'b'], { compositeId: 'g', instanceId: 'i', anonymous: true });
+  const named = grouped(scene, ['c'], { compositeId: 'n', instanceId: 'j', name: 'Named' });
 
   test('Group marks its Object anonymous, and the library leaves it out until it is named', ({ expect }) => {
     expect(group?.composite.anonymous).toBe(true);
@@ -347,7 +400,7 @@ describe('constrained parts', () => {
 
   test('ungrouping a constrained instance leaves its parts where they were drawn', ({ expect }) => {
     const node = instance({ width: 576, height: 384 });
-    const { edit } = ungroupInstance(scene, node, CARD, counter());
+    const { edit } = ungrouped(scene, node, CARD, counter());
     const placed = edit(scene);
     const footer = Object.values(placed.nodes).find((candidate) => candidate.size.height === 18);
     expect(footer && nodeBounds(footer)).toMatchObject({ y: 192 - 12 - 18, height: 18 });

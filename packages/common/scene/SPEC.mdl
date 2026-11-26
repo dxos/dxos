@@ -1366,3 +1366,12 @@ decision D-127: Ungroup applies the group's scale to its members' positions and 
   affects: [F-1.8]
   why: The members of a resized group snapped back to their old size, and Make object gave a frame of no height to members that take their size from a model object, so it drew nothing.
 ```
+
+```mdl
+decision D-128: `group` and `ungroup` are the one Group and Ungroup of every editor. An editor that draws a group its own way gives the intent the placement (`placing`, `placed`, the parts layout's id, name and layers; for `ungroup`, the members as drawn and the ids they return under), and the reducer keeps the structure: the object, the parts layout, the links. `group` refuses a locked member and a View. `ungroup` also takes an Object's instance apart, leaving its definition, as it leaves a group's that another element places. Fills in [D-125].
+  date: 2026-11-26
+  by: user:richburdon
+  affects: [F-1.8]
+  why: The 2D engine had a Group and an Ungroup of its own, so two implementations made and took apart the same records. Where a group stands and how its members follow its frame is the 2D engine's to say, since its constraint solver draws them; which records that makes is not.
+  rejected: Moving the 2D placement into the reducer, which would bring the canvas's constraint solver into the model.
+```
