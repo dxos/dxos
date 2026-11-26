@@ -10,6 +10,7 @@ import type * as Scene from './Scene.ts';
 import { Style3D } from './style.ts';
 import {
   upgradeConstraint,
+  retypeContainers,
   upgradeDocument,
   upgradeElement2D,
   upgradeElement3D,
@@ -392,6 +393,46 @@ describe('upgrade', () => {
         },
       ]);
       expect(upgradeDocument(upgraded)).toEqual(upgraded);
+    });
+
+    test('an object the 2D editor stored as a `rect` takes the kind of the container it is', () => {
+      const stored: Scene.SceneDocument = {
+        scenes: [],
+        layouts: [
+          {
+            id: 'root',
+            dim: '2d',
+            model: 'm',
+            elements: {
+              v: { id: 'v', kind: 'view', object: 'view:inner', center: { x: 0, y: 0 } },
+              g: { id: 'g', kind: 'instance', object: 'instance:parts', center: { x: 0, y: 0 } },
+              h: { id: 'h', kind: 'instance', object: 'instance:border', hull: 'box', center: { x: 0, y: 0 } },
+              o: { id: 'o', kind: 'instance', object: 'instance:card', center: { x: 0, y: 0 } },
+            },
+          },
+          { id: 'inner', dim: '2d', elements: {} },
+          { id: 'parts', dim: '2d', kind: 'composite', anonymous: true, elements: {} },
+          { id: 'border', dim: '2d', kind: 'composite', anonymous: true, elements: {} },
+          { id: 'card', dim: '2d', kind: 'composite', elements: {} },
+        ],
+        models: [
+          {
+            id: 'm',
+            dim: '2d',
+            objects: {
+              'view:inner': { id: 'view:inner', kind: 'rect', parts: 'inner' },
+              'instance:parts': { id: 'instance:parts', kind: 'rect', parts: 'parts' },
+              'instance:border': { id: 'instance:border', kind: 'rect', parts: 'border' },
+              'instance:card': { id: 'instance:card', kind: 'rect', parts: 'card' },
+            },
+          },
+        ],
+      };
+      const upgraded = upgradeDocument(stored);
+      const kinds = Object.values(upgraded.models[0].objects).map((object) => object.kind);
+      expect(kinds).toEqual(['view', 'group', 'hull', 'rect']);
+      // Retyped once: a second pass finds nothing to change and returns the document it was given.
+      expect(retypeContainers(upgraded)).toBe(upgraded);
     });
   });
 });

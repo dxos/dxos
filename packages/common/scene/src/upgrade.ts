@@ -9,6 +9,7 @@
 import * as Schema from 'effect/Schema';
 
 import { DEFAULT_COLOR, formatColor } from './color.ts';
+import { containerOf } from './document.ts';
 import { LEGACY_PARAMS, LINK_KIND, LINK_PATHS, MARKERS, type Side, Style2D, sidePort } from './element.ts';
 import {
   Constraint,
@@ -475,9 +476,46 @@ export const upgradeModelRecord = <M extends ModelRecord>(model: M): M => {
   };
 };
 
+/**
+ * A document whose objects say which container each is: one a 2D editor stored as a `rect` beside an element or a
+ * parts layout that said a View, a hull or a group takes that kind. It needs the whole document, since what an object
+ * is was said on the records round it; `containerOf` reads those until an object is retyped.
+ */
+export const retypeContainers = (doc: SceneDocument): SceneDocument => {
+  const kinds = new Map<string, Map<string, string>>();
+  for (const layout of doc.layouts) {
+    for (const element of Object.values(layout.elements)) {
+      const container = containerOf(doc, layout, element.id);
+      if (
+        layout.model !== undefined &&
+        element.object !== undefined &&
+        container !== undefined &&
+        container !== 'object'
+      ) {
+        kinds.set(layout.model, (kinds.get(layout.model) ?? new Map()).set(element.object, container));
+      }
+    }
+  }
+  const retyped = <M extends ModelRecord>(model: M): M => {
+    const changed = [...(kinds.get(model.id) ?? [])].filter(([id, kind]) => model.objects[id]?.kind !== kind);
+    return changed.length === 0
+      ? model
+      : {
+          ...model,
+          objects: {
+            ...model.objects,
+            ...Object.fromEntries(changed.map(([id, kind]) => [id, { ...model.objects[id], kind }])),
+          },
+        };
+  };
+  const models = doc.models.map(retyped);
+  return models.every((model, index) => model === doc.models[index]) ? doc : { ...doc, models };
+};
+
 /** A document in the current words; a scene has none of its own to change. */
-export const upgradeDocument = (doc: SceneDocument): SceneDocument => ({
-  scenes: doc.scenes,
-  layouts: doc.layouts.map(upgradeLayoutRecord),
-  models: doc.models.map(upgradeModelRecord),
-});
+export const upgradeDocument = (doc: SceneDocument): SceneDocument =>
+  retypeContainers({
+    scenes: doc.scenes,
+    layouts: doc.layouts.map(upgradeLayoutRecord),
+    models: doc.models.map(upgradeModelRecord),
+  });
