@@ -15,6 +15,7 @@
   "exports": {},
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/compute": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/keys": "workspace:*",

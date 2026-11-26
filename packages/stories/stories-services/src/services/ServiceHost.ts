@@ -7,6 +7,7 @@
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
@@ -385,6 +386,17 @@ export class ServiceHost {
           instance: peer.description.services.find((service) => service.key === contract.key)?.instance ?? '',
         }
       : undefined;
+  }
+
+  /**
+   * Provides `contract` to an Effect from this host, so the Effect yields the contract and an
+   * operation declares it in `services`. The client it provides is the one `client` returns: it
+   * resolves a provider at each call, and follows the provider when it moves.
+   */
+  layer<Key extends string, S extends Service.Shape>(
+    contract: Service.Contract<Key, S>,
+  ): Layer.Layer<Service.Requirement<Key>> {
+    return Layer.succeed(contract, this.client(contract));
   }
 
   /**

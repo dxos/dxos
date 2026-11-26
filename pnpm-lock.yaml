@@ -24376,6 +24376,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute/compute
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect

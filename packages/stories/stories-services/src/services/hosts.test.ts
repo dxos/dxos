@@ -2,14 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
+import * as Layer from 'effect/Layer';
+import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import { afterEach, assert, describe, test } from 'vitest';
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as Operation from '@dxos/compute/Operation';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
 
@@ -496,6 +500,135 @@ describe('plugin services', () => {
     expect(summarizer.status).toBe('fulfilled');
     expect(broken.status).toBe('rejected');
     expect(app.binding(Summarizer.Contract)?.kind).toBe('memory');
+  });
+
+  test('an effect yields a contract and gets the client its host provides', async ({ expect }) => {
+    const app = make('app', 'app', { [Settings.STORAGE_FEATURE]: memoryStorage() });
+    await app.install('settings');
+
+    const program = Effect.gen(function* () {
+      const settings = yield* Settings.Contract;
+      yield* settings.set({ key: 'theme', value: 'dark' });
+      return yield* settings.values.get;
+    });
+
+    expect(await EffectEx.runPromise(program.pipe(Effect.provide(app.layer(Settings.Contract))))).toEqual({
+      theme: 'dark',
+    });
+  });
+
+  test('a yielded contract follows its provider to another host', async ({ expect }) => {
+    const app = make('app', 'app');
+    const edge = make('edge', 'edge', { [Summarizer.GATEWAY_FEATURE]: fakeGateway('edge', 1) });
+    await join(app, edge);
+    await edge.install('summarizer');
+    await until(app, (snapshot) => snapshot.bindings[Summarizer.Contract.key]?.kind === 'port');
+
+    const firstToken = Effect.gen(function* () {
+      const summarizer = yield* Summarizer.Contract;
+      const tokens = yield* Stream.runCollect(summarizer.summarize({ text: 'a b' }));
+      return tokens[0];
+    }).pipe(Effect.provide(app.layer(Summarizer.Contract)));
+    expect(await EffectEx.runPromise(firstToken)).toBe('[edge]');
+
+    // The layer was built once; the same Effect now reaches the provider that arrived in the app.
+    await app.install('summarizer');
+    await app.setFeature(Summarizer.GATEWAY_FEATURE, fakeGateway('app', 1));
+    expect(await EffectEx.runPromise(firstToken)).toBe('[app]');
+  });
+
+  test('a contract no host provides is yielded, and fails with a typed error when called', async ({ expect }) => {
+    const app = make('app', 'app');
+    const exit = await Effect.runPromiseExit(
+      Effect.gen(function* () {
+        const settings = yield* Settings.Contract;
+        return yield* settings.values.get;
+      }).pipe(Effect.provide(app.layer(Settings.Contract))),
+    );
+    expect(String(exit)).toContain('ServiceNotAvailableError');
+  });
+
+  test('an operation declares contracts in services, and its handler yields them', async ({ expect }) => {
+    const app = make('app', 'app', {
+      [Settings.STORAGE_FEATURE]: memoryStorage(),
+      [Summarizer.GATEWAY_FEATURE]: fakeGateway('app', 1),
+    });
+    await app.install('settings');
+    await app.install('summarizer');
+
+    const definition = Operation.make({
+      input: Schema.Struct({ text: Schema.String }),
+      output: Schema.Struct({ summary: Schema.String }),
+      meta: { key: DXN.make('com.example.operation.summarize') },
+      services: [Settings.Contract, Summarizer.Contract],
+    });
+    expect(definition.services.map((service) => service.key)).toEqual([Settings.Contract.key, Summarizer.Contract.key]);
+
+    const operation = Operation.withHandler(definition, ({ text }) =>
+      Effect.gen(function* () {
+        const settings = yield* Settings.Contract;
+        const summarizer = yield* Summarizer.Contract;
+        const tokens = yield* Stream.runCollect(summarizer.summarize({ text }));
+        const summary = tokens.join(' ');
+        yield* settings.set({ key: 'lastSummary', value: summary });
+        return { summary };
+      }),
+    );
+
+    const result = await operation
+      .handler({ text: 'one two' })
+      .pipe(
+        Effect.provide(Layer.mergeAll(app.layer(Settings.Contract), app.layer(Summarizer.Contract))),
+        EffectEx.runAndForwardErrors,
+      );
+    expect(result.summary).toBe('[app] 2 words: one two');
+    expect(await EffectEx.runPromise(app.client(Settings.Contract).get({ key: 'lastSummary' }))).toBe(result.summary);
+  });
+
+  test('a thick client is an Effect service layered over a contract', async ({ expect }) => {
+    // The facade keeps state of its own and a nicer surface; the contract stays the wire shape.
+    class Theme extends Context.Service<
+      Theme,
+      { readonly current: Effect.Effect<string, Service.Failure>; readonly reads: () => number }
+    >()('org.dxos.stories.services.test.theme') {
+      static readonly layer = Layer.effect(
+        Theme,
+        Effect.gen(function* () {
+          const settings = yield* Settings.Contract;
+          let reads = 0;
+          let cached: string | undefined;
+          return Theme.of({
+            current: Effect.suspend(() => {
+              reads += 1;
+              return cached === undefined
+                ? settings.get({ key: 'theme' }).pipe(
+                    Effect.map((value) => value ?? 'light'),
+                    Effect.tap((value) => Effect.sync(() => (cached = value))),
+                  )
+                : Effect.succeed(cached);
+            }),
+            reads: () => reads,
+          });
+        }),
+      );
+    }
+
+    const worker = make('worker', 'worker', { [Settings.STORAGE_FEATURE]: memoryStorage() });
+    const app = make('app', 'app');
+    await join(app, worker);
+    await worker.install('settings');
+    await until(app, (snapshot) => snapshot.bindings[Settings.Contract.key]?.kind === 'port');
+    await EffectEx.runPromise(app.client(Settings.Contract).set({ key: 'theme', value: 'dark' }));
+
+    const program = Effect.gen(function* () {
+      const theme = yield* Theme;
+      return [yield* theme.current, yield* theme.current, theme.reads()];
+    }).pipe(Effect.provide(Theme.layer.pipe(Layer.provide(app.layer(Settings.Contract)))));
+    const calls = () => app.getSnapshot().calls.filter((call) => call.member === 'get').length;
+
+    expect(await EffectEx.runPromise(program)).toEqual(['dark', 'dark', 2]);
+    // The second read was answered from the facade's own state, with no call across the port.
+    expect(calls()).toBe(1);
   });
 
   test('version matching: same major, equal or higher minor', ({ expect }) => {

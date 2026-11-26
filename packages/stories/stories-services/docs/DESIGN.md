@@ -330,7 +330,9 @@ Effect is the design's type system for services. The sections below rely on it i
    object.
 3. **A contract is a service tag, and a provider is a layer.** A handler writes `yield* Summarizer`
    and an operation lists the contract in `services`, as both do for a layer-spec tag today. The
-   provider supplies a `Layer` of handlers whose requirements are other services.
+   provider supplies a `Layer` of handlers whose requirements are other services. The spike builds
+   the consumer half: `Service.make` returns the Effect service key of the contract's client, and a
+   host gives a `Layer` that provides it.
 4. **A lifetime is a `Scope`.** A provider is built into the scope of its affinity; closing the
    scope ends its streams and removes it from the router. A connection to another host has a scope
    of its own, so disconnecting closes its clients and servers together.
@@ -473,6 +475,22 @@ own, as it is for `ServiceResolver` today.
 | HTTP        | The browser calls EDGE.                      | Effect RPC over HTTP, ndjson.                              | `EdgeProcessControl.makeRpcClient`                 |
 | Workers RPC | An isolate calls EDGE or another isolate.    | A Workers RPC stub carrying encoded RPC messages.          | `ServiceHost.call` (untyped), `WorkerdBridge.ts`   |
 
+- **A contract is yielded.** `yield* Settings.Contract` gives the client, and the Effect then
+  requires `Service.Requirement<'…settings'>`, a type that names the contract's key. A contract
+  that no layer provides is a compile error at the point the Effect is run, and an operation's
+  handler may yield only the contracts the operation lists in `services`.
+- **The word is client.** A _client_ is what a consumer holds. A _binding_ is how the client
+  reaches the provider at a given moment (in memory, or over a port), which is what the table
+  above lists and what Cloudflare calls a binding. A _stub_ is the client built for the port
+  binding. One contract has one client type and several bindings, so the three words do not name
+  the same thing.
+- **A thick client is a service layered over a contract.** A contract is the wire shape: methods,
+  properties and events that all cross a port. A service with a nicer surface or state of its own,
+  as a database has a working set, is an ordinary Effect service whose `Layer` yields the contract
+  and wraps its client. It runs in the consumer's host and holds its state there, and the contract
+  under it still resolves and rebinds as any other. The contract's package exports both, so a
+  consumer chooses the thin client or the thick one. The spike has a test of one: a facade that
+  caches a setting and answers a second read with no call across the port.
 - **The host's RPC server is `RpcRouter`.** A provider registers its contract's group on the
   host's router, as `RegisterService` does. The router serves it over every attached transport
   and gives the in-memory binding its client. Only the HTTP and Workers RPC transports are new.
@@ -773,8 +791,8 @@ The story walks through six steps:
    are now the ones in the frame's own storage. The probe then tries to read the app's `localStorage`
    and IndexedDB and to `fetch` a URL, and the card shows all three refused.
 
-An operation `settings.summarize`, whose handler requires both contracts, runs in step 3 to show
-operations on top of services.
+An operation whose handler requires both contracts shows operations on top of services. The spike
+has it as a test, not as a step of the story.
 
 ### What is mocked
 
@@ -804,8 +822,8 @@ draft PR that is not merged.
 
 ## Spike results
 
-The spike is built and runs. `src/services/hosts.test.ts` has 19 passing tests with hosts joined by a
-`MessageChannel` in Node, and the story `stories/stories-services/Services` was walked through all
+The spike is built and runs. `src/services/hosts.test.ts` has 24 passing tests with hosts joined by a
+`MessageChannel` in Node, `src/services/Service.tst.ts` has 8 passing type tests, and the story `stories/stories-services/Services` was walked through all
 six steps in a browser. Its `Calls` variant drives steps 1 to 5 with a play function, which the
 Storybook test runner passes.
 
@@ -864,6 +882,14 @@ open: a script request to its own origin, and navigating itself.
 9. **Cost of one more host: about 0.2 s to start, memory not measured.** One warm run: 205 ms
    from starting the worker to its catalog arriving, 233 ms for the frame, and about 30 ms to
    install a plugin in either. Each host loaded its own copy of Effect and app-framework.
+10. **A contract as an Effect service: yes.** This was not one of the questions above; it was asked
+   in review. A contract is the Effect service key of its client, with the contract's key as the
+   service key. An Effect yields it, a host's `layer(contract)` provides it, and the client it
+   provides follows the provider from host to host as any client does. An operation lists
+   contracts in `services`; a type test shows its handler accepting a declared contract and
+   rejecting an undeclared one, and a unit test runs a handler that yields two. No cast was needed.
+   The provider half is not built: a provider is still an `Effect` of its implementation, not a
+   `Layer`, so it cannot yet require another contract.
 
 ### What the spike changed in the design
 

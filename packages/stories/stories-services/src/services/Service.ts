@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Rpc from 'effect/rpc/Rpc';
 import * as RpcGroup from 'effect/rpc/RpcGroup';
@@ -69,7 +70,23 @@ export interface AnyContract {
   readonly group: RpcGroup.RpcGroup<Rpc.Any>;
 }
 
-export interface Contract<Key extends string, S extends Shape> extends AnyContract {
+declare const RequirementTypeId: unique symbol;
+
+/**
+ * What an Effect requires once it yields a contract: the service with that key. It is a type only,
+ * and names the key so a missing service reads as the contract that was not provided.
+ */
+export interface Requirement<Key extends string> {
+  readonly [RequirementTypeId]: Key;
+}
+
+/**
+ * A contract is also the Effect service key of its client: an Effect yields it to get the client,
+ * the contract's `Requirement` then shows in the Effect's requirements, and an operation lists it in
+ * `services`. A host provides it with `ServiceHost.layer`.
+ */
+export interface Contract<Key extends string, S extends Shape>
+  extends AnyContract, Context.Service<Requirement<Key>, Client<S>> {
   readonly key: Key;
   readonly shape: S;
 }
@@ -111,12 +128,13 @@ export const make = <const Key extends string, const S extends Shape>(
     rpcs.push(Rpc.make(tag(key, 'on', name), { success: schema, error: WireError, stream: true }));
   }
 
-  return {
+  // The contract's key is the service key, so one string names the contract on the wire and in a context.
+  return Object.assign(Context.Service<Requirement<Key>, Client<S>>(key), {
     key,
     version: spec.version,
     shape: { methods: spec.methods, properties: spec.properties, events: spec.events } as S,
     group: RpcGroup.make(...rpcs),
-  };
+  });
 };
 
 /**
