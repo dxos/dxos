@@ -28,9 +28,10 @@ import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN, EID, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type ContentBlock, Task } from '@dxos/types';
+import { type ContentBlock } from '@dxos/types';
 
 import { type DelegationStrategy } from './delegation-strategy.ts';
+import { prepareSessionDelegation } from './delegation.ts';
 import { type McpEndpointOf } from './mcp-servers.ts';
 import { type SessionControlRpc } from './session-control.ts';
 import {
@@ -574,9 +575,8 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
       };
 
       /**
-       * Hands work to another session of the caller's agent: the named one, or a new one that starts on the caller's
-       * model, skills and context. The task goes on the receiver's checklist with the receiver as its delegate, and the
-       * receiver's first turn starts at once.
+       * Hands work to another session of the caller's agent (see `prepareSessionDelegation`); the receiver's first turn
+       * starts at once.
        */
       const delegateToSession = (
         request: Agent.DelegateRequest,
@@ -584,58 +584,7 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
       ): Effect.Effect<Agent.DelegateResult, Agent.NoCurrentSessionError, Database.Service> =>
         Effect.gen(function* () {
           const caller = yield* currentSession;
-          const runtime = yield* Effect.context<Database.Service>();
-          const callerFeed = yield* Database.load(caller.feed).pipe(Effect.orDie);
-          const callerContext = yield* EffectEx.acquireReleaseResource(
-            () => new AiContext.Binder({ feed: callerFeed, runtime }),
-          );
-
-          const receiver =
-            target !== undefined
-              ? yield* Database.resolve(target, Agent.Session).pipe(Effect.orDie)
-              : yield* Effect.gen(function* () {
-                  const feed = yield* Database.add(TrajectoryStore.makeFeed());
-                  const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
-                  yield* Effect.promise(() =>
-                    binder.bind({
-                      skills: callerContext.getSkills().map(Skill.makeRef),
-                      objects: callerContext.getObjects().map((object) => Ref.make(object)),
-                    }),
-                  );
-                  // The same agent works the delegated session, so it is filed under that agent when there is one.
-                  const agent = yield* Agent.loadForSession(caller);
-                  const session = yield* Database.add(
-                    Agent.makeSession({
-                      feed: Ref.make(feed),
-                      ...(request.purpose !== undefined ? { name: request.purpose } : {}),
-                      ...(caller.instructions ? { instructions: caller.instructions } : {}),
-                      ...(agent ? { [Obj.Parent]: agent } : {}),
-                    }),
-                  );
-                  Agent.seedSession(session, caller.session);
-                  return session;
-                });
-
-          const task = request.task ? yield* Database.load(request.task).pipe(Effect.orDie) : undefined;
-          const assigned = task && Obj.instanceOf(Task.Task, task) ? task : undefined;
-          if (assigned) {
-            Agent.assignTasks(receiver, [Ref.make(assigned)]);
-            Task.update(assigned, { status: 'started', delegate: { role: 'assistant', subject: Ref.make(receiver) } });
-          }
-          yield* Database.flush();
-
-          const prompt: ContentBlock.Any[] = request.message
-            ? [...request.message]
-            : [
-                {
-                  _tag: 'text',
-                  // The system writes this on the reader's behalf, so it shows as context rather than as their words.
-                  disposition: 'synthetic',
-                  text: assigned
-                    ? `You have been assigned the task below.\n- ${JSON.stringify(assigned.title)}: ${Obj.getURI(assigned)}`
-                    : (request.purpose ?? ''),
-                },
-              ];
+          const { receiver, prompt } = yield* prepareSessionDelegation(caller, request, target);
           const handle = yield* handleFor(receiver);
           yield* handle.submitPrompt(prompt);
           return { session: Obj.getURI(receiver) };
