@@ -605,10 +605,16 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
         chat: Agent.Session,
         options?: Agent.OpenSessionOptions,
       ): Effect.Effect<SessionHandle, never, Database.Service> => {
-        if (options !== undefined) {
-          openedWith.set(chat.id, options);
-        }
-        return getHandle(chat, options ?? openedWith.get(chat.id));
+        // Saved only once the open succeeds, so a refused reopen leaves the session's verbs on the options that worked.
+        return getHandle(chat, options ?? openedWith.get(chat.id)).pipe(
+          Effect.tap(() =>
+            Effect.sync(() => {
+              if (options !== undefined) {
+                openedWith.set(chat.id, options);
+              }
+            }),
+          ),
+        );
       };
 
       /**

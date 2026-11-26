@@ -1379,6 +1379,9 @@ describe('Agent Service', () => {
             expect(Exit.isFailure(exit) && String(Cause.squash(exit.cause))).toContain(
               'cannot be opened with an authority',
             );
+            // The refused options are not kept, so the session still opens on the ones that worked.
+            const reopened = yield* AgentService.bindSession(session.chat).pipe(Effect.exit);
+            expect(Exit.isSuccess(reopened)).toBe(true);
           },
           Effect.provide(ScriptedTestLayer(makeScriptedModel(researchReplies).script)),
           TestHelpers.provideTestContext,
