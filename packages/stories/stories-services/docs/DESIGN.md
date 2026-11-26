@@ -735,10 +735,10 @@ The story is laid out from story modules, as the stories in `stories-compute` an
 | ------------------ | --------------------------------------------------------------------------------------------- |
 | `NotesModule`      | The notes, read and written through `NoteStore`.                                              |
 | `SummarizerModule` | A summarize action and its streamed result, through `Summarizer`.                             |
-| `HostsModule`      | Each host, the plugins installed in it, the install actions, and where each contract is bound. |
-| `LoggingModule`    | The shared log module, showing each service call and the binding that carried it.             |
+| `HostsModule`      | Each host, the plugins installed in it, the install actions, where each contract is bound, and a log of each call with the binding that carried it. |
 
-The first two are the consumer plugin's UI and call services only through `Service.get`. The mock
+The first two are the consumer plugin's UI and call services only through their clients. The story
+has these three modules; the shared logging module is not in its layout. The mock
 EDGE host is a service container: a Web Worker that runs the same host code as the app, loads the
 summarizer plugin and serves its contract over a port.
 
