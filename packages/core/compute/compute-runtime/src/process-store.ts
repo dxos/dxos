@@ -59,6 +59,11 @@ export const PersistedProcess = Schema.Struct({
   parentId: Schema.NullOr(Process.ID),
   // Who the process's writes are attributed to (`Database.Origin`); absent on records written before it existed.
   origin: Schema.optional(Schema.Literals(['user', 'system', 'unknown'])),
+  // The authority the process was spawned with (`Process.SpawnOptions.authority`), with any grants added since; absent
+  // for a process spawned without one and on records written before authorities existed.
+  authority: Schema.optional(Process.Authority),
+  // Its ancestors' and spawner's authorities as they stood when it was spawned; each must also admit a call.
+  inheritedAuthorities: Schema.optional(Schema.Array(Process.Authority)),
   state: Schema.Enum(Process.State),
   alarmDueAt: Schema.NullOr(Schema.Number),
   events: Schema.Array(PersistedEvent),
@@ -185,6 +190,11 @@ export class ProcessStore {
         yield* this.#kv.set(recordKey(id), encoded).pipe(Effect.orDie);
       }),
     );
+  }
+
+  /** Replaces the process's own authority, as `ProcessManager.Manager.grant` extends it. */
+  setAuthority(id: Process.ID, authority: Process.Authority): Effect.Effect<void> {
+    return this.#modify(id, (record) => ({ ...record, authority }));
   }
 
   /** Updates the lifecycle state of the given process. */

@@ -26,6 +26,7 @@ import * as ProcessManager from './ProcessManager.ts';
 import * as QueuedRemoteControl from './QueuedRemoteControl.ts';
 import * as RemoteProcessManager from './RemoteProcessManager.ts';
 import { LocalRemoteHost } from './testing/index.ts';
+import * as Verifier from './Verifier.ts';
 
 /**
  * End-to-end test of the queued remote control, with a SECOND local process manager standing in for
@@ -510,6 +511,7 @@ const withHarness = (
 
     // The "remote" runtime: an ordinary manager over its own store.
     const hostManager = new ProcessManager.Impl({
+      verifier: Verifier.make(),
       registry,
       kvStore: KeyValueStore.prefix(kv, 'host/'),
       traceSink,

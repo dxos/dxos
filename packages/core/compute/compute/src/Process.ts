@@ -18,6 +18,7 @@ import * as Stream from 'effect/Stream';
 import { Annotation, type Database } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
 import { type SpaceId, URI } from '@dxos/keys';
+import { Grant, Principal } from '@dxos/permission';
 import type { SerializedError } from '@dxos/protocols';
 
 import * as Operation from './Operation.ts';
@@ -390,6 +391,18 @@ export interface Guard {
 /** The guard of the running process; absent when it was spawned without one. */
 export class GuardService extends Context.Service<GuardService, Guard>()('@dxos/compute/Process.GuardService') {}
 
+/**
+ * Who a process acts as and the grants it holds. Data, unlike a {@link Guard}: it is persisted with the process, so a
+ * rehydrated process keeps its limits, and it can be sent with a remote spawn.
+ */
+export const Authority = Schema.Struct({
+  /** The principal the process acts as: the audience its grants name. */
+  principal: Principal.Principal,
+  /** The grants the process holds for that principal. */
+  grants: Schema.Array(Grant.Grant),
+}).pipe(Schema.annotate({ title: 'Authority' }));
+export type Authority = Schema.Schema.Type<typeof Authority>;
+
 /** A guard that admits only what both admit, so a child spawned with its own guard never widens its parent's. */
 export const bothGuards = (first: Guard, second: Guard): Guard => ({
   check: (op, input) => first.check(op, input).pipe(Effect.andThen(second.check(op, input))),
@@ -431,6 +444,13 @@ export interface SpawnOptions {
    * rehydrated process holds none and refuses operations that declare requirements.
    */
   readonly guard?: Guard;
+
+  /**
+   * Who the process acts as and the grants it holds. Every call the process makes that declares requirements must be
+   * admitted by this authority and by each ancestor's (and, for a detached spawn, the spawner's), so a child never
+   * widens what it inherits. Persisted with the process; grants are added later through the host manager's `grant`.
+   */
+  readonly authority?: Authority;
 
   /**
    * Who the process's database writes are attributed to (see `Database.Origin`); also the origin of every process it

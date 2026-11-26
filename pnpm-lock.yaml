@@ -4504,9 +4504,6 @@ importers:
 
   packages/common/permission:
     dependencies:
-      '@dxos/compute':
-        specifier: workspace:*
-        version: link:../../core/compute/compute
       '@dxos/errors':
         specifier: workspace:*
         version: link:../errors
@@ -5017,6 +5014,9 @@ importers:
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../../common/errors
+      '@dxos/permission':
+        specifier: workspace:*
+        version: link:../../../common/permission
       '@effect/vitest':
         specifier: 'catalog:'
         version: 4.1.5(effect@4.1.5)(vitest@4.1.12)
@@ -5563,6 +5563,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
+      '@dxos/permission':
+        specifier: workspace:*
+        version: link:../../../common/permission
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../protocols
@@ -5685,6 +5688,9 @@ importers:
       '@dxos/operation':
         specifier: workspace:*
         version: link:../operation
+      '@dxos/permission':
+        specifier: workspace:*
+        version: link:../../../common/permission
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../protocols
@@ -5701,9 +5707,6 @@ importers:
         specifier: 'catalog:'
         version: 2.1.0
     devDependencies:
-      '@dxos/permission':
-        specifier: workspace:*
-        version: link:../../../common/permission
       '@dxos/types':
         specifier: workspace:*
         version: link:../../../sdk/types
@@ -14379,6 +14382,9 @@ importers:
       '@dxos/markdown':
         specifier: workspace:*
         version: link:../../common/markdown
+      '@dxos/permission':
+        specifier: workspace:*
+        version: link:../../common/permission
       '@dxos/pipeline':
         specifier: workspace:*
         version: link:../../core/compute/pipeline
@@ -14470,9 +14476,6 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
-      '@dxos/permission':
-        specifier: workspace:*
-        version: link:../../common/permission
       '@dxos/plugin-preview':
         specifier: workspace:*
         version: link:../plugin-preview

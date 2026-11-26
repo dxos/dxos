@@ -21,6 +21,7 @@ import {
   RemoteProcessManager,
   RemoteTraceMonitor,
   UnifiedProcessManager,
+  Verifier,
 } from '@dxos/compute-runtime';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -284,9 +285,9 @@ export default Capability.makeModule(
       Layer.succeed(Tracer.Tracer, OtelTracer.makeGlobal('@dxos/app-framework/process-manager')),
     );
 
-    const processManagerLayer = ProcessManager.layer({ runtimeName: Trace.CommonRuntimeName.local }).pipe(
-      Layer.provide(baseLayer),
-    );
+    const processManagerLayer = ProcessManager.layer({ runtimeName: Trace.CommonRuntimeName.local })
+      .pipe(Layer.provide(Verifier.layer()))
+      .pipe(Layer.provide(baseLayer));
     // Holds the stack's application slice that the manager resolves from, for the module's lifetime.
     const stackScope = yield* Scope.make();
     yield* Effect.addFinalizer(() => Scope.close(stackScope, Exit.void));

@@ -14,6 +14,7 @@ import type * as Process from '@dxos/compute/Process';
 import * as Skill from '@dxos/compute/Skill';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
+import { Permission, Requirement } from '@dxos/permission';
 
 import { AssistantTestLayer } from '../testing/index.ts';
 import * as AgentService from './AgentService.ts';
@@ -31,7 +32,9 @@ const Exec = Operation.make({
   },
   input: Schema.Struct({ command: Schema.String }),
   output: Schema.String,
-}).pipe(Operation.annotate(Operation.RequiresAnnotation, ['/sandbox/exec']));
+}).pipe(
+  Operation.requires(Requirement.make(Permission.define({ command: '/sandbox/exec', name: 'Run sandbox commands' }))),
+);
 
 const ran: string[] = [];
 

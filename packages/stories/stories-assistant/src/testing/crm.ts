@@ -13,6 +13,7 @@ import { AiContext } from '@dxos/assistant';
 import * as AgentSkill from '@dxos/assistant-toolkit/AgentSkill';
 import * as DelegationSkill from '@dxos/assistant-toolkit/DelegationSkill';
 import * as AgentSetup from '@dxos/assistant/AgentSetup';
+import { Verifier } from '@dxos/compute-runtime';
 import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -22,7 +23,7 @@ import * as Template from '@dxos/compute/Template';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
-import { Grant, Guard, Permission, Principal, Requirement, Subject } from '@dxos/permission';
+import { Grant, Permission, Principal, Requirement, Subject } from '@dxos/permission';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import { Organization } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -85,7 +86,7 @@ export const SetOrganizationStatus = Operation.make({
   }),
   output: Schema.Struct({ name: Schema.String, status: Schema.String }),
   services: [Database.Service],
-}).pipe(Guard.requires(Requirement.make(CrmWrite)));
+}).pipe(Operation.requires(Requirement.make(CrmWrite)));
 
 export const CrmHandlers = OperationHandlerSet.make(
   SetOrganizationStatus.pipe(
@@ -128,14 +129,20 @@ const ISSUER = Principal.process('story://crm/owner');
 /** The principal an agent's processes act as. */
 const principalOf = (agent: string) => Principal.process(`agent://crm/${agent}`);
 
+const verifier = Verifier.make();
+
+/**
+ * The agent's sessions' standing guard: its grants, checked by the runtime's verifier. `SessionGuard` still takes a
+ * guard rather than an authority, since a chat's consent prompt is a guard too.
+ */
 const makeAgentGuard = Effect.fnUntraced(function* (agent: string, permissions: readonly Permission.Definition[]) {
-  const audience = principalOf(agent);
   const grant = yield* Grant.make({
     issuer: ISSUER,
-    audience,
+    audience: principalOf(agent),
     permissions: permissions.map(({ command }) => Permission.make({ subject: Subject.any(), command })),
   });
-  return Guard.make({ principal: audience, source: Guard.attested([grant]) });
+  const authority: Process.Authority = { principal: principalOf(agent), grants: [grant] };
+  return { check: (op, input) => verifier.check({ authority, op, input }) } satisfies Process.Guard;
 });
 
 /** Gives each agent's sessions the grants that agent holds; built once, since a new guard restarts the session. */

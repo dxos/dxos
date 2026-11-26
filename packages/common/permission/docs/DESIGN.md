@@ -415,16 +415,17 @@ manifest lists `permissions.defines: [SendEmail, ExecSandbox]`.
 
 ### Requiring it on an operation
 
-Implemented today: pipe the definition through `Guard.requires`.
+Implemented today: pipe the definition through `Operation.requires`.
 
 ```ts
-import { Guard, Requirement } from '@dxos/permission';
+import * as Operation from '@dxos/compute/Operation';
+import { Requirement } from '@dxos/permission';
 
 export const sendEmail = Operation.make({
   meta: { key: DXN.make('org.dxos.operation.email.send'), name: 'Send email' },
   input: Schema.Struct({ mailbox: Ref.Ref(Mailbox), to: Schema.String, body: Schema.String }),
   output: Schema.Void,
-}).pipe(Guard.requires(Requirement.make(SendEmail, { subject: Requirement.arg('mailbox') })));
+}).pipe(Operation.requires(Requirement.make(SendEmail, { subject: Requirement.arg('mailbox') })));
 ```
 
 Proposed sugar, not implemented: a `permissions` option on `Operation.make`.
@@ -573,24 +574,31 @@ sources).
 
 ## Interfaces
 
-**Implemented first cut (opt-in).** The runtime knows nothing of grants; it knows a guard.
+**Implemented first cut (opt-in).** A process carries its authority as data; the runtime checks it.
 
-- `Operation.RequiresAnnotation` (set with `Guard.requires(...requirements)`) declares what an
+- `Operation.RequiresAnnotation` (set with `Operation.requires(...requirements)`) declares what an
   operation needs. An operation that declares nothing is never checked.
-- `Process.Guard` is `{ check(op, input) }`, passed as `SpawnOptions.guard`. Children inherit the
-  parent's guard; a child spawned with its own gets both (`Process.bothGuards`), so it can only
-  narrow. Guards are closures and are not persisted, so a rehydrated process, or one spawned on
-  EDGE, holds none.
+- `Process.Authority` is `{ principal, grants }`, passed as `SpawnOptions.authority`. A child is
+  held to its parent's and its spawner's authorities as they stood when it was spawned, plus its
+  own, so it can only narrow. Authorities are persisted with the process, so a rehydrated process
+  is held to the same ones; they are not yet sent to EDGE.
+- `ProcessManager.Manager.grant(pid, grants)` adds grants to a live process's own authority and
+  persists them. Only the host holds it: the `Process.Manager` a process sees cannot grant.
+- `Verifier` (compute-runtime) is the layer the process manager requires: every requirement goes
+  through `Check.check` with the operation's input as `.args`, against the authority's grants
+  (each rooted by the runtime that placed it) and an optional runtime `GrantSource` for
+  revocations, memberships and consents.
 - `OperationProcess` checks after input validation: an operation with requirements in a process
-  with no guard dies with `OperationDeniedError`, otherwise the guard decides.
-- `Guard.make({ principal, source })` is the guard backed by this package: every requirement goes
-  through `Check.check` with the operation's input as `.args`. `Guard.attested(grants)` is the
-  source for grants the spawning runtime vouches for.
+  that holds nothing dies with `OperationDeniedError`, otherwise every authority must admit it.
+- `SpawnOptions.guard`, a `Process.Guard` closure, still exists for the chat's interactive consent
+  prompt and is combined with the authorities (both must admit); it goes once consent becomes a
+  grant added through `grant`.
 - `compute-runtime/src/permission.test.ts` covers it at the process-manager level: unannotated
-  operations run anywhere; annotated ones are refused without a guard (spawned or via the
+  operations run anywhere; annotated ones are refused without an authority (spawned or via the
   invoker), allowed with a covering grant or a parent command, refused on an uncovered command or
-  a failing policy; nested invocations are checked against the parent's guard; a child cannot
-  widen it.
+  a failing policy; nested invocations are checked against the parent's authority; a child cannot
+  widen it; grants added to a live process apply to its later calls. `ProcessManager.test.ts`
+  covers a rehydrated process keeping its authority.
 
 The sections below are the fuller target design.
 

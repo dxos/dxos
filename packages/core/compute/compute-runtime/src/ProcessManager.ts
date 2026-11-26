@@ -37,6 +37,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 import type { SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { type Grant } from '@dxos/permission';
 import { markWork } from '@dxos/util';
 
 import { type ProcessIdGenerator, UUIDProcessIdGenerator } from './process-id.ts';
@@ -47,6 +48,7 @@ import * as ProcessHandle from './ProcessHandle.ts';
 import * as ProcessOperationInvoker from './ProcessOperationInvoker.ts';
 import * as ScriptRunner from './ScriptRunner.ts';
 import { layer as storageServiceLayer } from './storage-service-layer.ts';
+import * as Verifier from './Verifier.ts';
 
 /** The optional services that resolve; one the runtime cannot provide is left out rather than failing the process. */
 const resolveOptional = (
@@ -223,6 +225,13 @@ export interface Manager {
   ): Effect.Effect<Process.Process<I, O, Rpcs>>;
 
   /**
+   * Adds grants to a process's own authority (see `Process.SpawnOptions.authority`), persisted with it. Only the host
+   * holds this: the `Process.Manager` a process sees has no `grant`, so no process can widen itself. Its ancestors'
+   * authorities still apply. Dies when the process is not live or was spawned without an authority of its own.
+   */
+  grant(pid: Process.ID, grants: readonly Grant.Grant[]): Effect.Effect<void>;
+
+  /**
    * Attach to an existing process.
    */
   attach<I, O, Rpcs extends Rpc.Any = never>(id: Process.ID): Effect.Effect<Process.Process<I, O, Rpcs>>;
@@ -269,6 +278,8 @@ export { ProcessManagerService as Service };
 
 export interface ImplOpts {
   registry: Registry.AtomRegistry;
+  /** Checks a process's calls against the authorities it is held to. */
+  verifier: Verifier.Api;
   kvStore: KeyValueStore.KeyValueStore;
   traceSink: Trace.Sink;
   serviceResolver?: ServiceResolver.ServiceResolver;
@@ -283,11 +294,35 @@ export interface ImplOpts {
   runtimeName?: Trace.RuntimeName;
 }
 
+/** The authorities a live process is held to: its own (which `grant` extends) and those it inherited. */
+type HeldAuthorities = {
+  readonly own: Process.Authority | undefined;
+  readonly inherited: readonly Process.Authority[];
+};
+
+/** What a process passes to the children it spawns, whatever parent they name. */
+type Spawner = {
+  readonly guard: Process.Guard | undefined;
+  readonly authorities: readonly Process.Authority[];
+};
+
+/** One guard that admits only what every given guard admits; undefined when none is given. */
+const combineGuards = (guards: readonly (Process.Guard | undefined)[]): Process.Guard | undefined =>
+  [...new Set(guards)]
+    .filter((candidate): candidate is Process.Guard => candidate !== undefined)
+    .reduce<Process.Guard | undefined>(
+      (combined, next) => (combined === undefined ? next : Process.bothGuards(combined, next)),
+      undefined,
+    );
+
 export class Impl implements Manager {
   readonly #idGenerator: ProcessIdGenerator;
   readonly #handles = new Map<Process.ID, ProcessHandle.Impl<any, any, any>>();
   /** Guards of live processes, kept beside the handles because a guard is a closure and is never persisted. */
   readonly #guards = new Map<Process.ID, Process.Guard>();
+  /** Authorities of live processes: each one's own (which {@link grant} extends) and those it inherited. */
+  readonly #authorities = new Map<Process.ID, HeldAuthorities>();
+  readonly #verifier: Verifier.Api;
   /**
    * Live processes kept out of the durable store, each with the clear of its storage in {@link #memoryKvStore}; see
    * {@link Operation.DurableProps.resumable}.
@@ -321,6 +356,7 @@ export class Impl implements Manager {
   constructor(opts: ImplOpts) {
     this.#idGenerator = opts.idGenerator ?? UUIDProcessIdGenerator;
     this.#registry = opts.registry;
+    this.#verifier = opts.verifier;
     this.#kvStore = opts.kvStore;
     this.#serviceResolver = opts.serviceResolver ?? ServiceResolver.empty;
     this.#handlerSet = opts.handlerSet;
@@ -357,8 +393,8 @@ export class Impl implements Manager {
                 ...options,
                 parentProcessId: 'parentProcessId' in options ? options.parentProcessId : pid,
               },
-              // A detached child must not shed the guard of the process that spawned it.
-              this.#guards.get(pid),
+              // A detached child must not shed the guard or the authorities of the process that spawned it.
+              { guard: this.#guards.get(pid), authorities: this.#heldAuthorities(pid) },
             ),
       handles: ({ location, ...options } = {}) =>
         location?.kind === 'edge'
@@ -448,6 +484,7 @@ export class Impl implements Manager {
     }
     this.#handles.delete(pid);
     this.#guards.delete(pid);
+    this.#authorities.delete(pid);
     const clearStorage = this.#inMemory.get(pid);
     this.#inMemory.delete(pid);
     if (clearStorage) {
@@ -488,6 +525,7 @@ export class Impl implements Manager {
         }
         this.#handles.clear();
         this.#guards.clear();
+        this.#authorities.clear();
         for (const clearStorage of this.#inMemory.values()) {
           yield* clearStorage;
         }
@@ -498,6 +536,35 @@ export class Impl implements Manager {
         log('lifecycle: manager suspended', { suspended: handleCount });
       }),
     );
+  }
+
+  grant(pid: Process.ID, grants: readonly Grant.Grant[]): Effect.Effect<void> {
+    return Effect.gen({ self: this }, function* () {
+      const held = this.#authorities.get(pid);
+      if (!this.#handles.has(pid) || held?.own === undefined) {
+        return yield* Effect.die(new Error(`Process ${pid} is not live or holds no authority of its own to extend.`));
+      }
+      const own: Process.Authority = { ...held.own, grants: [...held.own.grants, ...grants] };
+      this.#authorities.set(pid, { ...held, own });
+      // A no-op for a process kept in memory, which has no record.
+      yield* this.#store.setAuthority(pid, own);
+    });
+  }
+
+  /** Every authority the process is held to: those it inherited, then its own. */
+  #heldAuthorities(pid: Process.ID): readonly Process.Authority[] {
+    const held = this.#authorities.get(pid);
+    return held === undefined ? [] : [...held.inherited, ...(held.own !== undefined ? [held.own] : [])];
+  }
+
+  /** A guard that needs every authority the process holds, read when each call is checked, so added grants apply. */
+  #authorityGuard(pid: Process.ID): Process.Guard {
+    return {
+      check: (op, input) =>
+        Effect.forEach(this.#heldAuthorities(pid), (authority) => this.#verifier.check({ authority, op, input }), {
+          discard: true,
+        }),
+    };
   }
 
   startup(): Effect.Effect<void> {
@@ -524,7 +591,7 @@ export class Impl implements Manager {
   #spawn<I, O, _Rpcs extends Rpc.Any>(
     definition: Operation.Durable<I, O, any, _Rpcs>,
     options: Process.SpawnOptions | undefined,
-    spawnerGuard: Process.Guard | undefined,
+    spawner: Spawner | undefined,
   ): Effect.Effect<Process.Process<I, O, _Rpcs>> {
     return Effect.gen({ self: this }, function* () {
       const id = this.#idGenerator();
@@ -559,12 +626,20 @@ export class Impl implements Manager {
       };
       const parentGuard =
         options?.parentProcessId !== undefined ? this.#guards.get(options.parentProcessId) : undefined;
-      const guard = [...new Set([spawnerGuard, parentGuard, options?.guard])]
-        .filter((candidate): candidate is Process.Guard => candidate !== undefined)
-        .reduce<Process.Guard | undefined>(
-          (combined, next) => (combined === undefined ? next : Process.bothGuards(combined, next)),
-          undefined,
-        );
+      const closureGuard = combineGuards([spawner?.guard, parentGuard, options?.guard]);
+      // A child is held to its spawner's and parent's authorities as they stand now, so a later grant to either
+      // never reaches it; its own comes last.
+      const inherited = [
+        ...new Set([
+          ...(spawner?.authorities ?? []),
+          ...(options?.parentProcessId !== undefined ? this.#heldAuthorities(options.parentProcessId) : []),
+        ]),
+      ];
+      const authority = options?.authority;
+      if (authority !== undefined || inherited.length > 0) {
+        this.#authorities.set(id, { own: authority, inherited });
+      }
+      const guard = combineGuards([closureGuard, this.#authorities.has(id) ? this.#authorityGuard(id) : undefined]);
 
       const resolutionContext: LayerSpec.LayerContext = {
         space: environment.space,
@@ -767,8 +842,9 @@ export class Impl implements Manager {
       );
       handleRef = handle;
       this.#handles.set(id, handle);
-      if (guard !== undefined) {
-        this.#guards.set(id, guard);
+      // Only the closures are kept for children: authorities reach them through `#authorities`.
+      if (closureGuard !== undefined) {
+        this.#guards.set(id, closureGuard);
       }
       this.#refreshProcessTree();
 
@@ -784,6 +860,8 @@ export class Impl implements Manager {
           environment: { space: environment.space, conversation: environment.conversation },
           parentId: Option.getOrNull(parentOption),
           ...(origin !== undefined ? { origin } : {}),
+          ...(authority !== undefined ? { authority } : {}),
+          ...(inherited.length > 0 ? { inheritedAuthorities: inherited } : {}),
           state: Process.State.RUNNING,
           alarmDueAt: null,
           events: [{ _tag: 'spawn', seq: spawnSeq }],
@@ -878,6 +956,11 @@ export class Impl implements Manager {
         ),
       );
 
+      // Authorities are data, so a rehydrated process is held to the same ones; a guard closure is not restored.
+      if (record.authority !== undefined || (record.inheritedAuthorities?.length ?? 0) > 0) {
+        this.#authorities.set(id, { own: record.authority, inherited: record.inheritedAuthorities ?? [] });
+        builtinCtx = builtinCtx.pipe(Context.add(Process.GuardService, this.#authorityGuard(id)));
+      }
       builtinCtx = Context.merge(builtinCtx, this.#childServices(id, origin, tracer));
 
       const builtinTagKeys = new Set([
@@ -1246,6 +1329,7 @@ export const layer = (opts?: {
 }): Layer.Layer<
   ProcessManagerService,
   never,
+  | Verifier.Service
   | KeyValueStore.KeyValueStore
   | ServiceResolver.ServiceResolver
   | OperationHandlerSet.OperationHandlerProvider
@@ -1260,9 +1344,11 @@ export const layer = (opts?: {
       const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
       const registry = yield* Registry.AtomRegistry;
       const traceSink = yield* Trace.TraceSink;
+      const verifier = yield* Verifier.Service;
 
       const manager = new Impl({
         registry,
+        verifier,
         kvStore,
         traceSink,
         serviceResolver,

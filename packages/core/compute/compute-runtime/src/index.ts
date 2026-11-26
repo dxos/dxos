@@ -24,4 +24,5 @@ export { layer as storageServiceLayer } from './storage-service-layer.ts';
 export * from './triggers/index.ts';
 export * as TriggerManager from './TriggerManager.ts';
 export * as UnifiedProcessManager from './UnifiedProcessManager.ts';
+export * as Verifier from './Verifier.ts';
 export * from './url.ts';

@@ -102,7 +102,7 @@ export const SendReply = Operation.make({
   services: [Capability.Service, Database.Service],
 }).pipe(
   Operation.visible,
-  Operation.annotate(Operation.RequiresAnnotation, [InboxPermission.SendEmailRequirement]),
+  Operation.requires(InboxPermission.SendEmailRequirement),
   Operation.annotate(Operation.ConsentPreviewAnnotation, { field: 'body', label: 'Reply' }),
 );
 
