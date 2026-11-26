@@ -2,6 +2,31 @@
 
 Status: proposal, awaiting approval. Nothing here is built.
 
+## Overview
+
+![Overview: a consumer plugin calls a service that a provider plugin provides.](diagrams/plugin-services-overview.dx.svg)
+
+<details>
+<summary>Diagram source</summary>
+
+```diagram
+diagram flow=right
+node Consumer "Consumer plugin"
+node Service "Service" right-of Consumer
+node Provider "Provider plugin" right-of Service
+edge Consumer -> Service "calls"
+edge Provider implements Service "provides"
+```
+
+</details>
+
+- **Service.** A named interface: methods, properties and events, each with a schema. It is the
+  only thing the two plugins share.
+- **Provider plugin.** Implements the service. It can run in the app, in a worker or frame, or on
+  EDGE.
+- **Consumer plugin.** Calls the service. It does not know which plugin provides it or where that
+  plugin runs.
+
 ## Summary
 
 A plugin provides **services**. A service has a **contract**: a key, a version, and schemas for its
