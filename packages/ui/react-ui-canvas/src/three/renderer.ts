@@ -170,17 +170,27 @@ export type WorldTransform = { center: Model.Vec3; rotation: Model.Vec3; scale: 
 /** A selection box: a unit cube's edges, placed and sized to the bounds `min` to `max`. */
 type SelectionBox = { mesh: LinesMesh; min: Vector3; max: Vector3 };
 
-/** Puts a selection box on the mesh's world-aligned bounds as they now are; a box already there is left alone. */
-const fitBox = (box: SelectionBox, surface: AbstractMesh): void => {
-  surface.computeWorldMatrix(true);
-  const { minimumWorld, maximumWorld } = surface.getBoundingInfo().boundingBox;
-  if (minimumWorld.equalsWithEpsilon(box.min) && maximumWorld.equalsWithEpsilon(box.max)) {
+/**
+ * Puts a selection box on the world-aligned bounds of the meshes as they now are, all of them together; a box
+ * already there is left alone.
+ */
+const fitBox = (box: SelectionBox, surfaces: readonly AbstractMesh[]): void => {
+  const [first, ...rest] = surfaces.map((surface) => {
+    surface.computeWorldMatrix(true);
+    return surface.getBoundingInfo().boundingBox;
+  });
+  if (!first) {
     return;
   }
-  box.min.copyFrom(minimumWorld);
-  box.max.copyFrom(maximumWorld);
-  box.mesh.position.copyFrom(minimumWorld);
-  box.mesh.scaling.copyFrom(maximumWorld.subtract(minimumWorld));
+  const min = rest.reduce((low, bounds) => Vector3.Minimize(low, bounds.minimumWorld), first.minimumWorld);
+  const max = rest.reduce((high, bounds) => Vector3.Maximize(high, bounds.maximumWorld), first.maximumWorld);
+  if (min.equalsWithEpsilon(box.min) && max.equalsWithEpsilon(box.max)) {
+    return;
+  }
+  box.min.copyFrom(min);
+  box.max.copyFrom(max);
+  box.mesh.position.copyFrom(min);
+  box.mesh.scaling.copyFrom(max.subtract(min));
 };
 
 const degrees = (radians: number) => Math.round(((radians * 180) / Math.PI) * 1000) / 1000 + 0;
@@ -1185,7 +1195,7 @@ export class SceneRenderer3D {
   #outline(): void {
     const color = Color3.FromHexString(this.#selection);
     for (const [key, { surface }] of this.#items) {
-      const selected = this.#selected.has(key);
+      const selected = this.#selected.has(key) || this.#inSelectedGroup(key);
       if (selected && !this.#highlight.hasMesh(surface)) {
         this.#excluded.delete(surface);
         this.#highlight.removeExcludedMesh(surface);
@@ -1198,24 +1208,42 @@ export class SceneRenderer3D {
     // A box is moved and sized to bounds that change, never rebuilt: a new box is not drawn until its material is ready,
     // so one rebuilt on every frame of a drag flickers.
     for (const [key, box] of this.#boxes) {
-      if (!this.#items.has(key) || !this.#selected.has(key) || !box.mesh.color.equals(color)) {
+      if (this.#boxed(key).length === 0 || !this.#selected.has(key) || !box.mesh.color.equals(color)) {
         box.mesh.dispose();
         this.#boxes.delete(key);
       }
     }
-    for (const key of this.#items.keys()) {
-      if (this.#selected.has(key) && !this.#boxes.has(key)) {
+    for (const key of this.#selected) {
+      if (this.#boxed(key).length > 0 && !this.#boxes.has(key)) {
         this.#boxes.set(key, this.#createBox(key, color));
       }
     }
     this.#fitBoxes();
   }
 
+  /** Whether the item is drawn for a selected group: a group has no mesh, and its members are keyed under it. */
+  #inSelectedGroup(key: string): boolean {
+    for (const selected of this.#selected) {
+      if (!this.#items.has(selected) && key.startsWith(`${selected}/`)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /** The meshes a selected key's box goes round: the item's own, or a group's members'. */
+  #boxed(key: string): AbstractMesh[] {
+    const own = this.#items.get(key)?.surface;
+    if (own) {
+      return [own];
+    }
+    return [...this.#items].flatMap(([member, { surface }]) => (member.startsWith(`${key}/`) ? [surface] : []));
+  }
+
   /** Puts each selection box on its item's bounds as they now are. */
   #fitBoxes(): void {
     for (const [key, box] of this.#boxes) {
-      const surface = this.#items.get(key)?.surface;
-      surface && fitBox(box, surface);
+      fitBox(box, this.#boxed(key));
     }
   }
 

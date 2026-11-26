@@ -5,7 +5,7 @@
 import { NullEngine, PointerDragBehavior, Vector3 } from '@babylonjs/core';
 import { describe, expect, test } from 'vitest';
 
-import { type Scene } from '@dxos/scene';
+import { type Scene, applyModelIntent } from '@dxos/scene';
 
 import { NEU_PALETTE } from '../model/index.ts';
 import { GROUND_PLANE, planeThrough } from './plane.ts';
@@ -145,6 +145,34 @@ describe('SceneRenderer3D.pick', () => {
     expect(view.boxes.a?.min.x).toBeCloseTo(2.5);
     view.setSelectionColor('#00ff00');
     expect(view.boxes.a?.color).toBe('#00ff00');
+    view.dispose();
+  });
+
+  test('a selected group, which draws no mesh of its own, has one box round its members', () => {
+    const flat = doc([
+      { id: 'a', kind: 'cube', center: { x: 0, y: 0, z: 0 } },
+      { id: 'b', kind: 'cube', center: { x: 4, y: 0, z: 0 } },
+      { id: 'c', kind: 'cube', center: { x: 0, y: 0, z: 8 } },
+    ]);
+    const model: Scene.ModelRecord = { id: 'm', dim: '3d', objects: {} };
+    const grouped = applyModelIntent(
+      {
+        ...flat,
+        layouts: flat.layouts.map((layout) => ({ ...layout, model: 'm' })),
+        models: [model],
+      },
+      { kind: 'group', model: 'm', layout: 'root', id: 'g', members: ['a', 'b'] },
+    );
+    expect(grouped.problems).toEqual([]);
+    const view = renderer(grouped.doc);
+    view.select(['g']);
+    // One box, from the left of A to the right of B, and none round the element left out of the group.
+    expect(Object.keys(view.boxes)).toEqual(['g']);
+    expect(view.boxes.g?.min.x).toBeCloseTo(-0.5);
+    expect(view.boxes.g?.max.x).toBeCloseTo(4.5);
+    expect(view.boxes.g?.max.z).toBeCloseTo(0.5);
+    view.select([]);
+    expect(view.boxes).toEqual({});
     view.dispose();
   });
 
