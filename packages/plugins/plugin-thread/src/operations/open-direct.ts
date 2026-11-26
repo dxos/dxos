@@ -19,7 +19,9 @@ const handler: Operation.WithHandler<typeof ThreadOperation.OpenDirect> = Thread
       }
       // As with sending: the backend's plugin runs apart from this one, so it opens the conversation itself.
       const { OpenDirect } = ThreadOperation.backendOperations(channel.backend.kind);
-      return yield* ChannelBackend.invokeBackend(channel, OpenDirect, { channel: channelRef, person: personRef });
+      return yield* ChannelBackend.invokeBackend(OpenDirect, { channel: channelRef, person: personRef }, (reason) => ({
+        reason,
+      }));
     }),
   ),
 );

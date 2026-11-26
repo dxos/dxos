@@ -42,7 +42,7 @@ export const makeDiscordChannelBackend = ({
   edgeClient = appEdgeClient,
   bot,
 }: DiscordChannelBackendOptions = {}): ThreadCapabilities.ChannelBackendProvider => {
-  /** Acts as the channel's bot; the receipt names the Discord channel the post landed in (a DM's, once opened). */
+  /** Acts as the channel's bot; a DM's receipt names the DM channel it opened as `thread`, where replies arrive. */
   const act = (channel: Channel.Channel, action: DiscordBot.Action) =>
     Effect.gen(function* () {
       const { config, spaceId } = yield* loadConfig(channel);
@@ -57,7 +57,7 @@ export const makeDiscordChannelBackend = ({
       );
       const messageIds = posted.messageId === undefined ? [] : [posted.messageId];
       return {
-        thread: posted.channelId,
+        ...(action.kind === 'dm' ? { thread: posted.channelId } : {}),
         messageIds,
         properties: { discord: { channelId: posted.channelId, messageId: posted.messageId } },
       } satisfies ThreadOperation.SendReceipt;

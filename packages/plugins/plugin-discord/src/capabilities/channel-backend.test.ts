@@ -198,7 +198,9 @@ describe('Discord channel backend', () => {
       const { channel } = yield* makeChannel();
       const spaceId = yield* Database.spaceId;
       const receipt = yield* backend.send(channel, text('hi')).pipe(withCapabilities);
-      expect(receipt).toMatchObject({ thread: 'c1', messageIds: ['message-9'] });
+      expect(receipt).toMatchObject({ messageIds: ['message-9'] });
+      // A post lands where it was asked to, so only a DM names its thread: a channel-level send stays channel-level.
+      expect(receipt).not.toHaveProperty('thread');
       expect(edge.requests).toEqual([
         {
           path: '/discord/bots/app-1/actions',

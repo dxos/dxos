@@ -19,7 +19,10 @@ const handler: Operation.WithHandler<typeof ThreadOperation.SendToChannel> = Thr
       }
       // The backend's plugin runs apart from this one (its own bundle on EDGE), so it posts through its operation.
       const { Send } = ThreadOperation.backendOperations(channel.backend.kind);
-      return yield* ChannelBackend.invokeBackend(channel, Send, { channel: channelRef, thread, text });
+      return yield* ChannelBackend.invokeBackend(Send, { channel: channelRef, thread, text }, (reason) => ({
+        delivered: false,
+        reason,
+      }));
     }),
   ),
 );

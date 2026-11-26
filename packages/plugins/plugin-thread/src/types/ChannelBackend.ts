@@ -2,7 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
@@ -55,17 +57,33 @@ export const getProvider: (
 
 /**
  * Invokes one of the channel backend's own {@link ThreadOperation.backendOperations}, for a backend whose capability
- * is not visible here; no handler for it means no backend handles the channel.
+ * is not visible here. Any failure becomes `refused`'s outcome, as a backend refusal does: across bundles on EDGE a
+ * missing handler or a transport failure does not arrive as a typed error, and the caller falls through to its next
+ * route either way.
  */
 export const invokeBackend = <I, O>(
-  channel: Channel.Channel,
   operation: Operation.Definition<I, O>,
   input: I,
-): Effect.Effect<O, ChannelBackendNotFoundError, Operation.Service> =>
+  refused: (reason: string) => O,
+): Effect.Effect<O, never, Operation.Service> =>
   Operation.invoke(operation, input).pipe(
-    Effect.catchTag('NoHandlerError', () =>
-      Effect.fail(new ChannelBackendNotFoundError({ context: { kind: channel.backend.kind } })),
-    ),
+    Effect.exit,
+    Effect.flatMap((exit) => {
+      if (Exit.isSuccess(exit)) {
+        return Effect.succeed(exit.value);
+      }
+      if (Cause.hasInterruptsOnly(exit.cause)) {
+        return Effect.interrupt;
+      }
+      const error = Cause.squash(exit.cause);
+      const reason =
+        error instanceof Error && error.name === 'NoHandlerError'
+          ? new ChannelBackendNotFoundError().message
+          : error instanceof Error
+            ? error.message
+            : String(error);
+      return Effect.succeed(refused(reason));
+    }),
   );
 
 /** Narrows a provider to one that has the optional member `name`, or fails naming what is missing. */

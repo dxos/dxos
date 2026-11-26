@@ -336,6 +336,12 @@ describe('Relay', () => {
           text: 'In the thread.',
         });
         expect(sent).toMatchObject({ delivered: true, messageIds: ['post-2'] });
+
+        // With neither a capability nor an operation for its kind, a channel refuses instead of failing the caller.
+        const orphan = yield* Database.add(makeTestChannel('orphan', 'org.dxos.channel.backend.missing'));
+        expect(
+          yield* Operation.invoke(ThreadOperation.SendToChannel, { channel: Ref.make(orphan), text: 'Anyone?' }),
+        ).toEqual({ delivered: false, reason: 'No channel backend handles this channel.' });
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

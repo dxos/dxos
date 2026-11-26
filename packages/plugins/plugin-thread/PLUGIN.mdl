@@ -66,9 +66,9 @@ op SendToChannel
   desc: |
     Send text to a channel, or to a backend thread inside it, through the provider resolved by
     `channel.backend.kind`. Where no provider is visible (another plugin's bundle on EDGE) it invokes
-    the backend's own `sendToChannel` operation instead. A backend refusal returns `delivered: false`
-    with a reason; no provider and no such operation, or a backend without threads, fails with a
-    typed error.
+    the backend's own `sendToChannel` operation instead. A backend refusal, a failure of that
+    operation, or no provider and no such operation, returns `delivered: false` with a reason; a
+    visible backend without threads fails with a typed error.
   in:
     channel: Ref<Channel>
     thread?: String
@@ -221,4 +221,15 @@ decision D-2: SendToChannel and OpenDirect invoke the backend's own operations, 
   rejected:
     - One generic backend operation for every kind: one key has one handler, so the host could not route it to the backend's plugin.
     - Moving every backend to operations: the feed, Slack and other backends run where plugin-thread sees them, so only a backend that runs apart needs its operations.
+```
+
+```mdl
+decision D-3: A failure of a backend's own operation, a missing handler included, is a refusal with a reason, not a failure of SendToChannel or OpenDirect. Fills in [D-2].
+  date: 2026-11-26
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [SendToChannel, OpenDirect]
+  why: Across bundles on EDGE a nested invocation's failure does not arrive as a typed error, and a caller such as an agent's relay must fall through to its next route rather than fail.
+  rejected:
+    - Failing with ChannelBackendNotFoundError only for a missing handler: on EDGE it is indistinguishable from any other nested failure.
 ```
