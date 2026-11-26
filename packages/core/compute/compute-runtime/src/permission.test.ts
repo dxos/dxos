@@ -318,7 +318,7 @@ describe('operation permissions', () => {
     'grants added to a live process apply to the calls it makes afterwards',
     Effect.fn(function* ({ expect }) {
       gate = yield* Deferred.make<void>();
-      const manager = yield* ProcessManager.Service;
+      const manager = yield* Process.ManagerService;
       const process = yield* Process.spawn(
         OperationProcess.make(WaitThenExec),
         { command: 'ls' },

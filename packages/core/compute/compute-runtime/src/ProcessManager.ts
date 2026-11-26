@@ -403,6 +403,8 @@ export class Impl implements Manager {
         location?.kind === 'edge'
           ? Effect.die(new Error('A process cannot attach to a remote process.'))
           : this.attach(childPid),
+      // A process can grant through its own manager too, itself included: see the TODO on `Process.Manager.grant`.
+      grant: (target, grants) => this.grant(target, grants),
     };
     // The handler set is always present, so an operation process can look its handler up.
     let services = Context.make(Process.ManagerService, manager).pipe(
