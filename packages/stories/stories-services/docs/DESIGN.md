@@ -520,11 +520,15 @@ Resolution of a contract in a context:
 
 1. Collect the providers of the contract's key from plugins installed for the context: the device's
    enabled set, and the space's `properties.plugins` map.
-2. Drop a provider whose `needs` its host does not have.
-3. Drop a host the plugin's isolation policy does not allow.
-4. Order the rest: this host, then other hosts on this device, then EDGE.
-5. Bind the first. Its location decides the binding.
-6. If none remain, fail with `ServiceNotAvailableError`.
+2. Drop a provider whose version does not satisfy the consumer's.
+3. Drop a provider whose `needs` its host does not have.
+4. Drop a host the plugin's isolation policy does not allow.
+5. Order the rest: this host, then other hosts on this device, then EDGE.
+6. Bind the first. Its location decides the binding.
+7. If none remain, fail with `ServiceNotAvailableError`.
+
+Version is checked before distance, so a compatible provider on EDGE is chosen over an incompatible
+one in the app. Among compatible providers the nearest still wins.
 
 `needs` says where a provider can run. The isolation policy says where it may run, and the person
 installing the plugin sets it, never the plugin.
@@ -578,9 +582,14 @@ edge FrameHost owns FrameWorker
   it can open the app's IndexedDB and OPFS, where ECHO and the identity's keys live. It isolates
   faults and CPU time. The host can terminate it, which nothing can do to code on the main thread.
 - **A frame on its own origin is the trust boundary.** A frame served from an origin other than
-  the app's has its own storage and cannot reach the app's. A `connect-src` policy on its document
-  removes the network, as `globalOutbound: null` does for an EDGE isolate. A frame host is hidden,
-  and it may start a worker of its own, which shares the frame's origin and gives both boundaries.
+  the app's has its own storage and cannot reach the app's. A frame host is hidden, and it may
+  start a worker of its own, which shares the frame's origin and gives both boundaries.
+- **A content security policy limits what the frame can send out, but not all of it.** The frame's
+  document is served with `default-src 'none'` and its own origin as the only script source. That
+  refuses `fetch`, sockets and every subresource request, images included; `connect-src` alone
+  would leave images open. It does not stop the frame navigating itself to another URL, which can
+  carry granted data in the address. An EDGE isolate has no such path, since `globalOutbound: null`
+  removes all of it. Closing it on the client is not designed here.
 - **An opaque origin does not work.** The first draft used `sandbox` without `allow-same-origin`,
   which gives the frame an opaque origin. The spike showed that such a frame cannot load module
   scripts: they are fetched with `Origin: null`, and a server answers that only if it allows every
@@ -593,8 +602,9 @@ edge FrameHost owns FrameWorker
   through `env` bindings.
 - **A grant says what an isolated plugin may use.** A plugin's manifest lists the contracts it
   uses and the network hosts it calls. The person approves the list at install. The app host's
-  router enforces it per port with RPC middleware, and writes the hosts into the frame's
-  `connect-src`. compute-service can check the same list on EDGE.
+  router enforces it per port with RPC middleware, and writes the hosts into the frame's content
+  security policy. compute-service can check the same list on EDGE. A peer with a grant cannot
+  install into the host that granted it, and sees only the granted contracts in that host's catalog.
 - **A worker or frame loads the bundle the way EDGE does.** Composer's import map supplies a
   plugin's external packages on the main thread. A worker does not read the page's import map, so
   a worker or frame host loads the plugin from its `vendor/` directory with the imports rewritten
@@ -744,7 +754,7 @@ draft PR that is not merged.
 
 ## Spike results
 
-The spike is built and runs. `src/services/hosts.test.ts` has 8 passing tests with hosts joined by a
+The spike is built and runs. `src/services/hosts.test.ts` has 11 passing tests with hosts joined by a
 `MessageChannel` in Node, and the story `stories/stories-services/Services` was walked through all
 five steps in a browser. Its `Calls` variant drives steps 1 to 4 with a play function, which the
 Storybook test runner passes.
@@ -761,13 +771,14 @@ Storybook test runner passes.
 
 The probe, run in each child host:
 
-| Host   | App's local storage | App's IndexedDB     | Network | App's notes, not granted |
-| ------ | ------------------- | ------------------- | ------- | ------------------------ |
-| Worker | Absent in a worker  | Sees the app's data | Allowed | Allowed                  |
-| Frame  | Isolated            | Isolated            | Refused | Refused                  |
+| Host   | App's local storage | App's IndexedDB     | `fetch` | Image request | App's notes, not granted |
+| ------ | ------------------- | ------------------- | ------- | ------------- | ------------------------ |
+| Worker | Absent in a worker  | Sees the app's data | Allowed | No document   | Allowed                  |
+| Frame  | Isolated            | Isolated            | Refused | Refused       | Refused                  |
 
 This is the claim of "Isolation on the client" measured: the worker reads the app's IndexedDB, and
-the frame reaches none of the four.
+the frame reaches none of the five. The probe does not try the frame navigating itself, which the
+policy does not stop.
 
 ### Answers
 
@@ -806,9 +817,13 @@ the frame reaches none of the four.
 - **A plugin is loaded from the host's own origin.** Installing by an absolute URL of the app's
   origin failed in the frame, which may import only from where it was served. The failure reached
   the app as a typed error over the control contract.
-- **A granted peer still sees the whole catalog.** The frame was served no contract it was not
-  granted, but it could read that the app provides notes. The catalog has to be filtered by the
-  grant as well.
+- **A grant has to cover the catalog and the host's own contract, not only the services.** At
+  first the frame was served no contract it was not granted, but it could read that the app
+  provides notes, and it could call `install` on the app, which loads code in the app's realm. A
+  peer with a grant now gets a catalog of what it was granted and is refused `install`.
+- **A host must not answer a peer's catalog with its own.** The first version republished its
+  catalog whenever a peer's arrived, so two idle hosts exchanged catalogs without end. A host now
+  publishes its catalog only when it changes.
 - **A hidden frame's timers may be throttled.** One run of the summarizer in the frame took 8.6 s
   for a stream that takes 0.3 s; a second run took 0.3 s. The cause was not found. If it is the
   browser throttling a hidden frame, a frame host has to run its providers in a worker.

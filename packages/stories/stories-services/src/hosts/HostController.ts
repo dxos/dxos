@@ -44,6 +44,8 @@ const writeMarker = (): void => {
 export class HostController {
   readonly app: ServiceHost.ServiceHost;
   readonly #children = new Map<string, Child>();
+  /** Ids of hosts being started, so a second start of one cannot leave two children under one id. */
+  readonly #starting = new Set<string>();
 
   constructor() {
     this.app = new ServiceHost.ServiceHost({
@@ -59,18 +61,39 @@ export class HostController {
     return this.#children.has(id);
   }
 
+  /** Runs `start` with `id` reserved, and gives the id back if the child never came up. */
+  async #reserve(id: string, start: () => Promise<Child>): Promise<void> {
+    if (this.#children.has(id) || this.#starting.has(id)) {
+      throw new Error(`host ${id} is already started or starting`);
+    }
+    this.#starting.add(id);
+    try {
+      this.#children.set(id, await start());
+    } finally {
+      this.#starting.delete(id);
+    }
+  }
+
   /** Starts a host in a Web Worker. `kind: 'edge'` makes it the story's stand-in for EDGE. */
   async startWorker(id: string, kind: HostControl.Kind, features: readonly string[]): Promise<void> {
-    const worker = new Worker(new URL('./worker-entry.ts', import.meta.url), { type: 'module', name: id });
-    await new Promise<void>((resolve, reject) => {
-      worker.addEventListener('message', (event) => isReady(event.data) && resolve(), { once: true });
-      worker.addEventListener('error', (event) => reject(new Error(event.message)), { once: true });
+    await this.#reserve(id, async () => {
+      const worker = new Worker(new URL('./worker-entry.ts', import.meta.url), { type: 'module', name: id });
+      try {
+        await new Promise<void>((resolve, reject) => {
+          worker.addEventListener('message', (event) => isReady(event.data) && resolve(), { once: true });
+          worker.addEventListener('error', (event) => reject(new Error(event.message)), { once: true });
+        });
+        const channel = new MessageChannel();
+        const init: Init = { type: 'init', id, kind, features, origin: window.location.origin, port: channel.port2 };
+        worker.postMessage(init, [channel.port2]);
+        // Resolves once the child's catalog has arrived, so the child is addressable when this returns.
+        await this.app.connect(channel.port1);
+      } catch (err) {
+        worker.terminate();
+        throw err;
+      }
+      return { id, dispose: () => worker.terminate() };
     });
-    const channel = new MessageChannel();
-    const init: Init = { type: 'init', id, kind, features, origin: window.location.origin, port: channel.port2 };
-    worker.postMessage(init, [channel.port2]);
-    await this.app.connect(channel.port1);
-    this.#children.set(id, { id, dispose: () => worker.terminate() });
   }
 
   /** Starts a host in a hidden sandboxed iframe, and serves it only the contracts in `grant`. */
@@ -79,42 +102,44 @@ export class HostController {
     if (origin === undefined) {
       throw new Error('a frame host needs a second origin; open the story on localhost or 127.0.0.1');
     }
-    const page = new URL('./frame.html', import.meta.url);
-    const frame = document.createElement('iframe');
-    // Scripts run, and the frame keeps the origin it was served from, which is not the app's.
-    frame.setAttribute('sandbox', 'allow-scripts allow-same-origin');
-    frame.style.display = 'none';
-    frame.src = `${origin}${page.pathname}`;
-    const ready = new Promise<void>((resolve, reject) => {
-      const timer = setTimeout(() => reject(new Error('frame host did not start')), 15_000);
-      const listener = (event: MessageEvent) => {
-        if (event.source === frame.contentWindow && isReady(event.data)) {
-          clearTimeout(timer);
-          window.removeEventListener('message', listener);
-          resolve();
-        }
-      };
-      window.addEventListener('message', listener);
+    await this.#reserve(id, async () => {
+      const page = new URL('./frame.html', import.meta.url);
+      const frame = document.createElement('iframe');
+      // Scripts run, and the frame keeps the origin it was served from, which is not the app's.
+      frame.setAttribute('sandbox', 'allow-scripts allow-same-origin');
+      frame.style.display = 'none';
+      frame.src = `${origin}${page.pathname}`;
+      const ready = new Promise<void>((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error('frame host did not start')), 15_000);
+        const listener = (event: MessageEvent) => {
+          if (event.source === frame.contentWindow && isReady(event.data)) {
+            clearTimeout(timer);
+            window.removeEventListener('message', listener);
+            resolve();
+          }
+        };
+        window.addEventListener('message', listener);
+      });
+      document.body.appendChild(frame);
+      try {
+        await ready;
+        const channel = new MessageChannel();
+        const init: Init = {
+          type: 'init',
+          id,
+          kind: 'frame',
+          features,
+          origin: window.location.origin,
+          port: channel.port2,
+        };
+        frame.contentWindow?.postMessage(init, origin, [channel.port2]);
+        await this.app.connect(channel.port1, { grant });
+      } catch (err) {
+        frame.remove();
+        throw err;
+      }
+      return { id, dispose: () => frame.remove() };
     });
-    document.body.appendChild(frame);
-    try {
-      await ready;
-    } catch (err) {
-      frame.remove();
-      throw err;
-    }
-    const channel = new MessageChannel();
-    const init: Init = {
-      type: 'init',
-      id,
-      kind: 'frame',
-      features,
-      origin: window.location.origin,
-      port: channel.port2,
-    };
-    frame.contentWindow?.postMessage(init, origin, [channel.port2]);
-    await this.app.connect(channel.port1, { grant });
-    this.#children.set(id, { id, dispose: () => frame.remove() });
   }
 
   async stop(id: string): Promise<void> {
@@ -126,16 +151,22 @@ export class HostController {
     }
   }
 
+  /** The control client of a started child; a child that is not connected is an error, never a silent no-op. */
+  #control(hostId: string): HostControl.Client {
+    const control = this.app.control(hostId);
+    if (!control) {
+      throw new Error(`host ${hostId} is not connected`);
+    }
+    return control;
+  }
+
   /** Installs a plugin into the app host or one of its children, through that host's own contract. */
   async install(hostId: string, pluginUrl: string): Promise<void> {
     if (hostId === APP_HOST) {
       await this.app.install(pluginUrl);
       return;
     }
-    const control = this.app.control(hostId);
-    if (control) {
-      await EffectEx.runPromise(control.install({ plugin: pluginUrl }));
-    }
+    await EffectEx.runPromise(this.#control(hostId).install({ plugin: pluginUrl }));
   }
 
   async uninstall(hostId: string, pluginUrl: string): Promise<void> {
@@ -143,10 +174,7 @@ export class HostController {
       await this.app.uninstall(pluginUrl);
       return;
     }
-    const control = this.app.control(hostId);
-    if (control) {
-      await EffectEx.runPromise(control.uninstall({ plugin: pluginUrl }));
-    }
+    await EffectEx.runPromise(this.#control(hostId).uninstall({ plugin: pluginUrl }));
   }
 
   /** Gives the app host a gateway of its own, or takes it away. */
@@ -154,9 +182,8 @@ export class HostController {
     await this.app.setFeature(Summarizer.GATEWAY_FEATURE, enabled ? fakeGateway(APP_HOST) : undefined);
   }
 
-  async probe(hostId: string): Promise<HostControl.Probe | undefined> {
-    const control = this.app.control(hostId);
-    return control ? EffectEx.runPromise(control.probe({ ungranted: NoteStore.Contract.key })) : undefined;
+  async probe(hostId: string): Promise<HostControl.Probe> {
+    return EffectEx.runPromise(this.#control(hostId).probe({ ungranted: NoteStore.Contract.key }));
   }
 
   async dispose(): Promise<void> {

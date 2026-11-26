@@ -7,8 +7,11 @@ import * as Fiber from 'effect/Fiber';
 import * as Stream from 'effect/Stream';
 import { afterEach, assert, describe, test } from 'vitest';
 
-import type * as Plugin from '@dxos/app-framework/Plugin';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import * as EffectEx from '@dxos/effect/EffectEx';
+import { DXN } from '@dxos/keys';
 
 import { NoteStore, Summarizer } from '../contracts/index.ts';
 import { fakeGateway } from '../hosts/gateway.ts';
@@ -16,9 +19,32 @@ import NotesPlugin from '../plugins/notes-plugin.ts';
 import SummarizerPlugin from '../plugins/summarizer-plugin.ts';
 import { type HostControl, Service, ServiceHost } from './index.ts';
 
+/** A plugin whose provider fails as it starts, as the notes provider would on unreadable storage. */
+const BrokenPlugin = Plugin.define(
+  Plugin.makeMeta({ key: DXN.make('org.dxos.stories.services.plugin.broken'), name: 'Broken' }),
+).pipe(
+  Plugin.addModule({
+    id: 'provider',
+    provides: [ServiceHost.Provider],
+    activatesOn: ActivationEvents.Startup,
+    activate: () =>
+      Effect.succeed([
+        Capability.contribute(
+          ServiceHost.Provider,
+          Service.provide(NoteStore.Contract, {
+            needs: [NoteStore.STORAGE_FEATURE],
+            make: () => Effect.die(new Error('cannot start')),
+          }),
+        ),
+      ]),
+  }),
+  Plugin.make,
+);
+
 const PLUGINS: Record<string, () => Plugin.Plugin> = {
   notes: NotesPlugin,
   summarizer: SummarizerPlugin,
+  broken: BrokenPlugin,
 };
 
 const loadPlugin = async (reference: string): Promise<Plugin.Plugin> => {
@@ -193,10 +219,47 @@ describe('plugin services', () => {
     const fromWorker = worker.client(NoteStore.Contract);
     expect(await EffectEx.runPromise(fromWorker.list({}))).toEqual([]);
 
-    // The frame sees the contract in the app's catalog, but the app does not serve it there.
-    const fromFrame = frame.client(NoteStore.Contract);
-    const exit = await Effect.runPromiseExit(fromFrame.list({}).pipe(Effect.timeout('500 millis')));
+    // The frame's catalog of the app leaves out what it was not granted, so nothing resolves there.
+    expect(frame.getSnapshot().peers.find((peer) => peer.id === 'app')?.services).toEqual([]);
+    expect(frame.binding(NoteStore.Contract)).toBeUndefined();
+    const exit = await Effect.runPromiseExit(frame.client(NoteStore.Contract).list({}));
+    expect(String(exit)).toContain('ServiceNotAvailableError');
+  });
+
+  test('a peer with a grant cannot install into the host that granted it', async ({ expect }) => {
+    const app = make('app', 'app');
+    const frame = make('frame', 'frame');
+    await join(app, frame, { grant: [] });
+
+    const control = frame.control('app');
+    assert(control, 'the frame holds the control client of the app');
+    const exit = await Effect.runPromiseExit(control.install({ plugin: 'notes' }));
     expect(exit._tag).toBe('Failure');
+    expect(app.getSnapshot().self.plugins).toEqual([]);
+  });
+
+  test('two idle connected hosts stop exchanging catalogs', async ({ expect }) => {
+    const app = make('app', 'app');
+    const worker = make('worker', 'worker');
+    await join(app, worker);
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    let changes = 0;
+    const unsubscribe = app.subscribe(() => changes++);
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    unsubscribe();
+    expect(changes).toBe(0);
+  });
+
+  test('a provider that cannot start fails the install that asked for it', async ({ expect }) => {
+    const app = make('app', 'app', { [NoteStore.STORAGE_FEATURE]: memoryStorage() });
+    await expect(app.install('broken')).rejects.toThrow('cannot start');
+    expect(app.binding(NoteStore.Contract)).toBeUndefined();
+
+    // The failure does not stop the host: a later change still goes through.
+    await app.setFeature(Summarizer.GATEWAY_FEATURE, fakeGateway('app', 1));
+    await app.install('summarizer');
+    expect(app.binding(Summarizer.Contract)?.kind).toBe('memory');
   });
 
   test('version matching: same major, equal or higher minor', ({ expect }) => {

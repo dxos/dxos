@@ -98,9 +98,7 @@ export const HostsModule = () => {
     (hostId: string) =>
       run(async () => {
         const probe = await controller.probe(hostId);
-        if (probe) {
-          setProbes((current) => ({ ...current, [hostId]: probe }));
-        }
+        setProbes((current) => ({ ...current, [hostId]: probe }));
       }),
     [controller, run],
   );

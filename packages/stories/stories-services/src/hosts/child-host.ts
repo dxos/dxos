@@ -69,6 +69,38 @@ const visibility = async (look: () => boolean | Promise<boolean>): Promise<strin
   }
 };
 
+/**
+ * Whether this realm may request an image from `origin`: a path `fetch` does not cover, since a
+ * policy governs images separately. Decided by the policy's own violation report, not by whether
+ * the image decodes.
+ */
+const requestImage = (origin: string): Promise<string> =>
+  new Promise((resolve) => {
+    if (typeof document === 'undefined') {
+      resolve('no document');
+      return;
+    }
+    let settled = false;
+    const finish = (result: string) => {
+      if (!settled) {
+        settled = true;
+        document.removeEventListener('securitypolicyviolation', onViolation);
+        resolve(result);
+      }
+    };
+    const onViolation = (event: SecurityPolicyViolationEvent) => {
+      if (event.effectiveDirective.startsWith('img-src')) {
+        finish('refused');
+      }
+    };
+    document.addEventListener('securitypolicyviolation', onViolation);
+    const image = new Image();
+    // The request left the frame whether or not the response is an image.
+    image.onload = () => finish('allowed');
+    image.onerror = () => setTimeout(() => finish('allowed'), 100);
+    image.src = new URL('/index.json?probe', origin).href;
+  });
+
 /** Tries each thing an isolated host should not reach, and reports what happened. */
 const probe = async (host: ServiceHost.ServiceHost, origin: string): Promise<HostControl.Probe> => ({
   localStorage:
@@ -76,7 +108,7 @@ const probe = async (host: ServiceHost.ServiceHost, origin: string): Promise<Hos
       ? await visibility(() => globalThis.localStorage.getItem(MARKER) !== null)
       : 'absent in a worker',
   indexedDb: await visibility(async () => (await indexedDB.databases()).some((database) => database.name === MARKER)),
-  network: await attempt(() => fetch(new URL('/index.json', origin), { cache: 'no-store' })),
+  network: `fetch ${await attempt(() => fetch(new URL('/index.json', origin), { cache: 'no-store' }))}, image ${await requestImage(origin)}`,
   // The app's notes, which a frame is not granted.
   ungranted: await attempt(() =>
     EffectEx.runPromise(host.client(NoteStore.Contract).list({}).pipe(Effect.timeout('1 second'))),

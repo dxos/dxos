@@ -32,6 +32,9 @@ export const Provider = Capability.make<Service.AnyProvider>()('org.dxos.stories
 /** A host could not load a plugin; `context` names the host and the reference. */
 export class PluginLoadError extends BaseError.extend('PluginLoadError', 'Failed to load the plugin.') {}
 
+/** The other host sent no catalog in time; `context` names this host. */
+export class HostConnectError extends BaseError.extend('HostConnectError', 'The host did not answer.') {}
+
 /** Where a contract is bound for this host's consumers. */
 export type Binding = {
   /** `memory` is a direct call of the provider; `port` crosses to another host. */
@@ -72,6 +75,8 @@ type Registration = {
   unmet: string[];
   /** Present while the provider is active. */
   implementation?: Record<string, unknown>;
+  /** Set once the provider failed to start; it is not tried again until its plugin is installed again. */
+  failed?: boolean;
   scope?: Scope.Closeable;
 };
 
@@ -88,6 +93,9 @@ type Peer = {
 };
 
 const MAX_CALLS = 50;
+
+/** How long a new peer has to send its first catalog. */
+const CONNECT_TIMEOUT = 10_000;
 
 /** Nearer hosts first: the same device before EDGE. */
 const DISTANCE: Record<HostControl.Kind, number> = { app: 0, worker: 1, frame: 2, edge: 3 };
@@ -113,6 +121,8 @@ export class ServiceHost {
   readonly #description: State.Cell<HostControl.Description>;
   readonly #topology = State.emitter<void>();
   #calls: Call[] = [];
+  /** Failed changes to this host's providers, in order; `install` reports the one it caused. */
+  readonly #failures: unknown[] = [];
   #snapshot: Snapshot;
   /** Serializes changes to registrations, so two feature changes never activate a provider twice. */
   #queue: Promise<void> = Promise.resolve();
@@ -180,6 +190,7 @@ export class ServiceHost {
 
   /** Loads a plugin by reference and enables it. */
   async install(reference: string): Promise<void> {
+    const failed = this.#failures.length;
     await EffectEx.runPromise(
       Effect.gen({ self: this }, function* () {
         const plugin = yield* this.#manager.add(reference);
@@ -191,6 +202,10 @@ export class ServiceHost {
       }),
     );
     await this.settled();
+    // The plugin's provider is registered by the registry's own callback, whose failure nobody awaits.
+    if (this.#failures.length > failed) {
+      throw this.#failures[failed];
+    }
   }
 
   async uninstall(reference: string): Promise<void> {
@@ -213,7 +228,7 @@ export class ServiceHost {
    * Connects this host to another over `port`. Both sides call it; each serves the other its
    * providers and reads the other's catalog. `grant` limits what this host serves to that peer.
    */
-  async connect(port: MessagePort, options: { readonly grant?: readonly string[] } = {}): Promise<void> {
+  async connect(port: MessagePort, options: { readonly grant?: readonly string[] } = {}): Promise<string> {
     const link = Link.make(port);
     const scope = await EffectEx.runPromise(Scope.make());
     const router = await EffectEx.runPromise(RpcRouter.make);
@@ -233,14 +248,21 @@ export class ServiceHost {
       stubs: new Map(),
     };
     this.#peers.add(peer);
-    await this.#serve(peer, HostControl.Contract, this.#control());
+    await this.#serve(peer, HostControl.Contract, this.#control(peer));
     await this.#enqueue(() => this.#reconcile());
 
+    // A peer is addressed by the id in its catalog, so the connection is not ready before one arrives.
+    let arrived: (id: string) => void = () => {};
+    const first = new Promise<string>((resolve) => {
+      arrived = resolve;
+    });
     Effect.runFork(
       Stream.runForEach(peer.control.description.changes, (description) =>
         Effect.sync(() => {
           peer.description = description;
-          this.#changed();
+          arrived(description.id);
+          // Republishing this host's catalog here would make two idle hosts answer each other forever.
+          this.#topologyChanged();
         }),
       ).pipe(
         Effect.catchCause((cause) => Effect.sync(() => log.warn('peer catalog ended', { host: this.id, cause }))),
@@ -248,6 +270,20 @@ export class ServiceHost {
         Scope.provide(scope),
       ),
     );
+
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const expired = new Promise<undefined>((resolve) => {
+      timer = setTimeout(() => resolve(undefined), CONNECT_TIMEOUT);
+    });
+    const id = await Promise.race([first, expired]);
+    clearTimeout(timer);
+    if (id === undefined) {
+      this.#peers.delete(peer);
+      await EffectEx.runPromise(Scope.close(scope, Exit.void));
+      link.close();
+      throw new HostConnectError({ context: { host: this.id } });
+    }
+    return id;
   }
 
   /** Disconnects the peer with the given id. */
@@ -259,7 +295,7 @@ export class ServiceHost {
     this.#peers.delete(peer);
     await EffectEx.runPromise(Scope.close(peer.scope, Exit.void));
     peer.link.close();
-    this.#changed();
+    this.#topologyChanged();
   }
 
   /** The control client of a connected host, for installing into it. */
@@ -341,6 +377,12 @@ export class ServiceHost {
                   ? (stream as Stream.Stream<unknown, Service.ServiceError>)
                   : Stream.empty;
               }),
+            ).pipe(
+              // A failure ends this provider's values only, so the next provider's can still arrive.
+              Stream.catchCause((cause) => {
+                log.warn('service stream failed', { key: contract.key, member, cause });
+                return Stream.empty;
+              }),
             ),
       );
 
@@ -390,12 +432,19 @@ export class ServiceHost {
   //
 
   #enqueue(task: () => Promise<void>): Promise<void> {
-    this.#queue = this.#queue.then(task).catch((err) => log.catch(err));
-    return this.#queue;
+    const result = this.#queue.then(task);
+    // The tail recovers so later tasks run; the caller still sees its own task fail.
+    this.#queue = result.catch((err) => {
+      this.#failures.push(err);
+      log.catch(err);
+    });
+    return result;
   }
 
   #syncProviders(byModule: Record<string, Service.AnyProvider[]>): void {
-    void this.#enqueue(async () => {
+    // Nobody awaits a change the registry started; `install` reads the failure it left behind.
+    const done = () => undefined;
+    this.#enqueue(async () => {
       const current = new Map<string, Service.AnyProvider>();
       Object.values(byModule)
         .flat()
@@ -407,20 +456,31 @@ export class ServiceHost {
         }
       }
       for (const [key, provider] of current) {
+        // Another plugin now provides the contract: the old provider must not go on answering for it.
+        if (this.#registrations.has(key) && this.#registrations.get(key)?.provider !== provider) {
+          await this.#deactivate(key);
+          this.#registrations.delete(key);
+        }
         if (!this.#registrations.has(key)) {
           this.#registrations.set(key, { provider, unmet: [] });
         }
       }
       await this.#reconcile();
-    });
+    }).then(done, done);
   }
 
   /** Activates each provider whose needs this host now meets, deactivates the rest, and re-serves peers. */
   async #reconcile(): Promise<void> {
+    // One provider that cannot start must not keep the others from starting or being served.
+    const failures: unknown[] = [];
     for (const [key, registration] of this.#registrations) {
       registration.unmet = registration.provider.needs.filter((name) => !this.#features.has(name));
-      if (registration.unmet.length === 0 && !registration.implementation) {
-        await this.#activate(registration);
+      if (registration.unmet.length === 0 && !registration.implementation && !registration.failed) {
+        await this.#activate(registration).catch((err) => {
+          // Trying again on every later change would fail each of them for a fault that is not theirs.
+          registration.failed = true;
+          failures.push(err);
+        });
       } else if (registration.unmet.length > 0 && registration.implementation) {
         await this.#deactivate(key);
       }
@@ -441,20 +501,29 @@ export class ServiceHost {
       }
     }
     this.#changed();
+    if (failures.length > 0) {
+      throw failures[0];
+    }
   }
 
   async #activate(registration: Registration): Promise<void> {
     const scope = await EffectEx.runPromise(Scope.make());
-    const implementation = await EffectEx.runPromise(
-      registration.provider
-        .make({
-          hostId: this.id,
-          feature: <T>(name: string) => this.#features.get(name) as T,
-        })
-        .pipe(Scope.provide(scope)),
-    );
-    registration.scope = scope;
-    registration.implementation = isRecord(implementation) ? implementation : {};
+    try {
+      const implementation = await EffectEx.runPromise(
+        registration.provider
+          .make({
+            hostId: this.id,
+            feature: <T>(name: string) => this.#features.get(name) as T,
+          })
+          .pipe(Scope.provide(scope)),
+      );
+      // The registration owns the scope only once the provider exists.
+      registration.scope = scope;
+      registration.implementation = isRecord(implementation) ? implementation : {};
+    } catch (err) {
+      await EffectEx.runPromise(Scope.close(scope, Exit.die(err)));
+      throw err;
+    }
   }
 
   async #deactivate(key: string): Promise<void> {
@@ -492,11 +561,25 @@ export class ServiceHost {
     }
   }
 
-  /** This host's own control contract, served to every peer. */
-  #control(): Record<string, unknown> {
+  /**
+   * This host's own contract, as one peer is served it. A peer with a grant is not trusted: it
+   * reads the catalog of what it was granted, and may not install into this host.
+   */
+  #control(peer: Peer): Record<string, unknown> {
+    const grant = peer.grant;
+    const refuse = (member: string) =>
+      Effect.fail(
+        new Service.ServiceCallError({ context: { key: HostControl.Contract.key, member, reason: 'not granted' } }),
+      );
+    const visible = (description: HostControl.Description): HostControl.Description =>
+      grant === undefined
+        ? description
+        : { ...description, services: description.services.filter((service) => grant.has(service.key)) };
     const control: HostControl.Client = {
-      install: ({ plugin }) => Effect.promise(() => this.install(plugin)),
-      uninstall: ({ plugin }) => Effect.promise(() => this.uninstall(plugin)),
+      install:
+        grant === undefined ? ({ plugin }) => Effect.promise(() => this.install(plugin)) : () => refuse('install'),
+      uninstall:
+        grant === undefined ? ({ plugin }) => Effect.promise(() => this.uninstall(plugin)) : () => refuse('uninstall'),
       probe: ({ ungranted }) =>
         Effect.promise(async () => {
           const probe = this.#options.probe;
@@ -504,7 +587,10 @@ export class ServiceHost {
             ? probe(ungranted)
             : { localStorage: 'not probed', indexedDb: 'not probed', network: 'not probed', ungranted: 'not probed' };
         }),
-      description: this.#description.property,
+      description: {
+        get: Effect.map(this.#description.property.get, visible),
+        changes: Stream.map(this.#description.property.changes, visible),
+      },
     };
     return control;
   }
@@ -566,9 +652,17 @@ export class ServiceHost {
     this.#publish();
   }
 
-  /** Something a resolution depends on changed: providers, features or a peer's catalog. */
+  /** This host's own catalog may have changed: its providers, features or plugins. */
   #changed(): void {
-    this.#description.set(this.#describe());
+    const description = this.#describe();
+    if (JSON.stringify(description) !== JSON.stringify(this.#description.get())) {
+      this.#description.set(description);
+    }
+    this.#topologyChanged();
+  }
+
+  /** Something a resolution depends on changed, in this host or in a peer. */
+  #topologyChanged(): void {
     this.#topology.emit();
     this.#publish();
   }
