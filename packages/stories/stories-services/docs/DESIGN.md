@@ -740,16 +740,16 @@ A private package `packages/stories/stories-services` with one Storybook story a
 The story is laid out from story modules, as the stories in `stories-compute` and
 `stories-assistant` are (`StoryModules` in `@dxos/storybook-testing`):
 
-| Module             | Shows                                                                                                                                                                                                                             |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `SettingsModule`   | The settings, read and written through `Settings`, the last `changed` event, and the route each of its calls took.                                                                                                                |
-| `SummarizerModule` | A summarize action and its streamed result, through `Summarizer`, and the route each of its calls took.                                                                                                                           |
-| `RuntimeModule`    | One runtime: its hosts, the plugins installed in each, the install actions and each host's probe. The story shows it twice, over the local hosts (the app and the sandboxed frame) and over the remote host (the mock EDGE host). |
+| Module             | Shows                                                                                                                                                                                                                                          |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SettingsModule`   | The settings, read and written through `Settings`, the last `changed` event, and the route each of its calls took.                                                                                                                             |
+| `SummarizerModule` | A summarize action and its streamed result, through `Summarizer`, and the route each of its calls took.                                                                                                                                        |
+| `HostModule`       | One host: whether it is started, its features, the plugins installed in it with whether it can run each, the install actions and its probe. The story shows it three times, configured as the app, the sandboxed frame and the mock EDGE host. |
 
 The first two are the consumer plugin's UI and call services only through their clients. The third
-is one module used for both runtimes, so the local and the remote runtime differ only in the hosts
-they list. The story lays out four panels from these three modules; the shared logging module is
-not in its layout. The mock
+is one module with a host as its configuration, so the app, the frame and the mock EDGE host are
+shown the same way and differ only in what they report. The story lays out five panels from these
+three modules; the shared logging module is not in its layout. The mock
 EDGE host is a service container: a Web Worker that runs the same host code as the app, loads the
 summarizer plugin and serves its contract over a port.
 

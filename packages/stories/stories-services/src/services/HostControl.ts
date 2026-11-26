@@ -34,15 +34,34 @@ export const Description = Schema.Struct({
 });
 export type Description = Schema.Schema.Type<typeof Description>;
 
-/** What a host could reach when it tried: each field is `allowed` or the reason it was refused. */
+/** Whether a host reached one thing it tried: `skipped` where the attempt would prove nothing. */
+export const Check = Schema.Struct({
+  outcome: Schema.Literals(['blocked', 'reachable', 'skipped']),
+  /** Why, in words a reader of the story can act on. */
+  detail: Schema.String,
+});
+export type Check = Schema.Schema.Type<typeof Check>;
+
+/** What a host could reach of its parent's when it tried, one check for each thing. */
 export const Probe = Schema.Struct({
-  localStorage: Schema.String,
-  indexedDb: Schema.String,
-  network: Schema.String,
+  localStorage: Check,
+  indexedDb: Check,
+  fetch: Check,
+  /** A request `fetch` does not cover, since a policy governs images separately. */
+  image: Check,
   /** Whether the host could resolve a contract of its parent that it was not granted. */
-  ungranted: Schema.String,
+  ungranted: Check,
 });
 export type Probe = Schema.Schema.Type<typeof Probe>;
+
+/** The result of a host that was given no probe. */
+export const NOT_PROBED: Probe = {
+  localStorage: { outcome: 'skipped', detail: 'not probed' },
+  indexedDb: { outcome: 'skipped', detail: 'not probed' },
+  fetch: { outcome: 'skipped', detail: 'not probed' },
+  image: { outcome: 'skipped', detail: 'not probed' },
+  ungranted: { outcome: 'skipped', detail: 'not probed' },
+};
 
 /**
  * The contract every host provides about itself. Installing a plugin is a service call like any

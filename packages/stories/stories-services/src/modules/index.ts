@@ -6,13 +6,12 @@ import * as Role from '@dxos/app-framework/Role';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as StoryModules from '@dxos/storybook-testing/StoryModules';
 
-import { LocalRuntimeModule, RemoteRuntimeModule } from './RuntimeModule.tsx';
+import { AppHostModule, EdgeHostModule, FrameHostModule } from './HostModule.tsx';
 import { SettingsModule } from './SettingsModule.tsx';
 import { SummarizerModule } from './SummarizerModule.tsx';
 
 export * from './CallLog.tsx';
-export * from './HostCard.tsx';
-export * from './RuntimeModule.tsx';
+export * from './HostModule.tsx';
 export * from './ServicesContext.tsx';
 export * from './SettingsModule.tsx';
 export * from './SummarizerModule.tsx';
@@ -22,8 +21,9 @@ export const StoryRole = {
   ...StoryModules.Role,
   Settings: Role.make<Record<string, never>>('org.dxos.storybook.role.services.settings'),
   Summarizer: Role.make<Record<string, never>>('org.dxos.storybook.role.services.summarizer'),
-  LocalRuntime: Role.make<Record<string, never>>('org.dxos.storybook.role.services.localRuntime'),
-  RemoteRuntime: Role.make<Record<string, never>>('org.dxos.storybook.role.services.remoteRuntime'),
+  AppHost: Role.make<Record<string, never>>('org.dxos.storybook.role.services.host.app'),
+  FrameHost: Role.make<Record<string, never>>('org.dxos.storybook.role.services.host.frame'),
+  EdgeHost: Role.make<Record<string, never>>('org.dxos.storybook.role.services.host.edge'),
 };
 
 /** React surfaces for this package's panels, keyed by `StoryRole` tokens, plus the generic ones. */
@@ -40,13 +40,18 @@ export const moduleSurfaces: Surface.Definition[] = [
     component: SummarizerModule,
   }),
   Surface.create({
-    id: 'role.services.localRuntime',
-    filter: Surface.makeFilter(StoryRole.LocalRuntime),
-    component: LocalRuntimeModule,
+    id: 'role.services.host.app',
+    filter: Surface.makeFilter(StoryRole.AppHost),
+    component: AppHostModule,
   }),
   Surface.create({
-    id: 'role.services.remoteRuntime',
-    filter: Surface.makeFilter(StoryRole.RemoteRuntime),
-    component: RemoteRuntimeModule,
+    id: 'role.services.host.frame',
+    filter: Surface.makeFilter(StoryRole.FrameHost),
+    component: FrameHostModule,
+  }),
+  Surface.create({
+    id: 'role.services.host.edge',
+    filter: Surface.makeFilter(StoryRole.EdgeHost),
+    component: EdgeHostModule,
   }),
 ];

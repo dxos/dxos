@@ -658,9 +658,7 @@ export class ServiceHost {
       probe: ({ ungranted }) =>
         Effect.promise(async () => {
           const probe = this.#options.probe;
-          return probe
-            ? probe(ungranted)
-            : { localStorage: 'not probed', indexedDb: 'not probed', network: 'not probed', ungranted: 'not probed' };
+          return probe ? probe(ungranted) : HostControl.NOT_PROBED;
         }),
       description: {
         get: Effect.map(this.#description.property.get, visible),

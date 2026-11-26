@@ -55,38 +55,46 @@ export const importPlugin = async (path: string): Promise<Plugin.Plugin> => {
  */
 export const marker = (appOrigin: string): string => `org.dxos.stories.services.marker:${appOrigin}`;
 
-const attempt = async (action: () => unknown): Promise<string> => {
+const refused = (err: unknown): string => `refused with ${err instanceof Error ? err.name : 'an error'}`;
+
+/** Whether an action this realm tried went through, with `blocked` naming what stopped it. */
+const attempt = async (action: () => unknown, blocked: string): Promise<HostControl.Check> => {
   try {
     await action();
-    return 'allowed';
+    return { outcome: 'reachable', detail: 'the call went through' };
   } catch (err) {
-    return `refused (${err instanceof Error ? err.name : 'error'})`;
+    return { outcome: 'blocked', detail: `${blocked}; ${refused(err)}` };
   }
 };
 
-/** Whether this realm can read what the app stored: `sees the app's data`, `isolated`, or why it could not look. */
-const visibility = async (look: () => boolean | Promise<boolean>): Promise<string> => {
+/** Whether this realm can read what the app stored. */
+const visibility = async (look: () => boolean | Promise<boolean>): Promise<HostControl.Check> => {
   try {
-    return (await look()) ? "sees the app's data" : 'isolated';
+    return (await look())
+      ? { outcome: 'reachable', detail: "sees the app's data" }
+      : { outcome: 'blocked', detail: "has storage of its own, and cannot see the app's" };
   } catch (err) {
-    return `refused (${err instanceof Error ? err.name : 'error'})`;
+    return { outcome: 'blocked', detail: refused(err) };
   }
 };
+
+const IMAGE_BLOCKED: HostControl.Check = { outcome: 'blocked', detail: "refused by the host's content policy" };
+const IMAGE_SENT: HostControl.Check = { outcome: 'reachable', detail: 'the request left the host' };
 
 /**
  * Whether this realm may request an image from `origin`: a path `fetch` does not cover, since a
  * policy governs images separately. Decided by the policy's own violation report, not by whether
  * the image decodes.
  */
-const requestImage = (origin: string): Promise<string> =>
+const requestImage = (origin: string): Promise<HostControl.Check> =>
   new Promise((resolve) => {
     if (typeof document === 'undefined') {
-      resolve('no document');
+      resolve({ outcome: 'skipped', detail: 'a worker has no document to load an image in' });
       return;
     }
     let settled = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
-    const finish = (result: string) => {
+    const finish = (result: HostControl.Check) => {
       if (!settled) {
         settled = true;
         clearTimeout(timer);
@@ -96,16 +104,16 @@ const requestImage = (origin: string): Promise<string> =>
     };
     const onViolation = (event: SecurityPolicyViolationEvent) => {
       if (event.effectiveDirective.startsWith('img-src')) {
-        finish('refused');
+        finish(IMAGE_BLOCKED);
       }
     };
     document.addEventListener('securitypolicyviolation', onViolation);
     const image = new Image();
     // The request left the frame whether or not the response is an image.
-    image.onload = () => finish('allowed');
+    image.onload = () => finish(IMAGE_SENT);
     // The violation report can arrive after the error event, so the verdict waits a moment for it.
     image.onerror = () => {
-      timer = setTimeout(() => finish('allowed'), 100);
+      timer = setTimeout(() => finish(IMAGE_SENT), 100);
     };
     image.src = new URL('/index.json?probe', origin).href;
   });
@@ -115,16 +123,21 @@ const probe = async (host: ServiceHost.ServiceHost, origin: string): Promise<Hos
   localStorage:
     'localStorage' in globalThis
       ? await visibility(() => globalThis.localStorage.getItem(marker(origin)) !== null)
-      : 'absent in a worker',
+      : { outcome: 'blocked', detail: 'a worker has no local storage' },
   indexedDb: await visibility(async () =>
     (await indexedDB.databases()).some((database) => database.name === marker(origin)),
   ),
-  network: `fetch ${await attempt(() => fetch(new URL('/index.json', origin), { cache: 'no-store' }))}, image ${await requestImage(origin)}`,
+  fetch: await attempt(
+    () => fetch(new URL('/index.json', origin), { cache: 'no-store' }),
+    "refused by the host's content policy",
+  ),
+  image: await requestImage(origin),
   // The app's settings, which a frame is not granted; a host that provides settings itself would only reach its own.
   ungranted: host.getSnapshot().self.services.some((service) => service.key === Settings.Contract.key && service.active)
-    ? 'not tried, this host provides its own'
-    : await attempt(() =>
-        EffectEx.runPromise(host.client(Settings.Contract).values.get.pipe(Effect.timeout('1 second'))),
+    ? { outcome: 'skipped', detail: 'this host provides its own settings, so it would only reach those' }
+    : await attempt(
+        () => EffectEx.runPromise(host.client(Settings.Contract).values.get.pipe(Effect.timeout('1 second'))),
+        'the app serves this host only what is in its grant',
       ),
 });
 

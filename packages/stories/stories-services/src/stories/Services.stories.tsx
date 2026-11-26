@@ -24,7 +24,7 @@ const meta: Meta<typeof ModuleContainer.Root> = {
   args: {
     layout: [
       [StoryRole.Settings, StoryRole.Summarizer],
-      [StoryRole.LocalRuntime, StoryRole.RemoteRuntime],
+      [StoryRole.AppHost, StoryRole.FrameHost, StoryRole.EdgeHost],
     ],
     columns: '28rem_1fr',
   },
@@ -36,8 +36,8 @@ type Story = StoryObj<typeof meta>;
 
 /**
  * One consumer, three places a provider can run. The left column is the consumer, and each panel
- * logs the route its calls took. The right column is the runtimes, one module shown twice: the hosts
- * on this device above, and the remote host below.
+ * logs the route its calls took. The right column is one host module shown three times, configured
+ * as the app, the sandboxed frame and the mock EDGE host; the frame and EDGE are started from theirs.
  *
  * 1. Settings are provided in the app host and bound in memory.
  * 2. Summarize fails: no host provides the contract.
