@@ -4,6 +4,7 @@
 
 import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
@@ -46,7 +47,10 @@ const allowed = new Map<string, Set<string>>();
  * fresh guard per call would restart the agent process on every prompt; a new database gets a new guard,
  * since the guard writes through the one it captured.
  */
-const guards = new Map<string, { readonly db: Database.Database; readonly guard: Process.Guard }>();
+const guards = new Map<
+  string,
+  { readonly db: Database.Database; readonly standing: Process.Guard | undefined; readonly guard: Process.Guard }
+>();
 
 const deny = (op: Operation.Definition.Any, message: string, context: Record<string, unknown> = {}) =>
   Effect.die(new Operation.OperationDeniedError({ message, context: { key: op.meta.key, ...context } }));
@@ -58,15 +62,19 @@ export const consentTitle = (op: Operation.Definition.Any): string =>
   `Allow the assistant to ${lowerFirst(op.meta.name ?? op.meta.key)}?`;
 
 /**
- * A process guard for an agent a person is talking to: an operation whose requirements are all
- * consentable is admitted once the person allows it in the chat, where the guard posts a request card
- * and waits; one that is not consentable is refused, since this guard holds no grants.
+ * A process guard for an agent a person is talking to: an operation the `standing` guard admits (the
+ * session's own grants, see `AssistantCapabilities.SessionGuard`) runs without asking; otherwise one whose
+ * requirements are all consentable is admitted once the person allows it in the chat, where the guard
+ * posts a request card and waits, and one that is not consentable is refused.
  */
-export const consentGuard = (chat: Agent.Session): Effect.Effect<Process.Guard, never, Database.Service> =>
+export const consentGuard = (
+  chat: Agent.Session,
+  standing?: Process.Guard,
+): Effect.Effect<Process.Guard, never, Database.Service> =>
   Effect.gen(function* () {
     const { db } = yield* Database.Service;
     const existing = guards.get(chat.id);
-    if (existing?.db === db) {
+    if (existing?.db === db && existing.standing === standing) {
       return existing.guard;
     }
     // Captured so the check can write to the chat's feed from inside the agent process, which holds no
@@ -75,6 +83,9 @@ export const consentGuard = (chat: Agent.Session): Effect.Effect<Process.Guard, 
     const guard: Process.Guard = {
       check: (op, input) =>
         Effect.gen(function* () {
+          if (standing && Exit.isSuccess(yield* Effect.exit(standing.check(op, input)))) {
+            return;
+          }
           const requirements = Operation.getRequirements(op).map((declared) =>
             Schema.decodeUnknownOption(ConsentRequirement)(declared),
           );
@@ -108,7 +119,7 @@ export const consentGuard = (chat: Agent.Session): Effect.Effect<Process.Guard, 
           }
         }),
     };
-    guards.set(chat.id, { db, guard });
+    guards.set(chat.id, { db, standing, guard });
     return guard;
   });
 

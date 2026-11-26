@@ -9,7 +9,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as Surface from '@dxos/app-framework/Surface';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as Agent from '@dxos/compute/Agent';
-import { Filter } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import * as ChatParticipant from '@dxos/plugin-agent/ChatParticipant';
 import * as Profile from '@dxos/plugin-agent/Profile';
 import * as Assistant from '@dxos/plugin-assistant/Assistant';
@@ -25,6 +25,8 @@ import * as StoryModules from '@dxos/storybook-testing/StoryModules';
 import { Person } from '@dxos/types';
 
 export type ChatModuleData = {
+  /** Name of the agent whose chat the panel shows, when the space holds several agents. */
+  agent?: string;
   /**
    * Name (preferred or full) of the person this panel speaks as: the panel shows the agent's chat with
    * them (see plugin-agent's `ChatParticipant`) and attributes every prompt to them.
@@ -40,6 +42,12 @@ export type ChatModuleData = {
   defaultDrawer?: Chat.RootProps['defaultDrawer'];
 };
 
+/** The name of the agent that parents the chat, if one does. */
+const agentName = (chat: Agent.Session): string | undefined => {
+  const parent = Obj.getParent(chat);
+  return parent && Obj.instanceOf(Agent.Agent, parent) ? parent.name : undefined;
+};
+
 export const ChatModule = ({ data }: Surface.ComponentProps<ChatModuleData>) => {
   const space = ToolkitHooks.useActiveSpace();
   if (!space) {
@@ -50,6 +58,7 @@ export const ChatModule = ({ data }: Surface.ComponentProps<ChatModuleData>) => 
 
 const ChatModuleContainer = ({
   space,
+  agent,
   participant,
   hue,
   initialPrompt,
@@ -67,7 +76,9 @@ const ChatModuleContainer = ({
   // The newest chat until the reader picks another; a template switch drops the id and lands on the
   // new space's own chat.
   const [selected, setSelected] = useState<string>();
-  const chat = chats.find(({ id }) => id === selected) ?? (participant ? participantChat : chats.at(-1));
+  const agentChat = agent ? chats.find((chat) => agentName(chat) === agent) : undefined;
+  const chat =
+    chats.find(({ id }) => id === selected) ?? (participant ? participantChat : agent ? agentChat : chats.at(-1));
 
   // The picker edits the chat's own model, so the hook needs the chat it is rendered for.
   const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);

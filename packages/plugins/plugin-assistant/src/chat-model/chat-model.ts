@@ -101,6 +101,8 @@ export type ChatModelOptions = {
   sqlLayer?: Layer.Layer<SqlService.SqlService, ServiceResolver.ServiceNotAvailableError>;
   /** The fork this model shows and sends into: main up to the fork point, then the fork. Main when absent. */
   thread?: Trajectory.ThreadId;
+  /** The session's standing grants, admitted without the consent prompt (see `AssistantCapabilities.SessionGuard`). */
+  standingGuard?: Process.Guard;
 };
 
 const defaultOptions: Partial<ChatModelOptions> = {
@@ -793,7 +795,7 @@ export class LiveChatModel implements ChatModel {
         provider: model ? providerForModel(model, this._options.provider) : this._options.provider,
         location,
         // A guard is a closure, so only a local agent can ask the person for consent.
-        ...(location === 'local' ? { guard: yield* consentGuard(chat) } : {}),
+        ...(location === 'local' ? { guard: yield* consentGuard(chat, this._options.standingGuard) } : {}),
       });
       return chat;
     });

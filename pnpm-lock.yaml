@@ -23433,6 +23433,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/permission':
+        specifier: workspace:*
+        version: link:../../common/permission
       '@dxos/plugin-agent':
         specifier: workspace:*
         version: link:../../plugins/plugin-agent

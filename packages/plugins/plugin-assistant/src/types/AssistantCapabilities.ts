@@ -15,6 +15,7 @@ import type { AiContext } from '@dxos/assistant';
 import type * as SlashCommand from '@dxos/assistant-toolkit/SlashCommand';
 import type * as ComputeAgent from '@dxos/compute/Agent';
 import type * as Instructions from '@dxos/compute/Instructions';
+import type * as Process from '@dxos/compute/Process';
 import { type Database, type Obj, type Ref, type Registry } from '@dxos/echo';
 import type { DXN } from '@dxos/keys';
 import { type Message } from '@dxos/types';
@@ -160,6 +161,22 @@ export const Agent = Capability.make<Agent>()(`${AssistantNamespace.key}.capabil
 export const SessionProcess = Capability.make<SessionProcessDefinition>()(
   `${AssistantNamespace.key}.capability.agentProcess`,
 );
+
+/**
+ * The standing permissions of a local chat's agent process: a guard that admits operations without
+ * asking the person. The first contribution that returns a guard for the session applies; an operation
+ * it refuses falls back to the chat's consent prompt, so a requirement that is not consentable is refused.
+ */
+export type SessionGuard = (session: ComputeAgent.Session) => Process.Guard | undefined;
+
+export const SessionGuard = Capability.make<SessionGuard>()(`${AssistantNamespace.key}.capability.sessionGuard`);
+
+/** The standing guard the contributed {@link SessionGuard}s give the session, if any. */
+export const findSessionGuard = (
+  guards: readonly SessionGuard[],
+  session: ComputeAgent.Session,
+): Process.Guard | undefined =>
+  guards.reduce<Process.Guard | undefined>((found, guard) => found ?? guard(session), undefined);
 
 /**
  * Slash commands the chat prompt completes and runs without the model. Each plugin contributes the
