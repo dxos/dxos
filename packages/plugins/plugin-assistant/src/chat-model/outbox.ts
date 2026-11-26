@@ -83,6 +83,23 @@ export class Outbox<T> {
     return entry;
   }
 
+  /**
+   * Dispatches a failed prompt again, in the row it already has; returns whether one matched.
+   */
+  resend(match: (payload: T) => boolean): boolean {
+    const entry = this._registry.get(this.entries).find((entry) => {
+      const payload = this.#payloads.get(entry.id);
+      return entry.state === 'failed' && payload !== undefined && match(payload);
+    });
+    if (!entry) {
+      return false;
+    }
+
+    this.#patch(entry.id, { state: 'sending', error: undefined });
+    this.#schedule(entry.id);
+    return true;
+  }
+
   remove(id: string): void {
     this.#payloads.delete(id);
     this._registry.update(this.entries, (entries) => entries.filter((entry) => entry.id !== id));

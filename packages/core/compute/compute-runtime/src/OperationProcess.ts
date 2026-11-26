@@ -11,12 +11,13 @@ import * as Semaphore from 'effect/Semaphore';
 
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
-import * as Process from '@dxos/compute/Process';
 import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
+
+import * as Verifier from './Verifier.ts';
 
 /**
  * Durable marker recording that an operation's input handler has begun executing.
@@ -152,17 +153,17 @@ export const make = <const Op extends Operation.Definition.Any>(
 };
 
 /**
- * Refuse an operation that declares requirements unless the invoking process's guard admits it.
- * An operation that declares none is never checked, which is what keeps permissions opt-in; a
- * process with no guard holds no permissions, so it is refused rather than let through.
+ * Refuse an operation that declares requirements unless the invoking process's authorities admit it (see
+ * {@link Verifier.Admission}). An operation that declares none is never checked, which is what keeps permissions
+ * opt-in; outside a process there is nothing to admit it, so it is refused rather than let through.
  */
 export const admitOperation = (op: Operation.Definition.Any, input: unknown): Effect.Effect<void> =>
   Effect.gen(function* () {
     if (Operation.getRequirements(op).length === 0) {
       return;
     }
-    const guard = yield* Effect.serviceOption(Process.GuardService);
-    if (Option.isNone(guard)) {
+    const admission = yield* Effect.serviceOption(Verifier.Admission);
+    if (Option.isNone(admission)) {
       return yield* Effect.die(
         new Operation.OperationDeniedError({
           message: `Operation "${op.meta.key}" requires permissions and the invoking process holds none`,
@@ -170,7 +171,7 @@ export const admitOperation = (op: Operation.Definition.Any, input: unknown): Ef
         }),
       );
     }
-    yield* guard.value.check(op, input);
+    yield* admission.value.admit(op, input);
   });
 
 /**

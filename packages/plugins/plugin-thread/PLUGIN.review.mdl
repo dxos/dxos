@@ -105,7 +105,7 @@ verdict F-1.1: ChannelArticle renders the provider's messages in MessageThread a
 verdict F-1.2: Channels with foreign-key meta render read-only, unless the provider sets its own policy.
   status: untested
   evidence: [github:dxos/dxos/packages/plugins/plugin-thread/src/containers/ChannelArticle/ChannelArticle.tsx#ChannelArticle, github:dxos/dxos/packages/plugins/plugin-thread/src/capabilities/channel-backend-feed.ts]
-  note: The article passes readOnly to MessageThread from the provider's `readOnly` or the meta keys; no test checks it (the operations test covers `isMirrored`, a different policy).
+  note: The article passes readOnly to MessageThread from the provider's `readOnly` or the meta keys; no test checks it.
 ```
 
 ```mdl

@@ -13,7 +13,14 @@ export {
   type SessionProcessOptions,
   makeInputMessage,
 } from './session-process.ts';
+export { type SessionControlRpc, SessionControlRpcs } from './session-control.ts';
 export { type Delegation, type DelegationStrategy } from './delegation-strategy.ts';
+export {
+  type AgentDelegationPlan,
+  type DelegationPlan,
+  prepareAgentDelegation,
+  prepareSessionDelegation,
+} from './delegation.ts';
 export { type McpEndpointOf, loadMcpServers } from './mcp-servers.ts';
 export { mcpServerTypes } from '../mcp-server-types.ts';
 export * from './turn-producer.ts';

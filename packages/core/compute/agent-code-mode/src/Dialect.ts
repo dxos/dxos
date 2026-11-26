@@ -36,6 +36,12 @@ export type SandboxField = FieldDescription;
 /** A type the workspace has registered, as the model is told about it. */
 export type SandboxType = TypeDescription;
 
+/**
+ * Finds an operation the conversation can call now but that was not bound when the evaluation began — one whose skill
+ * the code itself just enabled. Its key is taken with or without `dxn:`; `undefined` when no bound skill provides it.
+ */
+export type LookupOperation = (key: string) => Effect.Effect<Operation.Definition.Any | undefined>;
+
 /** What a dialect is handed to build its bindings: the ECHO runtime, the skills' operations, and the turn's printer. */
 export type BindingsContext = {
   /**
@@ -45,10 +51,20 @@ export type BindingsContext = {
   readonly runtime: Context.Context<Database.Service | Operation.Service>;
   readonly operations: readonly SandboxOperation[];
   /**
+   * Consulted for an operation `operations` does not hold, so code can call one from a skill it enabled earlier in the
+   * same program. Absent where the host cannot re-read the conversation's skills mid-evaluation.
+   */
+  readonly lookupOperation?: LookupOperation;
+  /**
    * Keys of the skills the conversation has bound, so a printed object can say which of the skills its
    * type declares are missing. Absent where the host did not say, in which case none is called missing.
    */
   readonly skills?: readonly string[];
+  /**
+   * Each enabled skill's instructions by skill key, for a dialect that serves them on demand (see
+   * `Dialect.skillInstructions`) rather than in the system prompt.
+   */
+  readonly skillDocs?: Readonly<Record<string, string>>;
   /** Appends a line to this call's output — the only channel back to the model. */
   readonly print: (...values: unknown[]) => void;
 };
@@ -67,8 +83,15 @@ export interface Dialect {
   /** The API reference rendered into the system prompt, ahead of the skills' own instructions. */
   readonly instructions: (context: InstructionsContext) => string;
 
-  /** The entries `instructions` lists for these operations, to announce ones bound after the system prompt was written. */
+  /** Announces operations bound after the system prompt was written. */
   readonly operations: (operations: readonly SandboxOperation[]) => string;
+
+  /**
+   * Where the model's code finds one skill's instructions (an expression, for a skill key). Given, the producer
+   * states each enabled skill by name and description and serves its instructions in `skillDocs`,
+   * keeping long skills out of the system prompt.
+   */
+  readonly skillInstructions?: (key: string) => string;
 
   /** Wraps the model's code into the body the sandbox evaluates. */
   readonly wrap: (code: string) => string;
@@ -81,6 +104,12 @@ export interface Dialect {
    * out of its operations.
    */
   readonly database?: boolean;
+
+  /**
+   * Whether its bindings reach an operation through `BindingsContext.lookupOperation`, so the model can be told that a
+   * skill it enables is callable in the same program.
+   */
+  readonly lookupOperations?: boolean;
 }
 
 /** What a dialect is handed to write its instructions: the operations and the types the model may name. */
@@ -95,14 +124,16 @@ export type InstructionsContext = {
 
 /**
  * The types section of the API reference, shared by the dialects. `name` renders the identifier a
- * dialect's code names a type by — its typename, or the DXN it resolves.
+ * dialect's code names a type by — its typename, or the DXN it resolves — and `lookup` how its code
+ * reaches the Skill Manager's type search.
  */
 export const renderTypes = (
   types: readonly SandboxType[] | undefined,
   name: (type: SandboxType) => string = ({ typename }) => typename,
+  lookup: string = `\`${Operation.toolName(SkillManagerSkill.Operations.QueryTypes)}\``,
 ): string =>
   types === undefined
-    ? `### Types\n\nTypes are not listed here: find them, and their fields, with the Skill Manager's \`${Operation.toolName(SkillManagerSkill.Operations.QueryTypes)}\`, which searches every registered type.`
+    ? `### Types\n\nTypes are not listed here: find them, and their fields, with the Skill Manager's ${lookup}, which searches every registered type.`
     : types.length === 0
       ? '### Types\n\nNo types are registered.'
       : trim`

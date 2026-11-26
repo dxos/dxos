@@ -23,7 +23,8 @@ import {
   mcpServerTypes,
   withTurnStatus,
 } from '@dxos/agent-runtime';
-import { Alarm, HarnessControl, type PendingState, SessionStore, TrajectoryStore } from '@dxos/assistant';
+import { SessionControlRpcs } from '@dxos/agent-runtime';
+import { Alarm, type PendingState, SessionStore, TrajectoryStore } from '@dxos/assistant';
 import * as Agent from '@dxos/compute/Agent';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
@@ -75,7 +76,7 @@ export const make = (options: Options): SessionProcessDefinition =>
     services: [Database.Service, Registry.Service, Credential.CredentialsService, ShellService.ShellService],
     // Where the host has one, `TrajectoryCache` keeps its checkpoints there, shared with the chat UI on this device.
     optionalServices: [SqlService.SqlService],
-    rpcs: HarnessControl,
+    rpcs: SessionControlRpcs,
   }).pipe(
     Operation.withDurableHandler((ctx) =>
       Effect.gen(function* () {
@@ -186,7 +187,7 @@ export const make = (options: Options): SessionProcessDefinition =>
             const { pendingMessages } = yield* store.loadPending(feed);
             yield* Effect.forEach(pendingMessages, (message) => store.ack(feed, message), { discard: true });
           }),
-          rpcHandlers: yield* HarnessControl.toHandlers({
+          rpcHandlers: yield* SessionControlRpcs.toHandlers({
             setAlarm: Effect.fn(function* ({ at, message }) {
               yield* store.setAlarm(feed, { wakeAt: DateTime.toEpochMillis(at), message: message ?? undefined });
               yield* rearm;

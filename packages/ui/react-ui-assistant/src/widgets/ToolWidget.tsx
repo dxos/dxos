@@ -213,6 +213,16 @@ type ToolPanelProps = {
 const entryLabel = (entry: ToolEntry, t: ReturnType<typeof Hooks.useTranslation>['t']): string =>
   entry.kind === 'reasoning' ? t('tool-thinking.label') : entry.background ? t('tool-background.label') : entry.title;
 
+/** Whether the call was refused for want of a permission, which is a decision rather than a failure. */
+const isDenied = (error: unknown): boolean => typeof error === 'string' && error.startsWith('OperationDeniedError');
+
+/** How a row that ended in an error reads: a denial is a warning, anything else an error. */
+const errorTone = (error: unknown): 'error' | 'warning' | undefined =>
+  error === undefined ? undefined : isDenied(error) ? 'warning' : 'error';
+
+const toneText = (tone: 'error' | 'warning' | undefined): string | undefined =>
+  tone === 'error' ? 'text-error-text' : tone === 'warning' ? 'text-warning-text' : undefined;
+
 /** Whether the row carries anything an expansion could show. */
 const hasDetail = (entry: ToolEntry): boolean =>
   entry.text !== undefined || entry.input !== undefined || entry.error !== undefined || entry.result !== undefined;
@@ -222,7 +232,8 @@ const ToolPanel = ({ entries, onChangeOpen }: ToolPanelProps) => {
 
   const calls = entries.filter((entry) => entry.kind === 'call');
   const status = entries.filter((entry) => entry.kind === 'status').at(-1);
-  const failed = calls.filter((call) => call.error !== undefined).length;
+  const denied = calls.filter((call) => isDenied(call.error)).length;
+  const failed = calls.filter((call) => call.error !== undefined && !isDenied(call.error)).length;
 
   // A lone row owns the panel itself: a summary above one row says the same thing twice, and the
   // outer disclosure is the one that opens onto its payload.
@@ -262,9 +273,16 @@ const ToolPanel = ({ entries, onChangeOpen }: ToolPanelProps) => {
     <WidgetPanel
       icon={icon}
       label={header}
-      error={single?.error !== undefined}
+      tone={errorTone(single?.error)}
       suffix={
-        failed > 0 && <span className='shrink-0 text-error-text'>· {t('tool-failed.label', { count: failed })}</span>
+        <>
+          {denied > 0 && (
+            <span className='shrink-0 text-warning-text'>· {t('tool-denied.label', { count: denied })}</span>
+          )}
+          {failed > 0 && (
+            <span className='shrink-0 text-error-text'>· {t('tool-failed.label', { count: failed })}</span>
+          )}
+        </>
       }
       testId={singleCall ? 'assistant.tool-call' : 'assistant.tool-run'}
       onChangeOpen={onChangeOpen}
@@ -310,7 +328,7 @@ const ToolCallList = ({ entries, onOpen }: ToolCallListProps) => {
             <Accordion.ItemTrigger
               icon={entry.icon}
               data-testid={`assistant.tool-${entry.kind}`}
-              classNames={mx('text-sm', entry.error !== undefined && 'text-error-text')}
+              classNames={mx('text-sm', toneText(errorTone(entry.error)))}
             >
               {/* The icon wrappers are a control tall; the label centres on that line rather than its top. */}
               <span className='flex items-center h-(--dx-control-sm) min-w-0'>

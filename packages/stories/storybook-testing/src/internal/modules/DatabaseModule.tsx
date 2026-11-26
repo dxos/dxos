@@ -6,16 +6,16 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { ObjectsTree } from '@dxos/devtools';
-import { Filter, Obj, Query } from '@dxos/echo';
+import { Filter, Json, Obj, Query } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { type EntityId } from '@dxos/keys';
 import * as ForceGraph from '@dxos/plugin-explorer/ForceGraph';
 import * as ExplorerHooks from '@dxos/plugin-explorer/Hooks';
-import { type Space, useFlush, useQuery } from '@dxos/react-client/echo';
+import { type Space, useFlush, useObject, useQuery } from '@dxos/react-client/echo';
 import { type ChatEditorProps } from '@dxos/react-ui-chat';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { type EditorController, QueryEditor } from '@dxos/react-ui-query';
-import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter, Syntax } from '@dxos/react-ui-syntax-highlighter';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -27,7 +27,12 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-type DatabaseView = 'graph' | 'object-tree' | 'cards';
+export type DatabaseView = 'graph' | 'object-tree' | 'cards';
+
+export type DatabaseModuleData = {
+  /** The view the module opens on; the graph by default. */
+  view?: DatabaseView;
+};
 
 const VIEW_OPTIONS: { value: DatabaseView; icon: string; label: string }[] = [
   {
@@ -47,18 +52,18 @@ const VIEW_OPTIONS: { value: DatabaseView; icon: string; label: string }[] = [
   },
 ];
 
-export const DatabaseModule = () => {
+export const DatabaseModule = ({ data }: { data?: DatabaseModuleData }) => {
   const space = Hooks.useActiveSpace();
   if (!space) {
     return null;
   }
 
-  return <DatabaseModuleContainer space={space} />;
+  return <DatabaseModuleContainer space={space} defaultView={data?.view} />;
 };
 
-const DatabaseModuleContainer = ({ space }: { space: Space }) => {
+const DatabaseModuleContainer = ({ space, defaultView = 'graph' }: { space: Space; defaultView?: DatabaseView }) => {
   const [filter, setFilter] = useState<Filter.Any>();
-  const [view, setView] = useState<DatabaseView>('graph');
+  const [view, setView] = useState<DatabaseView>(defaultView);
   const [open, setOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<EntityId | null>(null);
 
@@ -87,51 +92,76 @@ const DatabaseModuleContainer = ({ space }: { space: Space }) => {
     space.db,
     selectedId ? Query.select(Filter.id(selectedId)) : Query.select(Filter.nothing()),
   );
+  // A snapshot, so the panel re-renders when the selected object changes rather than only when another is selected.
+  const [selectedSnapshot] = useObject(selectedObject);
 
   return (
-    <Panel.Root classNames='relative h-full'>
+    <Panel.Root classNames='relative h-full' data-testid='database-module'>
       <Panel.Header>
         <DatabaseSearchBar space={space} view={view} onSubmit={handleSubmit} onViewChange={handleViewChange} />
       </Panel.Header>
-      <Panel.Body classNames='relative min-h-0'>
-        {view === 'graph' && <ForceGraph.Root classNames='min-h-[50vh]' model={model} />}
+      {/* A column, so the selected record docks below the view instead of floating over it. */}
+      <Panel.Body classNames='relative min-h-0 flex flex-col'>
+        {view === 'graph' && <ForceGraph.Root classNames='flex-1 min-h-[50vh]' model={model} />}
 
         {view === 'object-tree' && (
-          <ScrollArea.Root classNames='h-full'>
+          <ScrollArea.Root classNames='dx-grow'>
             <ScrollArea.Viewport>
-              <ObjectsTree db={space.db} onSelect={(entity) => setSelectedId(entity.id)} />
+              <ObjectsTree
+                db={space.db}
+                selected={selectedId ?? undefined}
+                onSelect={(entity) => setSelectedId(entity.id)}
+              />
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         )}
 
         {view === 'cards' && (
-          <DatabaseCardsView
-            space={space}
-            filter={filter}
-            selectedId={selectedId}
-            onSelect={(id) => setSelectedId(id)}
-          />
+          <div className='relative dx-grow'>
+            <DatabaseCardsView
+              space={space}
+              filter={filter}
+              selectedId={selectedId}
+              onSelect={(id) => setSelectedId(id)}
+            />
+          </div>
         )}
 
         {open ? (
           <div
             className={mx(
               'flex absolute left-2 right-2 bottom-2 h-[8rem]',
-              'overflow-hidden dx-base-surface border border-separator-subtle opacity-80',
+              'overflow-hidden dx-base-surface border border-separator-subtle',
             )}
           >
-            <JsonHighlighter classNames='text-sm' data={filter} />
+            <JsonHighlighter classNames='flex-1 min-w-0 text-sm' data={filter} />
           </div>
         ) : (
           (view === 'object-tree' || view === 'cards') &&
-          selectedObject && (
+          selectedSnapshot && (
             <div
-              className={mx(
-                'flex absolute left-2 right-2 bottom-2 h-[8rem]',
-                'overflow-hidden dx-base-surface border border-separator-subtle opacity-80',
-              )}
+              data-testid='database-module.selected'
+              className='flex flex-col shrink-0 h-1/2 min-h-0 dx-base-surface border-t border-separator'
             >
-              <JsonHighlighter classNames='text-sm' data={selectedObject} />
+              {/* The debug panel's record view: filter, depth, and refs resolved against the space. */}
+              <Syntax.Root
+                data={selectedSnapshot}
+                getReplacer={(depth) => Json.createRefReplacer({ db: space.db, depth })}
+              >
+                <Panel.Root>
+                  <Panel.Header>
+                    <Toolbar.Root classNames='grid grid-cols-[1fr_6rem]'>
+                      <Syntax.Filter />
+                      <Syntax.Depth />
+                    </Toolbar.Root>
+                  </Panel.Header>
+                  <Panel.Body asChild>
+                    <Syntax.Viewport>
+                      <Syntax.Code />
+                    </Syntax.Viewport>
+                  </Panel.Body>
+                </Panel.Root>
+              </Syntax.Root>
             </div>
           )
         )}

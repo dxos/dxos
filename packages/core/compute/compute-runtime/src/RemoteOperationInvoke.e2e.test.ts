@@ -31,6 +31,7 @@ import * as RemoteProcessManager from './RemoteProcessManager.ts';
 import * as RemoteTraceMonitor from './RemoteTraceMonitor.ts';
 import { LocalRemoteHost } from './testing/index.ts';
 import * as UnifiedProcessManager from './UnifiedProcessManager.ts';
+import * as Verifier from './Verifier.ts';
 
 /**
  * `invoke(op, input, { on: 'edge' })` end to end, as an app runs it: the process-backed invoker over the
@@ -128,6 +129,7 @@ const withInvoker = Effect.fn(
     const kv = yield* KeyValueStore.KeyValueStore;
     const makeManager = (prefix: string) =>
       new ProcessManager.Impl({
+        verifier: Verifier.make(),
         registry,
         kvStore: KeyValueStore.prefix(kv, prefix),
         traceSink,

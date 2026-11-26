@@ -1,7 +1,6 @@
 {
   "name": "@dxos/permission",
   "version": "0.17.0",
-  "private": true,
   "description": "Permission DSL: subjects, commands, policies, grants, requirements, and the pure check evaluator.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -18,6 +17,56 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/lib/index.mjs"
+    },
+    "./Check": {
+      "source": "./src/Check.ts",
+      "types": "./dist/types/src/Check.d.ts",
+      "default": "./dist/lib/Check.mjs"
+    },
+    "./Command": {
+      "source": "./src/Command.ts",
+      "types": "./dist/types/src/Command.d.ts",
+      "default": "./dist/lib/Command.mjs"
+    },
+    "./Consent": {
+      "source": "./src/Consent.ts",
+      "types": "./dist/types/src/Consent.d.ts",
+      "default": "./dist/lib/Consent.mjs"
+    },
+    "./Grant": {
+      "source": "./src/Grant.ts",
+      "types": "./dist/types/src/Grant.d.ts",
+      "default": "./dist/lib/Grant.mjs"
+    },
+    "./Permission": {
+      "source": "./src/Permission.ts",
+      "types": "./dist/types/src/Permission.d.ts",
+      "default": "./dist/lib/Permission.mjs"
+    },
+    "./Policy": {
+      "source": "./src/Policy.ts",
+      "types": "./dist/types/src/Policy.d.ts",
+      "default": "./dist/lib/Policy.mjs"
+    },
+    "./Principal": {
+      "source": "./src/Principal.ts",
+      "types": "./dist/types/src/Principal.d.ts",
+      "default": "./dist/lib/Principal.mjs"
+    },
+    "./Requirement": {
+      "source": "./src/Requirement.ts",
+      "types": "./dist/types/src/Requirement.d.ts",
+      "default": "./dist/lib/Requirement.mjs"
+    },
+    "./Revocation": {
+      "source": "./src/Revocation.ts",
+      "types": "./dist/types/src/Revocation.d.ts",
+      "default": "./dist/lib/Revocation.mjs"
+    },
+    "./Subject": {
+      "source": "./src/Subject.ts",
+      "types": "./dist/types/src/Subject.d.ts",
+      "default": "./dist/lib/Subject.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -26,7 +75,6 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/compute": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/keys": "workspace:*"
   },
@@ -36,5 +84,8 @@
   },
   "peerDependencies": {
     "effect": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

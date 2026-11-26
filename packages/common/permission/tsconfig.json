@@ -6,9 +6,6 @@
   ],
   "references": [
     {
-      "path": "../../core/compute/compute"
-    },
-    {
       "path": "../effect"
     },
     {

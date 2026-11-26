@@ -12,14 +12,18 @@ import { updateState } from './update-state.ts';
 const handler: Operation.WithHandler<typeof LayoutOperation.UpdateDialog> = LayoutOperation.UpdateDialog.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ subject, state, type, blockAlign, overlayClasses, overlayStyle, props }) {
-      yield* updateState(() => ({
-        dialogOpen: state ?? Boolean(subject),
-        dialogType: type ?? 'default',
-        dialogBlockAlign: blockAlign ?? 'center',
-        dialogOverlayClasses: overlayClasses,
-        dialogOverlayStyle: overlayStyle,
-        dialogContent: subject ? { component: subject, props } : null,
-      }));
+      yield* updateState((current) =>
+        state === false && subject && current.dialogContent?.component !== subject
+          ? {}
+          : {
+              dialogOpen: state ?? Boolean(subject),
+              dialogType: type ?? 'default',
+              dialogBlockAlign: blockAlign ?? 'center',
+              dialogOverlayClasses: overlayClasses,
+              dialogOverlayStyle: overlayStyle,
+              dialogContent: state !== false && subject ? { component: subject, props } : null,
+            },
+      );
     }),
   ),
 );

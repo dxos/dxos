@@ -25,6 +25,7 @@ import { BaseError } from '@dxos/errors';
 import { assertArgument, invariant } from '@dxos/invariant';
 import type { URI } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { Requirement } from '@dxos/permission';
 
 import { type NoHandlerError, RunAgainError } from './errors.ts';
 import type { Operation } from './index.ts';
@@ -1409,32 +1410,55 @@ export const isVisible = (op: PersistentOperation): boolean =>
 export const idempotent = annotate(IdempotentAnnotation, true);
 
 /**
- * What an operation requires of the process that invokes it, in the vocabulary of the permission
- * system that interprets it (`@dxos/permission` requirements). Present ⇒ the runtime refuses the
- * call unless the invoking process holds a guard that admits it; absent ⇒ the operation is never
- * checked, which is what keeps permissions opt-in.
+ * What an operation requires of the process that invokes it. Present ⇒ the runtime refuses the call unless the
+ * invoking process's authority admits it; absent ⇒ the operation is never checked, which is what keeps permissions
+ * opt-in.
+ *
+ * @experimental
  */
 export const RequiresAnnotation = Annotation.make({
   id: 'org.dxos.operation.requires',
-  schema: Schema$.Array(Schema$.Unknown),
+  schema: Schema$.Array(Requirement.Requirement),
 });
 
-/** The operation's declared requirements; empty when it declares none. */
-export const getRequirements = (op: Definition.Any): readonly unknown[] =>
+/**
+ * The operation's declared requirements; empty when it declares none.
+ *
+ * @experimental
+ */
+export const getRequirements = (op: Definition.Any): readonly Requirement.Requirement[] =>
   op.meta.annotations
-    ? Option.getOrElse(Annotation.getDictionary(op.meta.annotations, RequiresAnnotation), (): readonly unknown[] => [])
+    ? Option.getOrElse(
+        Annotation.getDictionary(op.meta.annotations, RequiresAnnotation),
+        (): readonly Requirement.Requirement[] => [],
+      )
     : [];
+
+/**
+ * Pipeable combinator that declares what the operation requires of the process that invokes it — see
+ * {@link RequiresAnnotation}: `Operation.make({ ... }).pipe(Operation.requires(Requirement.make(SendEmail)))`.
+ *
+ * @experimental
+ */
+export const requires = (...requirements: readonly Requirement.Requirement[]) =>
+  annotate(RequiresAnnotation, requirements);
 
 /**
  * The input field a consent prompt shows before the person allows the call (the body of an email it
  * would send), so they approve what is sent and not only that something is.
+ *
+ * @experimental
  */
 export const ConsentPreviewAnnotation = Annotation.make({
   id: 'org.dxos.operation.consentPreview',
   schema: Schema$.Struct({ field: Schema$.String, label: Schema$.String }),
 });
 
-/** The text a consent prompt previews for this call, when the operation names a string field to show. */
+/**
+ * The text a consent prompt previews for this call, when the operation names a string field to show.
+ *
+ * @experimental
+ */
 export const getConsentPreview = (
   op: Definition.Any,
   input: unknown,

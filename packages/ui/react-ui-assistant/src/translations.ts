@@ -40,6 +40,8 @@ export const translations = [
         'tool-run-suffix.label_other': 'Ran {{count}} commands',
         'tool-thinking.label': 'Thinking',
         'tool-background.label': 'Background result',
+        'tool-denied.label_one': '{{count}} denied',
+        'tool-denied.label_other': '{{count}} denied',
         'tool-failed.label_one': '{{count}} failed',
         'tool-failed.label_other': '{{count}} failed',
         'nav-first.label': 'First message',

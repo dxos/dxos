@@ -25,6 +25,7 @@ export class ReplayChatModel implements ChatModel {
   readonly active = Atom.make(false);
   readonly messages = Atom.make<Message.Message[]>([]);
   readonly error = Atom.make<Option.Option<Error>>(Option.none());
+  readonly retryable = Atom.make(false);
   readonly outbox = Atom.make<readonly OutboxEntry[]>([]);
   readonly mcpErrors = Atom.make<readonly Trace.PayloadType<typeof Trace.McpServerError>[]>([]);
   readonly activity = Atom.make<Trace.PayloadType<typeof Trace.RequestPhase> | undefined>(undefined);

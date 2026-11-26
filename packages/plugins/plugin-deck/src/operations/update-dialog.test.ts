@@ -44,4 +44,22 @@ describe('LayoutOperation.UpdateDialog', () => {
     expect(read().dialogOpen).toBe(true);
     expect(read().dialogContent?.component).toBe('dxn:test:arriving');
   });
+
+  test('a close naming a dialog leaves another that has replaced it open', async ({ expect }) => {
+    await using harness = await Harness.createComposerTestApp({ plugins: [DeckPlugin.make()] });
+    const read = () => harness.get(Capabilities.AtomRegistry).get(harness.get(DeckCapabilities.EphemeralState));
+
+    await harness.runPromise(Operation.invoke(LayoutOperation.UpdateDialog, { subject: 'dxn:test:replaced' }));
+    await harness.runPromise(Operation.invoke(LayoutOperation.UpdateDialog, { subject: 'dxn:test:replacing' }));
+    await harness.runPromise(
+      Operation.invoke(LayoutOperation.UpdateDialog, { subject: 'dxn:test:replaced', state: false }),
+    );
+    expect(read().dialogOpen).toBe(true);
+    expect(read().dialogContent?.component).toBe('dxn:test:replacing');
+
+    await harness.runPromise(
+      Operation.invoke(LayoutOperation.UpdateDialog, { subject: 'dxn:test:replacing', state: false }),
+    );
+    expect(read().dialogOpen).toBe(false);
+  });
 });

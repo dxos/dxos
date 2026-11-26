@@ -1,0 +1,12 @@
+---
+'@dxos/protocols': minor
+'@dxos/compute': minor
+'@dxos/compute-runtime': minor
+'@dxos/agent-runtime': minor
+'@dxos/edge-compute': patch
+'@dxos/echo-client': patch
+---
+
+An operation that runs in a plugin bundle on EDGE gets the full `Agent.Service` from the EDGE process that hosts its session (`PluginProtocol.InvocationScope.agent`), and the bundle runs no process of its own. There, `Agent.running` answers an atom fixed at the time of the call rather than a live one, since a live atom would hold an RPC open past the invocation. `Agent.open` there takes no `provider`, `systemPrompt` or `location` and dies if given them, since EDGE opens a session's process as the session was created. `Agent.conversationService` is removed. The `ProcessProtocol` decoders are now `ProcessProtocolCodec` in `@dxos/compute-runtime/remote-process`, and `@dxos/agent-runtime` exports `prepareSessionDelegation` and `prepareAgentDelegation`.
+
+`Database.absorbWorkingSet` now waits until the documents a refresh delivered are integrated (`RepoProxy.integrated`), so a caller resolves the objects a nested call created instead of falling back to a lagging index.

@@ -18,6 +18,7 @@ import {
   RemoteProcessManager,
   RemoteTraceMonitor,
   UnifiedProcessManager,
+  Verifier,
   configuredCredentialsLayer,
 } from '@dxos/compute-runtime';
 import * as Agent from '@dxos/compute/Agent';
@@ -106,7 +107,7 @@ export const makeAgentLayer = ({
     Layer.provideMerge(edge ? EdgeProcessManager.fromClient(client) : RemoteProcessManager.layerNoop),
     Layer.provideMerge(RemoteTraceMonitor.layerNoop),
     Layer.provideMerge(captureProcessManager(holder)),
-    Layer.provideMerge(ProcessManager.layer()),
+    Layer.provideMerge(ProcessManager.layer().pipe(Layer.provide(Verifier.layer()))),
     Layer.provideMerge(serviceResolverLayer(holder)),
     Layer.provideMerge(operationRegistryLayer),
     Layer.provideMerge(OperationHandlerSet.provide(PermissionHandlers)),

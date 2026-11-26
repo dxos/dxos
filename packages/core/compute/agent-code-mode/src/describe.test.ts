@@ -20,9 +20,12 @@ import { formatValue } from './describe.ts';
 import { EffectDialect } from './dialect-effect.ts';
 import { PlainDialect } from './dialect-plain.ts';
 import type { Dialect, SandboxOperation } from './Dialect.ts';
-import { EVAL_TOOL_NAME, evaluate } from './eval-tool.ts';
+import { EVAL_TOOL_NAME, STATE_TRAILER, evaluate } from './eval-tool.ts';
 import { makeCodeModeTurnProducer } from './producer.ts';
 import * as Sandbox from './Sandbox.ts';
+
+/** What the code printed, without the trailer every result the model reads ends with. */
+const untrailed = (text: string): string => text.replace(`\n\n${STATE_TRAILER}`, '');
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -70,7 +73,8 @@ const lastToolResult = ({ prompt }: ScriptedLanguageModel.ScriptedRequest): stri
       : [],
   );
   const result = results.at(-1);
-  return typeof result === 'string' ? result : JSON.stringify(result);
+  // No result yet on the first request: `JSON.stringify(undefined)` is undefined, which has no trailer to drop.
+  return result === undefined ? '' : untrailed(typeof result === 'string' ? result : JSON.stringify(result));
 };
 
 /** The last tool result each scripted turn was shown, by turn. */

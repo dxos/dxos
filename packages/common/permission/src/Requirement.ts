@@ -35,6 +35,8 @@ export type MakeOptions = {
 export const arg = (name: string): SubjectSelector => Schema.decodeSync(SubjectSelector)(`.args.${name}`);
 
 /** Builds a requirement from a definition (or a bare command) and how to find the subject. */
+// TODO(dmaretskyi): Drop the bare-command form and take only a `Permission.Definition` unless a caller needs it; only
+//  tests and stories-compute's permissions demo still pass a string.
 export const make = (
   definition: Permission.Definition | Command.Command | string,
   { subject, policy, consentable }: MakeOptions = {},

@@ -154,6 +154,8 @@ export class RepoProxy extends Resource {
   #inbox: { update: DataService.DocumentUpdate; bulk: boolean }[] = [];
   #inboxHead = 0;
   #draining = false;
+  /** The running drain of {@link #inbox}, which takes every update queued while it runs. */
+  #drained: Promise<void> = Promise.resolve();
 
   /**
    * What stopped the proxy taking work, recorded once when it does: a close, whose error's stack is the call site,
@@ -902,7 +904,19 @@ export class RepoProxy extends Resource {
     for (const update of updates) {
       this.#inbox.push({ update, bulk });
     }
-    void this.#drainInbox();
+    if (!this.#draining) {
+      this.#drained = this.#drainInbox().catch((error) => log.catch(error));
+    }
+  }
+
+  /**
+   * Resolves once every update the host has sent so far has been taken off the inbox. A batch is integrated in slices
+   * that yield between them, so its documents can still be pending after the batch was delivered. Best effort, as
+   * integration always was: an update that fails to integrate is logged and skipped, and a proxy that closes drops
+   * what is left; neither rejects.
+   */
+  integrated(): Promise<void> {
+    return this.#drained;
   }
 
   /**

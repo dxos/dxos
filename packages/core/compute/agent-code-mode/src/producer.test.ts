@@ -224,14 +224,25 @@ describe("code mode states the enabled skills and the Skill Manager's lookups", 
           const [system] = systems;
           expect(system).toContain('Today is Thursday, 2026-11-19 (UTC).');
           expect(system).toContain('The skills enabled in this conversation are stated in this prompt');
-          expect(system).toContain(querySkillsCall);
-          // Named by the tool name the Operations section lists, not a bare `queryTypes` another skill also offers.
+          // The plain dialect lists its operations; the Effect dialect has the model discover them in its catalog.
+          const lists = dialect !== EffectDialect;
+          expect(system.includes(querySkillsCall)).toBe(lists);
+          expect(system.includes('yield* search(words)')).toBe(!lists);
+          // Only a dialect that looks operations up mid-program can call an enabled skill's at once.
           expect(system).toContain(
-            "find them, and their fields, with the Skill Manager's `assistant-toolkit-query-types`, which searches every registered type",
+            lists
+              ? 'its instructions and operations are stated from your next eval call'
+              : 'its operations resolve right after that, in the same program',
           );
+          // Named by the tool name the Operations section lists, not a bare `queryTypes` another skill also offers.
+          expect(system).toContain("find them, and their fields, with the Skill Manager's ");
+          // The Effect dialect names the lookup by the DXN its code resolves, which a model otherwise guesses.
+          expect(system).toContain(lists ? '`assistant-toolkit-query-types`' : 'assistantToolkit.queryTypes');
           // The enabled Scoring skill's rules and operation are stated; the Notes skill is not enabled yet.
-          expect(system).toContain('Score titles before ranking them');
-          expect(system).toContain('Scores a title for urgency');
+          // The plain dialect states an enabled skill's instructions; the Effect dialect names the skill and serves them in DOCS.
+          expect(system.includes('Score titles before ranking them')).toBe(lists);
+          expect(system.includes('## Enabled skills')).toBe(!lists);
+          expect(system.includes('Scores a title for urgency')).toBe(lists);
           // An operation the database API replaces is left out of the Effect dialect, though its skill is enabled; the
           // plain dialect has no database API to replace it with.
           expect(system.includes('Reads a ticket by reference')).toBe(dialect !== EffectDialect);
@@ -249,7 +260,7 @@ describe("code mode states the enabled skills and the Skill Manager's lookups", 
               expect(conversation).toContain('Skills enabled in this turn');
               expect(conversation).toContain('Write notes in lower case');
               expect(conversation).toContain('Operations available in this turn');
-              expect(conversation).toContain('Adds a note to the notebook');
+              expect(conversation).toContain(lists ? 'Adds a note to the notebook' : keyOf(AddNote));
             }
           });
 
@@ -286,6 +297,65 @@ describe("code mode states the enabled skills and the Skill Manager's lookups", 
       { timeout: 30_000 },
     );
   });
+});
+
+describe('code mode calls an enabled skill in the program that enabled it', () => {
+  const { noted, handlers } = makeHandlers();
+
+  it.effect(
+    'effect dialect: enable, resolve and invoke in one eval; an unknown key still fails as before',
+    Effect.fnUntraced(
+      function* (_) {
+        // A host whose registry holds operation records (as Composer's registry sync adds them) resolves the key to this
+        // record, which `Operation.invoke` cannot run.
+        const { db } = yield* Database.Service;
+        db.registry.add([Operation.serialize(AddNote)]);
+        const session = yield* AgentService.createSession({ skills: [ScoreSkill] });
+        yield* session.submitPrompt('Note "remember the docs".');
+        yield* session.waitForCompletion();
+
+        const messages = yield* TrajectoryStore.history(session.feed);
+        const results = messages
+          .flatMap((message) => message.blocks)
+          .filter((block): block is ContentBlock.ToolResult => block._tag === 'toolResult');
+        expect(results).toHaveLength(2);
+        expect(results[0].error).toBeUndefined();
+        expect(JSON.stringify(results[0].result)).toContain('noted');
+        expect(noted).toEqual(['remember the docs']);
+        // The real resolver's failure, not a lookup miss, names what the code got wrong.
+        expect(results[1].error).toContain('com.example.operation.missing');
+      },
+      Effect.provide(
+        AssistantTestLayer({
+          types: [Ticket, Feed.Feed, Skill.Skill],
+          operationHandlers: [SkillManagerSkill.Handlers, handlers],
+          skills: [ScoreSkill, NotesSkill],
+          agent: { makeTurnProducer: makeCodeModeTurnProducer({ dialect: EffectDialect }) },
+          aiService: scriptedAiService([
+            {
+              parts: [
+                toolCall(EVAL_TOOL_NAME, {
+                  code:
+                    `const Enable = yield* Database.resolve('${keyOf(EnableSkills)}');\n` +
+                    "yield* Operation.invoke(Enable, { keys: ['com.example.skill.notes'] });\n" +
+                    `const AddNote = yield* Database.resolve('${keyOf(AddNote)}');\n` +
+                    "yield* print(yield* Operation.invoke(AddNote, { text: 'remember the docs' }));",
+                }),
+              ],
+            },
+            {
+              parts: [
+                toolCall(EVAL_TOOL_NAME, { code: "yield* Database.resolve('dxn:com.example.operation.missing');" }),
+              ],
+            },
+            { parts: [text('Noted.')] },
+          ]),
+        }),
+      ),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 30_000 },
+  );
 });
 
 describe('toToolInput', () => {

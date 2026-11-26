@@ -9,11 +9,13 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 
+import type { AiUsage } from '@dxos/ai';
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import { FeedTraceSink } from '@dxos/compute-runtime';
 import { Database, type Query } from '@dxos/echo';
 
 import { type ToolInvocation, toolInvocations } from './assertions.ts';
+import { EvalRunError } from './errors.ts';
 
 /** One message of a conversational run, as the scorers see it. */
 export type Turn = {
@@ -28,6 +30,8 @@ export class Run extends Context.Service<
     readonly durationMillis: number;
     /** The messages exchanged, for a run driven as a conversation; empty otherwise. */
     readonly transcript: readonly Turn[];
+    /** Every model round trip the run made, in order; empty where the harness cannot observe them. */
+    readonly modelCalls: readonly AiUsage.Call[];
   }
 >()('@dxos/assistant-evals/Scorer/Run') {}
 
@@ -52,8 +56,14 @@ export type Services =
   | Run
   | Memo;
 
-/** A scorer's verdict: a fraction of a mark, or a flag read as one or zero. */
-export type Result = number | boolean;
+/** A mark: a fraction, or a flag read as one or zero. */
+export type Mark = number | boolean;
+
+/**
+ * A scorer's verdict: a mark, or a mark with the raw figures behind it, so a count graded against a
+ * budget still reports the count itself.
+ */
+export type Result = Mark | { readonly score: Mark; readonly metadata: Record<string, unknown> };
 
 /**
  * One graded dimension: an effect that reads whatever it needs of the open run and returns the mark
@@ -71,6 +81,7 @@ export type Any = Scorer;
 /** A scored dimension, as a run reports it: the mark, or the failure that stood in for one. */
 export type Score = {
   readonly score: number;
+  readonly metadata?: Record<string, unknown>;
   readonly error?: string;
 };
 
@@ -151,6 +162,53 @@ export const toolCallSuccess = (options: { name?: string; description?: string }
   });
 
 /**
+ * Full marks up to `target`, falling linearly to nothing at `budget`: a count where fewer is better
+ * but some is expected.
+ */
+export const withinBudget = (count: number, target: number, budget: number): number =>
+  count <= target ? 1 : (budget - count) / (budget - target);
+
+/**
+ * Grades how many model round trips the session took: full marks up to `target`, nothing at `budget`.
+ * Every engine pays one round trip per step it takes, so this compares how directly engines reach the
+ * same result. The count itself rides the score's metadata.
+ */
+export const turns = (options: { name?: string; description?: string; target: number; budget: number }): Scorer =>
+  make({
+    name: options.name ?? 'turns',
+    description:
+      options.description ??
+      `Model round trips the session took: full marks up to ${options.target}, none at ${options.budget}.`,
+    score: Effect.gen(function* () {
+      const { modelCalls } = yield* Run;
+      if (modelCalls.length === 0) {
+        return yield* Effect.fail(new EvalRunError({ message: 'The run recorded no model calls to count.' }));
+      }
+      return {
+        score: withinBudget(modelCalls.length, options.target, options.budget),
+        metadata: { turns: modelCalls.length },
+      };
+    }),
+  });
+
+/**
+ * Grades how many of the session's tool calls failed (see {@link failedCall}): full marks for none,
+ * nothing at `budget`. In code mode every call is an `eval`, so this is its failed programs. A failure
+ * the agent recovers from still costs a round trip, which {@link toolCallSuccess} only sees as a share.
+ */
+export const failedCalls = (options: { name?: string; description?: string; budget: number }): Scorer =>
+  make({
+    name: options.name ?? 'failed-calls',
+    description: options.description ?? `Tool calls that failed: full marks for none, none at ${options.budget}.`,
+    score: invocations.pipe(
+      Effect.map((invocations) => {
+        const failed = invocations.filter(failedCall).length;
+        return { score: withinBudget(failed, 0, options.budget), metadata: { failed, calls: invocations.length } };
+      }),
+    ),
+  });
+
+/**
  * A scorer over the session's wall clock: full marks up to `targetMinutes`, falling linearly to
  * nothing at `budgetMinutes`. `delivered` gates it, so a run that never produced the thing being
  * timed scores nothing rather than being rewarded for stopping early.
@@ -176,8 +234,14 @@ export const duration = (options: {
   });
 
 /** Booleans are a mark or none; fractions are clamped, so a scorer cannot spend more than its one. */
-const normalize = (result: Result): number =>
-  typeof result === 'boolean' ? (result ? 1 : 0) : Math.max(0, Math.min(1, Number.isFinite(result) ? result : 0));
+const normalizeMark = (mark: Mark): number =>
+  typeof mark === 'boolean' ? (mark ? 1 : 0) : Math.max(0, Math.min(1, Number.isFinite(mark) ? mark : 0));
+
+/** A verdict as a score and whatever figures it reported. */
+const normalize = (result: Result): { score: number; metadata?: Record<string, unknown> } =>
+  typeof result === 'object'
+    ? { score: normalizeMark(result.score), metadata: result.metadata }
+    : { score: normalizeMark(result) };
 
 /**
  * A run whose space is still open. The harness is disposed by the eval's `afterAll` (see
@@ -208,11 +272,19 @@ export const closeSession = (id: string): void => {
  * What a session provides its scorers beyond the space itself: what the run reports about its own
  * wall clock, and the memo the shared reads of that run agree on.
  */
-export const sessionServices = (run: { durationMillis: number; transcript?: readonly Turn[] }) => {
+export const sessionServices = (run: {
+  durationMillis: number;
+  transcript?: readonly Turn[];
+  modelCalls?: readonly AiUsage.Call[];
+}) => {
   const cache = new Map<unknown, Exit.Exit<unknown, unknown>>();
   return <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, Exclude<R, Run | Memo>> =>
     effect.pipe(
-      Effect.provideService(Run, { durationMillis: run.durationMillis, transcript: run.transcript ?? [] }),
+      Effect.provideService(Run, {
+        durationMillis: run.durationMillis,
+        transcript: run.transcript ?? [],
+        modelCalls: run.modelCalls ?? [],
+      }),
       Effect.provideService(Memo, { cache }),
     ) as Effect.Effect<A, E, Exclude<R, Run | Memo>>;
 };
@@ -231,9 +303,7 @@ export const runAll = (scorers: readonly Any[]): Effect.Effect<Scores, never, Se
       const exit = yield* Effect.exit(
         scorer.score.pipe(Effect.flatMap((result) => Effect.try(() => normalize(result)))),
       );
-      scores[scorer.name] = Exit.isSuccess(exit)
-        ? { score: exit.value }
-        : { score: 0, error: Cause.pretty(exit.cause) };
+      scores[scorer.name] = Exit.isSuccess(exit) ? exit.value : { score: 0, error: Cause.pretty(exit.cause) };
     }
     return scores;
   });
@@ -256,11 +326,13 @@ export const toEvalite = (scorers: readonly Any[]) =>
       const session = output?.runId === undefined ? undefined : sessions.get(output.runId);
       if (!session) {
         const recorded = output?.scores?.[scorer.name];
-        return { score: recorded?.score ?? 0, metadata: { error: recorded?.error } };
+        return { score: recorded?.score ?? 0, metadata: { ...recorded?.metadata, error: recorded?.error } };
       }
       const exit = await session.grade(scorer);
-      return Exit.isSuccess(exit)
-        ? { score: normalize(exit.value), metadata: {} }
-        : { score: 0, metadata: { error: Cause.pretty(exit.cause) } };
+      if (Exit.isFailure(exit)) {
+        return { score: 0, metadata: { error: Cause.pretty(exit.cause) } };
+      }
+      const { score, metadata } = normalize(exit.value);
+      return { score, metadata: metadata ?? {} };
     },
   }));

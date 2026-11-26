@@ -32,6 +32,7 @@ import { credentialsLayerConfig } from './services/credentials.ts';
 import * as TriggerManager from './TriggerManager.ts';
 import { TriggerDispatcher } from './triggers/trigger-dispatcher.ts';
 import { TriggerStateStore } from './triggers/trigger-state-store.ts';
+import * as Verifier from './Verifier.ts';
 
 /**
  * Environment providing the {@link TriggerManagerLayer}'s dependencies
@@ -59,7 +60,9 @@ const TestLayer = (
     Layer.provideMerge(AiService.notAvailable),
     Layer.provideMerge(credentialsLayerConfig([])),
     Layer.provideMerge(FetchHttpClient.layer),
-    Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
+    Layer.provideMerge(
+      ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator }).pipe(Layer.provide(Verifier.layer())),
+    ),
     Layer.provideMerge(ServiceResolver.layerRequirements(Database.Service)),
     Layer.provideMerge(
       TestDatabaseLayer({

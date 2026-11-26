@@ -11,33 +11,49 @@ import type * as Process from '@dxos/compute/Process';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { DXN } from '@dxos/echo';
-import { Grant, Guard, Permission, Principal, Requirement, Subject } from '@dxos/permission';
+import { Grant, Permission, Principal, Requirement, Subject } from '@dxos/permission';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as SpaceOperationHandlerSet from '@dxos/plugin-space/SpaceOperationHandlerSet';
 
-/** A permission the configurator offers as a checkbox, and the command its grant names. */
+export const SpaceRead = Permission.define({
+  command: '/space/read',
+  name: 'Database read',
+  description: 'queryObjects, getObjects',
+});
+
+export const SpaceWrite = Permission.define({
+  command: '/space/write',
+  name: 'Database write',
+  description: 'updateObject',
+});
+
+export const SandboxExecPermission = Permission.define({
+  command: '/sandbox/exec',
+  name: 'Sandbox exec',
+  description: 'sandboxExec (stand-in)',
+});
+
+/** A permission the configurator offers as a checkbox. */
 export type PermissionOption = {
   id: 'read' | 'write' | 'exec';
-  label: string;
-  command: string;
-  description: string;
+  permission: Permission.Definition;
 };
 
 export const PERMISSION_OPTIONS: readonly PermissionOption[] = [
-  { id: 'read', label: 'Database read', command: '/space/read', description: 'queryObjects, getObjects' },
-  { id: 'write', label: 'Database write', command: '/space/write', description: 'updateObject' },
-  { id: 'exec', label: 'Sandbox exec', command: '/sandbox/exec', description: 'sandboxExec (stand-in)' },
+  { id: 'read', permission: SpaceRead },
+  { id: 'write', permission: SpaceWrite },
+  { id: 'exec', permission: SandboxExecPermission },
 ];
 
 export type PermissionId = PermissionOption['id'];
 
 /**
  * Copies of plugin-space's database operations that declare what they need. The shared definitions
- * stay undeclared, since every Composer process without a guard would otherwise refuse them.
+ * stay undeclared, since every Composer process without an authority would otherwise refuse them.
  */
-export const QueryObjects = SpaceOperation.QueryObjects.pipe(Guard.requires(Requirement.make('/space/read')));
-export const GetObjects = SpaceOperation.GetObjects.pipe(Guard.requires(Requirement.make('/space/read')));
-export const UpdateObject = SpaceOperation.UpdateObject.pipe(Guard.requires(Requirement.make('/space/write')));
+export const QueryObjects = SpaceOperation.QueryObjects.pipe(Operation.requires(Requirement.make(SpaceRead)));
+export const GetObjects = SpaceOperation.GetObjects.pipe(Operation.requires(Requirement.make(SpaceRead)));
+export const UpdateObject = SpaceOperation.UpdateObject.pipe(Operation.requires(Requirement.make(SpaceWrite)));
 
 /** Commands {@link SandboxExec} answers; anything else exits 127, as a shell would. */
 const SANDBOX_COMMANDS: Record<string, (args: string[]) => string> = {
@@ -67,7 +83,7 @@ export const SandboxExec = Operation.make({
     stdout: Schema.String,
     exitCode: Schema.Number,
   }),
-}).pipe(Guard.requires(Requirement.make('/sandbox/exec')));
+}).pipe(Operation.requires(Requirement.make(SandboxExecPermission)));
 
 /** Wires a declared copy to the shared operation's own handler, loaded on first use like the original. */
 const delegateTo = <Def extends Operation.Definition<any, any>>(declared: Def, original: Def) =>
@@ -117,7 +133,7 @@ export const makePermissionDemoSkill = (): Skill.Skill =>
     tools: Skill.toolDefinitions({ operations: [QueryObjects, GetObjects, UpdateObject, SandboxExec] }),
   });
 
-export type MakeGuardOptions = {
+export type MakeAuthorityOptions = {
   /** The identity granting the permissions: the story's own HALO DID. */
   issuer: string;
   /** The principal the agent process acts as. */
@@ -125,15 +141,20 @@ export type MakeGuardOptions = {
   permissions: readonly PermissionId[];
 };
 
-/** One grant from `issuer` to `audience` for exactly the checked permissions, and the guard that holds it. */
-export const makeGuard: (options: MakeGuardOptions) => Effect.Effect<{ grant: Grant.Grant; guard: Process.Guard }> =
-  Effect.fnUntraced(function* ({ issuer, audience, permissions }: MakeGuardOptions) {
-    const grant = yield* Grant.make({
-      issuer: Principal.identity(issuer),
-      audience,
-      permissions: PERMISSION_OPTIONS.filter(({ id }) => permissions.includes(id)).map(({ command }) =>
-        Permission.make({ subject: Subject.any(), command }),
-      ),
-    });
-    return { grant, guard: Guard.make({ principal: audience, source: Guard.attested([grant]) }) };
+/** One grant from `issuer` to `audience` for exactly the checked permissions, and the authority that holds it. */
+export const makeAuthority: (
+  options: MakeAuthorityOptions,
+) => Effect.Effect<{ grant: Grant.Grant; authority: Process.Authority }> = Effect.fnUntraced(function* ({
+  issuer,
+  audience,
+  permissions,
+}: MakeAuthorityOptions) {
+  const grant = yield* Grant.make({
+    issuer: Principal.identity(issuer),
+    audience,
+    permissions: PERMISSION_OPTIONS.filter(({ id }) => permissions.includes(id)).map(({ permission }) =>
+      Permission.make({ subject: Subject.any(), command: permission.command }),
+    ),
   });
+  return { grant, authority: { principal: audience, grants: [grant] } };
+});

@@ -18,9 +18,19 @@ import { log } from '@dxos/log';
 import type { ContentBlock } from '@dxos/types';
 
 import { camelCase } from './dialect-plain.ts';
-import type { Dialect, SandboxOperation } from './Dialect.ts';
+import type { Dialect, LookupOperation, SandboxOperation } from './Dialect.ts';
 import { formatPrinted } from './format.ts';
 import * as Sandbox from './Sandbox.ts';
+
+/**
+ * Said after every result the model reads: a model that reads a program's output as a live session writes its next
+ * program against variables the last one defined, and that program fails (`doc is not defined`).
+ */
+export const STATE_TRAILER =
+  '[The program has ended and its state is gone: nothing it defined exists in your next `eval` call. ' +
+  'Load again what you need.]';
+
+const withStateTrailer = (output: string): string => `${output}\n\n${STATE_TRAILER}`;
 
 /** The single tool a code-mode agent carries. */
 export const EVAL_TOOL_NAME = 'eval';
@@ -62,8 +72,12 @@ export type EvalToolkitOptions = {
   /** Services the sandbox's code runs against — the database, and `Operation.invoke`'s handler. */
   readonly runtime: Context.Context<Database.Service | Operation.Service>;
   readonly operations: readonly SandboxOperation[];
+  /** See `BindingsContext.lookupOperation`. */
+  readonly lookupOperation?: LookupOperation;
   /** Keys of the skills the conversation has bound; see `BindingsContext.skills`. */
   readonly skills?: readonly string[];
+  /** The enabled skills' instructions; see `BindingsContext.skillDocs`. */
+  readonly skillDocs?: Readonly<Record<string, string>>;
   readonly maxOutput?: number;
   readonly timeout?: Duration.Input;
   /**
@@ -103,7 +117,9 @@ export const evaluate = Effect.fnUntraced(function* ({
   sandbox,
   runtime,
   operations,
+  lookupOperation,
   skills,
+  skillDocs,
   maxOutput = DEFAULT_MAX_OUTPUT,
   timeout,
   onEvaluated,
@@ -126,7 +142,9 @@ export const evaluate = Effect.fnUntraced(function* ({
           recordingService(Context.get(runtime, Operation.Service), recorder),
         ),
         operations: recordInvocations(operations, recorder),
+        ...(lookupOperation !== undefined ? { lookupOperation } : {}),
         skills,
+        skillDocs,
         print: printer.print,
       },
       timeout,
@@ -181,9 +199,10 @@ export const makeEvalToolkit = (
     EvalToolkitDefinition,
     EvalToolkitDefinition.toLayer({
       [EVAL_TOOL_NAME]: ({ code }: { code: string }, { toolCallId }) =>
-        options.runner !== undefined
+        (options.runner !== undefined
           ? runThroughRunner(options.runner({ toolCallId }), options, code)
-          : evaluate({ ...options, code, toolCallId }),
+          : evaluate({ ...options, code, toolCallId })
+        ).pipe(Effect.map(withStateTrailer), Effect.mapError(withStateTrailer)),
     }),
   );
 
@@ -393,6 +412,13 @@ const hintFor = (message: string): string => {
   const effect3Name = /Effect\.(catchAll|catchAllCause|either) is not a function/.exec(message)?.[1];
   if (effect3Name) {
     return `\nHint: this is Effect 4, where \`Effect.${EFFECT_4_NAMES[effect3Name]}\` replaces \`Effect.${effect3Name}\`.`;
+  }
+  const guessed = /\b((?:Obj|Filter|Query|Database|Ref|Relation|Type|Order)\.\w+) is not a function/.exec(message)?.[1];
+  if (guessed) {
+    const identity = /^Obj\.get(?:DXN|Dxn|Id|Uri)$/.test(guessed)
+      ? " An object's id is `obj.id` and its URI `Obj.getURI(obj)`."
+      : '';
+    return `\nHint: \`${guessed}\` does not exist.${identity} Look a helper up in \`DOCS\` before you use it.`;
   }
   const missing = /Entity not found: \{"uri":"(dxn:[^"]+)"\}/.exec(message)?.[1];
   if (missing) {

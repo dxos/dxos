@@ -6,14 +6,18 @@
 
 import * as Effect from 'effect/Effect';
 
+import * as Agent from '@dxos/compute/Agent';
 import * as Cancellation from '@dxos/compute/Cancellation';
 import type * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
-import { Obj } from '@dxos/echo';
+import { type Database, Obj } from '@dxos/echo';
 import { messageOf } from '@dxos/errors';
+import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { PluginProtocol, TraceProtocol } from '@dxos/protocols';
+
+import * as AgentSession from './AgentSession.ts';
 
 //
 // The per-call context operation-service gives a handler, rebuilt from the `InvocationScope` (EDGE-PLUGINS F-5.6).
@@ -162,3 +166,24 @@ const disposeStub = (target: unknown): void => {
 /** Gives the handler the invocation's {@link Cancellation.Service}; cooperative, so nothing is interrupted. */
 export const withCancellation = (handler: Handler, signal: AbortSignal): Handler =>
   mapHandler(handler, (effect) => effect.pipe(Effect.provideService(Cancellation.Service, { signal })));
+
+/**
+ * Gives the handler the `Agent.Service` EDGE serves for the invocation's session, when the scope carries one: the
+ * bundle runs no process, so the session target is its only `Agent.Service` (EDGE spec
+ * `org.dxos.edge.agent-service-bridge`). Built inside the handler, where the space database it resolves URIs in exists.
+ */
+export const withAgentService = (
+  handler: Handler,
+  session: PluginProtocol.AgentSession | undefined,
+  spaceId: SpaceId | undefined,
+  refreshWorkingSet?: () => Promise<void>,
+): Handler =>
+  session === undefined || spaceId === undefined
+    ? handler
+    : mapHandler(handler, (effect) =>
+        Effect.flatMap(Effect.context<Database.Service>(), (database) =>
+          effect.pipe(
+            Effect.provideService(Agent.Service, AgentSession.make({ session, spaceId, database, refreshWorkingSet })),
+          ),
+        ),
+      );

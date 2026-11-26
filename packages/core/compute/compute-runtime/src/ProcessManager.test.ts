@@ -36,6 +36,7 @@ import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 import { makeRecordingTracer } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { type LogEntry, LogLevel, type LogProcessor, log } from '@dxos/log';
+import { Grant, Permission, Principal, Requirement, Subject } from '@dxos/permission';
 import { Organization } from '@dxos/types';
 
 import * as OperationProcess from './OperationProcess.ts';
@@ -47,6 +48,7 @@ import * as RemoteProcessManager from './RemoteProcessManager.ts';
 import * as RemoteTraceMonitor from './RemoteTraceMonitor.ts';
 import { TestDatabaseLayer } from './testing/index.ts';
 import * as UnifiedProcessManager from './UnifiedProcessManager.ts';
+import * as Verifier from './Verifier.ts';
 
 //
 // Test services (for unit tests without full ECHO stack).
@@ -427,7 +429,9 @@ const ProcessWithRpcs = Operation.makeDurable({
 );
 
 const TestLayer = ProcessOperationInvoker.layer.pipe(Layer.provideMerge(UnifiedProcessManager.layer)).pipe(
-  Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
+  Layer.provideMerge(
+    ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator }).pipe(Layer.provide(Verifier.layer())),
+  ),
   Layer.provideMerge(RemoteProcessManager.layerNoop),
   Layer.provideMerge(RemoteTraceMonitor.layerNoop),
   Layer.provide(ServiceResolver.layerRequirements(Database.Service)),
@@ -449,7 +453,9 @@ const capturedTraceMessages: Trace.Message[] = [];
 // Variant of {@link TestLayer} whose {@link Trace.TraceSink} records every message for assertions.
 const CapturingTraceTestLayer = ProcessOperationInvoker.layer.pipe(
   Layer.provideMerge(UnifiedProcessManager.layer),
-  Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
+  Layer.provideMerge(
+    ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator }).pipe(Layer.provide(Verifier.layer())),
+  ),
   Layer.provideMerge(RemoteProcessManager.layerNoop),
   Layer.provideMerge(RemoteTraceMonitor.layerNoop),
   Layer.provide(ServiceResolver.layerRequirements(Database.Service)),
@@ -485,6 +491,9 @@ const rearmSpans: Tracer.Span[] = [];
 const runtimeSpans: Tracer.Span[] = [];
 const callerSpans: Tracer.Span[] = [];
 const unusedRuntimeSpans: Tracer.Span[] = [];
+
+/** Running a command in the sandbox. */
+const SandboxExec = Permission.define({ command: '/sandbox/exec', name: 'Run sandbox commands' });
 
 describe('ManagerImpl', () => {
   it.effect(
@@ -1680,7 +1689,11 @@ describe('ProcessOperationInvoker environment inheritance', () => {
   const makeInheritanceTestLayer = (invokerLayer: typeof ProcessOperationInvoker.layer) =>
     invokerLayer.pipe(
       Layer.provideMerge(UnifiedProcessManager.layer),
-      Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
+      Layer.provideMerge(
+        ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator }).pipe(
+          Layer.provide(Verifier.layer()),
+        ),
+      ),
       Layer.provideMerge(RemoteProcessManager.layerNoop),
       Layer.provideMerge(RemoteTraceMonitor.layerNoop),
       Layer.provideMerge(SpaceAwareResolverLayer),
@@ -2108,6 +2121,62 @@ describe('reentrancy', () => {
       expect(seen).toEqual(['user', 'user']);
     }, Effect.provide(TestLayer)),
   );
+
+  it.effect(
+    'a rehydrated process is held to the authority it was spawned with',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const Exec = Operation.make({
+        meta: { key: DXN.make('com.example.operation.test.authorityRehydrate.exec'), name: 'Exec' },
+        input: Schema.Void,
+        output: Schema.Void,
+      }).pipe(Operation.requires(Requirement.make(SandboxExec)));
+      const seen: string[] = [];
+      const executable = Operation.makeDurable({
+        key: 'test.authority-rehydrate',
+        input: Schema.Number,
+        output: Schema.Void,
+        services: [],
+      }).pipe(
+        Operation.withDurableHandler(() =>
+          Effect.succeed({
+            onSpawn: () => Effect.void,
+            onInput: () =>
+              Effect.gen(function* () {
+                const admission = yield* Effect.serviceOption(Verifier.Admission);
+                if (Option.isNone(admission)) {
+                  seen.push('no admission');
+                  return;
+                }
+                const exit = yield* admission.value.admit(Exec, undefined).pipe(Effect.exit);
+                seen.push(Exit.isSuccess(exit) ? 'admitted' : 'refused');
+              }),
+            onAlarm: () => Effect.void,
+            onChildEvent: () => Effect.void,
+          }),
+        ),
+      );
+
+      const principal = Principal.process('process://local/agent');
+      const grant = yield* Grant.make({
+        issuer: Principal.identity('did:halo:ALICE'),
+        audience: principal,
+        permissions: [Permission.make({ subject: Subject.any(), command: SandboxExec.command })],
+      });
+      const handle = yield* manager.spawn(executable, { authority: { principal, grants: [grant] } });
+      yield* handle.submitInput(1);
+      yield* handle.runToCompletion();
+
+      yield* manager.shutdown();
+      yield* manager.startup();
+      const dormant = yield* manager.list({ key: executable.key });
+      const restored = yield* dormant[0].hydrate(executable);
+      yield* restored.submitInput(2);
+      yield* restored.runToCompletion();
+
+      expect(seen).toEqual(['admitted', 'admitted']);
+    }, Effect.provide(TestLayer)),
+  );
 });
 
 describe('durability', () => {
@@ -2119,6 +2188,7 @@ describe('durability', () => {
     traceSink: Trace.Sink;
   }) =>
     new ProcessManager.Impl({
+      verifier: Verifier.make(),
       registry: deps.registry,
       kvStore: deps.kv,
       traceSink: deps.traceSink,

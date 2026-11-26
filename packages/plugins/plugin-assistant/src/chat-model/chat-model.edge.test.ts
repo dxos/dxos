@@ -20,6 +20,7 @@ import {
   ProcessOperationInvoker,
   RemoteTraceMonitor,
   UnifiedProcessManager,
+  Verifier,
   configuredCredentialsLayer,
 } from '@dxos/compute-runtime';
 import * as Agent from '@dxos/compute/Agent';
@@ -258,7 +259,7 @@ const stack = (client: Client, space: Space) =>
       ),
     ),
     Layer.provideMerge(Layer.succeed(RemoteTraceMonitor.Service, swarmMonitor(client))),
-    Layer.provideMerge(ProcessManager.layer()),
+    Layer.provideMerge(ProcessManager.layer().pipe(Layer.provide(Verifier.layer()))),
     Layer.provideMerge(
       ServiceResolver.layerRequirements(
         Database.Service,

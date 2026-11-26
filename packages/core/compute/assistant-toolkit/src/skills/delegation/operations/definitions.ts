@@ -111,3 +111,23 @@ export const SessionDelegate = Operation.make({
   output: Schema.String,
   services: [Agent.Service, Process.ManagerService, Database.Service],
 });
+
+export const AgentDelegate = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.assistantToolkit.delegateToAgent'),
+    name: 'Delegate to agent',
+    description: trim`
+      Hands a request to another agent in this space, named by its name. The other agent works it in its own
+      session, on its own permissions, and starts at once. Use it when another agent holds a permission or a
+      specialization you lack, such as when a tool call of yours was refused for want of a permission that agent
+      holds. State everything the other agent needs in the message.
+    `,
+    icon: 'ph--users-three--regular',
+  },
+  input: Schema.Struct({
+    agent: Schema.String.annotate({ description: 'The name of the agent to hand the request to.' }),
+    message: Schema.String.annotate({ description: 'The complete request for the other agent.' }),
+  }),
+  output: Schema.String,
+  services: [Agent.Service, Process.ManagerService, Database.Service],
+});

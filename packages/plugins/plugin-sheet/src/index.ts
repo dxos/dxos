@@ -4,3 +4,4 @@
 
 export * as SheetPlugin from '#meta';
 export * from '#types';
+export * from '#skills';

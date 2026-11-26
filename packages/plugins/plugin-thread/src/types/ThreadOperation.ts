@@ -50,9 +50,14 @@ export const AppendChannelMessage = Operation.make({
 
 /**
  * What a backend reports about a message it posted. `properties` are stamped on the copy a caller
- * records locally, so a mirror of that record (EDGE's Discord bot) can tell it was already posted.
+ * records locally, so a mirror of that record can tell it was already posted.
  */
 export const SendReceipt = Schema.Struct({
+  thread: Schema.optional(
+    Schema.String.annotate({
+      description: 'The thread the message landed in, when the backend resolved it (a DM opened by the first post).',
+    }),
+  ),
   messageIds: Schema.optional(Schema.Array(Schema.String).annotate({ description: 'Backend ids of the posts.' })),
   properties: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
 });
@@ -131,6 +136,58 @@ export const OpenDirect = Operation.make({
       Schema.String.annotate({ description: 'The direct thread id; pass it to sendToChannel as `thread`.' }),
     ),
     reason: Schema.optional(Schema.String.annotate({ description: 'Why the person cannot be reached directly.' })),
+  }),
+});
+
+/** A channel backend's own operations (see {@link backendOperations}); `S` names the extra services its handlers use. */
+export type BackendOperations<S = never> = {
+  Send: Operation.Definition<
+    Operation.Definition.Input<typeof SendToChannel>,
+    Operation.Definition.Output<typeof SendToChannel>,
+    Database.Service | Capability.Service | S
+  >;
+  OpenDirect: Operation.Definition<
+    Operation.Definition.Input<typeof OpenDirect>,
+    Operation.Definition.Output<typeof OpenDirect>,
+    Database.Service | Capability.Service | S
+  >;
+};
+
+/**
+ * The key a channel backend's plugin declares one of its {@link backendOperations} under: a kind
+ * `<root>.channel.backend.<name>` gives `<root>.operation.<name>.<verb>`.
+ */
+const backendOperationKey = (kind: string, verb: 'sendToChannel' | 'openDirect') =>
+  DXN.make(`${kind.replace('.channel.backend.', '.operation.')}.${verb}`);
+
+/**
+ * Stand-ins for the operations a channel backend's own plugin declares and handles for its `kind` (keyed by
+ * {@link backendOperationKey}), with SendToChannel's and OpenDirect's input and output. SendToChannel and
+ * OpenDirect invoke them where the backend's capability is not visible, as on EDGE, where each plugin bundle runs
+ * alone and shares definitions but not capabilities; the host routes the call to the plugin that handles the key.
+ */
+export const backendOperations = (kind: string): BackendOperations => ({
+  Send: Operation.make({
+    meta: {
+      // The literal lives where the backend's plugin declares the operation, which is what the rule protects.
+      // eslint-disable-next-line @dxos/rules/operation-key-shape
+      key: backendOperationKey(kind, 'sendToChannel'),
+      name: 'Send through the channel backend',
+    },
+    services: [Database.Service, Capability.Service],
+    input: SendToChannel.input,
+    output: SendToChannel.output,
+  }),
+  OpenDirect: Operation.make({
+    meta: {
+      // As for Send: the literal lives with the backend's own declaration.
+      // eslint-disable-next-line @dxos/rules/operation-key-shape
+      key: backendOperationKey(kind, 'openDirect'),
+      name: 'Open a direct conversation through the channel backend',
+    },
+    services: [Database.Service, Capability.Service],
+    input: OpenDirect.input,
+    output: OpenDirect.output,
   }),
 });
 

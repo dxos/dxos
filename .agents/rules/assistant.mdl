@@ -1,0 +1,61 @@
+---
+id: org.dxos.review.assistant
+name: Assistant
+version: 0.1.0
+---
+
+Conventions for what goes into an agent's conversation that a linter cannot express. Each `rule`
+block below is discovered by the agentic-review harness.
+
+## Extensions
+
+| Term   | URI                   |
+| ------ | --------------------- |
+| `rule` | org.dxos.mdl.rule@1.0 |
+
+## Rules
+
+```mdl
+rule machine-written-prompt-text-is-synthetic: Text the reader did not write goes into a conversation as synthetic
+  A user-role message is drawn as the reader's own words, so text that code places there on
+  anyone else's behalf must carry `disposition: 'synthetic'`, which the chat draws as context
+  instead of a user bubble. Flag a text block built for `submitPrompt`, `enqueueMessage`,
+  `Agent.delegate`'s `message`, `RunPromptInChat`, or a feed append with a user sender when its
+  text comes from another session or agent (delegation, a relay), a trigger, a resumed question,
+  a recovered tool result, or a runtime note such as "You have been assigned the task below.",
+  and the block has no `disposition: 'synthetic'`. Flag code that forwards caller-supplied blocks
+  into another conversation unchanged when the caller is not the reader. Do not flag text the
+  reader typed or chose (the prompt input, a suggestion chip they clicked), a test fixture that
+  stands in for the reader, or a block whose disposition is set by a helper that already marks
+  it. Fix: set `disposition: 'synthetic'` where the block is built, or map forwarded text blocks
+  to it at the hand-over (see `delegateToSession` in
+  `packages/core/compute/agent-runtime/src/agent-service/AgentService.ts`).
+  scope: repo
+  files:
+    - packages/**/src/**/*.ts
+    - packages/**/src/**/*.tsx
+  grep: submitPrompt|enqueueMessage|delegate\(|RunPromptInChat|_tag: 'text'|Text\.make\(
+  unit: file
+  context: diff
+  system-one: on
+  severity: warn
+  question: Does this change put text the reader did not write into a conversation as a user-role text block without `disposition: 'synthetic'`?
+```
+
+## Appendix
+
+```mdl
+ext rule
+  uri: org.dxos.mdl.rule@1.0
+  desc: A machine-checked review rule applied by an LLM subagent or the System One checker.
+  inline-prose: true
+  fields:
+    files:       Glob | Glob[]     # paths this rule reviews, relative to `scope`
+    grep?:       Prose             # optional regex pre-filter over file contents
+    severity?:   warn | error      # defaults to warn
+    scope?:      dir | repo        # glob base: this file's dir (default) or repo root
+    unit?:       file | pr         # one verdict per file (default) or per change set
+    context?:    ContextKind[]     # diff | imports | importers | siblings | package | public-api | similar | test | pr
+    system-one?: on | off          # off when no fetcher can supply what the rule needs
+    question?:   Prose             # literal yes/no question for the System One checker
+```

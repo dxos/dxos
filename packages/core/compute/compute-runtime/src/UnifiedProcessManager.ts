@@ -99,6 +99,8 @@ export const layer: Layer.Layer<
         location?.kind === 'edge'
           ? Effect.suspend(() => remoteControl('attach')({ spaceId: location.space, pid }))
           : local.attach<I, O, Rpcs>(pid),
+      // Only this runtime's processes hold authorities the manager can extend; a remote pid is not live here.
+      grant: (pid, grants) => local.grant(pid, grants),
     } satisfies Process.Manager;
   }),
 );

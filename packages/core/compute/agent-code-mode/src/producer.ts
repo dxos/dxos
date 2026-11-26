@@ -9,7 +9,7 @@ import * as Option from 'effect/Option';
 import * as Record from 'effect/Record';
 
 import { type MakeTurnProducer, type TurnProducer, type TurnRequest } from '@dxos/agent-runtime';
-import { type OpaqueToolkit, callTool } from '@dxos/ai';
+import { type OpaqueToolkit, type ToolExecutionService, type ToolResolverService, callTool } from '@dxos/ai';
 import {
   AiRequest,
   AiSession,
@@ -23,12 +23,13 @@ import {
 import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
 import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
+import * as Template from '@dxos/compute/Template';
 import { type Database, Obj, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { type ContentBlock, Message } from '@dxos/types';
 
-import { PlainDialect } from './dialect-plain.ts';
-import type { Dialect, SandboxOperation } from './Dialect.ts';
+import { EffectDialect } from './dialect-effect.ts';
+import type { Dialect, LookupOperation, SandboxOperation } from './Dialect.ts';
 import { type CallLabel, EVAL_TOOL_NAME, type Evaluation, labelEvalCall, makeEvalToolkit } from './eval-tool.ts';
 import * as Runner from './Runner.ts';
 import * as Sandbox from './Sandbox.ts';
@@ -37,7 +38,7 @@ import * as Sandbox from './Sandbox.ts';
 export type CodeModeOptions = {
   /**
    * What the model writes and what it writes it against.
-   * @default PlainDialect
+   * @default the sandbox's `defaultDialect`, else EffectDialect
    */
   dialect?: Dialect;
 
@@ -102,11 +103,11 @@ const runCodeModeTurn = ({
   options,
 }: RunTurnOptions): Effect.Effect<Message.Message[], AiRequest.RunError, AiRequest.RunRequirements> =>
   Effect.gen(function* () {
-    const dialect = options.dialect ?? PlainDialect;
     // Resolved from the environment when a host provided one, so an out-of-process sandbox can be
     // installed as a layer without every caller passing it; the in-process one is the fallback.
     const sandbox =
       options.sandbox ?? Option.getOrElse(yield* Effect.serviceOption(Sandbox.Service), () => Sandbox.inProcess);
+    const dialect = options.dialect ?? sandbox.defaultDialect ?? EffectDialect;
 
     // The turn's own services, not the producer's database-only runtime: the sandbox runs the
     // model's effects, and `Operation.invoke` resolves its handler through `Operation.Service`.
@@ -168,20 +169,45 @@ const runCodeModeTurn = ({
               // The prompt states the Skill Manager's lookups and the enabled skills, with their operations; the model
               // looks up every other skill, operation and type through the lookups. A bound Skill Manager is stated as
               // its code-mode form, since its own instructions list every skill, but its operations stay callable.
-              const lookups = SkillManagerSkill.makeForCodeMode();
+              const lookups = SkillManagerSkill.makeForCodeMode({ sameProgram: dialect.lookupOperations === true });
               const enabled = skills.filter(
                 (skill) => Obj.getMeta(skill).key?.replace(/^dxn:/, '') !== SkillManagerSkill.key,
               );
-              const operations = (yield* projectOperations([lookups, ...skills], mcps)).filter(
-                ({ definition }) => !dialect.database || !definition || !Operation.isHiddenInCodeMode(definition),
-              );
+              const callable = ({ definition }: SandboxOperation) =>
+                !dialect.database || !definition || !Operation.isHiddenInCodeMode(definition);
+              const operations = (yield* projectOperations([lookups, ...skills], mcps)).filter(callable);
               labelCall = labelEvalCall(operations);
+              // A dialect that serves skill instructions on demand gets them here, and the prompt names the skills only.
+              const skillDocs = dialect.skillInstructions
+                ? Object.fromEntries(
+                    yield* Effect.forEach(enabled, (skill) =>
+                      Template.processTemplate(skill.instructions).pipe(
+                        Effect.map((text) => [skillKey(skill), text] as const),
+                      ),
+                    ).pipe(Effect.orDie),
+                  )
+                : undefined;
+              // The services `projectOperations` builds a toolkit against, held so a lookup made from the sandbox runs on them.
+              const projection = yield* Effect.context<ProjectionServices>();
+              // Re-reads the conversation's skills, so code that enabled one calls its operations in the same program.
+              const lookupOperation: LookupOperation = (key) =>
+                Effect.gen(function* () {
+                  yield* Effect.promise(() => session.context.sync());
+                  const current = yield* projectOperations([lookups, ...session.context.getSkills()]);
+                  const wanted = key.replace(/^dxn:/, '');
+                  return current
+                    .filter(callable)
+                    .find(({ definition }) => definition && String(definition.meta.key).replace(/^dxn:/, '') === wanted)
+                    ?.definition;
+                }).pipe(Effect.orDie, Effect.provideContext(projection));
               const evalOptions = {
                 dialect,
                 sandbox,
                 runtime,
                 operations,
+                lookupOperation,
                 skills: skills.flatMap((skill) => Obj.getMeta(skill).key ?? []),
+                ...(skillDocs ? { skillDocs } : {}),
                 maxOutput: options.maxOutput,
                 timeout: options.timeout,
                 onEvaluated: evaluations.add,
@@ -203,11 +229,17 @@ const runCodeModeTurn = ({
               const objects = session.context.getObjects();
               const operationNames = new Set(operations.map((operation) => operation.name));
               if (turnSystem === undefined) {
+                const read = dialect.skillInstructions;
                 const text = yield* formatSystemPrompt({
-                  system: [dialect.instructions({ operations }), options.system, params.system]
+                  system: [
+                    dialect.instructions({ operations }),
+                    read ? renderSkillIndex(enabled, read) : undefined,
+                    options.system,
+                    params.system,
+                  ]
                     .filter(isPresent)
                     .join('\n\n'),
-                  skills: [lookups, ...enabled],
+                  skills: read ? [lookups] : [lookups, ...enabled],
                   objects,
                   instructions,
                 }).pipe(Effect.orDie);
@@ -271,6 +303,9 @@ const runCodeModeTurn = ({
     Effect.provide(Operation.withInvocationOptions({ conversation: Obj.getURI(feed) })),
     Effect.withSpan('CodeMode.runTurn'),
   );
+
+/** What {@link projectOperations} builds its toolkit against. */
+type ProjectionServices = ToolResolverService | ToolExecutionService;
 
 /**
  * The request's evaluations by the `eval` call each answered, so a result written to the feed takes the operations
@@ -401,3 +436,25 @@ const tryParseJson = (text: string): unknown => {
 };
 
 const isPresent = (value: string | undefined): value is string => value !== undefined && value.length > 0;
+
+/** A skill's key, as `Dialect.skillInstructions` takes it. */
+const skillKey = (skill: Skill.Skill): string => (Obj.getMeta(skill).key ?? skill.id).replace(/^dxn:/, '');
+
+/**
+ * The enabled skills by name and purpose, with the code that reads each one's instructions: a skill's instructions run
+ * to thousands of tokens that a turn outside its area never reads.
+ */
+const renderSkillIndex = (skills: readonly Skill.Skill[], read: (key: string) => string): string | undefined =>
+  skills.length === 0
+    ? undefined
+    : [
+        '## Enabled skills',
+        '',
+        "Their instructions are not in this prompt. Before working in a skill's area, read the parts you need: " +
+          `\`search(words)\` finds them, or read the file in slices (output is cut at 8,000 characters):`,
+        '',
+        ...skills.map(
+          (skill) =>
+            `- **${skill.name}**${skill.description ? ` — ${skill.description}` : ''}: \`${read(skillKey(skill))}\``,
+        ),
+      ].join('\n');

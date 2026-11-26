@@ -14,6 +14,7 @@ import {
   RemoteProcessManager,
   RemoteTraceMonitor,
   UnifiedProcessManager,
+  Verifier,
 } from '@dxos/compute-runtime';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -66,7 +67,9 @@ const messages: MessageWithRangeId[] = [
 // `sentenceNormalization` declares no services, so `ServiceResolver.layerRequirements()` is empty.
 const operationLayer = ProcessOperationInvoker.layer.pipe(
   Layer.provide(UnifiedProcessManager.layer),
-  Layer.provide(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
+  Layer.provide(
+    ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator }).pipe(Layer.provide(Verifier.layer())),
+  ),
   Layer.provide(Layer.mergeAll(RemoteProcessManager.layerNoop, RemoteTraceMonitor.layerNoop)),
   Layer.provide(ServiceResolver.layerRequirements()),
   Layer.provide(OperationHandlerSet.provide(OperationHandlerSet.make(sentenceNormalization))),

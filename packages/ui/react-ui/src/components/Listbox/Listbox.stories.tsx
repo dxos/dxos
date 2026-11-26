@@ -456,6 +456,71 @@ export const Test: Story = {
   },
 };
 
+const CALLS: Listbox.Option[] = Array.from({ length: 12 }, (_, index) => ({
+  value: `call-${index + 1}`,
+  label: `Call ${index + 1}`,
+  icon: 'ph--phone--regular',
+  description: `Lasted ${index + 1} min`,
+}));
+
+const DescribedRows = ({ items, label, testId }: { items: Listbox.Option[]; label: string; testId: string }) => (
+  <Listbox.Viewport>
+    <Listbox.Content aria-label={label}>
+      {items.map((item, index) => (
+        <Listbox.Item key={item.value} item={item} data-testid={index === 0 ? testId : undefined} />
+      ))}
+    </Listbox.Content>
+  </Listbox.Viewport>
+);
+
+/**
+ * Rows with a description in a list that scrolls itself: a short list at its content height (the reference), then the
+ * long list bounded by a flex column it grows into and by a fixed-height block.
+ */
+const BoundedStory = ({ size = 'md' }: SizeArgs) => (
+  <>
+    <Listbox.Root items={CALLS.slice(0, 2)}>
+      <DescribedRows items={CALLS.slice(0, 2)} label='Unbounded' testId={`unbounded-${size}`} />
+    </Listbox.Root>
+    <div className='flex flex-col h-40'>
+      <Listbox.Root items={CALLS} classNames='dx-grow'>
+        <DescribedRows items={CALLS} label='In a flex column' testId={`flex-${size}`} />
+      </Listbox.Root>
+    </div>
+    <div className='h-40'>
+      <Listbox.Root items={CALLS}>
+        <DescribedRows items={CALLS} label='In a block' testId={`block-${size}`} />
+      </Listbox.Root>
+    </div>
+  </>
+);
+
+/**
+ * A height-bounded list keeps its rows at their content height and scrolls: a described row is as tall as the same
+ * row in a list with room to spare, and its description starts where its title ends.
+ */
+export const Bounded: Story = {
+  args: { allSizes: true },
+  render: BoundedStory,
+  play: async ({ canvasElement }) => {
+    for (const size of SIZES) {
+      const reference = byTestId(canvasElement, `unbounded-${size}`).getBoundingClientRect().height;
+      await expect(reference, `${size} described row`).toBeGreaterThan(GEOMETRY[size].block);
+      for (const host of ['flex', 'block']) {
+        const row = byTestId(canvasElement, `${host}-${size}`);
+        await expect(row.getBoundingClientRect().height, `${size} ${host} row`).toBeCloseTo(reference, 0);
+        const text = row.querySelector('[data-part="item-text"]')?.getBoundingClientRect();
+        const description = row.querySelector('[data-part="item-description"]')?.getBoundingClientRect();
+        await expect(description?.top, `${size} ${host} description below title`).toBeGreaterThanOrEqual(
+          (text?.bottom ?? 0) - 0.5,
+        );
+        const listbox = row.closest<HTMLElement>('[role="listbox"]');
+        await expect(listbox?.scrollHeight, `${size} ${host} scrolls`).toBeGreaterThan(listbox?.clientHeight ?? 0);
+      }
+    }
+  },
+};
+
 const SWATCHES: Listbox.Option[] = ['Red', 'Orange', 'Amber', 'Green', 'Teal', 'Blue', 'Indigo', 'Violet'].map(
   (label) => ({ value: label.toLowerCase(), label }),
 );
