@@ -637,7 +637,8 @@ jobs:
           "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/cancel"
 
   # The advisory suites (memory retention, model-fixture replay), apart from the test cells because their minutes ran a
-  # cell into its cap and cancelled tests that had passed; `test` does not wait on them.
+  # cell into its cap and cancelled tests that had passed; `test` does not wait on them. The model-fixture replay runs
+  # only nightly and on dispatch.
   advisory:
     name: advisory
     needs: plan
@@ -672,6 +673,8 @@ jobs:
 
       - name: Advisory suites
         uses: ./.github/actions/advisory
+        with:
+          model-fixture: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
 
   test-browser:
     name: test browser
