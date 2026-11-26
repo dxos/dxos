@@ -15,7 +15,7 @@ import { bindingLabel, useProperty, useServices, useSnapshot } from './ServicesC
 
 /** Story module: the consumer's view of `NoteStore`, which it reaches only through its client. */
 export const NotesModule = () => {
-  const { notes } = useServices();
+  const { notes, startupError, retry } = useServices();
   const snapshot = useSnapshot();
   const count = useProperty(notes.count);
   const [items, setItems] = useState<readonly NoteStore.Note[]>([]);
@@ -50,6 +50,12 @@ export const NotesModule = () => {
           NoteStore: {bindingLabel(snapshot.bindings[NoteStore.Contract.key])}
         </p>
         <Input.Textarea rows={2} value={text} onChange={(event) => setText(event.target.value)} />
+        {startupError && (
+          <div className='flex items-center gap-2 text-sm text-error-text' data-testid='notes-startup-error'>
+            <span>Notes plugin failed to start: {startupError}</span>
+            <Button.Root label='Retry' onClick={retry} data-testid='notes-retry' />
+          </div>
+        )}
         {error && <p className='text-sm text-error-text'>{error}</p>}
         <ul className='text-sm space-y-1' data-testid='notes-list'>
           {items.map((note) => (

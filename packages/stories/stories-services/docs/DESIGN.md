@@ -609,6 +609,11 @@ edge FrameHost owns FrameWorker
 - **A frame on its own origin is the trust boundary.** A frame served from an origin other than
   the app's has its own storage and cannot reach the app's. A frame host is hidden, and it may
   start a worker of its own, which shares the frame's origin and gives both boundaries.
+- **A worker in the frame needs the policy too.** A worker does not inherit the policy of the
+  document that started it; it takes its policy from its own script's response. A worker served
+  without one could send granted data to any origin, whatever the frame's document says. The
+  origin that serves a frame host must send the same policy with the worker's script, and phase
+  3's isolation test has to probe the worker as well as the frame.
 - **A content security policy limits what the frame can send out, but not all of it.** The frame's
   document is served with `default-src 'none'` and its own origin as the only script source. That
   refuses `fetch`, sockets, images and every other request except a script from the frame's own
@@ -624,11 +629,14 @@ edge FrameHost owns FrameWorker
   the client is not designed here.
 - **An opaque origin does not work.** The first draft used `sandbox` without `allow-same-origin`,
   which gives the frame an opaque origin. The spike showed that such a frame cannot load module
-  scripts: they are fetched with `Origin: null`, and a server answers that only if it allows every
-  origin. A frame host therefore needs a real second origin, such as one per plugin under a
-  dedicated domain, and the plugin's bundle has to be served to that origin.
+  scripts: they are fetched with `Origin: null`, and the dev server does not answer that origin.
+  A server could be made to answer `null`, but every opaque origin shares that value, so allowing
+  it is the same as allowing any sandboxed page anywhere to load the bundle; it cannot serve as
+  authorization. The design therefore gives a frame host a real second origin, such as one per
+  plugin under a dedicated domain, with the bundle served to that origin. An opaque origin with a
+  server that answers `null` remains possible where the bundle is public anyway.
 - **An isolated host is given contracts, not features.** A frame host has none of the app's
-  storage, and its policy refuses its requests to other origins. What it is meant to use is the contracts
+  storage, and its policy refuses its requests to other origins, except the network hosts in its grant. What it is meant to use is the contracts
   the app host serves on its port: ECHO through the client service groups, limited to the spaces
   it was granted, and a key-value contract scoped to the plugin. This is the EDGE arrangement,
   where a bundle reaches everything through `env` bindings. Unlike an EDGE isolate, a frame keeps
@@ -642,7 +650,8 @@ edge FrameHost owns FrameWorker
   plugin's external packages on the main thread. A worker does not read the page's import map, so
   a worker or frame host loads the plugin from its `vendor/` directory with the imports rewritten
   by `PluginLoader.rewriteImports` in `@dxos/edge-compute`. "One bundle for every runtime"
-  (EDGE-PLUGINS D-23) then covers the client's hosts. The spike confirms this.
+  (EDGE-PLUGINS D-23) then covers the client's hosts. The spike did not test this: its dev
+  server rewrites imports itself, so the `vendor/` path was never exercised (see answer 7).
 - **The app host supervises its child hosts.** It starts one when a contract first resolves
   there, restarts it after a crash, terminates it when a ping goes unanswered, and closes it when
   idle. `@dxos/worker-framework` already keeps one worker for all tabs, so an application-scoped
@@ -787,7 +796,7 @@ draft PR that is not merged.
 
 ## Spike results
 
-The spike is built and runs. `src/services/hosts.test.ts` has 16 passing tests with hosts joined by a
+The spike is built and runs. `src/services/hosts.test.ts` has 19 passing tests with hosts joined by a
 `MessageChannel` in Node, and the story `stories/stories-services/Services` was walked through all
 five steps in a browser. Its `Calls` variant drives steps 1 to 4 with a play function, which the
 Storybook test runner passes.
@@ -888,7 +897,7 @@ Phases run in order. Each ends with a test that proves its exit criterion. The t
 | 0     | The spike above.                                                                                                                                            | dxos       | The six questions have written answers; this document is revised.                                        |
 | 1     | `@dxos/compute/Service`: contract, provider, client, in-memory binding, strict mode. The layer stack and router move into app-framework's core. `Capabilities.Service`, `AppCapability.service`, `useService`, manifest `services`. | dxos       | A layer spec and a provider resolve side by side in one `LayerStack`, with no process-manager plugin loaded. |
 | 2     | Providers register on `RpcRouter`; HTTP and Workers RPC transports for it; `Catalog.services`; protocol version 3.                                           | dxos       | One contract passes the same test suite on all four bindings.                                            |
-| 3     | Client isolation: a worker host and a frame host, supervised by the app host; loading from `vendor/`; grants enforced on the port. | dxos       | A plugin with no app-host modules runs in a frame host in Composer, cannot reach the app's storage, and has every request to another origin refused. Each of the two open paths (a script request to its own origin, self-navigation) is prevented or recorded as a known gap. |
+| 3     | Client isolation: a worker host and a frame host, supervised by the app host; loading from `vendor/`; grants enforced on the port. | dxos       | A plugin with no app-host modules runs in a frame host in Composer, cannot reach the app's storage, and has every request refused except to the network hosts in its grant. Each of the two open paths (a script request to its own origin, self-navigation) is prevented or recorded as a known gap. |
 | 4     | EDGE's nine host services as contracts in `@dxos/protocols`. Version 3 bundles use them; `HostServiceAdapter` and the bundle's proxy are removed.            | dxos, edge | The agent and MCP suites pass on version 3 bundles with typed contracts; version 2 bundles still run.     |
 | 5     | A layer stack in PluginHost. Cross-plugin calls on EDGE: a contract index in registry-service, router resolution, EDGE-PLUGINS decisions.                    | dxos, edge | Sample plugin A calls a contract of sample plugin B on EDGE (T-20's counterpart for services).            |
 | 6     | Host features and derived placement; the plugins service; the app host reads the space's plugin map.                                                        | dxos, edge | An operation with no `on` runs where its services resolve, in a test with a local and a remote host.      |

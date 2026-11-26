@@ -309,6 +309,16 @@ describe('plugin services', () => {
     await EffectEx.runPromise(Fiber.interrupt(fiber));
   });
 
+  test('connecting to a peer that never answers fails and leaves nothing behind', async ({ expect }) => {
+    const app = new ServiceHost.ServiceHost({ id: 'app', kind: 'app', loadPlugin, connectTimeout: 100 });
+    hosts.push(app);
+    const channel = new MessageChannel();
+    // Nothing listens on the other port, so the handshake never completes.
+    await expect(app.connect(channel.port1)).rejects.toThrow('The host did not answer');
+    expect(app.getSnapshot().peers).toEqual([]);
+    channel.port2.close();
+  });
+
   test('a peer is served only the contracts it was granted', async ({ expect }) => {
     const app = make('app', 'app', { [NoteStore.STORAGE_FEATURE]: memoryStorage() });
     await app.install('notes');
@@ -414,6 +424,43 @@ describe('plugin services', () => {
     );
     expect(exit._tag).toBe('Failure');
     expect(String(exit)).toContain('provider defect');
+  });
+
+  test('a failed remote install is a typed failure and leaves the catalog live', async ({ expect }) => {
+    const app = make('app', 'app');
+    const edge = make('edge', 'edge', {
+      [NoteStore.STORAGE_FEATURE]: memoryStorage(),
+      [Summarizer.GATEWAY_FEATURE]: fakeGateway('edge', 1),
+    });
+    await join(app, edge);
+    const control = app.control('edge');
+    assert(control, 'the app holds the control client of a connected host');
+
+    const exit = await Effect.runPromiseExit(control.install({ plugin: 'broken' }));
+    expect(String(exit)).toContain('ServiceCallError');
+
+    // The failure did not end the catalog subscription: a later install still reaches the app.
+    await EffectEx.runPromise(control.install({ plugin: 'summarizer' }));
+    await until(app, (snapshot) => snapshot.bindings[Summarizer.Contract.key]?.kind === 'port');
+  });
+
+  test('a remote subscription follows a provider replaced in its host', async ({ expect }) => {
+    const app = make('app', 'app');
+    const worker = make('worker', 'worker', { [NoteStore.STORAGE_FEATURE]: memoryStorage() });
+    await join(app, worker);
+    await worker.install('notes');
+    await until(app, (snapshot) => snapshot.bindings[NoteStore.Contract.key]?.kind === 'port');
+
+    const seen: number[] = [];
+    const fiber = Effect.runFork(
+      Stream.runForEach(app.client(NoteStore.Contract).count.changes, (count) => Effect.sync(() => seen.push(count))),
+    );
+    await expect.poll(() => seen).toEqual([0]);
+
+    // The worker retires its provider for another one; the watch over the port must move with it.
+    await worker.install('otherNotes');
+    await expect.poll(() => seen).toEqual([0, 42]);
+    await EffectEx.runPromise(Fiber.interrupt(fiber));
   });
 
   test('an install reports only its own provider failing', async ({ expect }) => {

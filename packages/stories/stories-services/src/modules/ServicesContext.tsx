@@ -31,6 +31,10 @@ export type ServicesContextValue = {
   /** The consumer's clients: built once, and never rebuilt when a provider moves. */
   readonly notes: NoteStore.Client;
   readonly summarizer: Summarizer.Client;
+  /** Why the notes plugin could not be installed when the story started, if it could not. */
+  readonly startupError?: string;
+  /** Installs the notes plugin again after a failed start. */
+  readonly retry: () => void;
 };
 
 const ServicesContext = createContext<ServicesContextValue | undefined>(undefined);
@@ -43,13 +47,25 @@ export const ServicesProvider = ({ children }: PropsWithChildren) => {
   // disposed host cannot be given back to the tree.
   useEffect(() => {
     const controller = new HostController.HostController();
+    let disposed = false;
+    const install = () => {
+      setValue((current) => (current ? { ...current, startupError: undefined } : current));
+      controller.install(HostController.APP_HOST, PLUGIN_URLS.notes).catch((err) => {
+        if (!disposed) {
+          const startupError = err instanceof Error ? err.message : String(err);
+          setValue((current) => (current ? { ...current, startupError } : current));
+        }
+      });
+    };
     setValue({
       controller,
       notes: controller.app.client(NoteStore.Contract),
       summarizer: controller.app.client(Summarizer.Contract),
+      retry: install,
     });
-    void controller.install(HostController.APP_HOST, PLUGIN_URLS.notes);
+    install();
     return () => {
+      disposed = true;
       void controller.dispose();
     };
   }, []);

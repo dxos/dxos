@@ -48,8 +48,12 @@ export const importPlugin = async (path: string): Promise<Plugin.Plugin> => {
   return module.default();
 };
 
-/** A key and a database the app writes at its own origin, which an isolated host must not be able to see. */
-export const MARKER = 'org.dxos.stories.services.marker';
+/**
+ * The key and the database name the app at `appOrigin` writes at its own origin, which an isolated
+ * host must not be able to see. Named for that origin, so what an earlier app left at the frame's own
+ * origin is not mistaken for it.
+ */
+export const marker = (appOrigin: string): string => `org.dxos.stories.services.marker:${appOrigin}`;
 
 const attempt = async (action: () => unknown): Promise<string> => {
   try {
@@ -110,9 +114,11 @@ const requestImage = (origin: string): Promise<string> =>
 const probe = async (host: ServiceHost.ServiceHost, origin: string): Promise<HostControl.Probe> => ({
   localStorage:
     'localStorage' in globalThis
-      ? await visibility(() => globalThis.localStorage.getItem(MARKER) !== null)
+      ? await visibility(() => globalThis.localStorage.getItem(marker(origin)) !== null)
       : 'absent in a worker',
-  indexedDb: await visibility(async () => (await indexedDB.databases()).some((database) => database.name === MARKER)),
+  indexedDb: await visibility(async () =>
+    (await indexedDB.databases()).some((database) => database.name === marker(origin)),
+  ),
   network: `fetch ${await attempt(() => fetch(new URL('/index.json', origin), { cache: 'no-store' }))}, image ${await requestImage(origin)}`,
   // The app's notes, which a frame is not granted.
   ungranted: await attempt(() =>

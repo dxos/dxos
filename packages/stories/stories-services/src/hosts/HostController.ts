@@ -8,7 +8,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { NoteStore, Summarizer } from '../contracts/index.ts';
 import { type HostControl, ServiceHost } from '../services/index.ts';
-import { type Init, MARKER, importPlugin, isReady } from './child-host.ts';
+import { type Init, importPlugin, isReady, marker } from './child-host.ts';
 import { fakeGateway } from './gateway.ts';
 
 export const APP_HOST = 'app';
@@ -32,8 +32,9 @@ const frameOrigin = (): string | undefined => {
 
 /** Writes the marker an isolated host must not see, in the app's local storage and IndexedDB. */
 const writeMarker = (): void => {
-  window.localStorage.setItem(MARKER, APP_HOST);
-  const request = indexedDB.open(MARKER);
+  const name = marker(window.location.origin);
+  window.localStorage.setItem(name, APP_HOST);
+  const request = indexedDB.open(name);
   request.onsuccess = () => request.result.close();
 };
 

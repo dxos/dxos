@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Option from 'effect/Option';
@@ -69,6 +70,8 @@ export type Options = {
   readonly features?: Readonly<Record<string, unknown>>;
   /** Loads a plugin by reference: a module URL in a browser host, a name in a test. */
   readonly loadPlugin?: (reference: string) => Promise<Plugin.Plugin>;
+  /** How long a new peer has to answer, in milliseconds; a test shortens it. */
+  readonly connectTimeout?: number;
   /** What this host can reach; a frame host reports what its sandbox refuses. */
   readonly probe?: (ungranted: string) => Promise<HostControl.Probe>;
 };
@@ -101,7 +104,7 @@ type Peer = {
 
 const MAX_CALLS = 50;
 
-/** How long a new peer has to send its first catalog. */
+/** How long a new peer has to complete its handshake, and then to send its first catalog. */
 const CONNECT_TIMEOUT = 10_000;
 
 /** Nearer hosts first: the same device before EDGE. */
@@ -248,54 +251,68 @@ export class ServiceHost {
   async connect(port: MessagePort, options: { readonly grant?: readonly string[] } = {}): Promise<string> {
     const link = Link.make(port);
     const scope = await EffectEx.runPromise(Scope.make());
-    const router = await EffectEx.runPromise(RpcRouter.make);
-    link.onServe((served) => {
-      Effect.runFork(Link.serve(router, served).pipe(Scope.provide(scope)));
-    });
-    const call = await EffectEx.runPromise(
-      Link.call(HostControl.Contract.group, link.open()).pipe(Scope.provide(scope)),
-    );
-    const peer: Peer = {
-      link,
-      scope,
-      router,
-      grant: options.grant === undefined ? undefined : new Set([HostControl.Contract.key, ...options.grant]),
-      served: new Map(),
-      control: Service.toStub(HostControl.Contract, call),
-      stubs: new Map(),
-    };
-    this.#peers.add(peer);
-    await this.#serve(peer, HostControl.Contract, this.#control(peer));
-    await this.#enqueue(async () => void (await this.#reconcile()));
+    const timeout = this.#options.connectTimeout ?? CONNECT_TIMEOUT;
+    let peer: Peer | undefined;
+    try {
+      const router = await EffectEx.runPromise(RpcRouter.make);
+      link.onServe((served) => {
+        Effect.runFork(Link.serve(router, served).pipe(Scope.provide(scope)));
+      });
+      // The client's construction waits for the peer's handshake, so the deadline has to cover it:
+      // a worker or frame that never starts its host would otherwise hang the connection for good.
+      const call = await EffectEx.runPromise(
+        Link.call(HostControl.Contract.group, link.open()).pipe(Scope.provide(scope), Effect.timeoutOption(timeout)),
+      );
+      if (Option.isNone(call)) {
+        throw new HostConnectError({ context: { host: this.id, reason: 'no handshake' } });
+      }
+      const connected: Peer = {
+        link,
+        scope,
+        router,
+        grant: options.grant === undefined ? undefined : new Set([HostControl.Contract.key, ...options.grant]),
+        served: new Map(),
+        control: Service.toStub(HostControl.Contract, call.value),
+        stubs: new Map(),
+      };
+      peer = connected;
+      this.#peers.add(connected);
+      await this.#serve(connected, HostControl.Contract, this.#control(connected));
+      await this.#enqueue(async () => void (await this.#reconcile()));
 
-    // A peer is addressed by the id in its catalog, so the connection is not ready before one arrives.
-    let arrived: (id: string) => void = () => {};
-    const first = new Promise<string>((resolve) => {
-      arrived = resolve;
-    });
-    Effect.runFork(
-      Stream.runForEach(peer.control.description.changes, (description) =>
-        Effect.sync(() => {
-          peer.description = description;
-          arrived(description.id);
-          // Republishing this host's catalog here would make two idle hosts answer each other forever.
-          this.#topologyChanged();
-        }),
-      ).pipe(
-        Effect.catchCause((cause) => Effect.sync(() => log.warn('peer catalog ended', { host: this.id, cause }))),
-        Effect.forkScoped,
-        Scope.provide(scope),
-      ),
-    );
+      // A peer is addressed by the id in its catalog, so the connection is not ready before one arrives.
+      let arrived: (id: string) => void = () => {};
+      const first = new Promise<string>((resolve) => {
+        arrived = resolve;
+      });
+      Effect.runFork(
+        Stream.runForEach(connected.control.description.changes, (description) =>
+          Effect.sync(() => {
+            connected.description = description;
+            arrived(description.id);
+            // Republishing this host's catalog here would make two idle hosts answer each other forever.
+            this.#topologyChanged();
+          }),
+        ).pipe(
+          Effect.catchCause((cause) => Effect.sync(() => log.warn('peer catalog ended', { host: this.id, cause }))),
+          Effect.forkScoped,
+          Scope.provide(scope),
+        ),
+      );
 
-    const id = await EffectEx.runPromise(Effect.promise(() => first).pipe(Effect.timeoutOption(CONNECT_TIMEOUT)));
-    if (Option.isNone(id)) {
-      this.#peers.delete(peer);
+      const id = await EffectEx.runPromise(Effect.promise(() => first).pipe(Effect.timeoutOption(timeout)));
+      if (Option.isNone(id)) {
+        throw new HostConnectError({ context: { host: this.id, reason: 'no catalog' } });
+      }
+      return id.value;
+    } catch (err) {
+      if (peer) {
+        this.#peers.delete(peer);
+      }
       await EffectEx.runPromise(Scope.close(scope, Exit.void));
       link.close();
-      throw new HostConnectError({ context: { host: this.id } });
+      throw err;
     }
-    return id.value;
   }
 
   /** Disconnects the peer with the given id. */
@@ -400,6 +417,9 @@ export class ServiceHost {
                 log.warn('service stream failed', { key: contract.key, member, error });
                 return Stream.empty;
               }),
+              // A host that retires a provider interrupts the watches on it. That ends this provider's
+              // values too; the replacement's catalog then starts the next watch.
+              Stream.catchCauseIf(Cause.hasInterruptsOnly, () => Stream.empty),
             ),
       );
 
@@ -561,11 +581,14 @@ export class ServiceHost {
     const scope = await EffectEx.runPromise(Scope.make());
     const handlers = Service.toHandlers(contract, implementation);
     await EffectEx.runPromise(
-      peer.router.serve(Service.prefix(contract.key), contract.group, { disableTracing: true }).pipe(
-        // The group's handler types are keyed by rpc tag, which a contract only knows at run time.
-        Effect.provide(contract.group.toLayer(Effect.succeed(handlers as never))),
-        Scope.provide(scope),
-      ),
+      peer.router
+        // A defect in one handler fails that request, not every request and stream on the connection.
+        .serve(Service.prefix(contract.key), contract.group, { disableTracing: true, disableFatalDefects: true })
+        .pipe(
+          // The group's handler types are keyed by rpc tag, which a contract only knows at run time.
+          Effect.provide(contract.group.toLayer(Effect.succeed(handlers as never))),
+          Scope.provide(scope),
+        ),
     );
     peer.served.set(contract.key, scope);
   }
@@ -586,15 +609,34 @@ export class ServiceHost {
     const grant = peer.grant;
     const refuse = (member: string) =>
       Effect.fail(new Service.CallError({ context: { key: HostControl.Contract.key, member, reason: 'not granted' } }));
+    // A rejection has to be a typed failure: a defect would end every stream on the peer's control client,
+    // its catalog subscription included.
+    const administer = (member: string, action: () => Promise<void>) =>
+      Effect.tryPromise({
+        try: action,
+        catch: (cause) =>
+          new Service.CallError({
+            cause,
+            context: {
+              key: HostControl.Contract.key,
+              member,
+              reason: cause instanceof Error ? cause.message : String(cause),
+            },
+          }),
+      });
     const visible = (description: HostControl.Description): HostControl.Description =>
       grant === undefined
         ? description
         : { ...description, services: description.services.filter((service) => grant.has(service.key)) };
     const control: HostControl.Client = {
       install:
-        grant === undefined ? ({ plugin }) => Effect.promise(() => this.install(plugin)) : () => refuse('install'),
+        grant === undefined
+          ? ({ plugin }) => administer('install', () => this.install(plugin))
+          : () => refuse('install'),
       uninstall:
-        grant === undefined ? ({ plugin }) => Effect.promise(() => this.uninstall(plugin)) : () => refuse('uninstall'),
+        grant === undefined
+          ? ({ plugin }) => administer('uninstall', () => this.uninstall(plugin))
+          : () => refuse('uninstall'),
       probe: ({ ungranted }) =>
         Effect.promise(async () => {
           const probe = this.#options.probe;

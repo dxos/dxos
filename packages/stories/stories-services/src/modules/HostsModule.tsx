@@ -109,7 +109,7 @@ export const HostsModule = () => {
         <Toolbar.Root>
           <Toolbar.Text>Hosts</Toolbar.Text>
           <Button.Root
-            label={hasEdge ? 'Stop EDGE (mock)' : 'Start EDGE (mock)'}
+            label={hasEdge ? 'Stop EDGE host (mock)' : 'Start EDGE host (mock)'}
             onClick={() =>
               run(() =>
                 hasEdge
@@ -120,7 +120,7 @@ export const HostsModule = () => {
             data-testid='toggle-edge'
           />
           <Button.Root
-            label={hasFrame ? 'Stop frame' : 'Start frame'}
+            label={hasFrame ? 'Stop frame host' : 'Start frame host'}
             onClick={() =>
               run(() =>
                 hasFrame
@@ -131,13 +131,18 @@ export const HostsModule = () => {
             data-testid='toggle-frame'
           />
           <Button.Root
-            label={appGateway ? 'Remove app gateway' : 'Give app a gateway'}
+            label={appGateway ? 'Remove AI gateway from app' : 'Add AI gateway to app'}
             onClick={() => run(() => controller.setAppGateway(!appGateway))}
             data-testid='toggle-app-gateway'
           />
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body classNames='p-2 space-y-2 overflow-y-auto'>
+        <p className='text-sm text-fg-muted'>
+          The summarizer needs an AI gateway, so it runs only in a host that has one. Start the EDGE host (a Web Worker
+          standing in for EDGE) or the frame host (a sandboxed iframe for untrusted plugins), or add a gateway to the
+          app, then install the summarizer in that host.
+        </p>
         {error && (
           <p className='text-sm text-error-text' data-testid='hosts-error'>
             {error}

@@ -36,9 +36,9 @@ type Story = StoryObj<typeof meta>;
  *
  * 1. Notes are provided in the app host and bound in memory.
  * 2. Summarize fails: no host provides the contract.
- * 3. Start EDGE (mock) and install the summarizer there: the call streams over a port.
- * 4. Give the app a gateway and install the summarizer in the app: the same client rebinds in memory.
- * 5. Start the frame and install the summarizer there; Probe shows what the sandbox refuses.
+ * 3. Start the EDGE host (mock) and install the summarizer there: the call streams over a port.
+ * 4. Add an AI gateway to the app and install the summarizer in the app: the same client rebinds in memory.
+ * 5. Start the frame host and install the summarizer there; Probe shows what the sandbox refuses.
  */
 export const Default: Story = {
   decorators: StoryHarness.decorators({ plugins: [consumerPlugin()], Wrapper: ServicesProvider }),
