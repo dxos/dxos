@@ -6,6 +6,7 @@ import React, { useCallback, useState } from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
 
+import { Summarizer } from '../contracts/index.ts';
 import { type HostControl } from '../services/index.ts';
 import { PLUGIN_URLS, useServices } from './ServicesContext.tsx';
 
@@ -20,6 +21,8 @@ export type HostActions = {
   readonly install: (hostId: string) => void;
   readonly uninstall: (hostId: string) => void;
   readonly probe: (hostId: string) => void;
+  /** Gives the app host an AI gateway of its own, or takes it away. */
+  readonly setAppGateway: (enabled: boolean) => void;
 };
 
 /** The summarizer install, uninstall and probe actions of one runtime module. */
@@ -50,7 +53,12 @@ export const useHostActions = (): HostActions => {
     [controller, run],
   );
 
-  return { error, probes, run, install, uninstall, probe };
+  const setAppGateway = useCallback(
+    (enabled: boolean) => run(() => controller.setAppGateway(enabled)),
+    [controller, run],
+  );
+
+  return { error, probes, run, install, uninstall, probe, setAppGateway };
 };
 
 export type HostCardProps = {
@@ -59,17 +67,27 @@ export type HostCardProps = {
   onInstall: (hostId: string) => void;
   onUninstall: (hostId: string) => void;
   onProbe?: (hostId: string) => void;
+  /** Set for a host whose AI gateway the story can add and remove. */
+  onSetGateway?: (enabled: boolean) => void;
 };
 
 /** One host: what it has, what is installed in it, and what it provides. */
-export const HostCard = ({ host, probe, onInstall, onUninstall, onProbe }: HostCardProps) => {
+export const HostCard = ({ host, probe, onInstall, onUninstall, onProbe, onSetGateway }: HostCardProps) => {
   const installed = host.plugins.includes(PLUGIN_URLS.summarizer);
+  const hasGateway = host.features.includes(Summarizer.GATEWAY_FEATURE);
   return (
     <div className='border border-separator rounded p-2 space-y-1 text-sm' data-testid={`host-${host.id}`}>
       <div className='flex items-center gap-2'>
         <span className='font-medium'>{host.id}</span>
         <span className='text-fg-muted'>{host.kind}</span>
         <span className='grow' />
+        {onSetGateway && (
+          <Button.Root
+            label={hasGateway ? 'Remove AI gateway' : 'Add AI gateway'}
+            onClick={() => onSetGateway(!hasGateway)}
+            data-testid={`toggle-${host.id}-gateway`}
+          />
+        )}
         {installed ? (
           <Button.Root
             label='Uninstall summarizer'

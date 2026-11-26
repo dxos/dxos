@@ -11,6 +11,7 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { NoteStore } from '../contracts/index.ts';
+import { CallLog } from './CallLog.tsx';
 import { bindingLabel, useProperty, useServices, useSnapshot } from './ServicesContext.tsx';
 
 /** Story module: the consumer's view of `NoteStore`, which it reaches only through its client. */
@@ -64,6 +65,7 @@ export const NotesModule = () => {
             </li>
           ))}
         </ul>
+        <CallLog contractKey={NoteStore.Contract.key} />
       </Panel.Body>
     </Panel.Root>
   );

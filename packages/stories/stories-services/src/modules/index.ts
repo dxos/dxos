@@ -6,15 +6,14 @@ import * as Role from '@dxos/app-framework/Role';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as StoryModules from '@dxos/storybook-testing/StoryModules';
 
-import { LocalRuntimeModule } from './LocalRuntimeModule.tsx';
 import { NotesModule } from './NotesModule.tsx';
-import { RemoteRuntimeModule } from './RemoteRuntimeModule.tsx';
+import { LocalRuntimeModule, RemoteRuntimeModule } from './RuntimeModule.tsx';
 import { SummarizerModule } from './SummarizerModule.tsx';
 
+export * from './CallLog.tsx';
 export * from './HostCard.tsx';
-export * from './LocalRuntimeModule.tsx';
 export * from './NotesModule.tsx';
-export * from './RemoteRuntimeModule.tsx';
+export * from './RuntimeModule.tsx';
 export * from './ServicesContext.tsx';
 export * from './SummarizerModule.tsx';
 

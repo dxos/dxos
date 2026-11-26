@@ -35,8 +35,9 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * One consumer, three places a provider can run. The left column is the consumer; the right column
- * is the runtimes: the hosts on this device above, and the remote host below.
+ * One consumer, three places a provider can run. The left column is the consumer, and each panel
+ * logs the route its calls took. The right column is the runtimes, one module shown twice: the hosts
+ * on this device above, and the remote host below.
  *
  * 1. Notes are provided in the app host and bound in memory.
  * 2. Summarize fails: no host provides the contract.

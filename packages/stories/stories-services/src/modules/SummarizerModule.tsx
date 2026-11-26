@@ -13,6 +13,7 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { Summarizer } from '../contracts/index.ts';
+import { CallLog } from './CallLog.tsx';
 import { bindingLabel, useProperty, useServices, useSnapshot } from './ServicesContext.tsx';
 
 /** Story module: the consumer's view of `Summarizer`; the first token names the host that answered. */
@@ -60,6 +61,7 @@ export const SummarizerModule = () => {
         <p className='text-sm' data-testid='summarizer-output'>
           {tokens.join(' ')}
         </p>
+        <CallLog contractKey={Summarizer.Contract.key} />
       </Panel.Body>
     </Panel.Root>
   );

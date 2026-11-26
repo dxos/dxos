@@ -740,16 +740,16 @@ A private package `packages/stories/stories-services` with one Storybook story a
 The story is laid out from story modules, as the stories in `stories-compute` and
 `stories-assistant` are (`StoryModules` in `@dxos/storybook-testing`):
 
-| Module                | Shows                                                                                                                                                                                                             |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `NotesModule`         | The notes, read and written through `NoteStore`.                                                                                                                                                                  |
-| `SummarizerModule`    | A summarize action and its streamed result, through `Summarizer`.                                                                                                                                                 |
-| `LocalRuntimeModule`  | The hosts on this device (the app and the sandboxed frame): the plugins installed in each, the install actions, where each contract is bound in the app, and a log of each call with the binding that carried it. |
-| `RemoteRuntimeModule` | The remote host (the mock EDGE host): start and stop it, the plugins installed in it, the install action and its probe.                                                                                           |
+| Module             | Shows                                                                                                                                                                                                                             |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NotesModule`      | The notes, read and written through `NoteStore`, and the route each of its calls took.                                                                                                                                            |
+| `SummarizerModule` | A summarize action and its streamed result, through `Summarizer`, and the route each of its calls took.                                                                                                                           |
+| `RuntimeModule`    | One runtime: its hosts, the plugins installed in each, the install actions and each host's probe. The story shows it twice, over the local hosts (the app and the sandboxed frame) and over the remote host (the mock EDGE host). |
 
-The first two are the consumer plugin's UI and call services only through their clients. The other
-two split the hosts by where they run, so the story shows one call landing in a local or a remote
-runtime. The story has these four modules; the shared logging module is not in its layout. The mock
+The first two are the consumer plugin's UI and call services only through their clients. The third
+is one module used for both runtimes, so the local and the remote runtime differ only in the hosts
+they list. The story lays out four panels from these three modules; the shared logging module is
+not in its layout. The mock
 EDGE host is a service container: a Web Worker that runs the same host code as the app, loads the
 summarizer plugin and serves its contract over a port.
 
