@@ -12,6 +12,14 @@ import { PLUGIN_URLS, useServices } from './ServicesContext.tsx';
 
 const pluginName = (url: string): string => Object.entries(PLUGIN_URLS).find(([, value]) => value === url)?.[0] ?? url;
 
+/** Where a host of each kind runs, since a host's id often repeats its kind. */
+const KIND_LABELS: Record<HostControl.Kind, string> = {
+  app: 'this page',
+  worker: 'Web Worker',
+  frame: 'sandboxed iframe',
+  edge: 'Web Worker standing in for EDGE',
+};
+
 /** What a runtime module does to its hosts, and the last failure of any of those actions. */
 export type HostActions = {
   readonly error?: string;
@@ -78,8 +86,8 @@ export const HostCard = ({ host, probe, onInstall, onUninstall, onProbe, onSetGa
   return (
     <div className='border border-separator rounded p-2 space-y-1 text-sm' data-testid={`host-${host.id}`}>
       <div className='flex items-center gap-2'>
-        <span className='font-medium'>{host.id}</span>
-        <span className='text-fg-muted'>{host.kind}</span>
+        <span className='font-medium'>Host: {host.id}</span>
+        <span className='text-fg-muted'>{KIND_LABELS[host.kind]}</span>
         <span className='grow' />
         {onSetGateway && (
           <Button.Root
