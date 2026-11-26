@@ -86,6 +86,53 @@ describe('code mode', () => {
   });
 });
 
+describe('turn cap', () => {
+  it.effect(
+    'a model that keeps retrying a failing eval is stopped and answers once, without tools',
+    Effect.fnUntraced(
+      function* (_) {
+        const session = yield* AgentService.createSession();
+        yield* session.submitPrompt('Make this plan a project with a task for each thing to plan.');
+        yield* session.waitForCompletion();
+
+        // Every call that offers `eval` uses it, as the model on preview did; only the last call offers no tools.
+        expect(offered).toHaveLength(26);
+        expect(offered.slice(0, 25).every((tools) => tools.includes(EVAL_TOOL_NAME))).toBe(true);
+        expect(offered.at(-1)).toEqual([]);
+
+        const messages = yield* TrajectoryStore.history(session.feed);
+        const results = messages
+          .flatMap((message) => message.blocks)
+          .filter((block): block is ContentBlock.ToolResult => block._tag === 'toolResult');
+        // The 25th call ran too, so the answer can report it and no call is left without a result.
+        expect(results).toHaveLength(25);
+        const texts = messages.flatMap((message) =>
+          message.sender.role === 'assistant'
+            ? message.blocks.flatMap((block) => (block._tag === 'text' ? [block.text] : []))
+            : [],
+        );
+        expect(texts).toEqual(['I could not create the project.']);
+      },
+      Effect.provide(
+        AssistantTestLayer({
+          agent: { makeTurnProducer: makeCodeModeTurnProducer() },
+          aiService: scriptedAiService((request) => {
+            offered.push(request.tools);
+            return request.tools.length > 0
+              ? { parts: [toolCall(EVAL_TOOL_NAME, { code: "throw new Error('milestones: Missing key');" })] }
+              : { parts: [text('I could not create the project.')] };
+          }),
+        }),
+      ),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 30_000 },
+  );
+});
+
+/** The tools the scripted model was offered on each call of the turn-cap test. */
+const offered: (readonly string[])[] = [];
+
 const { EnableSkills, QueryOperations, QuerySkills } = SkillManagerSkill.Operations;
 
 class Ticket extends Type.makeObject<Ticket>(DXN.make('com.example.type.ticket', '0.1.0'))(

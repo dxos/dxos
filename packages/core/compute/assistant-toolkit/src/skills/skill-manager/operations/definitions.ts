@@ -51,6 +51,9 @@ const ListedType = Schema.Struct({
   dxn: Schema.String.annotate({ description: 'The versioned DXN the type resolves by.' }),
   kind: Schema.Literals(['object', 'relation']),
   fields: Schema.optional(Schema.String).annotate({ description: 'Its fields; given when looked up by typename.' }),
+  skills: Schema.optional(Schema.Array(Schema.String)).annotate({
+    description: 'Keys of the skills that manage this type; create its objects with their operations.',
+  }),
 });
 
 export interface ListedType extends Schema.Schema.Type<typeof ListedType> {}
@@ -98,7 +101,10 @@ export const QueryTypes = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.assistantToolkit.queryTypes'),
     name: 'Query types',
-    description: 'Searches the registered object and relation types. Pass `typenames` to get their fields.',
+    description:
+      'Searches the registered object and relation types. Pass `typenames` to get their fields. A type that lists ' +
+      '`skills` is managed by them: enable one and create its objects with its operations, which also make the ' +
+      'objects they own, rather than writing them by hand.',
     icon: 'ph--shapes--regular',
   },
   input: Schema.Struct({

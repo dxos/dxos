@@ -38,3 +38,7 @@ if (exit._tag === 'Failure') {
 ## When not to use one
 
 Most of what an operation does to a single object is a line of `Obj` / `Database` code. Prefer that.
+
+The exception is creating an object whose type lists `skills` (Query types shows them): create it with that skill's
+operation. A project made with `Obj.make` has no task set, outline or instructions; the project skill's
+`projects-create` makes all of them.

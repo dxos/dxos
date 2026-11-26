@@ -36,6 +36,11 @@ class Note extends Type.makeObject<Note>(DXN.make('com.example.type.note', '0.1.
   }),
 ) {}
 
+/** A type a skill manages, as a project is managed by the project skill. */
+class Notebook extends Type.makeObject<Notebook>(DXN.make('com.example.type.notebook', '0.1.0'))(
+  Schema.Struct({ name: Schema.String }).pipe(Skill.SkillsAnnotation.set(['com.example.skill.notes'])),
+) {}
+
 const Score = Operation.make({
   meta: {
     key: DXN.make('com.example.operation.score'),
@@ -105,7 +110,7 @@ const BrokenSkill = Skill.make({
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: [SkillManagerHandlers, handlers],
-  types: [Ticket, Note, Feed.Feed, Skill.Skill],
+  types: [Ticket, Note, Notebook, Feed.Feed, Skill.Skill],
   skills: [ScoreSkill, NotesSkill, HiddenSkill, BrokenSkill],
 });
 
@@ -237,6 +242,31 @@ describe('Skill Manager lookups', () => {
           { conversation },
         );
         expect(ticket.fields).toEqual('title: string, priority?: number');
+      },
+      provideTestLayers,
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'query-types names the skills that manage a type, so the model creates its objects with their operations',
+    Effect.fnUntraced(
+      function* (_) {
+        const { conversation } = yield* TestConversation;
+        expect(yield* Operation.invoke(QueryTypes, { query: 'notebook' }, { conversation })).toEqual([
+          {
+            typename: 'com.example.type.notebook',
+            dxn: String(DXN.make('com.example.type.notebook', '0.1.0')),
+            kind: 'object',
+            skills: ['com.example.skill.notes'],
+          },
+        ]);
+        const [notebook] = yield* Operation.invoke(
+          QueryTypes,
+          { typenames: ['com.example.type.notebook'] },
+          { conversation },
+        );
+        expect(notebook.skills).toEqual(['com.example.skill.notes']);
       },
       provideTestLayers,
       TestHelpers.provideTestContext,

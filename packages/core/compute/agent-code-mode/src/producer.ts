@@ -9,7 +9,7 @@ import * as Option from 'effect/Option';
 import * as Record from 'effect/Record';
 
 import { type MakeTurnProducer, type TurnProducer, type TurnRequest } from '@dxos/agent-runtime';
-import { type OpaqueToolkit, callTool } from '@dxos/ai';
+import { OpaqueToolkit, callTool } from '@dxos/ai';
 import {
   AiRequest,
   AiSession,
@@ -32,6 +32,12 @@ import type { Dialect, SandboxOperation } from './Dialect.ts';
 import { type CallLabel, EVAL_TOOL_NAME, type Evaluation, labelEvalCall, makeEvalToolkit } from './eval-tool.ts';
 import * as Runner from './Runner.ts';
 import * as Sandbox from './Sandbox.ts';
+
+/**
+ * Default {@link CodeModeOptions.maxTurns}: an agent on EDGE has no one watching its turn, and a model retrying a failing
+ * `eval` would otherwise call the model until the platform killed the request, without ever answering.
+ */
+const DEFAULT_MAX_TURNS = 25;
 
 /** How a code-mode producer is configured; every field has a default, so `{}` is a working producer. */
 export type CodeModeOptions = {
@@ -57,8 +63,9 @@ export type CodeModeOptions = {
   maxOutput?: number;
 
   /**
-   * Cap on the model/tool turns of a single request; uncapped when omitted. A code-mode agent's loop is driven
-   * entirely by what its own code printed, so a host that cannot watch the turn can bound it here.
+   * Cap on the model/tool turns of a single request. A code-mode agent's loop is driven entirely by what its own
+   * code printed; past the cap the model gets one more call, without tools, to write its answer.
+   * @default DEFAULT_MAX_TURNS
    */
   maxTurns?: number;
 };
@@ -154,7 +161,7 @@ const runCodeModeTurn = ({
           // whole prompt cache. The next turn's system prompt includes it as usual.
           let turnSystem: (TurnBindings & { operations: ReadonlySet<string>; text: string }) | undefined;
 
-          const maxTurns = options.maxTurns ?? Number.POSITIVE_INFINITY;
+          const maxTurns = options.maxTurns ?? DEFAULT_MAX_TURNS;
           // Each iteration is scoped so the MCP connections it opens close before the next opens its own.
           const runIteration = (turn: number) =>
             Effect.gen(function* () {
@@ -247,9 +254,16 @@ const runCodeModeTurn = ({
               // Checked before the pause branch below: a provider that keeps pausing would otherwise
               // re-issue the request forever, since a paused turn skips the rest of the loop.
               if (turn + 1 >= maxTurns) {
+                // The calls just made get their results first, so the answer can report them; then one call with no
+                // tools, since a request that ends on a call leaves the person who asked with no answer at all.
+                if (finishReason !== 'pause') {
+                  yield* request.runTools({ toolkit });
+                }
                 yield* request.submitNotice(
-                  `Stopped after ${maxTurns} turns without a final answer. Report what you established and what is left.`,
+                  `You have used all ${maxTurns} turns of this request, so you can no longer run code. ` +
+                    'Write your answer now: what you did, what failed, and what is left.',
                 );
+                yield* request.runAgentTurn({ system: turnSystem.text, toolkit: OpaqueToolkit.empty });
                 return 'done' as const;
               }
               // A paused server-tool turn resumes with another request and no local tool execution.
