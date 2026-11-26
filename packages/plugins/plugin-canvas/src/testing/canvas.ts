@@ -3,11 +3,11 @@
 //
 
 import { type ContentMap } from '@dxos/diagram';
-import { type Database, Obj } from '@dxos/echo';
+import { type Database, Obj, Ref } from '@dxos/echo';
 import { rootOf } from '@dxos/react-ui-canvas/headless';
-import { Scene } from '@dxos/scene';
+import { Scene, toEcho } from '@dxos/scene';
 
-import { type Canvas } from '#types';
+import { Canvas } from '#types';
 
 import { editCanvasContent } from '../model/canvas-content.ts';
 import { makeCanvas } from '../model/canvas-document.ts';
@@ -34,4 +34,31 @@ export const addTestCanvas = (
   db.add(canvas);
   editCanvasContent(canvas, (content) => seed(content, rootOf(content) ?? ''));
   return canvas;
+};
+
+/**
+ * Adds a `Canvas` over `document` to `db` and leaves its scenes, layouts and model out, as a canvas whose objects have
+ * not loaded yet. `arrive` adds them, which changes nothing on the canvas: only its references resolve.
+ */
+export const addUnloadedCanvas = (
+  db: Database.Database,
+  document: Scene.SceneDocument,
+): { canvas: Canvas.Canvas; arrive: () => void } => {
+  const stored = toEcho(document);
+  const model = stored.models.values().next().value;
+  const scenes = [stored.root, ...[...stored.scenes.values()].filter((scene) => scene !== stored.root)];
+  const canvas = db.add(
+    Obj.make(Canvas.Canvas, {
+      settings: {},
+      // An inlined target reads as loaded before its object is in the database.
+      ...(model ? { model: Ref.make(model).noInline() } : {}),
+      layouts: [...stored.layouts.values()].map((layout) => Ref.make(layout).noInline()),
+      scenes: scenes.map((scene) => Ref.make(scene).noInline()),
+    }),
+  );
+  return {
+    canvas,
+    arrive: () =>
+      [...stored.models.values(), ...stored.layouts.values(), ...scenes].forEach((object) => db.add(object)),
+  };
 };

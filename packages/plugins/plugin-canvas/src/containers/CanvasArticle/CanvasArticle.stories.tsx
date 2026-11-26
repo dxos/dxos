@@ -28,7 +28,7 @@ import { translations } from '#translations';
 import { Canvas } from '#types';
 
 import types from '../../capabilities/schema.ts';
-import { addTestCanvas } from '../../testing/canvas.ts';
+import { addTestCanvas, addUnloadedCanvas } from '../../testing/canvas.ts';
 
 random.seed(1234);
 
@@ -393,6 +393,45 @@ export const MarkdownEmbed: Story = {
       10,
     );
     await expect(zoom).toBeLessThanOrEqual(100);
+  },
+};
+
+// Set by the story's setup, run by its play: the scene's objects reach the database after the article is on screen.
+const unloaded: { arrive?: () => void } = {};
+
+/**
+ * A canvas opened before its scene has loaded, as a drawing opened straight after the app starts.
+ *
+ * Test:
+ * 1. The article is on screen with nothing to draw.
+ * 2. The scene's objects load: the article draws A, B and C with no other change to the canvas.
+ */
+export const Unloaded2D: Story = {
+  decorators: StoryHarness.decorators({
+    types: [Drawing.Drawing, Drawing.Canvas, ...types],
+    plugins: [IllustratorPlugin.make(), CanvasPlugin.make()],
+    onInit: async ({ space }) => {
+      const { canvas, arrive } = addUnloadedCanvas(space.db, DSL.readScenes(EXEMPLARS.links).document);
+      const drawing = space.db.add(Drawing.make({ name: 'Canvas', canvas }));
+      await space.db.flush();
+      unloaded.arrive = arrive;
+      return [[Cell.article(drawing)]];
+    },
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // 1. The article draws nothing it can be waited on, so it is given time to render over the unloaded scene.
+    await waitFor(() => expect(canvasElement.querySelector('[data-component="DrawingArticle"]')).not.toBeNull(), {
+      timeout: 30_000,
+    });
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
+    await expect(canvas.queryByTestId('scene-view')).toBeNull();
+
+    // 2. Only the references resolve.
+    unloaded.arrive?.();
+    const view = await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 });
+    await waitFor(() => expect(view.querySelector('[data-node-id="a"]')).not.toBeNull());
   },
 };
 

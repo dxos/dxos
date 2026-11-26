@@ -27,7 +27,7 @@ import { translations } from '#translations';
 import { Canvas as CanvasFormat } from '#types';
 
 import types from '../../capabilities/schema.ts';
-import { addTestCanvas } from '../../testing/canvas.ts';
+import { addTestCanvas, addUnloadedCanvas } from '../../testing/canvas.ts';
 
 // Dispatched through the illustrator's card surface, as a stack or popover shows it, so the story covers the variant
 // dispatch as well as the card.
@@ -120,6 +120,45 @@ export const Test: Story = {
       await expect(canvas.queryByTestId(testId)).not.toBeInTheDocument();
     }
     await expect(canvasElement.querySelector('[role="toolbar"]')).toBeNull();
+  },
+};
+
+// Set by the story's setup, run by its play: the scene's objects reach the database after the card is on screen.
+const unloaded: { arrive?: () => void } = {};
+
+/**
+ * A card shown before its canvas's scene has loaded, as a card in a list drawn straight after the app starts.
+ *
+ * Test:
+ * 1. The card is on screen with nothing to draw.
+ * 2. The scene's objects load: the card draws A, B and C with no other change to the canvas.
+ */
+export const Unloaded: Story = {
+  decorators: StoryHarness.decorators({
+    types: [Drawing.Drawing, Drawing.Canvas, ...types],
+    plugins: [IllustratorPlugin.make(), CanvasPlugin.make()],
+    onInit: async ({ space }) => {
+      const { canvas, arrive } = addUnloadedCanvas(space.db, DSL.readScenes(EXEMPLARS.links).document);
+      const drawing = space.db.add(Drawing.make({ name: 'Canvas', canvas }));
+      await space.db.flush();
+      unloaded.arrive = arrive;
+      return [[Cell.article(drawing, { component: DrawingCard })]];
+    },
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // 1. The card draws nothing it can be waited on, so it is given time to render over the unloaded scene.
+    await waitFor(() => expect(canvasElement.querySelector('[data-component^="Drawing"]')).not.toBeNull(), {
+      timeout: 30_000,
+    });
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
+    await expect(canvas.queryByTestId('scene-view')).toBeNull();
+
+    // 2. Only the references resolve.
+    unloaded.arrive?.();
+    await expect(await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 })).toBeInTheDocument();
+    await waitFor(() => expect(canvasElement.querySelectorAll('[data-node-id]').length).toBe(3), { timeout: 10_000 });
   },
 };
 
