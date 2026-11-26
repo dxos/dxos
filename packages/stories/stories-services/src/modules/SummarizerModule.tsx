@@ -10,7 +10,6 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import * as Button from '@dxos/react-ui/Button';
 import * as Input from '@dxos/react-ui/Input';
 import * as Panel from '@dxos/react-ui/Panel';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { Summarizer } from '../contracts/index.ts';
@@ -49,24 +48,20 @@ export const SummarizerModule = () => {
           />
         </Toolbar.Root>
       </Panel.Header>
-      <Panel.Body asChild>
-        <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport classNames='p-2 space-y-2'>
-            <p className='text-sm text-fg-muted' data-testid='summarizer-binding'>
-              Summarizer: {bindingLabel(snapshot.bindings[Summarizer.Contract.key])}
-            </p>
-            <Input.Textarea rows={3} value={text} onChange={(event) => setText(event.target.value)} />
-            {error && (
-              <p className='text-sm text-error-text' data-testid='summarizer-error'>
-                {error}
-              </p>
-            )}
-            <p className='text-sm' data-testid='summarizer-output'>
-              {tokens.join(' ')}
-            </p>
-            <CallLog contractKey={Summarizer.Contract.key} />
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
+      <Panel.Body classNames='flex flex-col gap-2 p-2'>
+        <p className='text-sm text-fg-muted' data-testid='summarizer-binding'>
+          Summarizer: {bindingLabel(snapshot.bindings[Summarizer.Contract.key])}
+        </p>
+        <Input.Textarea rows={3} value={text} onChange={(event) => setText(event.target.value)} />
+        {error && (
+          <p className='text-sm text-error-text' data-testid='summarizer-error'>
+            {error}
+          </p>
+        )}
+        <p className='text-sm' data-testid='summarizer-output'>
+          {tokens.join(' ')}
+        </p>
+        <CallLog contractKey={Summarizer.Contract.key} />
       </Panel.Body>
     </Panel.Root>
   );
