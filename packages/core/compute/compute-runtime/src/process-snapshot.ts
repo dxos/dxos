@@ -37,6 +37,7 @@ class Snapshot<I, O, Rpcs extends Rpc.Any> implements Process.Process<I, O, Rpcs
   readonly startedAt: number;
   readonly completedAt: Option.Option<number>;
   readonly metrics: Process.Data['metrics'];
+  readonly authorities?: readonly Process.Authority[];
   readonly #resolve: (() => Process.Process<I, O, Rpcs>) | undefined;
   #live: Process.Process<I, O, Rpcs> | undefined;
 
@@ -51,6 +52,9 @@ class Snapshot<I, O, Rpcs extends Rpc.Any> implements Process.Process<I, O, Rpcs
     this.startedAt = data.startedAt;
     this.completedAt = data.completedAt;
     this.metrics = data.metrics;
+    if (data.authorities !== undefined) {
+      this.authorities = data.authorities;
+    }
     this.#resolve = resolve;
   }
 

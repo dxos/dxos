@@ -12,11 +12,14 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Agent from '@dxos/compute/Agent';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as Process from '@dxos/compute/Process';
+import { Obj } from '@dxos/echo';
+import { Principal } from '@dxos/permission';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 
 import { AssistantCapabilities, AssistantOptions } from '#types';
 
+import { consentLayerSpec } from '../util/consent.ts';
 import { resolveTurnProducer } from './turn-producers.ts';
 
 //
@@ -62,6 +65,18 @@ const makeAgentServiceSpec = (codeModeTurnProducer: AssistantOptions.AssistantPl
               return { limit: values.parallelThreadLimit, ...(tenants.length > 0 ? { tenants } : {}) };
             },
             hooks: () => manager.getAll(AppCapabilities.HookDefinition),
+            // A session another agent delegated to, or one opened with no authority named, acts with its own: the one a
+            // plugin contributes for it, or itself with no grants, so a consentable call can still be put to the person.
+            defaultAuthority: (session) =>
+              Effect.succeed(
+                AssistantCapabilities.findSessionAuthority(
+                  manager.getAll(AssistantCapabilities.SessionAuthority),
+                  session,
+                ) ?? {
+                  principal: Principal.make(Obj.getURI(session)),
+                  grants: [],
+                },
+              ),
             mcpEndpoint: (connection) =>
               ConnectorSpec.mcpEndpoint(manager.getAll(ConnectorSpec.Connector).flat(), connection),
           });
@@ -69,6 +84,12 @@ const makeAgentServiceSpec = (codeModeTurnProducer: AssistantOptions.AssistantPl
       ),
   );
 
-export default Capability.makeModule((options: AssistantOptions.AssistantPluginOptions | void) =>
-  Effect.succeed(Capability.contribute(Capabilities.LayerSpec, makeAgentServiceSpec(options?.codeModeTurnProducer))),
+export default Capability.makeModule(
+  Effect.fnUntraced(function* (options: AssistantOptions.AssistantPluginOptions | void) {
+    const manager = yield* Capability.Service;
+    return [
+      Capability.contribute(Capabilities.LayerSpec, makeAgentServiceSpec(options?.codeModeTurnProducer)),
+      Capability.contribute(Capabilities.LayerSpec, consentLayerSpec(manager)),
+    ];
+  }),
 );

@@ -1,0 +1,90 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+// @import-as-namespace
+
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+
+import * as Operation from '@dxos/compute/Operation';
+import type * as Process from '@dxos/compute/Process';
+import { Check, type Requirement } from '@dxos/permission';
+
+/** Whether an authority admits a call; a refusal names the first requirement it refused and why. */
+export type Verdict =
+  | { readonly _tag: 'Admitted' }
+  | {
+      readonly _tag: 'Refused';
+      readonly requirement: Requirement.Requirement;
+      /** The requirement's position among those the operation declares. */
+      readonly index: number;
+      readonly reason: Check.Reason;
+      readonly message: string;
+    };
+
+/**
+ * Decides whether an authority admits an operation that declares requirements. The process manager checks every call a
+ * process makes against each authority the process is held to, and asks for consent where a refusal allows it.
+ */
+export interface Api {
+  readonly check: (params: {
+    readonly authority: Process.Authority;
+    readonly op: Operation.Definition.Any;
+    readonly input: unknown;
+    /** Positions of requirements already admitted another way, such as a one-time consent, which the check skips. */
+    readonly except?: readonly number[];
+  }) => Effect.Effect<Verdict>;
+}
+
+export class Service extends Context.Service<Service, Api>()('@dxos/compute-runtime/Verifier') {}
+
+export type Options = {
+  /**
+   * The runtime's live facts: revocations, space memberships, recorded consents, and grants it holds itself. Consulted
+   * beside the process's own grants.
+   */
+  readonly source?: Check.GrantSource;
+};
+
+/**
+ * Checks each requirement the operation declares against the authority's grants. Those grants were placed on the
+ * process by the host that spawned it or added through `ProcessManager.grant`, which the runtime vouches for, so each
+ * issuer roots its own grant; chains among them are still checked.
+ */
+export const make = ({ source }: Options = {}): Api => ({
+  check: Effect.fnUntraced(function* ({ authority, op, input, except = [] }) {
+    const held = Check.fromGrants({
+      grants: authority.grants,
+      trusted: [...new Set(authority.grants.map((grant) => grant.issuer))],
+    });
+    const grants = source ? Check.merge(held, source) : held;
+    for (const [index, requirement] of Operation.getRequirements(op).entries()) {
+      if (except.includes(index)) {
+        continue;
+      }
+      const result = yield* Check.check({ principal: authority.principal, requirement, args: input, source: grants });
+      if (Check.isDenied(result)) {
+        return {
+          _tag: 'Refused',
+          requirement,
+          index,
+          reason: result.reason,
+          message: `Operation "${op.meta.key}" denied: ${Check.describeReason(result.reason)}`,
+        } satisfies Verdict;
+      }
+    }
+    return { _tag: 'Admitted' } satisfies Verdict;
+  }),
+});
+
+/** Admits or refuses the calls the running process makes; the process manager provides it to every process. */
+export interface AdmissionApi {
+  /** Dies with `Operation.OperationDeniedError` when the process's authorities refuse the call and no consent admits it. */
+  readonly admit: (op: Operation.Definition.Any, input: unknown) => Effect.Effect<void>;
+}
+
+export class Admission extends Context.Service<Admission, AdmissionApi>()('@dxos/compute-runtime/Verifier.Admission') {}
+
+export const layer = (options?: Options): Layer.Layer<Service> => Layer.succeed(Service, make(options));

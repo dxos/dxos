@@ -72,6 +72,15 @@ goal G-6: Storybook deploys to preview and production after the merge.
     - Deploy Apps runs with app storybook-react, one time for each environment.
 ```
 
+```mdl
+goal G-7: An agent hands work to an agent that has the permission.
+  status: review
+  notes:
+    - Each process carries its authority, and the Verifier in compute-runtime checks every call.
+    - The Delegation story shows two agents with different permissions and the process tree.
+    - The autocue demo of the story is an Artifact. The dx.pub upload needs R2 keys.
+```
+
 ## Pull requests
 
 ```mdl
@@ -80,6 +89,14 @@ pr PR-1: Delegate to sessions, show threads as rows, add delegation stories.
   goals: [G-1, G-2, G-3, G-4]
   notes:
     - A storybook test timed out in CI. The last turn of the agent now has 90 seconds.
+```
+
+```mdl
+pr PR-2: Cross-agent delegation and permissions carried by each process.
+  ref: dxos/dxos#14698
+  goals: [G-7]
+  notes:
+    - Ready for review. Auto-merge is on.
 ```
 
 ## Changelog
@@ -100,6 +117,13 @@ decision D-1: Deploy storybook to preview and production when the PR lands.
   date: 2026-11-25
   by: user:dmaretskyi
   answers: Q-1
+```
+
+```mdl
+decision D-2: Add G-7. Two agents with different permissions show why an agent hands work to another.
+  date: 2026-11-26
+  by: user:dmaretskyi
+  affects: [G-7]
 ```
 
 ## Timeline
@@ -144,4 +168,40 @@ event T-6: The storybook deploy goes to preview and production, as the user deci
 event T-7: The user stopped the landing of PR-1. Auto-merge is off.
   date: 2026-11-25T15:10Z
   by: user:dmaretskyi
+```
+
+```mdl
+event T-8: The demo of agents with different permissions is recorded and published.
+  date: 2026-11-26T19:30Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-9: PR-2 is ready for review, and auto-merge is on.
+  date: 2026-11-26T19:37Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-10: The review of PR-2 found a self-grant and a consent gap. Both are fixed and pushed.
+  date: 2026-11-26T20:40Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-11: A second review round found two more permission gaps. Both are fixed and pushed.
+  date: 2026-11-26T21:45Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-12: A session on EDGE now refuses an authority, because EDGE drops it.
+  date: 2026-11-26T22:05Z
+  by: agent:claude-code
+```
+
+```mdl
+event T-13: Four stories crashed on the agent header tooltip. The header now shows it only with permissions.
+  date: 2026-11-26T22:50Z
+  by: agent:claude-code
 ```

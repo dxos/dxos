@@ -28,9 +28,10 @@ import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN, EID, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type ContentBlock, Task } from '@dxos/types';
+import { type ContentBlock } from '@dxos/types';
 
 import { type DelegationStrategy } from './delegation-strategy.ts';
+import { prepareAgentDelegation, prepareSessionDelegation } from './delegation.ts';
 import { type McpEndpointOf } from './mcp-servers.ts';
 import { type SessionControlRpc } from './session-control.ts';
 import {
@@ -97,8 +98,8 @@ export interface CreateSessionOptions {
   readonly systemPrompt?: string;
   /** Where the session's agent runs (see `Agent.OpenSessionOptions.location`). */
   readonly location?: Agent.AgentLocation;
-  /** Admits the operations the agent invokes that declare requirements (see `Agent.OpenSessionOptions.guard`). */
-  readonly guard?: Process.Guard;
+  /** Who the session acts as and the grants it holds (see `Agent.OpenSessionOptions.authority`). */
+  readonly authority?: Process.Authority;
   /** Steers the session's chat; its hook settings apply to the session's requests. */
   readonly instructions?: Instructions.Instructions;
 }
@@ -137,9 +138,22 @@ export const createSession: (
   return yield* bindSession(chat, {
     provider: opts?.provider,
     ...(opts?.location !== undefined ? { location: opts.location } : {}),
-    ...(opts?.guard !== undefined ? { guard: opts.guard } : {}),
+    ...(opts?.authority !== undefined ? { authority: opts.authority } : {}),
   });
 }, Effect.scoped);
+
+/** Whether two authorities name the same principal and grants; callers build them afresh, so identity says nothing. */
+const sameAuthority = (left: Process.Authority | undefined, right: Process.Authority): boolean =>
+  left !== undefined &&
+  left.principal === right.principal &&
+  left.grants.length === right.grants.length &&
+  left.grants.every((grant, index) => grant.id === right.grants[index]?.id);
+
+/** Whether `live` is `opened` with grants added since, as `ProcessManager.grant` appends them. */
+const extendsAuthority = (live: Process.Authority | undefined, opened: Process.Authority): boolean =>
+  live !== undefined &&
+  live.principal === opened.principal &&
+  opened.grants.every((grant, index) => grant.id === live.grants[index]?.id);
 
 export interface Options {
   systemPrompt?: string;
@@ -194,6 +208,11 @@ export interface Options {
   mcpEndpoint?: McpEndpointOf;
   /** Lifecycle hooks the agent process can run (see `SessionProcessOptions.hooks`). */
   hooks?: () => readonly Hook.Definition[];
+  /**
+   * The authority a local session's process is spawned with when the open names none, such as a session another agent
+   * delegated to: it runs on its own agent's permissions, never the caller's.
+   */
+  defaultAuthority?: (session: Agent.Session) => Effect.Effect<Process.Authority | undefined, never, Database.Service>;
 }
 
 /**
@@ -271,7 +290,7 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
           instructions: string | undefined;
           location: Agent.AgentLocation;
           process: string;
-          guard: Process.Guard | undefined;
+          authority: Process.Authority | undefined;
           handle: AgentHandle;
           session: SessionHandle;
         }
@@ -359,9 +378,19 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
         }
       });
 
+      const defaultAuthorityFor = (
+        chat: Agent.Session,
+      ): Effect.Effect<Process.Authority | undefined, never, Database.Service> =>
+        opts?.defaultAuthority ? opts.defaultAuthority(chat) : Effect.succeed(undefined);
+
+      /**
+       * `reopen` is a verb acting on the options the session was last opened with: its authority may since have gained
+       * grants, which it keeps, so it reuses a process whose authority extends the saved one rather than replacing it.
+       */
       const getHandle = (
         chat: Agent.Session,
         options?: Agent.OpenSessionOptions,
+        { reopen = false }: { readonly reopen?: boolean } = {},
       ): Effect.Effect<SessionHandle, never, Database.Service> =>
         Effect.suspend(() =>
           lockFor(chat.id).withPermits(1)(
@@ -373,8 +402,13 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
               const harness = SessionConfig.harnessOf(chat.session);
               const instructions = chat.instructions?.uri;
               const location: Agent.AgentLocation = options?.location ?? 'local';
-              const guard = options?.guard;
+              const authority = options?.authority;
               const executable = executableFor(chat, provider);
+              if (location === 'edge' && authority !== undefined) {
+                // A remote spawn carries no authority and an EDGE snapshot returns none, so one asked for would be
+                // dropped silently; refusing it keeps a session from running without the limits it was opened with.
+                return yield* Effect.die(new Error('A session on EDGE cannot be opened with an authority yet.'));
+              }
               if (location === 'edge' && executable.key !== SESSION_PROCESS_KEY) {
                 // EDGE spawns by key from its own registry, which holds no process a plugin contributed.
                 return yield* Effect.die(
@@ -383,6 +417,15 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
               }
               const cached = sessionCache.get(chat.id);
               if (cached) {
+                // A grant extends a live process's authority after it was cached, so the check reads the live one. An EDGE
+                // session is never opened with an authority, so the fallback serves only a process the tree has dropped.
+                const cachedPid = cached.handle.pid;
+                const liveAuthority =
+                  authority === undefined
+                    ? undefined
+                    : ((yield* processManager.processTree)
+                        .find((process) => process.pid === cachedPid)
+                        ?.authorities?.at(-1) ?? cached.authority);
                 if (
                   cached.model === model &&
                   cached.harness === harness &&
@@ -390,8 +433,8 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
                   cached.instructions === instructions &&
                   cached.location === location &&
                   cached.process === executable.key &&
-                  // No guard asked for is no demand for an unguarded process, so it reuses a guarded one.
-                  (guard === undefined || cached.guard === guard) &&
+                  // No authority asked for is no demand for a process without one, so it reuses any.
+                  (authority === undefined || (reopen ? extendsAuthority : sameAuthority)(liveAuthority, authority)) &&
                   !Process.isTerminal(cached.handle.status.state)
                 ) {
                   return cached.session;
@@ -423,13 +466,21 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
                 location: processLocation,
               });
               let activeProcess = processes.find((process) => !Process.isTerminal(process.status.state));
-              if (activeProcess && guard !== undefined) {
-                // A running process keeps the guard it was spawned with, so one asked for under a guard is never adopted.
-                yield* activeProcess.terminate();
-                activeProcess = undefined;
+              if (activeProcess && authority !== undefined) {
+                // A running process keeps the authority it was spawned with, so one asked for under another is never
+                // adopted; one already running under the same authority is, so a remount does not cut its turn short.
+                const activePid = activeProcess.pid;
+                const listed = (yield* processManager.processTree).find((process) => process.pid === activePid);
+                if (!(reopen ? extendsAuthority : sameAuthority)(listed?.authorities?.at(-1), authority)) {
+                  yield* activeProcess.terminate();
+                  activeProcess = undefined;
+                }
               }
 
               const agent = yield* Agent.loadForSession(chat);
+              // Only a fresh spawn takes the default: an adopted process keeps the authority it was spawned with.
+              const spawnAuthority =
+                authority ?? (!activeProcess && location === 'local' ? yield* defaultAuthorityFor(chat) : undefined);
               let handle: AgentHandle;
               if (activeProcess) {
                 // `hydrate` returns the live handle; the listed one may be a dormant view whose
@@ -440,7 +491,7 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
                   location: processLocation,
                   name: 'Agent',
                   target,
-                  ...(guard !== undefined ? { guard } : {}),
+                  ...(spawnAuthority !== undefined ? { authority: spawnAuthority } : {}),
                   // Stamp the host marker so the harness control surface is discoverable by annotation
                   // lookup (set once at spawn, immutable — the identity plane).
                   annotations: Annotation.buildDictionary((dictionary) => {
@@ -505,7 +556,7 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
                 instructions,
                 location,
                 process: executable.key,
-                guard,
+                authority: spawnAuthority,
                 handle,
                 session,
               });
@@ -567,77 +618,49 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
         chat: Agent.Session,
         options?: Agent.OpenSessionOptions,
       ): Effect.Effect<SessionHandle, never, Database.Service> => {
-        if (options !== undefined) {
-          openedWith.set(chat.id, options);
-        }
-        return getHandle(chat, options ?? openedWith.get(chat.id));
+        // Saved only once the open succeeds, so a refused reopen leaves the session's verbs on the options that worked.
+        return getHandle(chat, options ?? openedWith.get(chat.id), { reopen: options === undefined }).pipe(
+          Effect.tap(() =>
+            Effect.sync(() => {
+              if (options !== undefined) {
+                openedWith.set(chat.id, options);
+              }
+            }),
+          ),
+        );
       };
 
       /**
-       * Hands work to another session of the caller's agent: the named one, or a new one that starts on the caller's
-       * model, skills and context. The task goes on the receiver's checklist with the receiver as its delegate, and the
-       * receiver's first turn starts at once.
+       * Hands work to another session of the caller's agent (see `prepareSessionDelegation`); the receiver's first turn
+       * starts at once.
        */
       const delegateToSession = (
         request: Agent.DelegateRequest,
         target: URI.URI | undefined,
+        sender?: Agent.PromptSender,
       ): Effect.Effect<Agent.DelegateResult, Agent.NoCurrentSessionError, Database.Service> =>
         Effect.gen(function* () {
           const caller = yield* currentSession;
-          const runtime = yield* Effect.context<Database.Service>();
-          const callerFeed = yield* Database.load(caller.feed).pipe(Effect.orDie);
-          const callerContext = yield* EffectEx.acquireReleaseResource(
-            () => new AiContext.Binder({ feed: callerFeed, runtime }),
-          );
-
-          const receiver =
-            target !== undefined
-              ? yield* Database.resolve(target, Agent.Session).pipe(Effect.orDie)
-              : yield* Effect.gen(function* () {
-                  const feed = yield* Database.add(TrajectoryStore.makeFeed());
-                  const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
-                  yield* Effect.promise(() =>
-                    binder.bind({
-                      skills: callerContext.getSkills().map(Skill.makeRef),
-                      objects: callerContext.getObjects().map((object) => Ref.make(object)),
-                    }),
-                  );
-                  // The same agent works the delegated session, so it is filed under that agent when there is one.
-                  const agent = yield* Agent.loadForSession(caller);
-                  const session = yield* Database.add(
-                    Agent.makeSession({
-                      feed: Ref.make(feed),
-                      ...(request.purpose !== undefined ? { name: request.purpose } : {}),
-                      ...(caller.instructions ? { instructions: caller.instructions } : {}),
-                      ...(agent ? { [Obj.Parent]: agent } : {}),
-                    }),
-                  );
-                  Agent.seedSession(session, caller.session);
-                  return session;
-                });
-
-          const task = request.task ? yield* Database.load(request.task).pipe(Effect.orDie) : undefined;
-          const assigned = task && Obj.instanceOf(Task.Task, task) ? task : undefined;
-          if (assigned) {
-            Agent.assignTasks(receiver, [Ref.make(assigned)]);
-            Task.update(assigned, { status: 'started', delegate: { role: 'assistant', subject: Ref.make(receiver) } });
-          }
-          yield* Database.flush();
-
-          const prompt: ContentBlock.Any[] = request.message
-            ? [...request.message]
-            : [
-                {
-                  _tag: 'text',
-                  // The system writes this on the reader's behalf, so it shows as context rather than as their words.
-                  disposition: 'synthetic',
-                  text: assigned
-                    ? `You have been assigned the task below.\n- ${JSON.stringify(assigned.title)}: ${Obj.getURI(assigned)}`
-                    : (request.purpose ?? ''),
-                },
-              ];
+          const { receiver, prompt } = yield* prepareSessionDelegation(caller, request, target);
           const handle = yield* handleFor(receiver);
-          yield* handle.submitPrompt(prompt);
+          yield* handle.submitPrompt(prompt, sender ? { sender } : undefined);
+          return { session: Obj.getURI(receiver) };
+        }).pipe(Effect.scoped);
+
+      /**
+       * Hands work to another agent: its primary session takes the message (or the task) as a turn from the caller's
+       * agent, and runs on that agent's own permissions, never the caller's.
+       */
+      const delegateToAgent = (
+        request: Agent.DelegateRequest,
+        target: URI.URI,
+      ): Effect.Effect<Agent.DelegateResult, Agent.NoCurrentSessionError, Database.Service> =>
+        Effect.gen(function* () {
+          const caller = yield* currentSession;
+          const agent = yield* Database.resolve(target, Agent.Agent).pipe(Effect.orDie);
+          const { receiver, prompt, sender } = yield* prepareAgentDelegation(caller, agent, request);
+          const handle = yield* handleFor(receiver);
+          yield* handle.submitPrompt(prompt, { sender });
           return { session: Obj.getURI(receiver) };
         }).pipe(Effect.scoped);
 
@@ -682,26 +705,28 @@ export const layer = (opts?: Options): Layer.Layer<Agent.Service, never, Process
         spawn: (definition, spawnOptions) =>
           Effect.gen(function* () {
             const caller = yield* Effect.option(Process.current);
-            // The caller's guard still applies when the spawn names another parent, so a child never escapes it.
-            const callerGuard = yield* Effect.serviceOption(Process.GuardService);
-            const guards = [Option.getOrUndefined(callerGuard), spawnOptions?.guard].filter(
-              (guard) => guard !== undefined,
-            );
-            const guard = guards.reduce<Process.Guard | undefined>(
-              (combined, next) => (combined === undefined ? next : Process.bothGuards(combined, next)),
-              undefined,
-            );
+            // Inside a process, spawn through its own manager: the child is held to the caller's authorities whatever
+            // parent it names.
+            const scoped = yield* Effect.serviceOption(Process.ManagerService);
+            if (Option.isSome(caller) && Option.isSome(scoped)) {
+              return yield* scoped.value.spawn(definition, spawnOptions);
+            }
             return yield* processManager.spawn(definition, {
               // The caller is the parent unless the spawn names its own.
               ...(Option.isSome(caller) ? { parentProcessId: caller.value.pid } : {}),
               ...spawnOptions,
-              ...(guard !== undefined ? { guard } : {}),
             });
           }),
-        delegate: (request) =>
-          request.target.kind === 'session'
-            ? withCurrentDatabase(delegateToSession(request, request.target.session))
-            : Effect.die(new Error(`Agent.delegate to a ${request.target.kind} is not implemented.`)),
+        delegate: (request) => {
+          switch (request.target.kind) {
+            case 'session':
+              return withCurrentDatabase(delegateToSession(request, request.target.session));
+            case 'agent':
+              return withCurrentDatabase(delegateToAgent(request, request.target.agent));
+            case 'thread':
+              return Effect.die(new Error('Agent.delegate to a thread is not implemented.'));
+          }
+        },
       };
 
       return service;

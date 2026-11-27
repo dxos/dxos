@@ -66,6 +66,7 @@
     "@dxos/assistant": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/errors": "workspace:*",
+    "@dxos/permission": "workspace:*",
     "@effect/vitest": "catalog:",
     "vitest": "catalog:"
   },

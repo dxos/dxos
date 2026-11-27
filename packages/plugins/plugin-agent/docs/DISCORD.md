@@ -172,29 +172,25 @@ When someone posts in a bound channel:
 
 ### How the agent's messages reach Discord
 
-The agent never posts to Discord itself: it appends assistant messages to its chat for the conversation, and the bot
-host posts them. Each conversation the bot knows (a thread or DM) has a record in the bot's `threads` table with a
-cursor into the chat's feed; whatever is past the cursor is posted, and the cursor advances.
+The bot host never posts what the agent writes into its chats. Every message reaches Discord through the bot's `act`
+(`DiscordBotService`), which EDGE's bot host serves with the token it holds.
 
-| Case                                    | What the agent does                                                                                                                                                                                                           | What the bot host does                                                                                                                                                                                                    |
-| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A reply in the thread whose turn ran    | Appends its reply during the turn.                                                                                                                                                                                            | Posts it right after the turn settles (`mirrorReplies`), starting the thread if the message was top-level.                                                                                                                |
-| A relay into another known thread or DM | `RelayOperation.SendMessage` appends the message to that conversation's chat (`ensureChannelChat`), with no send.                                                                                                             | A sweep (`sweepThread`, after every handled message and every 5 seconds) posts what each known conversation's chat has past its cursor; a conversation whose thread was never started (a silent first turn) gets it then. |
-| A relay to someone with no conversation | `SendMessage` asks the channel for a direct thread; Discord's backend answers `dm:<Discord user id>` from the person's `discord` identity without a Discord call, and the chat is keyed by it plus `AgentChannels.directKey`. | The sweep queries chats carrying the direct key for the `Channel`, opens the DM with its own token, records the DM channel → chat (so the person's replies pass the DM gate into the same chat), and posts.               |
+| Case                                    | What sends it                                                                                                                                                                                                                                       |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A reply in the thread whose turn ran    | plugin-discord's `Reply` operation calls `act` with a post. A reply edits the bot's `thinking...` placeholder and stops typing, so the turn need not end on the reply.                                                                             |
+| A relay into another known thread or DM | `RelayOperation.SendMessage` sends through `ThreadOperation.SendToChannel`; the Discord channel backend posts with `act`, and the message is recorded in that conversation's chat (`ensureChannelChat`).                                          |
+| A relay to someone with no conversation | `SendMessage` asks the channel for a direct thread; Discord's backend answers `dm:<Discord user id>` from the person's `discord` identity without a Discord call. The send calls `act` with a DM, and its receipt's `thread` names the DM channel, which keys the chat, so the person's replies arrive in the same chat. |
 
 `SendMessage` picks where a relay goes in this order: back to the requester's thread when reporting; the person's
 newest conversation on a channel; a new DM through the agent's channels; and only then a Composer chat with them,
 which it wakes, since they may never have it open. `ChatParticipant` ties the chat to the person, so later relays to
-them reuse it. A turn's mirror and the sweep share
-the cursor and a per-thread lock, and the sweep skips a thread whose turn is mirroring, so each message is posted once.
-A conversation Discord refuses for good (closed DMs, a deleted thread: 403 or 404) is dropped and reported in the bot's
-`lastError` rather than retried. A backend declares this split with `ChannelBackendProvider.mirrored`; for any other
-backend `SendMessage` still sends through `ThreadOperation.SendToChannel`.
+them reuse it. A refused send (closed DMs, a deleted thread) is a reason, and delivery falls through to the next route.
+No backend has a host that posts what the agent appends to a chat: the agent posts every message itself.
 
-**Only the bot host talks to Discord with the token EDGE holds.** `SendMessage` runs inside an agent's tool call on
-EDGE (operation-service), where there is no app client to reach the bot routes, and the space may hold only a
-placeholder token (locally) or a KMS-managed one the operation cannot read. The bot host resolves the real token once
-(`bot-token.ts`) and already holds the gateway, so sending lives there too.
+**On EDGE, a bundle activates alone**, so plugin-thread's bundle cannot see Discord's channel backend. Where no backend
+is visible, `SendToChannel` and `OpenDirect` invoke the backend's own operations instead
+(`org.dxos.operation.discord.sendToChannel` and `.openDirect`, keyed by `ThreadOperation.backendOperations`), which
+plugin-discord's bundle handles with the same backend code and the `DiscordBotService` EDGE serves it.
 
 **Disconnect** (`UnbindChannel`) deletes the binding and removes the id from the config; a `Channel` left with no Discord
 channel leaves the agent's list, and its conversations stay in the space. Deleting a thread conversation in the Activity panel deletes the Discord thread through EDGE

@@ -10,7 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { type Channel } from '@dxos/types';
+import { type Channel, Message } from '@dxos/types';
 
 import { AgentChannels, AgentOperation } from '#types';
 
@@ -40,8 +40,6 @@ export type EnsureChannelChatProps = {
   channel: Channel.Channel;
   thread?: string;
   title?: string;
-  /** A direct conversation the channel's host has yet to open; the chat also carries {@link AgentChannels.directKey}. */
-  direct?: boolean;
 };
 
 /**
@@ -53,19 +51,10 @@ export const ensureChannelChat = Effect.fnUntraced(function* ({
   channel,
   thread,
   title,
-  direct,
 }: EnsureChannelChatProps) {
   const key = AgentChannels.chatKey(channel.id, thread);
-  // The same conversation may be bridged to more than one agent.
-  const existing = yield* Database.query(Query.select(Filter.foreignKeys(Agent.Session, [key]))).run;
-  const match = existing.find((chat) => Obj.getParent(chat)?.id === agent.id);
+  const match = yield* findChat(agent, key);
   if (match) {
-    // A chat first made without `direct` (e.g. by `EnsureChannelChat`) still needs the key the host finds pending DMs by.
-    if (direct && !Obj.getMeta(match).keys.some(({ source }) => source === AgentChannels.DIRECT_SOURCE)) {
-      Obj.update(match, (match) => {
-        Obj.getMeta(match).keys.push(AgentChannels.directKey(channel.id));
-      });
-    }
     yield* bindChannelSkills(match, channel);
     return match;
   }
@@ -77,13 +66,21 @@ export const ensureChannelChat = Effect.fnUntraced(function* ({
   const feed = yield* Database.add(TrajectoryStore.makeFeed());
   const chat = yield* Database.add(
     Agent.makeSession({
-      [Obj.Meta]: { keys: direct ? [key, AgentChannels.directKey(channel.id)] : [key] },
+      [Obj.Meta]: { keys: [key] },
       [Obj.Parent]: agent,
       name: title,
       feed: Ref.make(feed),
       instructions: agent.instructions,
     }),
   );
+
+  // Concurrent first contacts can each create a chat: the oldest wins and the others give theirs up.
+  const winner = yield* findChat(agent, key);
+  if (winner && winner.id !== chat.id) {
+    yield* Database.remove(chat);
+    yield* Database.remove(feed);
+    return winner;
+  }
 
   const runtime = yield* Effect.context<Database.Service>();
   const AiContext = yield* Effect.promise(aiContextRuntime);
@@ -97,6 +94,33 @@ export const ensureChannelChat = Effect.fnUntraced(function* ({
   );
   return chat;
 }, Effect.scoped);
+
+/** The agent's chat for a conversation key, the oldest if concurrent first contacts made more than one. */
+const findChat = Effect.fnUntraced(function* (agent: Agent.Agent, key: ReturnType<typeof AgentChannels.chatKey>) {
+  // The same conversation may be bridged to more than one agent.
+  const chats = yield* Database.query(Query.select(Filter.foreignKeys(Agent.Session, [key]))).run;
+  return chats
+    .filter((chat) => Obj.getParent(chat)?.id === agent.id)
+    .sort((left, right) => left.id.localeCompare(right.id))
+    .at(0);
+});
+
+/** Appends a message the agent sent to the chat's feed; `properties` carry the backend's receipt. */
+export const appendToChat = Effect.fnUntraced(function* (
+  agent: Agent.Agent,
+  chat: Agent.Session,
+  text: string,
+  properties?: Record<string, unknown>,
+) {
+  const feed = yield* Database.load(chat.feed).pipe(Effect.orDie);
+  yield* TrajectoryStore.appendMessages(feed, [
+    Message.make({
+      sender: { role: 'assistant', name: agent.name },
+      blocks: [{ _tag: 'text', text }],
+      properties,
+    }),
+  ]);
+});
 
 /**
  * The skills the channel's backend declares on its config type ({@link Skill.SkillsAnnotation}): how the agent

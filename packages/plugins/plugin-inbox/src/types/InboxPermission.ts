@@ -4,19 +4,19 @@
 
 // @import-as-namespace
 
+import { Permission, Requirement } from '@dxos/permission';
+
 /**
  * Sending mail on the user's behalf. Consentable: an agent that lacks it is asked in the chat
  * rather than refused outright, since the person is there to answer.
- *
- * Plain data in the `@dxos/permission` vocabulary, since that package is private and this one is published.
  */
-export const SendEmail = {
+export const SendEmail = Permission.define({
   command: '/email/send',
   name: 'Send email',
   description: 'Send email from your mailbox.',
   icon: 'ph--paper-plane-tilt--regular',
   consentable: true,
-} as const;
+});
 
-/** What an operation that sends mail declares through `Operation.RequiresAnnotation`. */
-export const SendEmailRequirement = { command: SendEmail.command, consentable: SendEmail.consentable } as const;
+/** What an operation that sends mail declares with `Operation.requires`. */
+export const SendEmailRequirement = Requirement.make(SendEmail);

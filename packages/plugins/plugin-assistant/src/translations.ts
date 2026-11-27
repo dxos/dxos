@@ -227,6 +227,7 @@ export const translations: Theme.Resource[] = [
         'mcp-server-error.unauthorized': 'Sign-in required — the connection needs signing in again.',
         'ai-service-error.label': 'AI service error',
         'view-usage.label': 'View usage',
+        'retry-request.label': 'Try again',
 
         // LLM provider labels.
         'settings.provider.edge.label': 'Edge',

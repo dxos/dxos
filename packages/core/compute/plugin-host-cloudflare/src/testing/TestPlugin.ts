@@ -3,7 +3,11 @@
 //
 
 import * as Context from 'effect/Context';
+import * as DateTime from 'effect/DateTime';
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
+import * as Rpc from 'effect/rpc/Rpc';
+import * as RpcGroup from 'effect/rpc/RpcGroup';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
@@ -12,6 +16,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as Agent from '@dxos/compute/Agent';
 import * as Cancellation from '@dxos/compute/Cancellation';
 import * as Hook from '@dxos/compute/Hook';
 import * as Operation from '@dxos/compute/Operation';
@@ -19,10 +24,10 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
 import { Fibonacci, Reply, ReplyHandler } from '@dxos/compute/testing';
 import * as Trace from '@dxos/compute/Trace';
-import { Database, Filter, Obj, Registry } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref, Registry } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { BaseError } from '@dxos/errors';
-import { DXN, EntityId } from '@dxos/keys';
+import { DXN, EntityId, URI } from '@dxos/keys';
 
 export const TEST_PLUGIN_KEY = 'org.dxos.plugin.hostTest';
 
@@ -248,6 +253,136 @@ const RecordThenDelegateHandler = RecordThenDelegate.pipe(
   ),
 );
 
+/** Makes an agent session and its feed, for an invocation to name as its conversation. */
+export const MakeSession = Operation.make({
+  meta: { key: DXN.make('com.example.operation.hostTest.makeSession'), name: 'Make session' },
+  services: [Database.Service],
+  types: [Agent.Session, Feed.Feed],
+  input: Schema.Struct({}),
+  output: Schema.Struct({ uri: Schema.String }),
+});
+
+const MakeSessionHandler = MakeSession.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(function* () {
+      const feed = yield* Database.add(Feed.make());
+      const session = yield* Database.add(Agent.makeSession({ feed: Ref.make(feed) }));
+      return { uri: Obj.getURI(session) };
+    }),
+  ),
+);
+
+/** When {@link UseAgent} sets its alarm. */
+export const ALARM_AT = 1_700_000_000_000;
+
+/** Drives the session it works for as a hook does: reads it, follows up, sets an alarm and hands work to a new session. */
+export const UseAgent = Operation.make({
+  meta: { key: DXN.make('com.example.operation.hostTest.useAgent'), name: 'Use agent' },
+  services: [Agent.Service],
+  types: [Agent.Session, Feed.Feed],
+  input: Schema.Struct({ text: Schema.String }),
+  output: Schema.Struct({
+    session: Schema.String,
+    delegated: Schema.NullOr(Schema.String),
+    thread: Schema.NullOr(Schema.String),
+  }),
+});
+
+const UseAgentHandler = UseAgent.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(function* ({ text }) {
+      const session = yield* Agent.currentSession.pipe(Effect.orDie);
+      yield* Agent.enqueueMessage({ content: [{ _tag: 'text', text }] }).pipe(Effect.orDie);
+      yield* Agent.setAlarm({ at: DateTime.makeUnsafe(ALARM_AT), message: text }).pipe(Effect.orDie);
+      const delegated = yield* Agent.delegate({ target: { kind: 'session' }, purpose: text }).pipe(Effect.orDie);
+      const thread = yield* Agent.currentThread;
+      return {
+        session: Obj.getURI(session),
+        delegated: delegated.session === undefined ? null : String(delegated.session),
+        thread: Option.getOrNull(thread),
+      };
+    }),
+  ),
+);
+
+/** Reads the session it works for, answering none when there is none rather than failing. */
+export const CurrentSessionOrNone = Operation.make({
+  meta: { key: DXN.make('com.example.operation.hostTest.currentSessionOrNone'), name: 'Current session or none' },
+  services: [Agent.Service],
+  types: [Agent.Session, Feed.Feed],
+  input: Schema.Struct({}),
+  output: Schema.Struct({ session: Schema.NullOr(Schema.String) }),
+});
+
+const CurrentSessionOrNoneHandler = CurrentSessionOrNone.pipe(
+  Operation.withHandler(() =>
+    Agent.currentSession.pipe(
+      Effect.map((session) => ({ session: Obj.getURI(session) })),
+      Effect.catchTag('NoCurrentSessionError', () => Effect.succeed({ session: null })),
+    ),
+  ),
+);
+
+/** What {@link SpawnWork} assigns the process it starts to, which the spawn carries as its target annotation. */
+export const SPAWN_TARGET = URI.make('echo:///01KSPAWNTARGET000000000000');
+
+/** A process the host runs, which {@link SpawnWork} starts. */
+export const WorkProcess = Operation.makeDurable({
+  key: 'com.example.process.hostTest.work',
+  input: Schema.Void,
+  output: Schema.Void,
+  services: [],
+}).pipe(Operation.withDurableHandler(() => Effect.succeed({})));
+
+/** Starts {@link WorkProcess} through `Agent.spawn` and reads the handle's state back from the host. */
+export const SpawnWork = Operation.make({
+  meta: { key: DXN.make('com.example.operation.hostTest.spawnWork'), name: 'Spawn work' },
+  services: [Agent.Service],
+  input: Schema.Struct({}),
+  output: Schema.Struct({ pid: Schema.String, state: Schema.String }),
+});
+
+const SpawnWorkHandler = SpawnWork.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(function* () {
+      const handle = yield* Agent.spawn(WorkProcess, { target: SPAWN_TARGET });
+      yield* handle.terminate();
+      return { pid: handle.pid, state: handle.status.state };
+    }),
+  ),
+);
+
+/** The RPC group {@link EchoProcess} serves. */
+export const EchoRpcs = RpcGroup.make(
+  Rpc.make('echo', { payload: Schema.Struct({ text: Schema.String }), success: Schema.String }),
+);
+
+/** A process with an RPC group; the bundle only names it, EDGE hosts it. */
+export const EchoProcess = Operation.makeDurable({
+  key: 'com.example.process.hostTest.echo',
+  input: Schema.Void,
+  output: Schema.Void,
+  services: [],
+  rpcs: EchoRpcs,
+}).pipe(Operation.withDurableHandler(() => Effect.succeed({})));
+
+/** Starts {@link EchoProcess} through `Agent.spawn` and calls its `echo` RPC. */
+export const CallEcho = Operation.make({
+  meta: { key: DXN.make('com.example.operation.hostTest.callEcho'), name: 'Call echo' },
+  services: [Agent.Service],
+  input: Schema.Struct({ text: Schema.String }),
+  output: Schema.Struct({ echoed: Schema.String }),
+});
+
+const CallEchoHandler = CallEcho.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(function* ({ text }) {
+      const handle = yield* Agent.spawn(EchoProcess);
+      return { echoed: yield* handle.rpc.echo({ text }).pipe(Effect.orDie) };
+    }),
+  ),
+);
+
 /** Makes a person, as an operation that returns an ECHO object does. */
 export const MakePerson = Operation.make({
   meta: { key: DXN.make('com.example.operation.hostTest.makePerson'), name: 'Make person' },
@@ -311,6 +446,11 @@ export const TestPlugin = Plugin.define(Plugin.makeMeta({ key: DXN.make(TEST_PLU
             FailsHandler,
             ResolveRegistryHandler,
             HiddenHandler,
+            MakeSessionHandler,
+            UseAgentHandler,
+            CurrentSessionOrNoneHandler,
+            SpawnWorkHandler,
+            CallEchoHandler,
           ),
         ),
       ),

@@ -34,6 +34,7 @@ import { Person, Task } from '@dxos/types';
 
 import * as ProcessManager from '../ProcessManager.ts';
 import { credentialsLayerConfig } from '../services/credentials.ts';
+import * as Verifier from '../Verifier.ts';
 import { LEGACY_KEY_FEED_CURSOR, TriggerDispatcher, resetFeedCursor } from './trigger-dispatcher.ts';
 import { TriggerStateStore } from './trigger-state-store.ts';
 
@@ -223,7 +224,9 @@ const TestLayer = (
     Layer.provideMerge(AiService.notAvailable),
     Layer.provideMerge(credentialsLayerConfig([])),
     Layer.provideMerge(FetchHttpClient.layer),
-    Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
+    Layer.provideMerge(
+      ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator }).pipe(Layer.provide(Verifier.layer())),
+    ),
     Layer.provideMerge(
       options.spaceAwareResolver ? SpaceAwareResolverLayer : ServiceResolver.layerRequirements(Database.Service),
     ),

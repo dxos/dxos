@@ -5,20 +5,19 @@
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { type RemoteProcessManager } from '@dxos/compute-runtime';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation } from '@dxos/echo';
 import { SpaceId, URI } from '@dxos/keys';
 import type { ProcessProtocol } from '@dxos/protocols';
 
+import type * as RemoteProcessManager from './RemoteProcessManager.ts';
+
 /**
- * Wire {@link ProcessProtocol} shapes to the domain types `RemoteProcessManager.Control` answers in.
- *
- * This lives with the transport rather than in `@dxos/compute-runtime`: the protocol is how EDGE
- * happens to be reached, and nothing above the `Control` interface should have to know it. Ids,
- * space ids and URIs are branded and annotation dictionaries are keyed by a branded key, so every
- * conversion is a decode rather than an assertion — the values come from another runtime.
+ * Wire {@link ProcessProtocol} shapes to the domain types `RemoteProcessManager.Control` answers in, shared by the two
+ * ways EDGE is reached: its HTTP routes (`EdgeProcessControl`) and a plugin bundle's session target. Ids, space ids and
+ * URIs are branded and annotation dictionaries are keyed by a branded key, so every conversion is a decode rather than
+ * an assertion — the values come from another runtime.
  */
 
 /** The wire state strings are the `Process.State` enum's own values. */

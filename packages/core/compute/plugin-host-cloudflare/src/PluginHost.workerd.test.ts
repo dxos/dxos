@@ -6,6 +6,11 @@ import { next as A } from '@automerge/automerge';
 import { generateAutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
 import { create } from '@bufbuild/protobuf';
 import * as Effect from 'effect/Effect';
+import * as HttpServerRequest from 'effect/http/HttpServerRequest';
+import * as HttpServerResponse from 'effect/http/HttpServerResponse';
+import * as Layer from 'effect/Layer';
+import * as RpcSerialization from 'effect/rpc/RpcSerialization';
+import * as RpcServer from 'effect/rpc/RpcServer';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
@@ -13,20 +18,33 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Fibonacci, Reply, ReplyHandler } from '@dxos/compute/testing';
 import { Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { DXN, EntityId, PublicKey, SpaceId } from '@dxos/keys';
-import { type EdgeFunctionEnv, ErrorCodec, PluginProtocol, type WorkingSetService } from '@dxos/protocols';
+import {
+  type EdgeFunctionEnv,
+  ErrorCodec,
+  PluginProtocol,
+  type ProcessProtocol,
+  type WorkingSetService,
+} from '@dxos/protocols';
 import { QueryResponseSchema } from '@dxos/protocols/buf/dxos/echo/query_pb';
 
 import * as PluginHost from './PluginHost.ts';
 import {
   Adopt,
+  ALARM_AT,
+  CallEcho,
+  CurrentSessionOrNone,
   Delegate,
+  EchoProcess,
+  EchoRpcs,
   Fails,
   Followup,
   Greet,
@@ -35,14 +53,19 @@ import {
   Hidden,
   Inspect,
   InspectEvent,
+  MakeSession,
   Nest,
   OtherSkill,
   RecordThenDelegate,
   ResolveRegistry,
+  SPAWN_TARGET,
+  SpawnWork,
   TEST_PLUGIN_KEY,
   TestFailure,
   TestPlugin,
   TestSkill,
+  UseAgent,
+  WorkProcess,
 } from './testing/index.ts';
 
 const SPACE_ID = 'B2N35FBQKXIOTC5XEOCRVORIYQZHM2IBM';
@@ -224,6 +247,132 @@ describe('PluginHost', () => {
         error: { code: 'invalid-request', message: expect.stringContaining('conversation') },
       });
     });
+  });
+
+  // The bundle runs no process: an operation gets `Agent.Service` only from the session EDGE passes, and every verb
+  // is served there (EDGE spec `org.dxos.edge.agent-service-bridge`).
+  describe('agent service', () => {
+    test(
+      'every verb an operation calls is served by the session EDGE passes',
+      { timeout: 20_000 },
+      async ({ expect }) => {
+        const { host, env, spaceId, uri } = await sessionInSpace();
+        const receiver = `echo://${spaceId}/01KRECEIVERSESSION000000000`;
+        const fake = makeAgentSession({
+          currentSession: async () => uri,
+          delegate: async () => ({ session: receiver }),
+        });
+        const result = await host.invoke(
+          { operationKey: String(UseAgent.meta.key), spaceId, input: { text: 'Reply in the thread.' } },
+          env,
+          { conversation: uri, agent: fake.session },
+        );
+        expect(result).toEqual({ ok: true, output: { session: uri, delegated: receiver, thread: null } });
+        expect(fake.calls).toEqual([
+          ['currentSession', []],
+          ['enqueueMessage', [[{ _tag: 'text', text: 'Reply in the thread.' }]]],
+          ['setAlarm', [new Date(ALARM_AT).toISOString(), 'Reply in the thread.']],
+          ['delegate', [{ target: { kind: 'session' }, purpose: 'Reply in the thread.' }]],
+          ['currentThread', []],
+        ]);
+      },
+    );
+
+    test("the session's own failure keeps its type across the boundary", { timeout: 20_000 }, async ({ expect }) => {
+      const { host, env, spaceId, uri } = await sessionInSpace();
+      const fake = makeAgentSession({
+        currentSession: async () => {
+          throw new Agent.NoCurrentSessionError();
+        },
+      });
+      expect(
+        await host.invoke({ operationKey: String(CurrentSessionOrNone.meta.key), spaceId, input: {} }, env, {
+          conversation: uri,
+          agent: fake.session,
+        }),
+      ).toEqual({ ok: true, output: { session: null } });
+    });
+
+    test('a spawned process is driven through the session EDGE passes', { timeout: 20_000 }, async ({ expect }) => {
+      const { host, env, spaceId, uri } = await sessionInSpace();
+      const info: ProcessProtocol.ProcessInfo = {
+        pid: '01KSPAWNEDPROCESS0000000000',
+        parentPid: null,
+        key: WorkProcess.key,
+        params: { name: null, annotations: {} },
+        environment: { space: spaceId },
+        state: 'RUNNING',
+        alarmDueAt: null,
+        error: null,
+        startedAt: 1,
+        metrics: { wallTime: 0, inputCount: 0, outputCount: 0 },
+      };
+      const fake = makeAgentSession(
+        { spawn: async () => info },
+        {
+          status: async () => ({ ...info, state: 'TERMINATED', completedAt: 2 }),
+          terminate: async () => null,
+        },
+      );
+      const result = await host.invoke({ operationKey: String(SpawnWork.meta.key), spaceId, input: {} }, env, {
+        conversation: uri,
+        agent: fake.session,
+      });
+      expect(result).toEqual({ ok: true, output: { pid: info.pid, state: 'TERMINATED' } });
+      expect(fake.calls[0]).toEqual([
+        'spawn',
+        [{ key: WorkProcess.key, annotations: { 'org.dxos.process.target': SPAWN_TARGET } }, {}],
+      ]);
+      expect(fake.calls.slice(1).map(([op]) => op)).toEqual(['terminate', 'status']);
+    });
+
+    test("a spawned process's RPC goes to its host through the session", { timeout: 20_000 }, async ({ expect }) => {
+      const { host, env, spaceId, uri } = await sessionInSpace();
+      const info: ProcessProtocol.ProcessInfo = {
+        pid: '01KECHOPROCESS0000000000000',
+        parentPid: null,
+        key: EchoProcess.key,
+        params: { name: null, annotations: {} },
+        environment: { space: spaceId },
+        state: 'RUNNING',
+        alarmDueAt: null,
+        error: null,
+        startedAt: 1,
+        metrics: { wallTime: 0, inputCount: 0, outputCount: 0 },
+      };
+      const served: string[] = [];
+      const fake = makeAgentSession({ spawn: async () => info });
+      const session: PluginProtocol.AgentSession = {
+        ...fake.session,
+        processRpc: (rpcSpaceId, pid, request) => {
+          served.push(`${rpcSpaceId}/${pid}`);
+          return serveEcho(request);
+        },
+      };
+      const result = await host.invoke(
+        { operationKey: String(CallEcho.meta.key), spaceId, input: { text: 'hi' } },
+        env,
+        {
+          conversation: uri,
+          agent: session,
+        },
+      );
+      expect(result).toEqual({ ok: true, output: { echoed: 'HI' } });
+      expect(served).toEqual([`${spaceId}/${info.pid}`]);
+    });
+
+    test(
+      'without a session from EDGE, an operation that needs Agent.Service is refused',
+      { timeout: 20_000 },
+      async ({ expect }) => {
+        const { host, env, spaceId, uri } = await sessionInSpace();
+        expect(
+          await host.invoke({ operationKey: String(UseAgent.meta.key), spaceId, input: { text: 'hi' } }, env, {
+            conversation: uri,
+          }),
+        ).toMatchObject({ ok: false, error: { message: expect.stringContaining('Agent/Service') } });
+      },
+    );
   });
 
   // A skill bound by registry URI resolves only through the invocation's registry, as on operation-service.
@@ -454,6 +603,7 @@ describe('PluginHost', () => {
       ]);
     });
 
+    // A callee that declares `Agent.Service` works for the caller's session, so EDGE needs the caller's target to pass on.
     test("a nested call starts after the caller's writes reach its working set, and the caller takes the callee's", async ({
       expect,
     }) => {
@@ -646,3 +796,85 @@ const BrokenSkillPlugin = Plugin.define(
 );
 
 const makeHost = () => PluginHost.make(() => ({ primary: TestPlugin() }));
+
+/** A host and a space holding one agent session, named by `uri`. */
+const sessionInSpace = async () => {
+  const spaceId = SpaceId.random();
+  const env = makeSpaceEnv(spaceId);
+  const host = makeHost();
+  const made = await host.invoke({ operationKey: String(MakeSession.meta.key), spaceId, input: {} }, env);
+  invariant(made.ok, 'the session was not made');
+  const { uri } = Schema.decodeUnknownSync(Schema.Struct({ uri: Schema.String }))(made.output);
+  return { host, env, spaceId, uri };
+};
+
+/** The handlers and serialization {@link serveEcho} serves with. */
+const EchoServerLayer = Layer.mergeAll(
+  EchoRpcs.toLayer({ echo: ({ text }) => Effect.succeed(text.toUpperCase()) }),
+  RpcSerialization.layerNdjson,
+);
+
+/** Serves {@link EchoRpcs} as a process host does: effect-rpc over HTTP. */
+const serveEcho = (request: Request): Promise<Response> =>
+  EffectEx.runPromise(
+    Effect.gen(function* () {
+      const app = yield* RpcServer.toHttpEffect(EchoRpcs);
+      const web = HttpServerResponse.toWeb(yield* app);
+      const body = yield* Effect.promise(() => web.arrayBuffer());
+      return new Response(body, { status: web.status, headers: web.headers });
+    }).pipe(
+      Effect.provide(EchoServerLayer),
+      Effect.provideService(HttpServerRequest.HttpServerRequest, HttpServerRequest.fromWeb(request)),
+      Effect.scoped,
+    ),
+  );
+
+/** The session EDGE passes, answering the verbs given and failing the rest; it records every call. */
+const makeAgentSession = (
+  verbs: Partial<PluginProtocol.AgentVerbHandlers>,
+  processes: Partial<PluginProtocol.AgentProcessHandlers> = {},
+) => {
+  const calls: [string, unknown][] = [];
+  const unserved = (name: string) => async (): Promise<never> => {
+    throw new Error(`Not served by this test: ${name}`);
+  };
+  const handlers: PluginProtocol.AgentVerbHandlers = {
+    open: verbs.open ?? unserved('open'),
+    getContext: verbs.getContext ?? unserved('getContext'),
+    addContext: verbs.addContext ?? unserved('addContext'),
+    submitPrompt: verbs.submitPrompt ?? unserved('submitPrompt'),
+    running: verbs.running ?? unserved('running'),
+    waitForCompletion: verbs.waitForCompletion ?? unserved('waitForCompletion'),
+    terminate: verbs.terminate ?? unserved('terminate'),
+    sessionProcess: verbs.sessionProcess ?? unserved('sessionProcess'),
+    currentSession: verbs.currentSession ?? unserved('currentSession'),
+    currentFeed: verbs.currentFeed ?? unserved('currentFeed'),
+    currentAgent: verbs.currentAgent ?? (async () => null),
+    currentThread: verbs.currentThread ?? (async () => null),
+    enqueueMessage: verbs.enqueueMessage ?? (async () => null),
+    setAlarm: verbs.setAlarm ?? (async () => null),
+    listSessions: verbs.listSessions ?? (async () => []),
+    listAgents: verbs.listAgents ?? (async () => []),
+    spawn: verbs.spawn ?? unserved('spawn'),
+    delegate: verbs.delegate ?? unserved('delegate'),
+    waitForThread: verbs.waitForThread ?? unserved('waitForThread'),
+  };
+  const processHandlers: PluginProtocol.AgentProcessHandlers = {
+    status: processes.status ?? unserved('status'),
+    submitInput: processes.submitInput ?? unserved('submitInput'),
+    terminate: processes.terminate ?? unserved('terminate'),
+    readEvents: processes.readEvents ?? unserved('readEvents'),
+  };
+  const session: PluginProtocol.AgentSession = {
+    call: (verb, args) => {
+      calls.push([verb, args]);
+      return PluginProtocol.callAgentVerb(handlers, verb, args);
+    },
+    process: (request) => {
+      calls.push([request.op, request]);
+      return PluginProtocol.callAgentProcess(processHandlers, request);
+    },
+    processRpc: async () => new Response(null, { status: 404 }),
+  };
+  return { session, calls };
+};

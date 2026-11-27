@@ -18,6 +18,7 @@ import * as Stream from 'effect/Stream';
 import { Annotation, type Database } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
 import { type SpaceId, URI } from '@dxos/keys';
+import { Grant, Principal } from '@dxos/permission';
 import type { SerializedError } from '@dxos/protocols';
 
 import * as Operation from './Operation.ts';
@@ -274,6 +275,14 @@ export interface Data {
    */
   readonly completedAt: Option.Option<number>;
 
+  /**
+   * Every authority the process is held to, those it inherited first and its own last; each must admit a call that
+   * declares requirements. Absent when it holds none.
+   *
+   * @experimental
+   */
+  readonly authorities?: readonly Authority[];
+
   readonly metrics: {
     /**
      * Total wall time of all handler invocations of the process in milliseconds.
@@ -380,20 +389,18 @@ export interface Process<_Input = any, _Output = any, _Rpcs extends Rpc.Any = an
 export type Any = Process<any, any, any>;
 
 /**
- * Admits or refuses an operation a process invokes, for operations that declare requirements
- * (`Operation.RequiresAnnotation`). Refuses by dying with `Operation.OperationDeniedError`.
+ * Who a process acts as and the grants it holds. Data: it is persisted with the process, so a rehydrated process keeps
+ * its limits, and it can be sent with a remote spawn.
+ *
+ * @experimental
  */
-export interface Guard {
-  readonly check: (op: Operation.Definition.Any, input: unknown) => Effect.Effect<void>;
-}
-
-/** The guard of the running process; absent when it was spawned without one. */
-export class GuardService extends Context.Service<GuardService, Guard>()('@dxos/compute/Process.GuardService') {}
-
-/** A guard that admits only what both admit, so a child spawned with its own guard never widens its parent's. */
-export const bothGuards = (first: Guard, second: Guard): Guard => ({
-  check: (op, input) => first.check(op, input).pipe(Effect.andThen(second.check(op, input))),
-});
+export const Authority = Schema.Struct({
+  /** The principal the process acts as: the audience its grants name. */
+  principal: Principal.Principal,
+  /** The grants the process holds for that principal. */
+  grants: Schema.Array(Grant.Grant),
+}).pipe(Schema.annotate({ title: 'Authority' }));
+export type Authority = Schema.Schema.Type<typeof Authority>;
 
 /**
  * Options for spawning a process.
@@ -426,11 +433,14 @@ export interface SpawnOptions {
   readonly environment?: Environment;
 
   /**
-   * Admits the operations this process invokes that declare requirements. Inherited by children;
-   * a child's own guard is combined with its parent's, never replaces it. Not persisted, so a
-   * rehydrated process holds none and refuses operations that declare requirements.
+   * Who the process acts as and the grants it holds. Every call the process makes that declares requirements must be
+   * admitted by this authority and by each ancestor's (and, for a detached spawn, the spawner's), so a child never
+   * widens what it inherits. A process that holds none is refused every such call. Persisted with the process; grants
+   * are added later through the host manager's `grant`, or by consent.
+   *
+   * @experimental
    */
-  readonly guard?: Guard;
+  readonly authority?: Authority;
 
   /**
    * Who the process's database writes are attributed to (see `Database.Origin`); also the origin of every process it
@@ -522,7 +532,7 @@ export interface Manager {
    * definition stays local, supplying the codecs and RPC group the handle is typed by.
    *
    * A script operation spawns like a durable one: the runtime runs its code itself, so the run is a
-   * process like any other — a pid, a parent, its guard, children of its own.
+   * process like any other — a pid, a parent, its authority, children of its own.
    *
    * Dies when the location is a remote runtime that offers no process control.
    */
@@ -547,6 +557,22 @@ export interface Manager {
    * process control.
    */
   attach<I, O, Rpcs extends Rpc.Any = never>(pid: ID, options?: LocationOptions): Effect.Effect<Process<I, O, Rpcs>>;
+
+  /**
+   * Adds grants to a process's own authority (see {@link SpawnOptions.authority}), persisted with it. Its ancestors'
+   * authorities still apply, so a grant never lets a child exceed its parent. Dies when the process is not live, was
+   * spawned without an authority of its own, or runs on a remote runtime.
+   *
+   * The manager a process sees grants only to processes held to that process's authorities, never to itself or an
+   * ancestor, so no process can widen past what it holds.
+   *
+   * TODO(dmaretskyi): Not yet secure as a grant path: the host's manager adds any grant to any process, and the issuer of
+   *  a grant is not checked to hold what it grants. Limit it later, e.g. by verifying the issuer, or by moving grants
+   *  into a store keyed by principal.
+   *
+   * @experimental
+   */
+  grant(pid: ID, grants: readonly Grant.Grant[]): Effect.Effect<void>;
 }
 
 /**

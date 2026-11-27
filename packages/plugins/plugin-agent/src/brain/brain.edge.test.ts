@@ -15,7 +15,7 @@ import * as AgentSetup from '@dxos/assistant/AgentSetup';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { performInvitation } from '@dxos/client/testing';
-import { ProcessManager, RemoteTraceMonitor, UnifiedProcessManager } from '@dxos/compute-runtime';
+import { ProcessManager, RemoteTraceMonitor, UnifiedProcessManager, Verifier } from '@dxos/compute-runtime';
 import * as Agent from '@dxos/compute/Agent';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -108,7 +108,7 @@ describe('agent brain (edge-local)', { tags: ['manual'], timeout: 600_000 }, () 
       Layer.provideMerge(UnifiedProcessManager.layer),
       Layer.provideMerge(EdgeProcessManager.fromClient(peer.client)),
       Layer.provideMerge(RemoteTraceMonitor.layerNoop),
-      Layer.provideMerge(ProcessManager.layer()),
+      Layer.provideMerge(ProcessManager.layer().pipe(Layer.provide(Verifier.layer()))),
       Layer.provideMerge(ServiceResolver.layerRequirements()),
       Layer.provideMerge(OperationHandlerSet.provide(OperationHandlerSet.empty)),
       Layer.provideMerge(Trace.layerNoop),

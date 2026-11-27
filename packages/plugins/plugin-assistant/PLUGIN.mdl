@@ -233,6 +233,9 @@ feat F-1: AI Chat
   req F-1.4:
     when: chat has enough messages
     then: chat name is automatically derived from the conversation
+  req F-1.5:
+    when: a request fails
+    then: the error offers "Try again", which runs the request again without showing the prompt twice
 ```
 
 ```mdl
@@ -635,6 +638,25 @@ test QA-6: Token labels beside each block
       expect: each block of the answer gets its label as it arrives, and the labels never move a row
 ```
 
+```mdl
+test QA-7: Try again after a failed request
+  desc: A request that fails after its prompt reached the agent is retried from the error toast.
+  actors: human
+  covers: [F-1.5]
+  status: unverified
+  given:
+    - a chat on a live model
+  steps:
+    - name: Send a prompt while the AI service is unreachable
+      do: Block the AI service, then type a prompt and press Enter.
+      expect: the prompt shows once in the thread and an "AI service error" toast offers "Try again"
+      note: |
+        The block stands in for an outage; the autocue flow aborts requests to the AI service's URL.
+    - name: Try again
+      do: Restore the AI service and click "Try again".
+      expect: the toast closes, the assistant answers the prompt, and the prompt still shows once
+```
+
 ## Changelog
 
 ```mdl
@@ -916,6 +938,18 @@ decision D-32: Code mode is off by default again; the setting goes back to `code
   why: Every user goes back to tool calling unless they opt in. A saved `codeMode: true` exists only for someone who opted in before [D-18], so honouring it keeps their choice.
   rejected:
     - Keep `disableCodeMode` and read a missing value as true: a saved `false` would keep code mode on for people who never opted in.
+```
+
+```mdl
+decision D-33: "Try again" on a failed request resumes a prompt the agent already holds with a hidden synthetic prompt, and resends one that never reached it in its own outbox row.
+  date: 2026-11-26
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.5, QA-7]
+  why: The agent appends a delivered prompt to its trajectory, so sending it again shows it twice; one that never arrived has only its failed outbox row.
+  rejected:
+    - Resend the prompt in every case: a delivered prompt shows twice.
+    - A dedicated resume turn in the session process: it touches the agent protocol on both runtimes for the same effect.
 ```
 
 ---
