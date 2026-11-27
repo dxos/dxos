@@ -10,18 +10,27 @@ import { hello } from './hello.ts';
 import { launchKitSessions } from './launch-kit-sessions.ts';
 import { launchKit } from './launch-kit.ts';
 import { savingsPlans } from './savings-plans.ts';
+import { supportAgent } from './support-agent.ts';
 
 export * from './build-plugin.ts';
 export * from './crm-agents.ts';
 export * from './launch-kit-sessions.ts';
 export * from './launch-kit.ts';
 export * from './savings-plans.ts';
+export * from './support-agent.ts';
 
 /**
  * The scenes a story can play, by name; each is served as the model `org.dxos.model.scripted.<name>`, so a name is
  * camelCase, as a model id needs.
  */
-export type ScriptName = 'buildPlugin' | 'crmAgents' | 'hello' | 'launchKit' | 'launchKitSessions' | 'savingsPlans';
+export type ScriptName =
+  | 'buildPlugin'
+  | 'crmAgents'
+  | 'hello'
+  | 'launchKit'
+  | 'launchKitSessions'
+  | 'savingsPlans'
+  | 'supportAgent';
 
 // Annotated, since the declaration emit cannot name `Scene` through the inferred type.
 export const Scripts: Readonly<Record<ScriptName, ScriptedScene.Scene>> = {
@@ -31,4 +40,5 @@ export const Scripts: Readonly<Record<ScriptName, ScriptedScene.Scene>> = {
   launchKit,
   launchKitSessions,
   savingsPlans,
+  supportAgent,
 };

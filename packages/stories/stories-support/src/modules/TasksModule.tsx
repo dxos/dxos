@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { type Database, Filter } from '@dxos/echo';
+import { type Database, Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { Task, type TaskSet } from '@dxos/types';
 
@@ -14,6 +14,21 @@ import { useSupport } from './SupportContext.tsx';
 const TITLE = 'Tasks';
 const EMPTY = 'No tasks yet.';
 const TEST_ID = 'support.tasks';
+
+/** A task given to an agent shows who has it; one left for a person shows why it was made. */
+const holderOf = (task: Task.Task): string | undefined => {
+  if (task.delegate?.role !== 'assistant') {
+    return undefined;
+  }
+  const subject = task.delegate.subject?.target;
+  const who = (subject && Obj.getLabel(subject)) ?? 'an agent';
+  return task.status === 'done' ? `Done by ${who}` : `Given to ${who}`;
+};
+
+const STATUS_ICON: Partial<Record<Task.Status, string>> = {
+  started: 'ph--robot--regular',
+  done: 'ph--check-square--regular',
+};
 
 type TaskRowsProps = {
   db: Database.Database;
@@ -32,8 +47,8 @@ const TaskRows = ({ db, taskSet }: TaskRowsProps) => {
       .map((task) => ({
         id: task.id,
         label: task.title,
-        description: task.description?.split('\n')[0],
-        icon: 'ph--check-square-offset--regular',
+        description: holderOf(task) ?? task.description?.split('\n')[0],
+        icon: STATUS_ICON[task.status ?? 'todo'] ?? 'ph--check-square-offset--regular',
       }));
   }, [tasks, refs]);
   return <ListModule title={TITLE} rows={rows} empty={EMPTY} testId={TEST_ID} />;

@@ -413,6 +413,42 @@ test QA-1: An agent hands a change it may not make to an agent that may
       expect: its record shows status active
 ```
 
+```mdl
+test QA-2: A support agent picks up the tasks a pipeline left and hands each to a session
+  desc: The scripted story `stories-assistant/support/SupportAgent` walked by a person. The support inbox of
+    `stories-support` runs twelve customer messages through its pipeline, which drafts a cited reply when a document
+    answers and makes a task in the "Support" task set when none does. The support agent lists the open tasks, keeps
+    the requests and the question that needs the customer's logs for people, and delegates each question it can
+    research to a session of its own, assigning the task to that session.
+  actors: human
+  covers: [F-1.2, F-2.2, F-2.3]
+  status: draft
+  given:
+    - the story `stories/stories-assistant/support/SupportAgent` Default, with the `supportAgent` scripted model
+  steps:
+    - name: Start the generators
+      do: Click "Start the generators" in the Messages column.
+      expect: twelve messages arrive and each runs through the six pipeline stages
+    - name: Watch the pipeline answer or make tasks
+      do: Wait for the last message to finish.
+      expect: the Drafts column holds seven cited drafts and the Tasks column six tasks
+    - name: Ask the agent to work the tasks
+      do: Click the chip "Work the open support tasks." in the agent's chat.
+      expect: the agent lists the six tasks and keeps the three requests and the deploy error for people
+    - name: Watch the sessions start
+      do: Wait.
+      expect: a session column opens for the Hyperdrive question and one for the Cron Trigger question, and each task
+        reads "Given to" its session
+    - name: Watch the sessions answer
+      do: Wait.
+      expect: the Hyperdrive session writes a Hyperdrive document, each session drafts a reply, and the Drafts column
+        holds nine drafts
+    - name: Check the drafts and the tasks
+      do: Look at the Drafts and Tasks columns.
+      expect: the new drafts cite "Hyperdrive: MySQL connection pooling" and "Cron Triggers: Local testing", and both
+        delegated tasks read "Done by" their session
+```
+
 ## Changelog
 
 ```mdl
@@ -817,4 +853,12 @@ decision D-46: QA-1 walks cross-agent delegation in the `agents/Delegation` stor
   by: agent:claude-code
   for: user:dmaretskyi
   affects: [F-3.2, F-15.4]
+```
+
+```mdl
+decision D-47: QA-2 walks intra-agent delegation of tracked tasks on the customer support demo of `stories-support`: the tasks its pipeline leaves for people are the control plane, and the support agent assigns each it can research to a session of its own, which closes it.
+  date: 2026-11-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.2, F-2.2, F-2.3]
 ```
