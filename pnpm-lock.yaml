@@ -24448,12 +24448,21 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../../plugins/plugin-space
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-menu
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
       '@dxos/storybook-testing':
         specifier: workspace:*
         version: link:../storybook-testing

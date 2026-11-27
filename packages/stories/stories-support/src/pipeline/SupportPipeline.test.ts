@@ -138,7 +138,7 @@ describe('SupportPipeline', () => {
   });
 
   test('a failed research stage skips the responder and still makes a task', async ({ expect }) => {
-    const entry = CORPUS.find((message) => message.fault === 'research')!;
+    const [entry] = CORPUS.filter((message) => message.fault === 'research');
     const { inputs, stages } = await run([entry]);
 
     expect(finalStages(stages, inputs[0].message.id)).toEqual({

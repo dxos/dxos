@@ -7,7 +7,7 @@ import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Organization, Person, TaskSet } from '@dxos/types';
 
-import { ACTORS, type Actor } from './corpus.ts';
+import { type Actor, ACTORS } from './corpus.ts';
 import { CANONICAL_DOCUMENTS, toMarkdown } from './documents.ts';
 
 export const MAILBOX_NAME = 'Support';

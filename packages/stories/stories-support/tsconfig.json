@@ -67,6 +67,12 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/schema"
+    },
+    {
       "path": "../../sdk/types"
     },
     {
@@ -74,6 +80,9 @@
     },
     {
       "path": "../../ui/react-ui-list"
+    },
+    {
+      "path": "../../ui/react-ui-menu"
     },
     {
       "path": "../storybook-testing"

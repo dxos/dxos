@@ -10,7 +10,7 @@ import { Obj } from '@dxos/echo';
 
 import { Support } from '../types/index.ts';
 import * as Contract from './Contract.ts';
-import { Sender } from './EntityExtractor.ts';
+import * as EntityExtractor from './EntityExtractor.ts';
 
 /** The parts of a message a reply is built from. */
 export const Replied = Schema.Struct({
@@ -19,7 +19,7 @@ export const Replied = Schema.Struct({
   /** When the message was sent; the draft is dated from it, so a re-run writes the same draft. */
   created: Schema.String,
   threadId: Schema.optional(Schema.String),
-  sender: Sender,
+  sender: EntityExtractor.Sender,
 });
 export interface Replied extends Schema.Schema.Type<typeof Replied> {}
 

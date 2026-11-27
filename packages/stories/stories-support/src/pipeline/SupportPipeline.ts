@@ -156,11 +156,11 @@ export const stages =
         }
         const { created, matched } = yield* processors.entities.extract({ sender });
         const detail = [
-          created.length > 0 ? `created ${created.join(', ')}` : undefined,
-          matched.length > 0 ? `matched ${matched.join(', ')}` : undefined,
+          created.length > 0 ? `${created.length} created` : undefined,
+          matched.length > 0 ? `${matched.length} matched` : undefined,
         ]
           .filter((part) => part !== undefined)
-          .join('; ');
+          .join(', ');
         return { envelope, detail };
       }),
     );
@@ -199,7 +199,7 @@ export const stages =
         const detail =
           questions.length === 0
             ? 'no questions'
-            : `${count(passages, 'passage')}${topics.size > 0 ? ` on ${[...topics].join(', ')}` : ''}`;
+            : `${count(passages, 'passage')}${topics.size > 0 ? ` (${[...topics].join(', ')})` : ''}`;
         return { envelope: { ...envelope, evidence }, detail };
       }),
     );

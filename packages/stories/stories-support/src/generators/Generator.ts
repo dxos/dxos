@@ -6,7 +6,7 @@
 
 import { Message } from '@dxos/types';
 
-import { ACTORS, type Actor, type ActorKey, CORPUS, type CorpusMessage } from './corpus.ts';
+import { type Actor, type ActorKey, ACTORS, CORPUS, type CorpusMessage } from './corpus.ts';
 
 /** One external person and the messages they have yet to send. */
 export type Generator = {

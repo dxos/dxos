@@ -175,7 +175,7 @@ run with `Pipeline.run`.
 | 3   | `facts`    | The message text; the sender            | Statement, question and request facts in the space's memory           | The pipeline          |
 | 4   | `research` | The topics of each question; canonical documents | Evidence per question on the envelope; a `mentions` fact per topic | Research plugin    |
 | 5   | `respond`  | Each question and its evidence          | A draft with its `Cites` relations, or a decision to make a task      | Responder plugin      |
-| 6   | `triage`   | Each request; each question without a draft | A `Task` in the "Support" task set, linked to the message         | The pipeline          |
+| 6   | `triage`   | Each request; each question without a draft | A `Task` in the "Support" task set, naming the message in a foreign key | The pipeline     |
 
 A stage that fails marks its row failed and the message continues: when `research` fails, `respond`
 is skipped and stays not started, and `triage` makes a task with the reason `research-failed`. No
@@ -190,57 +190,65 @@ time.
 
 ```ts
 /** Matches a message's sender against the people and organizations in the space, creating what is missing. */
-export const EntityExtractor = {
-  key: 'org.dxos.stories.support.entityExtractor',
+export const EntityExtractor = Contract.make('org.dxos.stories.support.entityExtractor', {
   version: '0.1.0',
   methods: {
     extract: {
-      payload: Schema.Struct({ message: Schema.String }),
+      payload: Schema.Struct({ sender: Sender }), // { email, name? }
       success: Schema.Struct({
-        person: Schema.optional(Schema.String),
-        organization: Schema.optional(Schema.String),
-        created: Schema.Array(Schema.String), // DXNs of objects made by this call.
-        matched: Schema.Array(Schema.String), // DXNs of objects that already existed.
+        person: Schema.optional(Schema.String), // URI of the sender's Person.
+        organization: Schema.optional(Schema.String), // URI of the sender's Organization.
+        created: Schema.Array(Schema.String), // Labels of the objects made by this call.
+        matched: Schema.Array(Schema.String), // Labels of the objects that already existed.
       }),
     },
   },
-};
+});
 
 /** Returns what the space's canonical documents say about the topics a question mentions. */
-export const Researcher = {
-  key: 'org.dxos.stories.support.researcher',
+export const Researcher = Contract.make('org.dxos.stories.support.researcher', {
   version: '0.1.0',
   methods: {
     research: {
-      payload: Schema.Struct({ question: Schema.String }),
+      // `context` is the rest of the message, read for topics the question does not name itself.
+      payload: Schema.Struct({ question: Schema.String, context: Schema.optional(Schema.String) }),
       success: Schema.Struct({ topics: Schema.Array(Schema.String), evidence: Schema.Array(Evidence) }),
     },
   },
-};
+});
 
 /** Decides whether a question can be answered from its evidence, and writes the draft when it can. */
-export const Responder = {
-  key: 'org.dxos.stories.support.responder',
+export const Responder = Contract.make('org.dxos.stories.support.responder', {
   version: '0.1.0',
   methods: {
     respond: {
-      payload: Schema.Struct({ message: Schema.String, question: Schema.String, evidence: Schema.Array(Evidence) }),
+      payload: Schema.Struct({
+        mailbox: Schema.String, // URI of the mailbox the draft belongs to.
+        message: Replied, // { id, subject, created, threadId?, sender }
+        question: Schema.String,
+        evidence: Schema.Array(Evidence),
+      }),
       success: Schema.Struct({ decision: Decision, draft: Schema.optional(Schema.String) }),
     },
   },
-};
+});
 ```
+
+A payload carries plain values (an address, a subject, a URI), never a live object, so every call
+can cross a wire unchanged. `Contract.Implementation<C>` derives what a provider implements and the
+pipeline calls: one function per method, from the payload's type to an Effect of the result's.
 
 | Plugin    | Contract          | Reuses                                                                                     |
 | --------- | ----------------- | ------------------------------------------------------------------------------------------ |
-| Entities  | `EntityExtractor` | `extractContact`, `personIdentitySpec`, `organizationIdentitySpec` (`@dxos/extractor-lib`) |
+| Entities  | `EntityExtractor` | `buildContactGraph`, `getIdentityIndex` and the identity specs (`@dxos/extractor-lib`)      |
 | Research  | `Researcher`      | `Markdown.Document` content; a topic list of Workers product names                         |
 | Responder | `Responder`       | `DraftMessage.make`; the confidence rule below                                             |
 
-How a plugin offers its processor is decision 1. The recommendation is a multi capability today
-(the mechanism `InboxCapabilities.MailboxProcessor` already uses), with each contract written in
-the plugin services shape, so moving to `Service.make` is a change of registration and not of
-interface.
+Each plugin contributes a provider (`{ contract, provide(host) }`) to the multi capability
+`SupportCapabilities.Processor`, the mechanism `InboxCapabilities.MailboxProcessor` already uses
+(decision 1). The pipeline's host resolves a provider by its contract's key and version, and gives
+it the space's database. Each contract is written in the plugin services shape, so moving to
+`Service.make` is a change of registration and not of interface.
 
 ## Confidence rule
 
@@ -262,9 +270,9 @@ Rule:
 
 1. A request is never answerable. It becomes a task with the reason `request`, whatever the
    documents say.
-2. Evidence for a question is every passage whose document shares at least one topic with the
-   question. A question with no topic, or with no such passage, becomes a task with the reason
-   `no-evidence`.
+2. Evidence for a question is every passage of a document whose title names a topic that the
+   question, or the rest of its message, mentions. A question with no topic, or with no such
+   passage, becomes a task with the reason `no-evidence`.
 3. The question's confidence is the highest coverage among its evidence.
 4. Confidence at or above the threshold (default `0.5`) gives a draft. It cites the highest-coverage
    passage: the document, the heading, and the passage text as the quote. Below the threshold the
@@ -273,14 +281,15 @@ Rule:
    `citations`.
 
 "Answerable from the ECHO graph" therefore means: some passage of a document in the space is about
-the question's topic and covers at least half of the question's terms. A message with a question and
+a topic of the message and covers at least half of the question's terms. A message with a question and
 a request produces both a draft and a task.
 
 ## Message generators
 
-Each generator is one external person. It is an Effect fiber that appends its next scripted message
-to the mailbox feed, on a schedule in the running story and on demand (`step`) in tests. Messages
-are emitted in the fixed order of the corpus.
+Each generator is one external person and the messages that person has yet to send. The generator
+whose next message is the earliest sends it, so the actors together always send in the order of the
+corpus. A message is appended to the mailbox feed and handed to the pipeline: one at a time on demand
+(`Step`), or every few seconds while the generators are started.
 
 | Actor       | Address                    | Organization                        | Already in the space                     |
 | ----------- | -------------------------- | ----------------------------------- | ---------------------------------------- |
@@ -311,7 +320,7 @@ Cloudflare documentation as of 2026-11.
 | #   | From | Message                                                                                             | Outcome                                    |
 | --- | ---- | --------------------------------------------------------------------------------------------------- | ------------------------------------------ |
 | 1   | Ada  | What is the CPU time limit for a Worker on the paid plan?                                           | Draft, citing Workers platform limits      |
-| 2   | Chen | Why did our deploy fail at 14:02 yesterday with error 10021?                                        | Task: `no-evidence`                        |
+| 2   | Chen | Why did our Worker deploy fail at 14:02 yesterday with error 10021?                                 | Task: `low-confidence`                     |
 | 3   | Ben  | Are Durable Object alarms guaranteed to run, and are they retried if the handler throws?            | Draft, citing Durable Objects              |
 | 4   | Ben  | Please raise our account's Worker limit to 2,000.                                                   | Task: `request`                            |
 | 5   | Chen | How long does a KV write take to be visible in other regions?                                       | Draft, citing Workers KV                   |
@@ -323,9 +332,10 @@ Cloudflare documentation as of 2026-11.
 | 11  | Ada  | How many subrequests can a Worker make in one request?                                              | Draft, citing Workers platform limits      |
 | 12  | Eli  | How do I test a Cron Trigger locally? (research is made to fail for this message)                   | `research` failed; task: `research-failed` |
 
-Six questions are answerable, two are not, three messages carry requests, and one shows a failed
-stage. Each corpus entry states its expected outcome, and a unit test checks every entry against
-`decide`.
+Seven questions end in a draft and two in a task (one for low confidence, one for no evidence),
+three messages carry requests, and one shows a failed stage: seven drafts and six tasks in all. Each
+corpus entry states its expected outcomes. A unit test checks every entry against the rule, and a
+node test runs the whole corpus through the pipeline on a real ECHO database.
 
 ## The story
 
@@ -338,13 +348,13 @@ services spike.
 | --------- | -------------------------------------------------------- | ---------------------------------------------------------------------- |
 | Messages  | The mailbox feed, newest first                           | Sender and organization; the message's first line                      |
 | Pipeline  | One card per message, newest first                       | A `StatusList` of the six stages                                       |
-| Facts     | The facts in the space's memory                          | Subject, predicate, object; a tag for statement, question or request   |
-| Objects   | People, organizations and documents in the space         | The object's label; a tag for its type                                 |
-| Drafts    | Draft messages for the mailbox                           | "Re:" and the subject; the answer's first line and its source document |
+| Facts     | The facts in the space's memory                          | Subject, predicate, object; statement, question or request, and who said it |
+| Objects   | People, organizations and documents in the space         | The object's label; its type and address or website                    |
+| Drafts    | Draft messages for the mailbox                           | "Re:" and the subject; the document and section the draft cites        |
 | Tasks     | The "Support" task set                                   | The task's title; the reason and who asked                             |
 
-Every list is `Listbox` rows from `@dxos/react-ui-list`. The Messages column's toolbar starts and
-pauses the generators, appends one message (`Step`) and resets the space.
+Every list is `Listbox` rows from `@dxos/react-ui-list`. The Messages column's toolbar sends one
+message (`Step`) and starts or pauses the generators. Reloading the story resets the space.
 
 **Progress in the pipeline column.** A message's card appears with all six rows not started as soon
 as the message is appended. The row of the stage being run is working; a finished stage is success
@@ -356,8 +366,9 @@ Stories:
 
 - `Default`: the seeded space, generators paused. Start them, or step, to watch messages arrive.
 - `Flow`: a play story. It steps message 1 and message 2 and asserts that message 1 ends with a
-  draft that names "Workers platform limits" and message 2 ends with a task, and that both cards
-  show their stages finished.
+  draft that cites "Workers platform limits: CPU time" and no task, that message 2 ends with a task
+  and no second draft, that both cards show every stage finished, and that the new sender and the
+  questions reached the Objects and Facts columns.
 
 ## What is real and what is mocked
 
@@ -365,7 +376,7 @@ Stories:
 | ----------------------------- | ---------------------------------------------------------------------------------------------- |
 | Space, feed, ECHO types       | Real: a client and space from `StoryHarness`                                                   |
 | Pipeline                      | Real: `@dxos/pipeline` `Stage.map` and `Pipeline.run`                                          |
-| Entity matching               | Real: `extractContact` and the identity specs, against the people and organizations in the space |
+| Entity matching               | Real: `buildContactGraph` and the identity index, against the people and organizations in the space |
 | Fact store                    | Real: the space's memory, through plugin-brain's `FactStoreRegistry`                           |
 | Fact extraction               | Mocked: a recorded extraction per corpus message; a sentence rule (`?` is a question, "please" or "can you" a request) for any other text. The real stage is `extractFactsStage` in `@dxos/pipeline-rdf`, which calls a model |
 | Research                      | Mocked: term overlap against the documents in the space. No web search, no model               |
