@@ -183,14 +183,19 @@ run with `Pipeline.run`.
 | 5   | `respond`  | Each question and its evidence          | A draft with its `Cites` relations, or a decision to make a task      | Responder plugin      |
 | 6   | `triage`   | Each request; each question without a draft | A `Task` in the "Support" task set, naming the message in a foreign key | The pipeline     |
 
-A stage that fails marks its row failed and the message continues. No failure stops the stream, and
-every request and question still ends in a draft or a task:
+A stage that fails marks its row failed and the message continues. No failure stops the stream. A
+failure before `triage` still leaves every request and question with a draft or a task:
 
 - When `facts` cannot store what it read, the facts stay on the envelope, so later stages still see
   the questions and requests.
 - When `research` fails, `respond` is skipped and stays not started, and `triage` makes a task with
   the reason `research-failed`.
 - When `respond` fails, `triage` makes a task with the reason `respond-failed`.
+
+`triage` itself is the exception. It is the last stage and the only one that creates tasks, so when
+its write fails, the requests and unanswered questions of that message have no task. Nothing retries
+it: the failed Triage row on the message's card is what tells a person to look. The stream carries on
+with the next message.
 
 ## Plugins and their contracts
 

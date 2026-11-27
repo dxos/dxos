@@ -247,47 +247,51 @@ export const stages =
     );
 
     const triage = stage('triage', (envelope) =>
-      Effect.sync(() => {
-        const { message } = envelope.input;
-        const { sender } = envelope.source;
-        const decided = new Map(envelope.outcomes.map((outcome) => [outcome.fact.id, outcome]));
-        const outcomes = actionable(envelope.facts).map((fact): Outcome => {
-          const known = decided.get(fact.id);
-          if (known?.decision.kind === 'draft') {
-            return known;
-          }
-          const decision: Support.TaskDecision =
-            known?.decision.kind === 'task'
-              ? known.decision
-              : {
-                  kind: 'task',
-                  confidence: 0,
-                  reason:
-                    Support.kindOf(fact) === 'request'
-                      ? 'request'
-                      : envelope.failed.includes('research')
-                        ? 'research-failed'
-                        : 'respond-failed',
-                };
-          const task = Task.make({
-            title: sentenceOf(fact),
-            description: [
-              TASK_REASON[decision.reason],
-              `From ${sender.name ?? sender.email} <${sender.email}>: "${envelope.subject}"`,
-            ].join('\n\n'),
-            status: 'todo',
-            priority: decision.reason === 'request' ? 'medium' : 'high',
+      // A write that throws fails the stage and its row; left as a defect it would end the stream for every message.
+      Effect.try({
+        try: () => {
+          const { message } = envelope.input;
+          const { sender } = envelope.source;
+          const decided = new Map(envelope.outcomes.map((outcome) => [outcome.fact.id, outcome]));
+          const outcomes = actionable(envelope.facts).map((fact): Outcome => {
+            const known = decided.get(fact.id);
+            if (known?.decision.kind === 'draft') {
+              return known;
+            }
+            const decision: Support.TaskDecision =
+              known?.decision.kind === 'task'
+                ? known.decision
+                : {
+                    kind: 'task',
+                    confidence: 0,
+                    reason:
+                      Support.kindOf(fact) === 'request'
+                        ? 'request'
+                        : envelope.failed.includes('research')
+                          ? 'research-failed'
+                          : 'respond-failed',
+                  };
+            const task = Task.make({
+              title: sentenceOf(fact),
+              description: [
+                TASK_REASON[decision.reason],
+                `From ${sender.name ?? sender.email} <${sender.email}>: "${envelope.subject}"`,
+              ].join('\n\n'),
+              status: 'todo',
+              priority: decision.reason === 'request' ? 'medium' : 'high',
+            });
+            Obj.update(task, (task) => Obj.getMeta(task).keys.push({ source: MESSAGE_KEY_SOURCE, id: message.id }));
+            db.add(task);
+            TaskSet.addTaskToSet(taskSet, task);
+            return { fact, decision, object: Obj.getURI(task) };
           });
-          Obj.update(task, (task) => Obj.getMeta(task).keys.push({ source: MESSAGE_KEY_SOURCE, id: message.id }));
-          db.add(task);
-          TaskSet.addTaskToSet(taskSet, task);
-          return { fact, decision, object: Obj.getURI(task) };
-        });
-        const tasks = outcomes.filter((outcome) => outcome.decision.kind === 'task').length;
-        return {
-          envelope: { ...envelope, outcomes },
-          detail: tasks === 0 ? 'nothing for a person' : count(tasks, 'task'),
-        };
+          const tasks = outcomes.filter((outcome) => outcome.decision.kind === 'task').length;
+          return {
+            envelope: { ...envelope, outcomes },
+            detail: tasks === 0 ? 'nothing for a person' : count(tasks, 'task'),
+          };
+        },
+        catch: (cause) => new Contract.ProcessorError({ message: 'The task could not be created.', cause }),
       }),
     );
 
