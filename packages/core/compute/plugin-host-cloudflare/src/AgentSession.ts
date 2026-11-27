@@ -339,9 +339,12 @@ const makeControl = (session: PluginProtocol.AgentSession): RemoteProcessManager
           HttpClient.mapRequest(HttpClientRequest.setUrl(PROCESS_RPC_URL)),
           // The fetch client reads `Fetch` as each request runs, in the caller's fiber, so it is provided per request.
           HttpClient.transform((response) =>
-            Effect.provideService(response, FetchHttpClient.Fetch, (input, init) =>
-              session.processRpc(spaceId, pid, new Request(input, init)),
-            ),
+            Effect.provideService(response, FetchHttpClient.Fetch, (input, init) => {
+              // Workers RPC cannot carry an `AbortSignal`, so the request crosses to the target without the one the
+              // client sets: an aborted call stops waiting here, while the process finishes the request it received.
+              const { signal: _signal, ...rest } = init ?? {};
+              return session.processRpc(spaceId, pid, new Request(input, rest));
+            }),
           ),
         );
         return yield* RpcClient.make(group).pipe(
