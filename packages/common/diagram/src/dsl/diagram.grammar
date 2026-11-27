@@ -204,7 +204,11 @@ Ref { name | String }
 // the only case that wanted one.
 Attribute { AttrName "=" AttrValue }
 AttrName  { name }
-AttrValue { Number | Size | Size3 | Ratio | String | Pair | Word | Point3 | Point | Dimension }
+AttrValue { Number | Size | Size3 | Ratio | String | Pair | Word | Toned | Point3 | Point | Dimension }
+// `color=blue/2`: a theme colour at a tone. A digit follows the `/` where a ref (`A/box`) has a letter, so the two
+// never lex alike. A CSS literal is quoted (`color="#1e90ff"`): bare, its `#` would have to outrank the comment in
+// every position, and `#fff is a comment` would stop being one.
+Toned { toned }
 // `constrain=stretch,max`: two words, as `Point` is two numbers. The reader hands the raw text on, so a pair-valued
 // attribute no field claims still round-trips through `props`.
 Pair { Word "," Word }
@@ -251,6 +255,8 @@ ckw<term> { @extend[@name={term}]<name, term> }
   // comment. A comment therefore needs whitespace in front of it.
   name { nameStart nameChar* ("/" nameStart nameChar*)? ("#" nameStart nameChar*)? }
 
+  toned { nameStart nameChar* "/" @digit+ }
+
   digits { @digit+ }
   // The exponent is accepted because the printer emits `String(value)`, which switches to
   // exponent notation outside roughly 1e-7..1e21 — without it, printing such a scene would
@@ -278,7 +284,7 @@ ckw<term> { @extend[@name={term}]<name, term> }
   "@" "->" "<->" "--" ".." "{" "}" "=" "," ":" "|" "~" "(" ")"
 
   @precedence { size3, size, dimension, number }
-  @precedence { name, Comment }
+  @precedence { toned, name, Comment }
 }
 
 @detectDelim

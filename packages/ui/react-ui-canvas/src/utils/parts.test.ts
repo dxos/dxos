@@ -28,9 +28,9 @@ const classicFrame = (node: Parameters<typeof frameClasses>[0], selected: boolea
 
 describe('parts', () => {
   const box = { x: 0, y: 0, width: 256, height: 128 };
-  // A host type with a list part, the way a contributed type declares its text.
+  // A host kind with a list part, the way a contributed kind declares its text.
   const ListNode = Schema.Struct({
-    type: Schema.Literal('list'),
+    kind: Schema.Literal('list'),
     ...nodeBase,
     title: Schema.String,
     items: Schema.Array(Schema.String),
@@ -55,7 +55,7 @@ describe('parts', () => {
   const note = nodes.n;
   const list = nodes.l;
 
-  test("reads a part as text and writes it back as the node property, by the type's declared parts", ({ expect }) => {
+  test("reads a part as text and writes it back as the node property, by the kind's declared parts", ({ expect }) => {
     expect(partText(registry, rect, 'label')).toBe('');
     expect(partText(registry, rect, 'items')).toBeUndefined();
     expect(partText(registry, list, 'items')).toBe('buy milk');
@@ -73,7 +73,7 @@ describe('parts', () => {
       ...registry,
       list: { ...registry.list, parts: [{ field: 'data.title' }, { field: 'data.items', lines: true }] },
     };
-    const node = { ...rect, type: 'list', data: { title: 'Todo', items: ['buy milk'], done: 1 } };
+    const node = { ...rect, kind: 'list', data: { title: 'Todo', items: ['buy milk'], done: 1 } };
     expect(partText(kinds, node, 'data.items')).toBe('buy milk');
     expect(nodeTitle(kinds, node)).toBe('Todo');
     expect(partValues(kinds, node, 'data.items', 'a\n b')).toEqual({
@@ -98,21 +98,25 @@ describe('parts', () => {
     expect(classicFrame(rect, false)).toEqual(['bg-base-surface', '', 'border-separator', '', 'rounded-sm']);
     expect(classicFrame(rect, true)[2]).toBe('border-focus');
     expect(classicFrame(rect, false, true)[2]).toBe('border-focus/50');
-    const styled = { ...rect, style: { hue: 'teal', rounded: true, fill: false, border: false } };
+    const styled = {
+      ...rect,
+      overrides: { color: 'teal', corners: 'all', fill: 'none', stroke: 'none' } as const,
+    };
     expect(classicFrame(styled, false)).toEqual(['', 'text-teal-fg', 'border-transparent', '', 'rounded-2xl']);
     // A text colour of its own wins over the hue's, and leaves the fill and the border the hue's.
-    const coloured = { ...rect, style: { hue: 'teal', textHue: 'red' as const } };
+    const coloured = { ...rect, overrides: { color: 'teal', textColor: 'red' } };
     expect(classicFrame(coloured, false)[1]).toBe('text-red-500');
-    expect(classicFrame(coloured, false)[2]).toBe(classicFrame({ ...rect, style: { hue: 'teal' } }, false)[2]);
+    expect(classicFrame(coloured, false)[2]).toBe(classicFrame({ ...rect, overrides: { color: 'teal' } }, false)[2]);
     // Its tone runs light to dark; unset, it is the middle one.
     const toned = (textTone: 1 | 2 | 3) =>
-      classicFrame({ ...rect, style: { textHue: 'blue' as const, textTone } }, false)[1];
+      classicFrame({ ...rect, overrides: { textColor: `blue/${textTone}` } }, false)[1];
     expect([toned(1), toned(2), toned(3)]).toEqual(['text-blue-300', 'text-blue-500', 'text-blue-700']);
+    expect(classicFrame({ ...rect, overrides: { textColor: 'blue' } }, false)[1]).toBe(toned(2));
     // A name that is no style hue colours nothing.
     expect(textColor('nope')).toBeUndefined();
     expect(textColor(undefined)).toBeUndefined();
-    // A guide is dashed and unfilled whatever fill and border say.
-    const guide = { ...rect, style: { guide: true, border: false } };
+    // A guide is dashed and unfilled whatever fill and stroke say.
+    const guide = { ...rect, overrides: { guide: true, stroke: 'none' } as const };
     expect(classicFrame(guide, false)).toEqual(['', '', 'border-separator', 'border-dashed', 'rounded-sm']);
   });
 
@@ -120,10 +124,10 @@ describe('parts', () => {
     const { views } = ViewBuilder.view('s', [
       ViewBuilder.view('open')
         .at(box)
-        .properties({ style: { hue: 'green', tone: 0 } }),
+        .properties({ overrides: { color: 'green/0' } }),
       ViewBuilder.view('closed')
         .at(box)
-        .properties({ label: 'Closed', style: { hue: 'green', tone: 0 } }),
+        .properties({ label: 'Closed', overrides: { color: 'green/0' } }),
     ]).build();
     expect(classicFrame(views[0].nodes.open, false)[0]).toBe('bg-base-surface');
     expect(classicFrame(views[0].nodes.closed, false)[0]).toBe('bg-transparent');
@@ -157,20 +161,21 @@ describe('parts', () => {
     expect(hueClasses(undefined, 3)).toEqual(hueClasses(undefined));
   });
 
-  test('an unset fill, border or corner resolves to drawn', ({ expect }) => {
-    expect(resolveStyle(undefined)).toEqual({ fill: true, border: true, rounded: true });
-    expect(resolveStyle({ hue: 'orange' })).toEqual({ hue: 'orange', fill: true, border: true, rounded: true });
-    expect(resolveStyle({ fill: false, border: false, rounded: false })).toEqual({
-      fill: false,
-      border: false,
-      rounded: false,
+  test('an unset fill or corner resolves to drawn, and the stroke is left as stated', ({ expect }) => {
+    expect(resolveStyle(undefined)).toEqual({ fill: 'solid', corners: 'all' });
+    expect(resolveStyle({ color: 'orange' })).toEqual({ color: 'orange', fill: 'solid', corners: 'all' });
+    expect(resolveStyle({ fill: 'none', stroke: 'none', corners: 'none' })).toEqual({
+      fill: 'none',
+      stroke: 'none',
+      corners: 'none',
     });
   });
 
-  test("rounded's two states always differ: off is square, on is the look's rounded corner", ({ expect }) => {
+  test("the corners' states always differ: none is square, any other the look's rounded corner", ({ expect }) => {
     const tokens = { radius: 'sm', roundedRadius: '2xl' } as const;
-    expect(cornerRadius({ rounded: false }, tokens)).toBe('none');
-    expect(cornerRadius({ rounded: true }, tokens)).toBe('2xl');
+    expect(cornerRadius({ corners: 'none' }, tokens)).toBe('none');
+    expect(cornerRadius({ corners: 'all' }, tokens)).toBe('2xl');
+    expect(cornerRadius({ corners: 'top' }, tokens)).toBe('2xl');
     expect(cornerRadius(undefined, tokens)).toBe('sm');
   });
 });

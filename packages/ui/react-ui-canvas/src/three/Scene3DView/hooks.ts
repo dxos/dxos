@@ -12,7 +12,7 @@ import { SNAP_HIGHLIGHT_CLASS } from '../../utils/index.ts';
 import { orbitBy, panBy, zoomBy } from '../camera.ts';
 import { loadManifold, manifoldGeometry } from '../manifold.ts';
 import { type GeometrySource, SceneRenderer3D } from '../renderer.ts';
-import { type Theme3D } from '../style.ts';
+import { type Theme3D, isRounded } from '../style.ts';
 import { orbitGesture, wheelGesture } from './orbit-gesture.ts';
 
 export const DEFAULT_CAMERA: Scene.Camera3D = {
@@ -42,7 +42,7 @@ const needsManifold = (doc: Scene.SceneDocument): boolean =>
     (layout) =>
       layout.dim === '3d' &&
       Object.values(resolveLayout3D(doc, layout)).some(
-        (element) => element.type === 'solid' || (element.type === 'cube' && element.overrides?.rounded === true),
+        (element) => element.kind === 'solid' || (element.kind === 'cube' && isRounded(element.overrides)),
       ),
   );
 

@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { Scene } from '@dxos/scene';
+import { Scene, sidePort } from '@dxos/scene';
 
 import {
   type ElementKindSpec,
@@ -19,7 +19,7 @@ import {
 /** A plugin kind: the element base, its title in the base's `label`, and its own fields under `data`. */
 const Sticky = Schema.Struct({
   ...Scene.Element2D.fields,
-  type: Schema.Literal('sticky'),
+  kind: Schema.Literal('sticky'),
   label: Schema.String,
   data: Schema.Struct({ votes: Schema.Number }),
 });
@@ -28,7 +28,7 @@ const sticky: ElementKindSpec = {
   name: 'Sticky',
   icon: 'ph--note--regular',
   schema: Sticky,
-  create: ({ id, z, center, size }) => ({ type: 'sticky', id, z, center, size, label: 'Note', data: { votes: 0 } }),
+  create: ({ id, z, center, size }) => ({ kind: 'sticky', id, z, center, size, label: 'Note', data: { votes: 0 } }),
   defaultSize: { width: 1, height: 1 },
 };
 
@@ -40,42 +40,65 @@ const layout: Scene.LayoutRecord2D = {
   id: 'main',
   dim: '2d',
   elements: {
-    s: { type: 'sticky', ...frame, label: 'Hi', data: { votes: 2 }, portsPerSide: 2, props: { other: true } },
-    r: { id: 'r', type: 'rect', z: 'a2', center: { x: 0, y: 0 }, size: { width: 64, height: 64 } },
+    s: { kind: 'sticky', ...frame, label: 'Hi', data: { votes: 2 }, portsPerSide: 2, props: { other: true } },
+    r: { id: 'r', kind: 'rect', z: 'a2', center: { x: 0, y: 0 }, size: { width: 64, height: 64 } },
   },
 };
 
 describe('element kinds', () => {
-  test("the engine's node type carries the kind's data and label over the node base", () => {
+  test("the engine's node definition carries the kind's data and label over the node base", () => {
     const def = kindNodeDef('sticky', sticky);
     const node = def.create?.(frame);
-    expect(node).toEqual({ ...frame, type: 'sticky', label: 'Note', data: { votes: 0 } });
+    expect(node).toEqual({ ...frame, kind: 'sticky', label: 'Note', data: { votes: 0 } });
     expect(def.schema && Schema.is(def.schema)(node)).toBe(true);
     expect(def.schema && Schema.is(def.schema)({ ...node, data: { votes: 'many' } })).toBe(false);
-    expect(kinds.validate({ ...frame, type: 'sticky', label: 'x', data: { votes: 'many' } }).ok).toBe(false);
+    expect(kinds.validate({ ...frame, kind: 'sticky', label: 'x', data: { votes: 'many' } }).ok).toBe(false);
   });
 
   test("a kind that declares a field of its own at its top is refused, unless a prototype's frame reads it", () => {
-    const flat = Schema.Struct({ ...Scene.Element2D.fields, type: Schema.Literal('flat'), votes: Schema.Number });
+    const flat = Schema.Struct({ ...Scene.Element2D.fields, kind: Schema.Literal('flat'), votes: Schema.Number });
     expect(() => kindNodeDef('flat', { ...sticky, schema: flat })).toThrow(/votes/);
     // A card's `body` is the core card's, which its frame reads from the node itself.
-    const card = Schema.Struct({ ...Scene.Element2D.fields, type: Schema.Literal('memo'), body: Schema.String });
+    const card = Schema.Struct({ ...Scene.Element2D.fields, kind: Schema.Literal('memo'), body: Schema.String });
     expect(() => kindNodeDef('memo', { ...sticky, extends: 'card', schema: card })).not.toThrow();
   });
 
-  test("a kind's data and the engine's fields are drawn under the canvas fields; other elements as stored", () => {
+  test("a kind's element is drawn as it is stored, its data and the engine's fields on it; other elements as stored", () => {
     const drawn = toViewportLayout(layout, kinds);
-    expect(drawn.elements.s).toEqual({
-      ...frame,
-      type: 'sticky',
-      label: 'Hi',
-      props: { other: true, canvas: { data: { votes: 2 }, portsPerSide: 2 } },
-    });
+    expect(drawn.elements.s).toEqual(layout.elements.s);
+    expect(drawn.elements.s).toMatchObject({ kind: 'sticky', label: 'Hi', data: { votes: 2 }, portsPerSide: 2 });
     expect(drawn.elements.r).toBe(layout.elements.r);
     expect(toViewportDocument({ scenes: [], layouts: [layout], models: [] }, kinds).layouts[0]).toEqual(drawn);
   });
 
-  test('a created element is stored with its data at its top and no canvas fields', () => {
+  test("a kind's field that shares a name with a field of the element leaves the element's own alone", () => {
+    // A graph keeps its object radius in `data.size`, which is not the frame's `size`.
+    const Disc = Schema.Struct({
+      ...Scene.Element2D.fields,
+      kind: Schema.Literal('disc'),
+      data: Schema.Struct({ size: Schema.optional(Schema.Number), label: Schema.optional(Schema.String) }),
+    });
+    const disc: ElementKindSpec = {
+      name: 'Disc',
+      icon: 'ph--circle--regular',
+      schema: Disc,
+      create: ({ id, z, center, size }) => ({ kind: 'disc', id, z, center, size, data: {} }),
+      defaultSize: { width: 1, height: 1 },
+    };
+    const discs = kindRegistry({ disc });
+    const stored: Scene.LayoutRecord2D = {
+      id: 'main',
+      dim: '2d',
+      elements: { d: { kind: 'disc', ...frame, id: 'd', label: 'Frame label', data: { size: 8 } } },
+    };
+    const drawn = toViewportLayout(stored, discs).elements.d;
+    expect(drawn).toEqual(stored.elements.d);
+    expect(drawn.size).toEqual(frame.size);
+    const intent = fromViewportIntent({ kind: 'update', id: 'd', path: [], value: drawn }, stored, discs);
+    expect(intent.kind === 'update' && intent.value).toEqual(stored.elements.d);
+  });
+
+  test('a created element is stored as it was drawn', () => {
     const drawn = toViewportLayout(layout, kinds).elements.s;
     const intent = fromViewportIntent({ kind: 'create', element: { ...drawn, id: 'copy' } }, layout, kinds);
     expect(intent).toEqual({
@@ -85,7 +108,7 @@ describe('element kinds', () => {
   });
 
   test('derived fields are drawn and never written back', () => {
-    const ports = [{ id: 'in', side: 'w' as const, offset: 0.5 }];
+    const ports = [sidePort('in', 'left', 0.5)];
     const drawn = toViewportLayout(layout, kinds, () => ports).elements.s;
     const intent = fromViewportIntent({ kind: 'update', id: 's', path: [], value: drawn }, layout, kinds, ['ports']);
     expect(intent.kind === 'update' && intent.value).toEqual(layout.elements.s);
@@ -99,11 +122,7 @@ describe('element kinds', () => {
       elements: { s: { ...layout.elements.s, data: { votes: 2, owner } } },
     };
     const drawn = toViewportLayout(stored, kinds).elements.s;
-    const canvas = drawn.props?.canvas;
-    const edited = {
-      ...drawn,
-      props: { ...drawn.props, canvas: { ...canvas, data: { votes: 3, owner: { ...owner } } } },
-    };
+    const edited = { ...drawn, data: { votes: 3, owner: { ...owner } } };
     const intent = fromViewportIntent({ kind: 'update', id: 's', path: [], value: edited }, stored, kinds);
     const value = intent.kind === 'update' ? Object(intent.value) : {};
     expect(value.data).toEqual({ votes: 3, owner });
@@ -117,11 +136,12 @@ describe('element kinds', () => {
     const { data, ...base } = layout.elements.s;
     const stored: Scene.LayoutRecord2D = { ...layout, elements: { s: { ...base, votes: 5 } } };
     const drawn = toViewportLayout(stored, kinds).elements.s;
-    expect(drawn.props?.canvas).toEqual({ data: { votes: 5 }, portsPerSide: 2 });
+    expect(drawn).toMatchObject({ data: { votes: 5 }, portsPerSide: 2 });
+    expect(drawn).not.toHaveProperty('votes');
     const intent = fromViewportIntent({ kind: 'update', id: 's', path: [], value: drawn }, stored, kinds);
     expect(intent.kind === 'update' && intent.value).toEqual({ ...base, data: { votes: 5 } });
     // Both forms at once: `data` is the newer, so it wins.
     const both: Scene.LayoutRecord2D = { ...layout, elements: { s: { ...base, votes: 5, data: { votes: 7 } } } };
-    expect(toViewportLayout(both, kinds).elements.s.props?.canvas).toMatchObject({ data: { votes: 7 } });
+    expect(toViewportLayout(both, kinds).elements.s).toMatchObject({ data: { votes: 7 } });
   });
 });

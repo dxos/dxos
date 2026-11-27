@@ -12,13 +12,14 @@ import {
   type Bounds,
   type ElementId,
   type Link,
-  type LinkType,
+  type LinkPath,
   type Node,
   type NodeId,
   type Point,
   endpointNode,
   isHullNode,
   isViewNode,
+  linkPath,
 } from '@dxos/scene';
 
 import { type LinkValues, type NodeValues, type RenderList2D } from '../model/index.ts';
@@ -174,34 +175,34 @@ export const reorderElement =
     return scene;
   };
 
-/** Sets a node's or link's fields (a label, text, geometry, control points); its `id` and `type` never change. */
+/** Sets a node's or link's fields (a label, geometry, control points); its `id` and `kind` never change. */
 export const updateElement =
   (id: ElementId, values: NodeValues | LinkValues): SceneEdit =>
   (scene) => {
     const node = scene.nodes[id];
     if (node) {
-      return { ...scene, nodes: { ...scene.nodes, [id]: Object.assign({}, node, values, { id, type: node.type }) } };
+      return { ...scene, nodes: { ...scene.nodes, [id]: Object.assign({}, node, values, { id, kind: node.kind }) } };
     }
     const link = scene.links[id];
     if (link) {
-      return { ...scene, links: { ...scene.links, [id]: Object.assign({}, link, values, { id, type: link.type }) } };
+      return { ...scene, links: { ...scene.links, [id]: Object.assign({}, link, values, { id, kind: link.kind }) } };
     }
     return scene;
   };
 
 /**
- * Draws a link another way: its `type` changes and everything else about it stays, between the same ends. A spline
- * starts with no control points of its own, and any other type keeps none.
+ * Draws a link another way: its `path` changes and everything else about it stays, between the same ends. A spline
+ * starts with no control points of its own, and any other path keeps none.
  */
 export const retypeLink =
-  (id: ElementId, type: LinkType): SceneEdit =>
+  (id: ElementId, path: LinkPath): SceneEdit =>
   (scene) => {
     const link = scene.links[id];
-    if (!link || link.type === type) {
+    if (!link || linkPath(link) === path) {
       return scene;
     }
-    const { points: _points, ...rest }: Link & { points?: readonly Point[] } = link;
-    const next: Link = type === 'spline' ? { ...rest, type, points: [] } : { ...rest, type };
+    const { points: _points, ...rest } = link;
+    const next: Link = path === 'spline' ? { ...rest, path, points: [] } : { ...rest, path };
     return { ...scene, links: { ...scene.links, [id]: next } };
   };
 

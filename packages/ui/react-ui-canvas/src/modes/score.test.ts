@@ -17,7 +17,7 @@ import { scoreLayout2D } from './score.ts';
 
 /** A canvas sample's Views as the scene document the editor holds. */
 const documentOf = (views: readonly RenderList2D[], root: string): Scene.SceneDocument => {
-  const read = views.map(fromRenderList2D);
+  const read = views.map((view) => fromRenderList2D(view));
   const objects = Object.fromEntries(read.flatMap(({ objects }) => objects.map((object) => [object.id, object])));
   return {
     scenes: [{ id: 'scene', dim: '2d', layout: root, camera: { center: { x: 0, y: 0 }, zoom: 1 } }],

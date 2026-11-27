@@ -312,7 +312,9 @@ const InspectorPanelContent = () => {
 
   return (
     <Panel.Root
-      classNames={
+      classNames={mx(
+        // Titles and labels are chrome, not text to select; a field's own text still selects.
+        'select-none',
         docked
           ? 'w-80 shrink-0 border-l border-separator-subtle bg-base-surface'
           : // The docked panel's surface, so the inspectors look the same wherever the panel sits. Clipped rather than
@@ -322,8 +324,8 @@ const InspectorPanelContent = () => {
               'absolute top-2 right-2 z-10 w-80 max-w-[calc(100%-1rem)] h-auto max-h-[calc(100%-4.25rem)] overflow-clip',
               FLOATING_PANEL,
               'bg-base-surface',
-            )
-      }
+            ),
+      )}
       data-testid='scene-view-dock'
       data-floating={!docked || undefined}
     >

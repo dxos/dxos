@@ -36,7 +36,7 @@ export const CONTAINERS_GROUP = 'Containers';
  */
 export const EXTENSIONS_GROUP = 'Extensions';
 
-/** The fold the link types share, since a drawing mostly uses one of them. */
+/** The fold the link paths share, since a drawing mostly uses one of them. */
 export const LINK_FOLD = 'Link';
 
 /** The fold the parametric shapes share: each a recipe of its own, dragged out as a box is. */
@@ -49,12 +49,12 @@ export const PATH_FOLD = 'Path';
 export const DRAW_FOLD = 'Draw';
 
 /**
- * A run of palette entries; a group of node types may fold into one flyout button when the rail runs out of room, and
+ * A run of palette entries; a group of node kinds may fold into one flyout button when the rail runs out of room, and
  * a `folded` group always does.
  */
 export type ToolGroup<T = Tool> = { name: string; entries: ToolEntry<T>[]; collapsible: boolean; folded?: boolean };
 
-/** Node types by their `group`, in registry order; types without one share the first, unnamed group. */
+/** Node kinds by their `group`, in registry order; kinds without one share the first, unnamed group. */
 const nodeGroups = (nodes: NodeRegistry): ToolGroup[] => {
   const groups = new Map<string, ToolEntry[]>();
   for (const def of Object.values(nodes).filter((def) => def.palette !== false)) {
@@ -62,7 +62,7 @@ const nodeGroups = (nodes: NodeRegistry): ToolGroup[] => {
     groups.set(name, [
       ...(groups.get(name) ?? []),
       {
-        tool: { kind: 'node' as const, type: def.type },
+        tool: { kind: 'node' as const, node: def.type },
         icon: def.icon,
         label: def.name,
         key: def.key,
@@ -74,15 +74,15 @@ const nodeGroups = (nodes: NodeRegistry): ToolGroup[] => {
 };
 
 /**
- * Tool groups: the fixed tools, then the create group (the shapes and the link types), then the other node types by
+ * Tool groups: the fixed tools, then the create group (the shapes and the link paths), then the other node kinds by
  * group; a tool the scene does not allow (`create`, `link`) is left out rather than offered and silently dropped.
- * Groups fold into a flyout when the rail runs out of room. In the create group the link types lead the tools that
+ * Groups fold into a flyout when the rail runs out of room. In the create group the link paths lead the tools that
  * draw a line of their own (a polyline, a stroke), so the lines sit together below the closed shapes.
  */
 export const toolGroups = (nodes: NodeRegistry, links: LinkRegistry, capabilities: Capabilities): ToolGroup[] => {
   const linkEntries: ToolEntry[] = capabilities.link
     ? Object.values(links).map((def) => ({
-        tool: { kind: 'link' as const, type: def.type },
+        tool: { kind: 'link' as const, path: def.type },
         icon: def.icon,
         label: def.name,
         key: def.key,
@@ -92,12 +92,12 @@ export const toolGroups = (nodes: NodeRegistry, links: LinkRegistry, capabilitie
   // The first (unnamed) node group is the shapes: it becomes the create group, which the link tools join.
   const [shapes, ...others] = capabilities.create ? nodeGroups(nodes) : [];
   const shapeEntries = shapes?.name === '' ? shapes.entries : [];
-  const lineTypes = new Set(
+  const lineKinds = new Set(
     Object.values(nodes)
       .filter((def) => def.createFromPoints !== undefined || def.freehand !== undefined)
       .map((def) => def.type),
   );
-  const firstLine = shapeEntries.findIndex((entry) => entry.tool.kind === 'node' && lineTypes.has(entry.tool.type));
+  const firstLine = shapeEntries.findIndex((entry) => entry.tool.kind === 'node' && lineKinds.has(entry.tool.node));
   const split = firstLine === -1 ? shapeEntries.length : firstLine;
   const create = [...shapeEntries.slice(0, split), ...linkEntries, ...shapeEntries.slice(split)];
   return [
@@ -131,7 +131,11 @@ export const toolEntries = (nodes: NodeRegistry, links: LinkRegistry, capabiliti
 export const pressSelects = (tool: Tool): boolean => tool.kind === 'select' || tool.kind === 'node';
 
 export const sameTool = (left: Tool, right: Tool): boolean =>
-  left.kind === right.kind && ('type' in left ? left.type === ('type' in right ? right.type : undefined) : true);
+  left.kind === 'node'
+    ? right.kind === 'node' && left.node === right.node
+    : left.kind === 'link'
+      ? right.kind === 'link' && left.path === right.path
+      : left.kind === right.kind;
 
 /** The tool a key picks, among those the scene allows. */
 export const toolForKey = (

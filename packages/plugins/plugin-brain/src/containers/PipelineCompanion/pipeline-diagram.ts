@@ -82,7 +82,7 @@ const CHIP = { width: 190, height: 44 };
 const STEP = 120;
 const SIDE = 260;
 
-type Card = { id: string; text: string; x: number; y: number; hue: string; chip?: boolean; ellipse?: boolean };
+type Card = { id: string; text: string; x: number; y: number; color: string; chip?: boolean; ellipse?: boolean };
 type Link = { id: string; from: string; to: string; text?: string; dashed?: boolean };
 
 /**
@@ -97,22 +97,22 @@ export const pipelineScene = (state: Pipeline.State): string => {
   const time = elapsed(state.startedAt, state.endedAt);
 
   const cards: Card[] = [
-    { id: 'source', text: `${state.name} · ${count(sum.sources)} channels`, x: 0, y: 0, hue: 'indigo' },
-    { id: 'first', text: `first ${moment(sum.first)}`, x: SIDE, y: -24, hue: 'indigo', chip: true },
-    { id: 'last', text: `last ${moment(sum.last)}`, x: SIDE, y: 24, hue: 'indigo', chip: true },
+    { id: 'source', text: `${state.name} · ${count(sum.sources)} channels`, x: 0, y: 0, color: 'indigo' },
+    { id: 'first', text: `first ${moment(sum.first)}`, x: SIDE, y: -24, color: 'indigo', chip: true },
+    { id: 'last', text: `last ${moment(sum.last)}`, x: SIDE, y: 24, color: 'indigo', chip: true },
     ...stages.map((stage, index) => ({
       id: `stage${index}`,
       text: stage.label,
       x: 0,
       y: STEP * (index + 1),
-      hue: stage.models.length > 0 ? 'violet' : 'blue',
+      color: stage.models.length > 0 ? 'violet' : 'blue',
     })),
     {
       id: 'memory',
       text: state.facts !== undefined ? `${count(state.facts)} facts` : 'Memory',
       x: 0,
       y: STEP * (stages.length + 1),
-      hue: 'green',
+      color: 'green',
       ellipse: true,
     },
     ...models.map((model, index) => ({
@@ -120,7 +120,7 @@ export const pipelineScene = (state: Pipeline.State): string => {
       text: modelName(model),
       x: SIDE,
       y: STEP * (stages.findIndex((stage) => stage.models.some((usage) => usage.model === model)) + 1.5) + index * STEP,
-      hue: 'amber',
+      color: 'amber',
       chip: true,
     })),
   ];
@@ -157,7 +157,7 @@ export const pipelineScene = (state: Pipeline.State): string => {
     'layout pipeline dim=2d {',
     ...cards.map((card) => {
       const size = card.chip ? CHIP : CARD;
-      return `  element ${card.id} ${card.ellipse ? 'ellipse' : 'rect'} ${quote(card.text)} @ ${card.x},${card.y} size=${size.width}x${size.height} hue=${card.hue} surface=${card.chip ? 'tint' : 'solid'} border=true rounded=true fontSize=${card.chip ? 17 : 22}`;
+      return `  element ${card.id} ${card.ellipse ? 'ellipse' : 'rect'} ${quote(card.text)} @ ${card.x},${card.y} size=${size.width}x${size.height} color=${card.color} fill=${card.chip ? 'tint' : 'solid'} stroke=solid corners=all fontSize=${card.chip ? 17 : 22}`;
     }),
     ...links.map(
       (link) =>

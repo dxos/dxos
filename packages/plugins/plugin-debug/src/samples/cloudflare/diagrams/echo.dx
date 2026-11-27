@@ -1,7 +1,7 @@
 diagram kind=grid size=1600x880 cols="1096 344" gap=64 padding=48
 
 group layers-section rows="251 517" gap=16 {
-  group types-section padding=16 border=true {
+  group types-section padding=16 stroke=solid {
     group types-section-inner "Core" cols=3 gap=24 {
       group types-col-0 gap=16 {
         node typescript "TypeScript" kind=card icon=file-ts {
@@ -18,7 +18,7 @@ group layers-section rows="251 517" gap=16 {
       }
     }
   }
-  group layers-body cols=3 gap=24 padding=16 border=true {
+  group layers-body cols=3 gap=24 padding=16 stroke=solid {
     group layers-col-0 gap=10 autoRows=155 {
       node graph "Graph" kind=card icon=graph iconTone=accent {
         item "Globally addressable."
@@ -65,7 +65,7 @@ group layers-section rows="251 517" gap=16 {
   }
 }
 
-group runtime-section padding=16 border=true {
+group runtime-section padding=16 stroke=solid {
   group runtime-section-inner "Runtime" gap=10 autoRows=155 alignContent=end {
     node browser "Browser" kind=card icon=browser {
       item "Full replica in the tab."

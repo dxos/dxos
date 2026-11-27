@@ -9,6 +9,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Obj, Ref } from '@dxos/echo';
 import { Scene, type StoredLayout, type StoredModel, fromEcho, reachedObjects } from '@dxos/scene';
 
+import { canvasDimension, openScene } from '#model';
 import { type Canvas } from '#types';
 
 const isStoredScene = (stage: unknown): stage is Scene.Scene2D | Scene.Scene3D =>
@@ -59,6 +60,25 @@ export const useCanvasLoaded = (canvas: Canvas.Canvas): number =>
       [canvas],
     ),
   );
+
+/**
+ * What `read` makes of the canvas, computed again as the canvas changes and as the objects it lists load: `read` goes
+ * through `.target`, which signals neither, and a compiled component keeps what it read from the same canvas.
+ */
+const canvasAtom = <T>(canvas: Canvas.Canvas, read: () => T): Atom.Atom<T> =>
+  Atom.make((get) => {
+    get(Obj.atom(canvas));
+    countLoaded(get, [...canvas.scenes, ...canvas.layouts, canvas.model]);
+    return read();
+  });
+
+/** The scene the canvas opens at (see `openScene`), from a subscription, so a render that reads it sees it load. */
+export const useOpenScene = (canvas: Canvas.Canvas, key?: string): Scene.Scene2D | Scene.Scene3D | undefined =>
+  useAtomValue(useMemo(() => canvasAtom(canvas, () => openScene(canvas, key)), [canvas, key]));
+
+/** The editor the canvas opens in (see `canvasDimension`), from a subscription, so a render sees its scene load. */
+export const useCanvasDimension = (canvas: Canvas.Canvas): Scene.Dimension | undefined =>
+  useAtomValue(useMemo(() => canvasAtom(canvas, () => canvasDimension(canvas)), [canvas]));
 
 /** A stage object as a scene document, or undefined when it is not a Scene2D or Scene3D. */
 export const sceneDocumentOf = (stage: unknown): Scene.SceneDocument | undefined =>

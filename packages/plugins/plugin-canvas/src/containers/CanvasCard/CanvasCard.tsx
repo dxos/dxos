@@ -12,12 +12,11 @@ import { Scene3DView } from '@dxos/react-ui-canvas/3d';
 import * as Card from '@dxos/react-ui/Card';
 import { Scene } from '@dxos/scene';
 
-import { canvasDimension, openScene } from '#model';
 import { Canvas as CanvasFormat } from '#types';
 
 import { CanvasDatabaseContext } from '../CanvasArticle/CanvasViewNodeView.tsx';
 import { useCanvasKinds, useCanvasNodes } from '../CanvasArticle/use-canvas-scene.ts';
-import { useCanvasLoaded, useSceneDocument } from '../CanvasStage/index.ts';
+import { useCanvasDimension, useOpenScene, useSceneDocument } from '../CanvasStage/index.ts';
 
 // The view's default fit margin (two major cells a side) would leave a card-sized view mostly empty.
 const CARD_MARGIN = 0.25;
@@ -34,9 +33,8 @@ type DimensionCardProps = { canvas: CanvasFormat.Canvas; extrinsic?: boolean };
 
 /** A 3D canvas's card shows its open scene through the 3D renderer; every other one through the 2D engine. */
 const DimensionCard = ({ canvas, extrinsic }: DimensionCardProps) => {
-  useObject(canvas);
-  useCanvasLoaded(canvas);
-  return canvasDimension(canvas) === '3d' ? (
+  const dimension = useCanvasDimension(canvas);
+  return dimension === '3d' ? (
     <Canvas3DCard canvas={canvas} extrinsic={extrinsic} />
   ) : (
     <Canvas2DCard canvas={canvas} extrinsic={extrinsic} />
@@ -56,7 +54,7 @@ const cardClassNames = (extrinsic?: boolean) =>
 /** The open 3D scene from its authored camera: no grid, and inert, so a press or wheel reaches the card. */
 const Canvas3DCard = ({ canvas, extrinsic }: DimensionCardProps) => {
   const classNames = cardClassNames(extrinsic);
-  const scene = openScene(canvas);
+  const scene = useOpenScene(canvas);
   const stored = Obj.instanceOf(Scene.Scene3D, scene) ? scene : undefined;
   const document = useSceneDocument(stored);
   return (
@@ -76,7 +74,7 @@ const Canvas2DCard = ({ canvas, extrinsic }: DimensionCardProps) => {
   const nodes = useCanvasNodes();
   const kinds = useCanvasKinds();
   const [snapshot] = useObject(canvas);
-  const scene = openScene(canvas);
+  const scene = useOpenScene(canvas);
   const stored = Obj.instanceOf(Scene.Scene2D, scene) ? scene : undefined;
   const document = useSceneDocument(stored);
   // The view draws a kind's element from its canvas fields, as the article's viewport does.

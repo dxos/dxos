@@ -22,7 +22,7 @@ import { type RenderList2D, createLink, fromRenderLists2D, portId } from '@dxos/
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
-import { type Link, LINK_TYPES, type LinkType, type Point, type RectNode, type Scene, type Side } from '@dxos/scene';
+import { type Link, LINK_PATHS, type LinkPath, type Point, type RectNode, type Scene, type Side } from '@dxos/scene';
 
 import { FullEditor, SceneEditorStory } from '../../testing/index.ts';
 
@@ -42,21 +42,21 @@ const SIZE = { width: 96, height: 72 };
 
 const CASES: readonly Case[] = [
   // Ports that face each other.
-  { id: 'straight', label: 'Straight', from: 'e', to: 'w', offset: { x: 192, y: 0 }, bends: 0 },
-  { id: 'step', label: 'Step', from: 'e', to: 'w', offset: { x: 192, y: 96 }, bends: 2 },
-  { id: 'close', label: 'Close', from: 'e', to: 'w', offset: { x: 120, y: 48 }, bends: 2 },
-  { id: 'down', label: 'Step down', from: 's', to: 'n', offset: { x: 96, y: 168 }, bends: 2 },
+  { id: 'straight', label: 'Straight', from: 'right', to: 'left', offset: { x: 192, y: 0 }, bends: 0 },
+  { id: 'step', label: 'Step', from: 'right', to: 'left', offset: { x: 192, y: 96 }, bends: 2 },
+  { id: 'close', label: 'Close', from: 'right', to: 'left', offset: { x: 120, y: 48 }, bends: 2 },
+  { id: 'down', label: 'Step down', from: 'bottom', to: 'top', offset: { x: 96, y: 168 }, bends: 2 },
   // Sides that meet at a corner, and one whose corner is on the far side.
-  { id: 'corner', label: 'Corner', from: 'e', to: 'n', offset: { x: 192, y: 144 }, bends: 1 },
-  { id: 'corner-up', label: 'Corner up', from: 'e', to: 's', offset: { x: 192, y: -144 }, bends: 1 },
-  { id: 'over', label: 'Over', from: 'e', to: 'n', offset: { x: 192, y: -120 }, bends: 3 },
+  { id: 'corner', label: 'Corner', from: 'right', to: 'top', offset: { x: 192, y: 144 }, bends: 1 },
+  { id: 'corner-up', label: 'Corner up', from: 'right', to: 'bottom', offset: { x: 192, y: -144 }, bends: 1 },
+  { id: 'over', label: 'Over', from: 'right', to: 'top', offset: { x: 192, y: -120 }, bends: 3 },
   // Two ports on the same side.
-  { id: 'far-side', label: 'Far side', from: 'e', to: 'e', offset: { x: 192, y: -168 }, bends: 2 },
-  { id: 'row', label: 'Row', from: 'n', to: 'n', offset: { x: 192, y: 0 }, bends: 2 },
-  { id: 'stack', label: 'Stack', from: 'e', to: 'e', offset: { x: 0, y: 168 }, bends: 2 },
+  { id: 'far-side', label: 'Far side', from: 'right', to: 'right', offset: { x: 192, y: -168 }, bends: 2 },
+  { id: 'row', label: 'Row', from: 'top', to: 'top', offset: { x: 192, y: 0 }, bends: 2 },
+  { id: 'stack', label: 'Stack', from: 'right', to: 'right', offset: { x: 0, y: 168 }, bends: 2 },
   // Ports that face away from each other.
-  { id: 'away', label: 'Away', from: 'w', to: 'e', offset: { x: 192, y: 144 }, bends: 4 },
-  { id: 'around', label: 'Around', from: 'w', to: 'e', offset: { x: 192, y: 0 }, bends: 4 },
+  { id: 'away', label: 'Away', from: 'left', to: 'right', offset: { x: 192, y: 144 }, bends: 4 },
+  { id: 'around', label: 'Around', from: 'left', to: 'right', offset: { x: 192, y: 0 }, bends: 4 },
 ];
 
 const COLUMNS = 4;
@@ -65,7 +65,7 @@ const CELL = { width: 408, height: 336 };
 /** The centre port of a side, of the three a shape spreads along each. */
 const centre = (side: Side): string => portId(side, 2);
 
-const boardOf = (type: LinkType): RenderList2D => {
+const boardOf = (path: LinkPath): RenderList2D => {
   const rows = Math.ceil(CASES.length / COLUMNS);
   const nodes: RectNode[] = [];
   const links: Link[] = [];
@@ -78,20 +78,28 @@ const boardOf = (type: LinkType): RenderList2D => {
     const first = { x: middle.x - offset.x / 2, y: middle.y - offset.y / 2 };
     const second = { x: first.x + offset.x, y: first.y + offset.y };
     nodes.push(
-      { type: 'rect', id: `${id}-a`, z: `a${index}0`, center: first, size: SIZE, label, style: { hue: 'indigo' } },
       {
-        type: 'rect',
+        kind: 'rect',
+        id: `${id}-a`,
+        z: `a${index}0`,
+        center: first,
+        size: SIZE,
+        label,
+        overrides: { color: 'indigo' },
+      },
+      {
+        kind: 'rect',
         id: `${id}-b`,
         z: `a${index}1`,
         center: second,
         size: SIZE,
         label: `${from} → ${to}`,
-        style: { hue: 'teal' },
+        overrides: { color: 'teal' },
       },
     );
     links.push(
       createLink({
-        type,
+        path,
         id,
         z: `b${index}`,
         source: { node: `${id}-a`, port: centre(from) },
@@ -107,20 +115,20 @@ const boardOf = (type: LinkType): RenderList2D => {
   };
 };
 
-const documentOf = (type: LinkType): Scene.SceneDocument => fromRenderLists2D([boardOf(type)], { root: 'board' });
+const documentOf = (path: LinkPath): Scene.SceneDocument => fromRenderLists2D([boardOf(path)], { root: 'board' });
 
 type StoryArgs = {
   /** The variant every link is drawn as. */
-  type: LinkType;
+  path: LinkPath;
   /** The link selected as the editor opens, so its ends show. */
   select?: string;
 };
 
-const DefaultStory = ({ type, select }: StoryArgs) => {
-  const document = useMemo(() => documentOf(type), [type]);
+const DefaultStory = ({ path, select }: StoryArgs) => {
+  const document = useMemo(() => documentOf(path), [path]);
   return (
     // Keyed, so a control change opens the new drawing rather than editing the old one.
-    <SceneEditorStory key={type} document={document} docked select={select ? [select] : undefined}>
+    <SceneEditorStory key={path} document={document} docked select={select ? [select] : undefined}>
       <FullEditor dim='2d' />
     </SceneEditorStory>
   );
@@ -132,7 +140,7 @@ const meta = {
   decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: { layout: 'fullscreen', translations: [...uiTranslations, ...formTranslations] },
   argTypes: {
-    type: { control: 'inline-radio', options: LINK_TYPES },
+    path: { control: 'inline-radio', options: LINK_PATHS },
   },
 } satisfies Meta<typeof DefaultStory>;
 
@@ -142,17 +150,17 @@ type Story = StoryObj<typeof meta>;
 
 /** Each port left along its side's normal, then right angles, as few as the two shapes allow. */
 export const Orthogonal: Story = {
-  args: { type: 'ortho' },
+  args: { path: 'ortho' },
 };
 
 /** The same ports as an elbow: a stub out of each, joined by one segment. */
 export const Elbow: Story = {
-  args: { type: 'smart' },
+  args: { path: 'smart' },
 };
 
 /** The same ports as a curve, which leaves each along its side's normal and bends toward the other. */
 export const Curve: Story = {
-  args: { type: 'curve' },
+  args: { path: 'curve' },
 };
 
 /**
@@ -161,7 +169,7 @@ export const Curve: Story = {
  *    Over, four where the ports face away.
  */
 export const Test: Story = {
-  args: { type: 'ortho' },
+  args: { path: 'ortho' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const view = await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 });
@@ -183,7 +191,7 @@ export const Test: Story = {
  * 3. Right-click that end: the menu opens, and the link is still selected and unchanged.
  */
 export const EndMenuTest: Story = {
-  args: { type: 'ortho', select: 'far-side' },
+  args: { path: 'ortho', select: 'far-side' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const view = await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 });
@@ -238,7 +246,7 @@ export const EndMenuTest: Story = {
  *    draws an arrow at its end too.
  */
 export const EndMarkerTest: Story = {
-  args: { type: 'ortho', select: 'far-side' },
+  args: { path: 'ortho', select: 'far-side' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const view = await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 });
@@ -270,7 +278,7 @@ export const EndMarkerTest: Story = {
     await waitFor(() => expect(glyph('arrow')).toBe('#px--line-arrow--regular'));
     await waitFor(() => expect(glyph('circle')).toBe('#px--line-circle--regular'));
     await waitFor(() => expect(glyph('triangle')).toBe('#px--line-triangle--regular'));
-    await waitFor(() => expect(glyph('many')).toBe('#px--line-many--regular'));
+    await waitFor(() => expect(glyph('crowsfoot')).toBe('#px--line-many--regular'));
     await expect(marker(link())).toBe('');
 
     // 2. By keyboard, since the menu ignores the synthetic pointer events a test can send.
@@ -314,7 +322,7 @@ export const EndMarkerTest: Story = {
  * marker and the line beside it, and the point it meets a shape at, which that shape's port otherwise covers.
  */
 export const EndPressTest: Story = {
-  args: { type: 'ortho' },
+  args: { path: 'ortho' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const view = await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 });

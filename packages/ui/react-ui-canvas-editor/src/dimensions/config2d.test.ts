@@ -19,8 +19,8 @@ const document: Scene.SceneDocument = {
       id: 'root',
       dim: '2d',
       elements: {
-        a: { id: 'a', type: 'rect', center: { x: 100, y: 0 }, size: { width: 100, height: 100 } },
-        b: { id: 'b', type: 'rect', center: { x: 500, y: 200 }, size: { width: 100, height: 100 } },
+        a: { id: 'a', kind: 'rect', center: { x: 100, y: 0 }, size: { width: 100, height: 100 } },
+        b: { id: 'b', kind: 'rect', center: { x: 500, y: 200 }, size: { width: 100, height: 100 } },
       },
     },
   ],
@@ -33,7 +33,7 @@ describe('config2d', () => {
       id: 'grid',
       dim: '2d',
       lattice: { width: 256, height: 128, gutterX: 128, gutterY: 64 },
-      elements: { a: { id: 'a', type: 'rect', center: { x: 0, y: 0 }, size: { width: 256, height: 128 } } },
+      elements: { a: { id: 'a', kind: 'rect', center: { x: 0, y: 0 }, size: { width: 256, height: 128 } } },
     };
     const { constrain } = createConfig2D();
     const move: LayoutIntent = { kind: 'move', ids: ['a'], delta: { x: 300, y: 20 } };
@@ -52,7 +52,7 @@ describe('config2d', () => {
   test('a dynamic layout pins a moved shape and re-places the rest when its graph changes', () => {
     const shape = (id: string): Scene.Element2D => ({
       id,
-      type: 'rect',
+      kind: 'rect',
       center: { x: 0, y: 0 },
       size: { width: 192, height: 128 },
     });
@@ -65,7 +65,7 @@ describe('config2d', () => {
     const { constrain } = createConfig2D();
     const bind: LayoutIntent = {
       kind: 'bind',
-      link: { id: 'ab', type: 'link', source: { node: 'a' }, target: { node: 'b' } },
+      link: { id: 'ab', kind: 'link', source: { node: 'a' }, target: { node: 'b' } },
     };
     const linked = constrain?.(dynamic, bind, { snap: true });
     const placed = linked && applyIntent(dynamic, linked);
@@ -77,7 +77,7 @@ describe('config2d', () => {
   test('a constrained layout re-relates a dropped shape and writes the new constraints in the same batch', () => {
     const shape = (id: string): Scene.Element2D => ({
       id,
-      type: 'rect',
+      kind: 'rect',
       center: { x: 0, y: 0 },
       size: { width: 192, height: 128 },
     });
@@ -86,9 +86,9 @@ describe('config2d', () => {
       dim: '2d',
       elements: { a: shape('a'), b: shape('b'), c: shape('c') },
       constraints: [
-        { subject: 'b', relation: 'east', object: 'a' },
+        { subject: 'b', relation: 'right-of', object: 'a' },
         { subject: 'b', relation: 'aligned', object: 'a' },
-        { subject: 'c', relation: 'south', object: 'a' },
+        { subject: 'c', relation: 'below', object: 'a' },
       ],
     };
     const layout = applyIntent(unsolved, constrainedPlacement(unsolved));
@@ -100,7 +100,7 @@ describe('config2d', () => {
     const written = constrain?.(layout, move, { snap: false });
     const after = written && applyIntent(layout, written);
     expect(after?.constraints?.filter(({ subject }) => subject === 'c')).toEqual([
-      { subject: 'c', relation: 'east', object: 'b' },
+      { subject: 'c', relation: 'right-of', object: 'b' },
       { subject: 'c', relation: 'aligned', object: 'b' },
     ]);
     expect(after?.elements.c.center?.y).toBe(after?.elements.a.center?.y);
@@ -113,7 +113,7 @@ describe('config2d', () => {
   test('a constrained drag is one undo step for the positions and the constraints', () => {
     const shape = (id: string, x: number): Scene.Element2D => ({
       id,
-      type: 'rect',
+      kind: 'rect',
       center: { x, y: 0 },
       size: { width: 192, height: 128 },
     });
@@ -133,7 +133,7 @@ describe('config2d', () => {
     expect(intent).toBeDefined();
     history.record(() => intent && registry.set(layouts, { root: applyIntent(before, intent) }));
     const after = registry.get(layouts).root;
-    expect(after.constraints).toEqual([{ subject: 'b', relation: 'south', object: 'a' }]);
+    expect(after.constraints).toEqual([{ subject: 'b', relation: 'below', object: 'a' }]);
     history.undo();
     expect(registry.get(layouts).root.constraints).toEqual([]);
     expect(registry.get(layouts).root.elements).toEqual(before.elements);
@@ -165,7 +165,7 @@ describe('config2d', () => {
     expect(joined.intents).toEqual([{ kind: 'join', id: 'union-1', operands: ['a', 'b'] }]);
     expect(joined.selected).toEqual(['union-1']);
     expect(applyIntent(root, joined.intents[0]).elements['union-1']).toMatchObject({
-      type: 'solid',
+      kind: 'solid',
       center: { x: 300, y: 100 },
       size: { width: 500, height: 300 },
       props: { op: 'union', operands: 'a b' },

@@ -10,7 +10,7 @@ import { constrainedConstrain, constrainedPlacement } from './constrained.ts';
 
 const shape = (id: string): Scene.Element2D => ({
   id,
-  type: 'rect',
+  kind: 'rect',
   center: { x: 0, y: 0 },
   size: { width: 192, height: 128 },
 });
@@ -20,11 +20,11 @@ const LAYOUT: Scene.LayoutRecord2D = {
   dim: '2d',
   elements: Object.fromEntries(['A', 'B', 'C', 'D'].map((id) => [id, shape(id)])),
   constraints: [
-    { subject: 'B', relation: 'east', object: 'A' },
+    { subject: 'B', relation: 'right-of', object: 'A' },
     { subject: 'B', relation: 'aligned', object: 'A' },
-    { subject: 'C', relation: 'south', object: 'A' },
-    { subject: 'D', relation: 'south', object: 'B' },
-    { subject: 'D', relation: 'east', object: 'C' },
+    { subject: 'C', relation: 'below', object: 'A' },
+    { subject: 'D', relation: 'below', object: 'B' },
+    { subject: 'D', relation: 'right-of', object: 'C' },
   ],
 };
 
@@ -41,7 +41,7 @@ const centerOf = (layout: Scene.LayoutRecord2D, id: string) => {
 };
 
 describe('constrained mode', () => {
-  test("the layout's constraints place its shapes: east/west, north/south and aligned", ({ expect }) => {
+  test("the layout's constraints place its shapes: right-of/left-of, above/below and aligned", ({ expect }) => {
     const layout = solved(LAYOUT);
     expect(centerOf(layout, 'B').x).toBeGreaterThan(centerOf(layout, 'A').x);
     expect(centerOf(layout, 'B').y).toBe(centerOf(layout, 'A').y);
@@ -62,7 +62,7 @@ describe('constrained mode', () => {
       delta: { x: a.x + 300 - c.x, y: a.y - c.y },
     });
     expect(result?.constraints.filter(({ subject }) => subject === 'C')).toEqual([
-      { subject: 'C', relation: 'east', object: 'B' },
+      { subject: 'C', relation: 'right-of', object: 'B' },
       { subject: 'C', relation: 'aligned', object: 'B' },
     ]);
     const moved = result && applyIntent(layout, result.intent);

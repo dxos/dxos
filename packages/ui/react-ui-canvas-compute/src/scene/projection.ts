@@ -10,7 +10,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj } from '@dxos/echo';
-import { type LayoutIntent, type Scene, applyIntent } from '@dxos/scene';
+import { type LayoutIntent, LINK_KIND, type Scene, applyIntent } from '@dxos/scene';
 
 import {
   type ComputeGraphController,
@@ -46,7 +46,7 @@ const isComputeShape = Schema.is(ComputeShape);
 
 /** The compute node id an element carries, when it is a compute shape. */
 const computeId = (element: BoardElement | undefined): string | undefined =>
-  element && element.type !== undefined && isValidComputeNode(element.type) ? computeNodeId(element) : undefined;
+  element && element.kind !== undefined && isValidComputeNode(element.kind) ? computeNodeId(element) : undefined;
 
 type Ends = { readonly source?: { readonly node?: string }; readonly target?: { readonly node?: string } };
 
@@ -57,7 +57,7 @@ const isSelfLink = (element: Ends): boolean =>
 const computeLink = (layout: Scene.LayoutRecord2D, link: BoardElement): ComputeLink | undefined => {
   const source = computeId(layout.elements[link.source?.node ?? '']);
   const target = computeId(layout.elements[link.target?.node ?? '']);
-  if (link.type !== 'link' || !source || !target) {
+  if (link.kind !== LINK_KIND || !source || !target) {
     return undefined;
   }
   const output = link.source?.port === undefined ? undefined : parseAnchorId(link.source.port)[1];
@@ -103,7 +103,7 @@ export const createComputeProjection = ({ controller }: ComputeProjectionOptions
         if (isSelfLink(element)) {
           return undefined;
         }
-        if (element.type === undefined || !isValidComputeNode(element.type)) {
+        if (element.kind === undefined || !isValidComputeNode(element.kind)) {
           return intent;
         }
         const node = computeNodeId(element);

@@ -78,7 +78,7 @@ describe('CanvasPlugin', () => {
         { id: 'taxi', label: 'Taxi', dim: '3d' },
       ]);
       const taxi = await items.find((item) => item.id === 'taxi')?.make();
-      expect(taxi).toMatchObject({ id: 'taxi', type: 'mesh' });
+      expect(taxi).toMatchObject({ id: 'taxi', kind: 'mesh' });
     },
   );
 });

@@ -10,8 +10,9 @@
 //
 
 import type { SyntaxNode } from '@lezer/common';
+import * as Schema from 'effect/Schema';
 
-import { Shape } from '@dxos/scene';
+import { Shape, upgradeStyle } from '@dxos/scene';
 
 import * as GridEngine from '../grid-engine.ts';
 import { ITEMS_FIELD, itemRecord } from '../items.ts';
@@ -32,11 +33,13 @@ import {
   GROUP_ATTRS,
   GROUP_FRAME_ATTRS,
   KIND_ATTR,
+  LEGACY_BORDER,
   NODE_ATTRS,
   NOTE_ATTRS,
   OBJECT_ATTRS,
   REF_SHAPE,
   dataFieldName,
+  withLegacy,
 } from './vocabulary.ts';
 
 export type Problem = {
@@ -72,6 +75,12 @@ export const optional = <K extends string, V>(key: K, value: V | undefined): { [
   }
   return result;
 };
+
+const isColor = Schema.is(Shape.Color);
+const STROKES: readonly Shape.Stroke[] = Shape.Stroke.literals;
+
+/** The kinds that are a line, whose stroke is the whole of what they draw. */
+const OPEN_KINDS: ReadonlySet<ElementKind> = new Set(['line', 'curve', 'arc', 'arrow']);
 
 /** Single-kind element nodes; the multi-kind ones carry a `BoxKind`/`PathKind` child instead. */
 const SHAPE_KINDS: Record<string, string | undefined> = {
@@ -264,6 +273,35 @@ export const read = (text: string): Reading => {
     return match;
   };
 
+  /** A colour, which the scene's own schema checks since the set is open; a CSS literal is quoted, as `#` opens a comment. */
+  const colorAttr = (attrs: Map<string, Attr>, name: string): Shape.Color | undefined => {
+    const attr = attrs.get(name);
+    if (!attr) {
+      return undefined;
+    }
+    const raw = slice(attr.valueNode);
+    const value = raw.startsWith('"') ? unquote(raw) : raw;
+    if (!isColor(value)) {
+      report(attr.node, `"${name}" takes a colour: a name (blue), a name at a tone (blue/2), or a quoted CSS colour.`);
+      return undefined;
+    }
+    return value;
+  };
+
+  /**
+   * The stroke a statement states. On a closed shape, older text's `border` flag still says whether the outline is
+   * drawn, and means what the scene's reader of old styles says it does; on a line it never said anything.
+   */
+  const strokeAttr = (attrs: Map<string, Attr>, closed = true): Shape.Stroke | undefined => {
+    const stroke = enumAttr(attrs, 'stroke', STROKES);
+    const border = booleanAttr(attrs, LEGACY_BORDER.name);
+    if (border === undefined || !closed) {
+      return stroke;
+    }
+    const stated = upgradeStyle({ ...optional('stroke', stroke), border })?.stroke;
+    return STROKES.find((candidate) => candidate === stated);
+  };
+
   /** A bare word from an open set a plugin extends, so there are no literals to check it against. */
   const nameAttr = (attrs: Map<string, Attr>, name: string): string | undefined => {
     const attr = attrs.get(name);
@@ -360,13 +398,12 @@ export const read = (text: string): Reading => {
       });
   };
 
-  /** The style fields every element shares. */
-  const readStyle = (attrs: Map<string, Attr>) => ({
-    ...optional('color', enumAttr(attrs, 'color', Shape.Color.literals)),
+  /** The style fields every element shares; `closed` says the element has an outline rather than being a line. */
+  const readStyle = (attrs: Map<string, Attr>, closed: boolean) => ({
+    ...optional('color', colorAttr(attrs, 'color')),
     ...optional('fill', enumAttr(attrs, 'fill', Shape.Fill.literals)),
-    ...optional('stroke', enumAttr(attrs, 'stroke', Shape.Stroke.literals)),
+    ...optional('stroke', strokeAttr(attrs, closed)),
     ...optional('weight', enumAttr(attrs, 'weight', Shape.Weight.literals)),
-    ...optional('border', booleanAttr(attrs, 'border')),
     ...optional('align', enumAttr(attrs, 'align', Shape.Align.literals)),
     ...optional('valign', enumAttr(attrs, 'valign', Shape.VerticalAlign.literals)),
     ...optional('fontSize', numberAttr(attrs, 'fontSize')),
@@ -424,15 +461,16 @@ export const read = (text: string): Reading => {
     }
 
     const attributeNodes = parts.filter((part) => part.name === 'Attribute');
-    const extra = ownAttrs(attributeNodes, ELEMENT_ATTRS[kind]);
-    const attrs = readAttrs(attributeNodes, [...ELEMENT_ATTRS[kind], ...extra], `${kind} "${id}"`);
+    const allowed = withLegacy(ELEMENT_ATTRS[kind]);
+    const extra = ownAttrs(attributeNodes, allowed);
+    const attrs = readAttrs(attributeNodes, [...allowed, ...extra], `${kind} "${id}"`);
     const items = readItems(shape);
     // A component's rows ride in its own bag, beside its fields, as the list they are.
     const data: Record<string, unknown> = {
       ...readData(attrs, extra),
       ...(items.length > 0 ? { [ITEMS_FIELD]: items.map(itemRecord) } : {}),
     };
-    const style = readStyle(attrs);
+    const style = readStyle(attrs, !OPEN_KINDS.has(kind));
     // One spelling for a box a component draws: the shape words draw shapes, and `custom` names a component.
     const custom = shape.name === 'CustomElement';
     const component = nameAttr(attrs, KIND_ATTR);
@@ -477,7 +515,7 @@ export const read = (text: string): Reading => {
           ...optional('parent', nameAttr(attrs, 'parent')),
           ...optional('width', numberAttr(attrs, 'width')),
           ...optional('height', numberAttr(attrs, 'height')),
-          ...optional('type', nameAttr(attrs, KIND_ATTR)),
+          ...optional('component', nameAttr(attrs, KIND_ATTR)),
           ...(Object.keys(data).length ? { data } : {}),
           ...style,
         };
@@ -751,8 +789,9 @@ export const read = (text: string): Reading => {
     const id = readId(idNode);
     const label = statement.getChild('Label');
     const attributeNodes = attributesOf(statement);
-    const own = ownAttrs(attributeNodes, NODE_ATTRS);
-    const attrs = readAttrs(attributeNodes, [...NODE_ATTRS, ...own], `node "${id}"`);
+    const allowed = withLegacy(NODE_ATTRS);
+    const own = ownAttrs(attributeNodes, allowed);
+    const attrs = readAttrs(attributeNodes, [...allowed, ...own], `node "${id}"`);
     const pins = childrenOf(statement).filter((child) => child.name === 'Pin');
     if (pins.length > 1) {
       report(pins[1], `node "${id}" has more than one pin.`);
@@ -769,7 +808,7 @@ export const read = (text: string): Reading => {
     const relations = readRelations(statement);
     diagram.hinted ||= pin !== undefined || relations.length > 0;
     const data = readData(attrs, own);
-    gridAttrs(attrs, [KIND_ATTR, 'border', 'width', 'height']);
+    gridAttrs(attrs, [KIND_ATTR, LEGACY_BORDER.name, 'width', 'height']);
     const items = readItems(statement);
     const body = statement.getChild('ItemBody');
     if (body) {
@@ -790,7 +829,7 @@ export const read = (text: string): Reading => {
       relations,
       range: rangeOf(statement),
       ...(label ? { labelled: true } : {}),
-      ...optional('type', nameAttr(attrs, KIND_ATTR)),
+      ...optional('component', nameAttr(attrs, KIND_ATTR)),
       ...(Object.keys(data).length ? { data } : {}),
       ...(items.length > 0 ? { items } : {}),
       ...optional('group', group),
@@ -798,10 +837,9 @@ export const read = (text: string): Reading => {
       ...optional('ref', stringAttr(attrs, 'ref')),
       ...optional('role', enumAttr(attrs, 'role', Semantic.ROLES)),
       ...optional('shape', enumAttr(attrs, 'shape', Shape.BoxKind.literals)),
-      ...optional('color', enumAttr(attrs, 'color', Shape.Color.literals)),
+      ...optional('color', colorAttr(attrs, 'color')),
       ...optional('fill', enumAttr(attrs, 'fill', Shape.Fill.literals)),
-      ...optional('stroke', enumAttr(attrs, 'stroke', Shape.Stroke.literals)),
-      ...optional('border', booleanAttr(attrs, 'border')),
+      ...optional('stroke', strokeAttr(attrs)),
       ...optional('width', numberAttr(attrs, 'width')),
       ...optional('height', numberAttr(attrs, 'height')),
     });
@@ -916,8 +954,8 @@ export const read = (text: string): Reading => {
       ...optional('head', op === '--' ? 'none' : enumAttr(attrs, 'head', Shape.ArrowHead.literals)),
       ...optional('tail', enumAttr(attrs, 'tail', Shape.ArrowTail.literals)),
       ...optional('path', enumAttr(attrs, 'path', Shape.Path.literals)),
-      ...optional('stroke', enumAttr(attrs, 'stroke', Shape.Stroke.literals)),
-      ...optional('color', enumAttr(attrs, 'color', Shape.Color.literals)),
+      ...optional('stroke', enumAttr(attrs, 'stroke', STROKES)),
+      ...optional('color', colorAttr(attrs, 'color')),
     };
     gridAttrs(attrs, ['path']);
     const fan = sources.length > 1 || targets.length > 1;
@@ -1000,7 +1038,7 @@ export const read = (text: string): Reading => {
         side: ends.length > 1 ? 'over' : side === 'left' ? 'left' : 'right',
         text: unquote(slice(label)),
         range: rangeOf(statement),
-        ...optional('color', enumAttr(attrs, 'color', Shape.Color.literals)),
+        ...optional('color', colorAttr(attrs, 'color')),
       },
     });
   };
@@ -1073,7 +1111,7 @@ export const read = (text: string): Reading => {
     } else {
       declared = true;
       const label = statement.getChild('Label');
-      const attrs = readAttrs(attributesOf(statement), GROUP_ATTRS, `group "${id}"`);
+      const attrs = readAttrs(attributesOf(statement), withLegacy(GROUP_ATTRS), `group "${id}"`);
       const relations = readRelations(statement);
       const gap = numberAttr(attrs, 'gap');
       const width = numberAttr(attrs, 'max-width');
@@ -1087,7 +1125,7 @@ export const read = (text: string): Reading => {
       } else {
         nested.push({ node: idNode, id, outer });
       }
-      gridAttrs(attrs, [...GRID_RULE_ATTRS, ...GROUP_FRAME_ATTRS]);
+      gridAttrs(attrs, [...GRID_RULE_ATTRS, ...GROUP_FRAME_ATTRS, LEGACY_BORDER.name]);
       enlist(outer, id);
       diagram.groups.push({
         id,
@@ -1098,12 +1136,11 @@ export const read = (text: string): Reading => {
         ...optional('parent', outer),
         ...readRule(attrs),
         ...optional('fill', enumAttr(attrs, 'fill', Shape.Fill.literals)),
-        ...optional('stroke', enumAttr(attrs, 'stroke', Shape.Stroke.literals)),
-        ...optional('border', booleanAttr(attrs, 'border')),
+        ...optional('stroke', strokeAttr(attrs)),
         ...optional('gap', gap),
         ...optional('maxWidth', maxWidth),
         ...optional('compact', compact),
-        ...optional('color', enumAttr(attrs, 'color', Shape.Color.literals)),
+        ...optional('color', colorAttr(attrs, 'color')),
       });
       ranges.set(id, rangeOf(statement));
     }

@@ -12,7 +12,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { LINE_STYLES, StyleHue } from '@dxos/scene';
+import { DASHES, StyleHue, ThemeSlots } from '@dxos/scene';
 
 /**
  * How a hue fills a node. `hue-clear`, `hue-strong`, `hue-role` and `hue-light` are the canvas's own tones (outline,
@@ -60,8 +60,8 @@ export const Opacity = Schema.Literals(['opaque', 'translucent']);
 export type Opacity = Schema.Schema.Type<typeof Opacity>;
 
 /**
- * One way a style set draws a node: a node's `style.tone` (0 to 3) picks the set's variant at that index (the last one
- * past the end), so a drawing keeps its choices whichever set draws it.
+ * One way a style set draws a node: the tone of a node's colour (0 to 3) picks the set's variant at that index (the
+ * last one past the end), so a drawing keeps its choices whichever set draws it.
  */
 export const StyleVariant = Schema.Struct({
   id: Schema.String,
@@ -69,8 +69,8 @@ export const StyleVariant = Schema.Struct({
   surface: NodeSurface,
   /** Border width in scene px. */
   borderWidth: Schema.Literals([1, 2, 4]),
-  /** The border of a node that sets no line style of its own. */
-  borderStyle: Schema.Literals(LINE_STYLES),
+  /** The border of a node that sets no stroke of its own. */
+  borderStyle: Schema.Literals(DASHES),
   /** Corners of a node, and of one whose style asks to be rounded. */
   radius: Radius,
   roundedRadius: Radius,
@@ -136,8 +136,9 @@ export const ThemeMode = Schema.Literals(['light', 'dark']);
 export type ThemeMode = Schema.Schema.Type<typeof ThemeMode>;
 
 /**
- * A canvas theme: a style set on a background, by id. With a `mode` the canvas takes that mode whatever the app's;
- * without, it follows the app.
+ * A canvas theme: a style set on a background, by id, and the slots a drawing's colours and fonts name. With a `mode`
+ * the canvas takes that mode whatever the app's; without, it follows the app. A slot it leaves out is the default
+ * theme's.
  */
 export const Theme = Schema.Struct({
   id: Schema.String,
@@ -145,6 +146,7 @@ export const Theme = Schema.Struct({
   styleSet: Schema.String,
   background: Schema.String,
   mode: Schema.optional(ThemeMode),
+  ...ThemeSlots.fields,
 });
 export interface Theme extends Schema.Schema.Type<typeof Theme> {}
 

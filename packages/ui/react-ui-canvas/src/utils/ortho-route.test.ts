@@ -4,10 +4,10 @@
 
 import { describe, test } from 'vitest';
 
-import { type Bounds, type Point, type Side } from '@dxos/scene';
+import { type Bounds, type Point, type Side, SIDES } from '@dxos/scene';
 
 import { orthoRoute } from './ortho-route.ts';
-import { SIDES, sideNormal } from './ports.ts';
+import { sideNormal } from './ports.ts';
 import { type RouteEnd } from './route.ts';
 
 const STUB = 24;
@@ -41,18 +41,18 @@ const crosses = (left: Point, right: Point, { x, y, width, height }: Bounds): bo
 
 describe('orthoRoute', () => {
   test('ports that face each other on one line join straight', ({ expect }) => {
-    expect(route(port(box(0, 0), 'e'), port(box(200, 0), 'w'))).toEqual([
+    expect(route(port(box(0, 0), 'right'), port(box(200, 0), 'left'))).toEqual([
       { x: 100, y: 50 },
       { x: 200, y: 50 },
     ]);
-    expect(route(port(box(0, 0), 's'), port(box(0, 200), 'n'))).toEqual([
+    expect(route(port(box(0, 0), 'bottom'), port(box(0, 200), 'top'))).toEqual([
       { x: 50, y: 100 },
       { x: 50, y: 200 },
     ]);
   });
 
   test('ports that face each other off one line step halfway between the shapes', ({ expect }) => {
-    expect(route(port(box(0, 0), 'e'), port(box(200, 100), 'w'))).toEqual([
+    expect(route(port(box(0, 0), 'right'), port(box(200, 100), 'left'))).toEqual([
       { x: 100, y: 50 },
       { x: 150, y: 50 },
       { x: 150, y: 150 },
@@ -61,7 +61,7 @@ describe('orthoRoute', () => {
   });
 
   test('sides that meet at a corner take one bend', ({ expect }) => {
-    expect(route(port(box(0, 0), 'e'), port(box(200, 200), 'n'))).toEqual([
+    expect(route(port(box(0, 0), 'right'), port(box(200, 200), 'top'))).toEqual([
       { x: 100, y: 50 },
       { x: 250, y: 50 },
       { x: 250, y: 200 },
@@ -69,8 +69,8 @@ describe('orthoRoute', () => {
   });
 
   test('a port on the far side of its shape is reached round the shape, never through it', ({ expect }) => {
-    // The shape below and to the left, joined east side to east side: out past the target, up, and back in to it.
-    expect(route(port(box(0, 300), 'e'), port(box(200, 0), 'e'))).toEqual([
+    // The shape below and to the left, joined right side to right side: out past the target, up, and back in to it.
+    expect(route(port(box(0, 300), 'right'), port(box(200, 0), 'right'))).toEqual([
       { x: 100, y: 350 },
       { x: 324, y: 350 },
       { x: 324, y: 50 },
@@ -79,7 +79,7 @@ describe('orthoRoute', () => {
   });
 
   test('two ports on the same side of shapes in a row make a U a stub out', ({ expect }) => {
-    expect(route(port(box(0, 0), 'n'), port(box(200, 0), 'n'))).toEqual([
+    expect(route(port(box(0, 0), 'top'), port(box(200, 0), 'top'))).toEqual([
       { x: 50, y: 0 },
       { x: 50, y: -24 },
       { x: 250, y: -24 },
@@ -88,7 +88,7 @@ describe('orthoRoute', () => {
   });
 
   test('ports that face away from each other take four bends, crossing halfway between the shapes', ({ expect }) => {
-    expect(route(port(box(300, 0), 'e'), port(box(0, 300), 'w'))).toEqual([
+    expect(route(port(box(300, 0), 'right'), port(box(0, 300), 'left'))).toEqual([
       { x: 400, y: 50 },
       { x: 424, y: 50 },
       { x: 424, y: 200 },
@@ -97,14 +97,14 @@ describe('orthoRoute', () => {
       { x: 0, y: 350 },
     ]);
     // In one row there is no gap to cross in, so the route goes round over or under both.
-    const around = route(port(box(300, 0), 'e'), port(box(0, 0), 'w'));
+    const around = route(port(box(300, 0), 'right'), port(box(0, 0), 'left'));
     expect(bends(around)).toBe(4);
     expect(around[1]).toEqual({ x: 424, y: 50 });
     expect(around[4]).toEqual({ x: -24, y: 50 });
   });
 
   test('shapes closer than two stubs share the gap between them', ({ expect }) => {
-    expect(route(port(box(0, 0), 'e'), port(box(110, 30), 'w'))).toEqual([
+    expect(route(port(box(0, 0), 'right'), port(box(110, 30), 'left'))).toEqual([
       { x: 100, y: 50 },
       { x: 105, y: 50 },
       { x: 105, y: 80 },
@@ -113,7 +113,9 @@ describe('orthoRoute', () => {
   });
 
   test('ends with no frame still leave and arrive along their sides', ({ expect }) => {
-    expect(orthoRoute({ point: { x: 0, y: 0 }, side: 'e' }, { point: { x: 100, y: 60 }, side: 'e' }, STUB)).toEqual([
+    expect(
+      orthoRoute({ point: { x: 0, y: 0 }, side: 'right' }, { point: { x: 100, y: 60 }, side: 'right' }, STUB),
+    ).toEqual([
       { x: 0, y: 0 },
       { x: 124, y: 0 },
       { x: 124, y: 60 },
@@ -122,7 +124,7 @@ describe('orthoRoute', () => {
   });
 
   test('shapes that overlap have nothing between them to route through', ({ expect }) => {
-    expect(orthoRoute(port(box(0, 0), 'e'), port(box(50, 50), 'w'), STUB)).toBeUndefined();
+    expect(orthoRoute(port(box(0, 0), 'right'), port(box(50, 50), 'left'), STUB)).toBeUndefined();
   });
 
   test('whichever sides and wherever the shapes stand, the route leaves and arrives square and crosses neither', ({

@@ -12,12 +12,13 @@ import {
   type Layer,
   type LayoutIntent,
   type LinkEnds,
-  type LinkType,
+  type LinkPath,
   type Node,
   type Point,
   type Scene,
   type Size,
   endpointNode,
+  linkMarkers,
 } from '@dxos/scene';
 
 import { type NodeRegistry } from '../model/index.ts';
@@ -25,16 +26,16 @@ import { type Arrangement, type ForceOptions, type LatticeSpec, initialKeys, nom
 import { DYNAMIC_ARRANGE } from './dynamic.ts';
 import { type GraphModel, type GraphNode, type SlotsCache, graphCenters } from './graph.ts';
 
-/** The shape a graph node draws as, beyond its place: the 2D viewport's node type for it, and that type's own fields. */
+/** The shape a graph node draws as, beyond its place: the 2D viewport's node kind for it, and that kind's own fields. */
 export type GraphShape = {
-  /** A node type the viewport's registry draws (a host's card, say); a titled `rect` when unset. */
-  type?: string;
+  /** A node kind the viewport's registry draws (a host's card, say); a titled `rect` when unset. */
+  kind?: string;
   /** Its size, when it differs from the slot's. */
   size?: Size;
   layer?: string;
   locked?: boolean;
   label?: string;
-  /** The type's own fields (a diagram frame's `element`, say). */
+  /** The kind's own fields (a diagram frame's `element`, say). */
   fields?: Record<string, unknown>;
 };
 
@@ -53,7 +54,7 @@ export type GraphLayoutOptions = {
   layers?: readonly Layer[];
   shape?: (node: GraphNode) => GraphShape;
   /** How edges draw: smart links (routed through a lattice's gutters, or round the shapes) by default. */
-  link?: { type?: Exclude<LinkType, 'spline'>; ends?: LinkEnds; layer?: string };
+  link?: { path?: Exclude<LinkPath, 'spline'>; ends?: LinkEnds; layer?: string };
   /** The node types, which the routed arrangement reads to route edges as they draw. */
   nodes?: NodeRegistry;
 };
@@ -68,8 +69,8 @@ const isLink = (element: Pick<Scene.Element2D, 'source' | 'target'>): boolean =>
 
 /**
  * `graph` as a dynamic 2D layout: every node a shape at its arranged slot (or at `positions`, pinned there), every edge
- * between two nodes a link, with the lattice and arrangement the editor's modes read. A host's node type keeps its
- * fields under `props.canvas`, where the 2D viewport reads a node's own fields (R-18).
+ * between two nodes a link, with the lattice and arrangement the editor's modes read. A host's node kind keeps its
+ * fields on its element, where the 2D viewport reads a node's own fields.
  */
 export const graphLayout = (
   graph: GraphModel,
@@ -83,7 +84,7 @@ export const graphLayout = (
   const shapeOf = (node: GraphNode): GraphShape => options.shape?.(node) ?? {};
   const createNode = (node: GraphNode, props: { id: string; z: string; center: Point; size: Size }): Node => {
     const shape = shapeOf(node);
-    return { type: shape.type ?? node.type ?? 'rect', ...props, size: shape.size ?? props.size };
+    return { kind: shape.kind ?? node.kind ?? 'rect', ...props, size: shape.size ?? props.size };
   };
   const centers = graphCenters(
     graph,
@@ -102,27 +103,29 @@ export const graphLayout = (
   const edges = graph.edges.filter(({ from, to }) => known.has(from) && known.has(to));
   // Links first, so within a layer they paint under the shapes they join.
   const keys = initialKeys(edges.length + graph.nodes.length);
-  const elements: Record<string, Scene.Element2D> = {};
+  const elements: Record<string, Scene.ElementRecord2D> = {};
   edges.forEach((edge, index) => {
-    const ends = edge.ends ?? link?.ends;
     elements[edge.id] = {
       id: edge.id,
-      type: 'link',
+      kind: 'link',
       z: keys[index],
       source: { node: edge.from },
       target: { node: edge.to },
-      ...(edge.text !== undefined ? { label: edge.text } : {}),
+      ...(edge.label !== undefined ? { label: edge.label } : {}),
       ...(link?.layer !== undefined ? { layer: link.layer } : {}),
-      ...(edge.style ? { overrides: edge.style } : {}),
-      props: { canvas: { type: link?.type ?? 'smart', ...(ends ? { ends } : {}) } },
+      ...(edge.overrides ? { overrides: edge.overrides } : {}),
+      path: link?.path ?? 'smart',
+      ...linkMarkers(edge.ends ?? link?.ends ?? {}),
     };
   });
   graph.nodes.forEach((node, index) => {
-    const { type, size: shapeSize, layer, locked, label, fields } = shapeOf(node);
-    const title = label ?? (type === undefined ? (node.label ?? node.id) : undefined);
+    const { kind, size: shapeSize, layer, locked, label, fields } = shapeOf(node);
+    const title = label ?? (kind === undefined ? (node.label ?? node.id) : undefined);
     elements[node.id] = {
+      // A host kind's own fields first, so none of them stands in for a field the layout sets.
+      ...(kind !== undefined ? fields : {}),
       id: node.id,
-      type: type ?? node.type ?? 'rect',
+      kind: kind ?? node.kind ?? 'rect',
       z: keys[edges.length + index],
       center: centers.get(node.id) ?? { x: 0, y: 0 },
       size: shapeSize ?? size,
@@ -130,8 +133,6 @@ export const graphLayout = (
       ...(layer !== undefined ? { layer } : {}),
       ...(locked ? { locked } : {}),
       ...(positions[node.id] ? { pinned: true } : {}),
-      // A host type is drawn only from its canvas fields; a titled rect is drawn from the element's own.
-      ...(type !== undefined ? { props: { canvas: { ...fields } } } : {}),
     };
   });
 

@@ -3,7 +3,7 @@
 //
 
 //
-// The `card` type as a composite object, written in the scene DSL rather than painted by a React view: a frame, a
+// The `card` kind as a composite object, written in the scene DSL rather than painted by a React view: a frame, a
 // glyph, a title, a body, a hairline and a footer, each a part of its own. Every part is selected, moved, restyled
 // and edited in place like any other shape, and each says how it follows the frame (`constrain`), so a card resized
 // taller grows its body rather than scaling like a picture.
@@ -57,9 +57,9 @@ const round = (value: number) => Math.round(value * 100) / 100;
  * `card` is now a kind. The id it is stored under is the tool's either way (`template:card`).
  */
 export const CARD_TEMPLATE = `composite cardObject size=${CARD_SIZE.width}x${CARD_SIZE.height} name="Card" {
-  element frame rect @ 0,0 size=${CARD_SIZE.width}x${CARD_SIZE.height} constrain=stretch rounded=true
+  element frame rect @ 0,0 size=${CARD_SIZE.width}x${CARD_SIZE.height} constrain=stretch corners=all
   element icon icon @ ${round(LEFT + GLYPH / 2)},${round(TOP + GLYPH / 2)} size=${GLYPH}x${GLYPH} fontSize=${FONT.icon} constrain=min bind=icon optional=true
-  element title note "" @ ${round((LEFT + GLYPH + GAP + RIGHT) / 2)},${round(TOP + GLYPH / 2)} size=${round(WIDTH - GLYPH - GAP)}x${TITLE} fontSize=${FONT.title} alignVertical=middle constrain=stretch,min bind=label padding=0,0 grow=icon
+  element title note "" @ ${round((LEFT + GLYPH + GAP + RIGHT) / 2)},${round(TOP + GLYPH / 2)} size=${round(WIDTH - GLYPH - GAP)}x${TITLE} fontSize=${FONT.title} valign=middle constrain=stretch,min bind=label padding=0,0 grow=icon
   element body note "" @ 0,${round((BODY_TOP + BODY_BOTTOM) / 2)} size=${WIDTH}x${round(BODY_BOTTOM - BODY_TOP)} fontSize=${FONT.body} constrain=stretch bind=body padding=0,0 optional=true grow="footer rule"
   element rule polyline @ 0,${round(BOTTOM - FOOTER - CELL / 4)} size=${WIDTH}x${RULE} constrain=stretch,max points="0,0.5 1,0.5" follows=footer
   element footer note "" @ 0,${round(BOTTOM - FOOTER / 2)} size=${WIDTH}x${FOOTER} fontSize=${FONT.footer} constrain=stretch,max bind=footer padding=0,0 optional=true

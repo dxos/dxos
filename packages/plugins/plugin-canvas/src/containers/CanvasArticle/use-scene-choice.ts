@@ -13,6 +13,7 @@ import { Scene } from '@dxos/scene';
 import { addScene, deleteScene, openScene } from '#model';
 import { type Canvas } from '#types';
 
+import { useCanvasLoaded, useOpenScene } from '../CanvasStage/index.ts';
 import { canvasViewAspect } from './view-state.ts';
 
 /**
@@ -24,8 +25,10 @@ export const useSceneChoice = (canvas: Canvas.Canvas): { key: string | undefined
   const { scene: key } = useViewState(canvasViewAspect, contextId);
   const { update } = useViewStateActions(canvasViewAspect, contextId);
   const [snapshot] = useObject(canvas);
+  const open = useOpenScene(canvas, key);
+  // The choice lists every scene that has loaded, so it is made again as they do.
+  const loaded = useCanvasLoaded(canvas);
   const choice = useMemo<SceneChoice | undefined>(() => {
-    const open = openScene(canvas, key);
     if (!open) {
       return undefined;
     }
@@ -55,6 +58,6 @@ export const useSceneChoice = (canvas: Canvas.Canvas): { key: string | undefined
         }
       },
     };
-  }, [canvas, snapshot, key, update]);
+  }, [canvas, snapshot, open, loaded, update]);
   return { key, choice };
 };

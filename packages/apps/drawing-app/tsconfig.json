@@ -57,6 +57,9 @@
       "path": "../../common/node-std"
     },
     {
+      "path": "../../common/scene"
+    },
+    {
       "path": "../../common/test-utils"
     },
     {

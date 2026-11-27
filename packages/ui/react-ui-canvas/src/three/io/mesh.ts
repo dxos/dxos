@@ -71,7 +71,7 @@ const idOf = (file: File): string =>
 /** A `mesh` object of the triangles, unit-sized and centred, keyed by its content. */
 export const meshObject = (id: string, triangles: Triangles): Scene.Object3D => {
   const unit = normalize(triangles);
-  return { id, type: 'mesh', props: { mesh: { key: contentKey(unit), ...unit } } };
+  return { id, kind: 'mesh', props: { mesh: { key: contentKey(unit), ...unit } } };
 };
 
 /**

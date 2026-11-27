@@ -193,7 +193,7 @@ export const ToolsPanel = ({
   // A type drawn point by point or in a stroke has no shape to drop: its tool is picked, not dragged.
   const dragData = useCallback(
     (tool: Tool): Record<string, unknown> | undefined =>
-      tool.kind === 'node' && !nodes[tool.type]?.createFromPoints ? nodeDragData(tool.type) : undefined,
+      tool.kind === 'node' && !nodes[tool.node]?.createFromPoints ? nodeDragData(tool.node) : undefined,
     [nodes],
   );
   // Read-only leaves only select and pan, so the toggle sits with them.
@@ -235,8 +235,8 @@ export const ReadonlyToggle = ({ readonly, onReadonlyChange }: ReadonlyTogglePro
   />
 );
 
-const paletteTestId = (entry: ToolEntry): string =>
-  `palette-${entry.key ?? ('type' in entry.tool ? entry.tool.type : entry.tool.kind)}`;
+const paletteTestId = ({ key, tool }: ToolEntry): string =>
+  `palette-${key ?? (tool.kind === 'node' ? tool.node : tool.kind === 'link' ? tool.path : tool.kind)}`;
 
 /** How long the pointer rests on a folded group before its tools open. */
 const HOVER_OPEN_MS = 500;

@@ -21,7 +21,7 @@ import { JsonComponent, JsonTransformComponent } from './Json.tsx';
 
 export const JsonShape = ComputeShape.mapFields(
   Struct.assign({
-    type: Schema.Literal('json'),
+    kind: Schema.Literal('json'),
   }),
 );
 
@@ -29,7 +29,7 @@ export type JsonShape = Schema.Schema.Type<typeof JsonShape>;
 
 export const JsonTransformShape = ComputeShape.mapFields(
   Struct.assign({
-    type: Schema.Literal('json-transform'),
+    kind: Schema.Literal('json-transform'),
   }),
 );
 
@@ -42,7 +42,7 @@ export type JsonTransformShape = Schema.Schema.Type<typeof JsonTransformShape>;
 export type CreateJsonProps = CreateShapeProps<JsonShape>;
 
 export const createJson = (props: CreateJsonProps) =>
-  createShape<JsonShape>({ type: 'json', size: { width: 4 * MAJOR_GRID, height: 4 * MAJOR_GRID }, ...props });
+  createShape<JsonShape>({ kind: 'json', size: { width: 4 * MAJOR_GRID, height: 4 * MAJOR_GRID }, ...props });
 
 export const jsonNodeDef = defineComputeNode<JsonShape>({
   type: 'json',
@@ -64,7 +64,7 @@ export type CreateJsonTransformProps = CreateShapeProps<JsonTransformShape>;
 
 export const createJsonTransform = (props: CreateJsonTransformProps) =>
   createShape<JsonTransformShape>({
-    type: 'json-transform',
+    kind: 'json-transform',
     size: { width: 2 * MAJOR_GRID, height: getHeight(JsonTransformInput) },
     ...props,
   });

@@ -16,7 +16,7 @@ import { SurfaceComponent } from './Surface.tsx';
 
 export const SurfaceShape = ComputeShape.mapFields(
   Struct.assign({
-    type: Schema.Literal('surface'),
+    kind: Schema.Literal('surface'),
   }),
 );
 
@@ -26,7 +26,7 @@ export type CreateSurfaceProps = CreateShapeProps<SurfaceShape>;
 
 export const createSurface = (props: CreateSurfaceProps) =>
   createShape<SurfaceShape>({
-    type: 'surface',
+    kind: 'surface',
     size: { width: 6 * MAJOR_GRID, height: 6 * MAJOR_GRID },
     ...props,
   });

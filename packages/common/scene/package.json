@@ -31,7 +31,8 @@
     "@dxos/ui-types": "workspace:*"
   },
   "devDependencies": {
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "tsx": "catalog:"
   },
   "peerDependencies": {
     "effect": "catalog:"

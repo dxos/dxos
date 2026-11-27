@@ -13,6 +13,7 @@ import {
   drawnWrites,
   enclose,
   gridPitch,
+  modelIntentOf,
   useCanvasServices,
 } from '@dxos/react-ui-canvas';
 import { DEFAULT_GRID, MAJOR_GRID, findLayout } from '@dxos/scene';
@@ -79,7 +80,7 @@ const COMMANDS_2D: readonly ExtraCommandDef[] = [
         if (write.kind === 'layout') {
           onIntent(write.layout, write.intent);
         } else if (model !== undefined) {
-          onModelIntent({ kind: 'define', model, object: write.object });
+          onModelIntent(modelIntentOf(write, model));
         }
       }
       select([id]);

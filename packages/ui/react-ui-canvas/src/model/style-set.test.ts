@@ -5,6 +5,8 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
+import { resolveColor, resolveFont } from '@dxos/scene';
+
 import {
   Background,
   CLASSIC_STYLE_SET,
@@ -101,5 +103,37 @@ describe('themes', () => {
     expect(resolveBackground(registry, 'plain').name).toBe('Bare');
     // A name inherited from `Object.prototype` is no theme.
     expect(resolveTheme(registry, 'toString')).toBe(FLAT_THEME);
+  });
+
+  test("a theme's slots name the colours and faces a drawing draws with; a built-in defines none", ({ expect }) => {
+    const brand: Theme = {
+      id: 'brand',
+      name: 'Brand',
+      styleSet: 'flat',
+      background: 'plain',
+      colors: { accent: 'teal/1', ink: '#1e90ff' },
+      fonts: { mono: 'Berkeley Mono, monospace' },
+    };
+    expect(Schema.is(Theme)(brand)).toBe(true);
+    expect(Schema.is(Theme)({ ...brand, colors: { accent: 'Not A Colour' } })).toBe(false);
+    const look = resolveLook(createThemeRegistry({ themes: { brand } }), { theme: 'brand' });
+    expect(resolveColor('accent', look.theme)).toEqual({ kind: 'name', name: 'teal', tone: 1 });
+    expect(resolveColor('ink', look.theme)).toEqual({ kind: 'css', css: '#1e90ff' });
+    expect(resolveFont('mono', look.theme)).toBe('Berkeley Mono, monospace');
+    // A slot the theme leaves out is the default theme's.
+    expect(resolveColor('grey', look.theme)).toEqual({ kind: 'name', name: 'neutral' });
+    for (const theme of Object.values(DEFAULT_THEMES)) {
+      expect([theme.colors, theme.fonts]).toEqual([undefined, undefined]);
+    }
+  });
+
+  test("a variant's border is a dash, never no line at all", ({ expect }) => {
+    const [variant] = CLASSIC_STYLE_SET.variants;
+    expect(
+      Schema.is(StyleSet)({ ...CLASSIC_STYLE_SET, variants: [{ ...variant, borderStyle: 'dotted' }, variant] }),
+    ).toBe(true);
+    expect(
+      Schema.is(StyleSet)({ ...CLASSIC_STYLE_SET, variants: [{ ...variant, borderStyle: 'none' }, variant] }),
+    ).toBe(false);
   });
 });

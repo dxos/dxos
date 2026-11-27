@@ -4,15 +4,16 @@
 
 import { describe, test } from 'vitest';
 
-import { type SplineLink } from '@dxos/scene';
+import { type Link } from '@dxos/scene';
 
 import { cloneShape, createLink, createNode, flipLink } from './shapes.ts';
 
 describe('shapes', () => {
   test('a new spline has no control points until one is added', ({ expect }) => {
-    const link = createLink({ type: 'spline', id: 's', z: 'a0', source: { node: 'a' }, target: { node: 'b' } });
+    const link = createLink({ path: 'spline', id: 's', z: 'a0', source: { node: 'a' }, target: { node: 'b' } });
     expect(link).toEqual({
-      type: 'spline',
+      kind: 'link',
+      path: 'spline',
       id: 's',
       z: 'a0',
       source: { node: 'a' },
@@ -23,41 +24,44 @@ describe('shapes', () => {
 
   test('a cloned shape keeps the look and size but not the text, identity or place', ({ expect }) => {
     const source = {
-      ...createNode({ type: 'rect', id: 'a', z: 'a0', center: { x: 0, y: 0 }, size: { width: 192, height: 96 } }),
+      ...createNode({ kind: 'rect', id: 'a', z: 'a0', center: { x: 0, y: 0 }, size: { width: 192, height: 96 } }),
       label: 'Source',
       portsPerSide: 2,
-      style: { hue: 'teal', rounded: true },
+      style: 'warn',
+      overrides: { color: 'teal', corners: 'all' as const },
     };
-    const fresh = createNode({ type: 'rect', id: 'b', z: 'a1', center: { x: 400, y: 0 }, size: source.size });
+    const fresh = createNode({ kind: 'rect', id: 'b', z: 'a1', center: { x: 400, y: 0 }, size: source.size });
     expect(cloneShape(source, fresh, [{ field: 'label' }])).toEqual({
-      type: 'rect',
+      kind: 'rect',
       id: 'b',
       z: 'a1',
       center: { x: 400, y: 0 },
       size: { width: 192, height: 96 },
       portsPerSide: 2,
-      style: { hue: 'teal', rounded: true },
+      style: 'warn',
+      overrides: { color: 'teal', corners: 'all' },
     });
   });
 
-  test('a cloned portal opens onto its own scene, and a note gets its type text', ({ expect }) => {
-    const portal = createNode({ type: 'view', id: 'p', z: 'a0', center: { x: 0, y: 0 }, scene: 'scene:p' });
-    const copy = cloneShape(portal, createNode({ type: 'view', id: 'q', z: 'a1', center: { x: 0, y: 0 } }));
+  test('a cloned portal opens onto its own scene, and a note gets its kind text', ({ expect }) => {
+    const portal = createNode({ kind: 'view', id: 'p', z: 'a0', center: { x: 0, y: 0 }, scene: 'scene:p' });
+    const copy = cloneShape(portal, createNode({ kind: 'view', id: 'q', z: 'a1', center: { x: 0, y: 0 } }));
     expect(copy).toMatchObject({ id: 'q', scene: 'q' });
 
-    const named = { ...createNode({ type: 'note', id: 'c', z: 'a0', center: { x: 0, y: 0 } }), text: 'Mine' };
-    const fresh = createNode({ type: 'note', id: 'd', z: 'a1', center: { x: 0, y: 0 } });
-    expect(cloneShape(named, fresh, [{ field: 'text', multiline: true }])).toMatchObject({ id: 'd', text: 'Note' });
+    const named = { ...createNode({ kind: 'note', id: 'c', z: 'a0', center: { x: 0, y: 0 } }), label: 'Mine' };
+    const fresh = createNode({ kind: 'note', id: 'd', z: 'a1', center: { x: 0, y: 0 } });
+    expect(cloneShape(named, fresh, [{ field: 'label', multiline: true }])).toMatchObject({ id: 'd', label: 'Note' });
   });
 
   test('flipping a link swaps its ends, keeps its markers and reverses a spline', ({ expect }) => {
-    const link: SplineLink = {
-      type: 'spline',
+    const link: Link = {
+      kind: 'link',
+      path: 'spline',
       id: 'l',
       z: 'a',
       source: { node: 'a', port: 'e1' },
       target: { point: { x: 100, y: 0 } },
-      ends: { end: 'arrow' },
+      head: 'arrow',
       points: [
         { x: 10, y: 0 },
         { x: 20, y: 5 },

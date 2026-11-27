@@ -16,7 +16,7 @@ import { SwitchComponent } from './Switch.tsx';
 
 export const SwitchShape = ComputeShape.mapFields(
   Struct.assign({
-    type: Schema.Literal('switch'),
+    kind: Schema.Literal('switch'),
   }),
 );
 
@@ -25,7 +25,7 @@ export type SwitchShape = Schema.Schema.Type<typeof SwitchShape>;
 export type CreateSwitchProps = CreateShapeProps<SwitchShape>;
 
 export const createSwitch = (props: CreateSwitchProps) =>
-  createShape<SwitchShape>({ type: 'switch', size: { width: MAJOR_GRID, height: MAJOR_GRID }, ...props });
+  createShape<SwitchShape>({ kind: 'switch', size: { width: MAJOR_GRID, height: MAJOR_GRID }, ...props });
 
 export const switchNodeDef = defineComputeNode<SwitchShape>({
   type: 'switch',

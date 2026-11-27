@@ -49,7 +49,7 @@ const line = (
   points: Point[],
   params: PolylineNode['params'],
 ): PolylineNode => ({
-  type: 'polyline',
+  kind: 'polyline',
   id,
   z: `a-${id}`,
   center: { x, y },
@@ -74,25 +74,26 @@ const BOARD: RenderList2D = {
 
 /** An empty board for Draw shape, with what to try written on it. */
 const HINT: NoteNode = {
-  type: 'note',
+  kind: 'note',
   id: 'hint',
   z: 'a-hint',
   center: { x: 0, y: -264 },
   size: { width: 480, height: 180 },
-  text: 'Press W, then draw a box, a ring, a triangle or a diamond in one stroke.\n\nPause at each corner of anything else: it lands as straight sides and even curves.',
+  label:
+    'Press W, then draw a box, a ring, a triangle or a diamond in one stroke.\n\nPause at each corner of anything else: it lands as straight sides and even curves.',
 };
 
 const SHAPES: RenderList2D = { id: 'board', name: 'Board', links: {}, nodes: { [HINT.id]: HINT } };
 
 const shape = (
   id: string,
-  type: 'rect' | 'ellipse',
+  kind: 'rect' | 'ellipse',
   z: string,
   [x, y]: [number, number],
   [width, height]: [number, number],
   label?: string,
 ): Node & { label?: string } => ({
-  type,
+  kind,
   id,
   z,
   center: { x, y },

@@ -11,18 +11,18 @@ import { layout2D, model2D, scene2D } from './testing.ts';
 const main = layout2D(
   'main',
   [
-    { id: 'a', type: 'rect', center: { x: 0, y: 0 }, size: { width: 128, height: 128 } },
+    { id: 'a', kind: 'rect', center: { x: 0, y: 0 }, size: { width: 128, height: 128 } },
     { id: 'b', object: 'detail', label: 'B', center: { x: 256, y: 0 }, size: { width: 256, height: 256 } },
-    { id: 'ab', type: 'link', source: { node: 'a' }, target: { node: 'b' } },
+    { id: 'ab', kind: 'link', source: { node: 'a' }, target: { node: 'b' } },
   ],
   'parts',
 );
 
 const detail = layout2D('b-detail', [
-  { id: 'x', type: 'ellipse', center: { x: 0, y: 0 }, size: { width: 64, height: 64 } },
+  { id: 'x', kind: 'ellipse', center: { x: 0, y: 0 }, size: { width: 64, height: 64 } },
 ]);
 
-const parts = model2D('parts', [{ id: 'detail', type: 'rect', parts: 'b-detail' }]);
+const parts = model2D('parts', [{ id: 'detail', kind: 'rect', parts: 'b-detail' }]);
 
 // In the order `fromEcho` reaches them: the scene's layout, its model, then the model's parts layouts.
 const document: Scene.SceneDocument = {
@@ -43,25 +43,25 @@ describe('echo', () => {
     const cyclic: Scene.SceneDocument = {
       scenes: [scene2D('s', 'a')],
       layouts: [layout2D('a', [{ id: 'self', object: 'again' }], 'm')],
-      models: [model2D('m', [{ id: 'again', type: 'rect', parts: 'a' }])],
+      models: [model2D('m', [{ id: 'again', kind: 'rect', parts: 'a' }])],
     };
     expect(fromEcho(toEcho(cyclic).root)).toEqual(cyclic);
   });
 
-  test('an element stored under a retired type name reads as its current type', () => {
+  test('an element stored under a retired kind name reads as its current kind', () => {
     const stored: Scene.SceneDocument = {
       scenes: [scene2D('s', 'old')],
       layouts: [
         layout2D('old', [
-          { id: 'space', type: 'space-graph', center: { x: 0, y: 0 }, size: { width: 384, height: 384 } },
-          { id: 'window', type: 'frame', center: { x: 512, y: 0 }, size: { width: 256, height: 256 } },
-          { id: 'box', type: 'rect', center: { x: 0, y: 512 }, size: { width: 128, height: 128 } },
+          { id: 'space', kind: 'space-graph', center: { x: 0, y: 0 }, size: { width: 384, height: 384 } },
+          { id: 'window', kind: 'frame', center: { x: 512, y: 0 }, size: { width: 256, height: 256 } },
+          { id: 'box', kind: 'rect', center: { x: 0, y: 512 }, size: { width: 128, height: 128 } },
         ]),
       ],
       models: [],
     };
     const [layout] = fromEcho(toEcho(stored).root).layouts;
-    expect(Object.values(layout.elements).map(({ id, type }) => `${id}:${type}`)).toEqual([
+    expect(Object.values(layout.elements).map(({ id, kind }) => `${id}:${kind}`)).toEqual([
       'space:graph',
       'window:view',
       'box:rect',

@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type Point, isRectNode } from '@dxos/scene';
+import { type Point, isRectNode, linkPath } from '@dxos/scene';
 
 import { type RenderList2D } from '../model/index.ts';
 import { createViewTree } from '../testing/index.ts';
@@ -44,7 +44,7 @@ describe('scene edits', () => {
     const scene = fixture();
     const node = {
       id: 'v',
-      type: 'view',
+      kind: 'view',
       z: 'a0',
       center: { x: 0, y: 0 },
       size: { width: 64, height: 64 },
@@ -71,18 +71,19 @@ describe('scene edits', () => {
   test('resize writes the size of a box and the radii of an ellipse', ({ expect }) => {
     const bounds = { x: 0, y: 0, width: 100, height: 50 };
     const rect = resizeTo('scene:r/a', bounds)(fixture()).nodes['scene:r/a'];
-    expect(rect.type === 'rect' && rect.size).toEqual({ width: 100, height: 50 });
+    expect(rect.kind === 'rect' && rect.size).toEqual({ width: 100, height: 50 });
     expect(rect.center).toEqual({ x: 50, y: 25 });
     const ellipse = resizeTo('scene:r/b', bounds)(fixture()).nodes['scene:r/b'];
-    expect(ellipse.type === 'ellipse' && ellipse.size).toEqual({ width: 100, height: 50 });
+    expect(ellipse.kind === 'ellipse' && ellipse.size).toEqual({ width: 100, height: 50 });
     expect(ellipse.center).toEqual({ x: 50, y: 25 });
   });
 
-  test('link adds a typed link and rejects self-links and unknown ends', ({ expect }) => {
+  test('link adds a link of its path and rejects self-links and unknown ends', ({ expect }) => {
     const scene = fixture();
     const link = (id: string, source: string, target: string) =>
       ({
-        type: 'spline',
+        kind: 'link',
+        path: 'spline',
         id,
         z: 'z',
         source: { node: source, port: 'e' },
@@ -90,7 +91,7 @@ describe('scene edits', () => {
         points: [],
       }) as const;
     const next = insertLink(link('l', 'scene:r/b', 'scene:r/c'))(scene);
-    expect(next.links.l?.type).toBe('spline');
+    expect(next.links.l?.path).toBe('spline');
     expect(next.links.l?.source).toEqual({ node: 'scene:r/b', port: 'e' });
     expect(insertLink(link('x', 'scene:r/a', 'scene:r/a'))(scene)).toBe(scene);
     expect(insertLink(link('x', 'scene:r/a', 'nope'))(scene)).toBe(scene);
@@ -98,7 +99,8 @@ describe('scene edits', () => {
 
   test('a free end needs no node and outlives the deletion of the other end', ({ expect }) => {
     const free = {
-      type: 'line',
+      kind: 'link',
+      path: 'line',
       id: 'f',
       z: 'z',
       source: { node: 'scene:r/a' },
@@ -110,10 +112,10 @@ describe('scene edits', () => {
     expect(deleteElements(['scene:r/a'])(next).links.f).toBeUndefined();
   });
 
-  test('update merges properties of nodes and links but never the id or type', ({ expect }) => {
+  test('update merges properties of nodes and links but never the id or kind', ({ expect }) => {
     const next = updateElement('scene:r/a', { id: 'other', label: 'Renamed', center: { x: 1, y: 2 } })(fixture());
     const node = next.nodes['scene:r/a'];
-    expect(node.type).toBe('rect');
+    expect(node.kind).toBe('rect');
     expect(isRectNode(node) && node.label).toBe('Renamed');
     expect(node.center).toEqual({ x: 1, y: 2 });
     expect(next.nodes.other).toBeUndefined();
@@ -123,7 +125,7 @@ describe('scene edits', () => {
       { x: 2, y: 2 },
     ];
     const spline = updateElement('scene:r/bc', { points })(fixture()).links['scene:r/bc'];
-    expect(spline.type === 'spline' && spline.points).toEqual(points);
+    expect(spline.points).toEqual(points);
   });
 
   test('delete removes nodes, links and the links attached to deleted nodes', ({ expect }) => {
@@ -132,28 +134,29 @@ describe('scene edits', () => {
     expect(Object.keys(next.links)).toEqual([]);
   });
 
-  test('a link is drawn another way by retyping it, which a field update never does', ({ expect }) => {
+  test('a link is drawn another way by retyping it, which leaves an update of another field alone', ({ expect }) => {
     const scene: RenderList2D = {
       id: 's',
       nodes: {},
       links: {
         free: {
-          type: 'smart',
+          kind: 'link',
+          path: 'smart',
           id: 'free',
           z: 'a1',
           source: { point: { x: 0, y: 0 } },
           target: { point: { x: 100, y: 50 } },
-          text: 'calls',
+          label: 'calls',
         },
       },
     };
-    // An update keeps the type whatever it is given, so the type cannot be changed by one.
-    expect(updateElement('free', { text: 'reads' })(scene).links.free.type).toBe('smart');
+    // An update of another field leaves the path as it is.
+    expect(linkPath(updateElement('free', { label: 'reads' })(scene).links.free)).toBe('smart');
     const line = retypeLink('free', 'line')(scene);
-    expect(line.links.free).toEqual({ ...scene.links.free, type: 'line' });
+    expect(line.links.free).toEqual({ ...scene.links.free, path: 'line' });
     // A spline starts with no control points, and loses them when it is drawn another way again.
     const spline = retypeLink('free', 'spline')(line);
-    expect(spline.links.free).toEqual({ ...scene.links.free, type: 'spline', points: [] });
+    expect(spline.links.free).toEqual({ ...scene.links.free, path: 'spline', points: [] });
     expect('points' in retypeLink('free', 'ortho')(spline).links.free).toBe(false);
     expect(retypeLink('free', 'smart')(scene)).toBe(scene);
     expect(retypeLink('missing', 'line')(scene)).toBe(scene);

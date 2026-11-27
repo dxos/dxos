@@ -27,6 +27,8 @@ const legacyContent = {
     node: { id: 'f', type: 'frame', z: 'a1', ...box, scene: 'child', contents: true, role: 'section', opacity: 0.5 },
   },
   'node:c': { kind: 'node', scene: 'child', node: { id: 'c', type: 'rect', z: 'a0', ...box, label: 'Current' } },
+  // A record a current editor wrote into a canvas still at version 1.
+  'node:n': { kind: 'node', scene: 'child', node: { id: 'n', kind: 'rect', z: 'a1', ...box, label: 'New' } },
   'link:p-f': {
     kind: 'link',
     scene: 'scene:root',
@@ -70,33 +72,39 @@ describe('dxos.org/scene/1 → dxos.org/scene/2', () => {
     expect(content['node:p']).toEqual({
       kind: 'node',
       scene: 'root',
-      node: { id: 'p', type: 'polygon', z: 'a0', ...box, params: { sides: 6 } },
+      node: { id: 'p', kind: 'polygon', z: 'a0', ...box, params: { sides: 6 } },
     });
     expect(content['node:f']).toEqual({
       kind: 'node',
       scene: 'root',
       node: {
         id: 'f',
-        type: 'view',
+        kind: 'view',
         z: 'a1',
         ...box,
         scene: 'child',
-        style: { opacity: 0.5 },
+        overrides: { opacity: 0.5 },
         link: { role: 'section', contents: true },
       },
     });
-    expect(content['node:c']).toEqual(legacyContent['node:c']);
+    expect(content['node:c']).toEqual({
+      kind: 'node',
+      scene: 'child',
+      node: { id: 'c', kind: 'rect', z: 'a0', ...box, label: 'Current' },
+    });
+    expect(content['node:n']).toEqual(legacyContent['node:n']);
     expect(content['link:p-f']).toEqual({
       kind: 'link',
       scene: 'root',
       link: {
         id: 'p-f',
-        type: 'line',
+        kind: 'link',
+        path: 'line',
         z: 'a2',
         source: { node: 'p' },
         target: { node: 'f' },
-        ends: { end: 'arrow' },
-        style: { hue: 'red', lineStyle: 'dashed' },
+        head: 'arrow',
+        overrides: { color: 'red', stroke: 'dashed' },
       },
     });
 

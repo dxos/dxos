@@ -3,7 +3,7 @@
 //
 
 //
-// The built-in node and link types: their definitions over the views this folder draws them with, so the model layer
+// The built-in node kinds and link paths: their definitions over the views this folder draws them with, so the model layer
 // holds only what a registry is and the React views stay with the components.
 //
 
@@ -16,7 +16,7 @@ import {
   HullNode,
   InstanceNode,
   MAJOR_GRID_RATIO,
-  type NodeType,
+  type NodeKind,
   NoteNode,
   PathNode,
   PolygonNode,
@@ -157,9 +157,9 @@ export const defaultNodePrototypes: Readonly<Record<string, NodeDefSpec>> = {
 const strokeTool: NodeDefSpec = {
   schema: PolylineNode,
   component: PolylineNodeView,
-  create: (props) => createNode({ type: 'polyline', ...props }),
+  create: (props) => createNode({ kind: 'polyline', ...props }),
   createFromPoints: (props, points, closed) => ({
-    ...createNode({ type: 'polyline', ...props }),
+    ...createNode({ kind: 'polyline', ...props }),
     points: [...points],
     params: { smooth: true, ...(closed ? { closed } : {}) },
   }),
@@ -170,7 +170,7 @@ const strokeTool: NodeDefSpec = {
 const shapeSpec: NodeDefSpec = {
   schema: ShapeNode,
   component: PolygonNodeView,
-  create: (props) => createNode({ type: 'shape', ...props }),
+  create: (props) => createNode({ kind: 'shape', ...props }),
   defaultSize: NOMINAL_SIZES.shape,
   silhouette: (node, inset, radius) => (isShapeNode(node) ? shapeNodePath(node, inset, radius) : ''),
   portsPerSide: 1,
@@ -180,7 +180,7 @@ const shapeSpec: NodeDefSpec = {
 };
 
 /** A tool per recipe, sharing one flyout: each drags out a `shape` node that names its recipe. */
-const shapeTools: Readonly<Record<NodeType, NodeDefSpec>> = Object.fromEntries(
+const shapeTools: Readonly<Record<NodeKind, NodeDefSpec>> = Object.fromEntries(
   SHAPE_RECIPES.map((recipe) => [
     recipe.id,
     {
@@ -189,20 +189,20 @@ const shapeTools: Readonly<Record<NodeType, NodeDefSpec>> = Object.fromEntries(
       icon: recipe.icon,
       ...(recipe.key !== undefined ? { key: recipe.key } : {}),
       fold: SHAPE_FOLD,
-      create: (props) => ({ ...createNode({ type: 'shape', ...props }), recipe: recipe.id }),
+      create: (props) => ({ ...createNode({ kind: 'shape', ...props }), recipe: recipe.id }),
       defaultSize: recipe.defaultSize,
     } satisfies NodeDefSpec,
   ]),
 );
 
-export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
+export const defaultNodeTypes: Readonly<Record<NodeKind, NodeDefSpec>> = {
   rect: {
     extends: 'box',
     name: 'Rectangle',
     icon: 'ph--rectangle--regular',
     key: 'R',
     schema: RectNode,
-    create: (props) => createNode({ type: 'rect', ...props }),
+    create: (props) => createNode({ kind: 'rect', ...props }),
   },
   ellipse: {
     name: 'Ellipse',
@@ -210,7 +210,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     key: 'E',
     schema: EllipseNode,
     component: EllipseNodeView,
-    create: (props) => createNode({ type: 'ellipse', ...props }),
+    create: (props) => createNode({ kind: 'ellipse', ...props }),
     defaultSize: NOMINAL_SIZES.ellipse,
     // Only the side centres of the frame lie on the curve.
     portsPerSide: 1,
@@ -225,7 +225,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     key: 'N',
     schema: PolygonNode,
     component: PolygonNodeView,
-    create: (props) => createNode({ type: 'polygon', ...props }),
+    create: (props) => createNode({ kind: 'polygon', ...props }),
     defaultSize: NOMINAL_SIZES.polygon,
     silhouette: (node, inset, radius) =>
       polygonPath(node.size, {
@@ -245,7 +245,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     key: 'C',
     schema: CloudNode,
     component: CloudNodeView,
-    create: (props) => createNode({ type: 'cloud', ...props }),
+    create: (props) => createNode({ kind: 'cloud', ...props }),
     defaultSize: NOMINAL_SIZES.cloud,
     silhouette: (node, inset) => cloudPath(node.size, inset, isCloudNode(node) ? node.params?.bumps : undefined),
     // Only the side centres of the frame lie near the outline.
@@ -269,9 +269,9 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     fold: PATH_FOLD,
     schema: PolylineNode,
     component: PolylineNodeView,
-    create: (props) => createNode({ type: 'polyline', ...props }),
+    create: (props) => createNode({ kind: 'polyline', ...props }),
     createFromPoints: (props, points, closed) => ({
-      ...createNode({ type: 'polyline', ...props }),
+      ...createNode({ kind: 'polyline', ...props }),
       points: [...points],
       ...(closed ? { params: { closed } } : {}),
     }),
@@ -302,7 +302,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     key: 'U',
     fold: PATH_FOLD,
     createFromPoints: (props, points, closed) => ({
-      ...createNode({ type: 'polyline', ...props }),
+      ...createNode({ kind: 'polyline', ...props }),
       points: [...points],
       ...(closed ? { params: { closed } } : {}),
     }),
@@ -335,7 +335,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     group: CONTAINERS_GROUP,
     schema: HullNode,
     component: HullNodeView,
-    create: (props) => ({ ...createNode({ type: 'hull', ...props }), style: HULL_STYLE }),
+    create: (props) => ({ ...createNode({ kind: 'hull', ...props }), overrides: HULL_STYLE }),
     defaultSize: NOMINAL_SIZES.hull,
     silhouette: (node, inset, radius) =>
       polylinePath(node.size, (isHullNode(node) && node.points) || UNIT_SQUARE, { inset, closed: true, radius }),
@@ -349,11 +349,11 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     key: 'T',
     schema: NoteNode,
     component: NoteNodeView,
-    parts: [{ field: 'text', multiline: true }],
+    parts: [{ field: 'label', multiline: true }],
     // The text is the shape: a border and a fill around it would be a second one, and a rounded corner would cut its
-    // first line. A node that wants either sets them on its own style.
+    // first line. A node that wants either sets them in its own look.
     bare: true,
-    create: (props) => createNode({ type: 'note', ...props }),
+    create: (props) => createNode({ kind: 'note', ...props }),
     defaultSize: NOMINAL_SIZES.note,
     resizable: true,
     minSize: MIN_SIZE,
@@ -366,7 +366,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     group: CONTAINERS_GROUP,
     schema: ViewNode,
     component: ViewNodeView,
-    create: (props) => createNode({ type: 'view', ...props }),
+    create: (props) => createNode({ kind: 'view', ...props }),
     defaultSize: NOMINAL_SIZES.view,
     minSize: { width: 96, height: 60 },
     openable: true,
@@ -377,7 +377,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     group: 'Objects',
     schema: InstanceNode,
     component: InstanceNodeView,
-    create: (props) => createNode({ type: 'instance', ...props }),
+    create: (props) => createNode({ kind: 'instance', ...props }),
     defaultSize: NOMINAL_SIZES.instance,
     resizable: true,
     minSize: { width: 12, height: 12 },
@@ -391,7 +391,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     icon: 'ph--sparkle--regular',
     schema: GeneratorNode,
     component: GeneratorNodeView,
-    create: (props) => createNode({ type: 'generator', ...props }),
+    create: (props) => createNode({ kind: 'generator', ...props }),
     defaultSize: NOMINAL_SIZES.generator,
     resizable: true,
     minSize: { width: 12, height: 12 },
@@ -404,7 +404,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     icon: 'ph--pen-nib--regular',
     schema: PathNode,
     component: PathNodeView,
-    create: (props) => createNode({ type: 'path', ...props }),
+    create: (props) => createNode({ kind: 'path', ...props }),
     defaultSize: NOMINAL_SIZES.path,
     resizable: true,
     minSize: { width: 3, height: 3 },
@@ -418,7 +418,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     icon: 'ph--unite--regular',
     schema: SolidNode,
     component: PolygonNodeView,
-    create: (props) => ({ type: 'solid', ...props }),
+    create: (props) => ({ kind: 'solid', ...props }),
     defaultSize: NOMINAL_SIZES.rect,
     silhouette: (node, inset) => solidPath(node.size, isSolidNode(node) ? node.rings : undefined, inset),
     portsPerSide: 1,
@@ -440,7 +440,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     template: CARD_TEMPLATE,
     // Placeholder regions, so a new card reads as a card before it is edited (as a new UML class does).
     create: (props) => ({
-      type: 'card',
+      kind: 'card',
       ...props,
       composite: templateCompositeId('card'),
       icon: { type: 'command' },
@@ -459,7 +459,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     icon: 'ph--command--regular',
     key: 'G',
     schema: IconNode,
-    create: (props) => ({ type: 'icon', ...props, icon: { type: 'command' } }),
+    create: (props) => ({ kind: 'icon', ...props, icon: { type: 'command' } }),
   },
   diagram: {
     name: 'Diagram shape',
@@ -467,7 +467,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     schema: DiagramNode,
     component: DiagramNodeView,
     // Made from a laid-out diagram (the illustrator's DSL), not drawn from the palette; a fresh one is an empty box.
-    create: (props) => createNode({ type: 'diagram', ...props }),
+    create: (props) => createNode({ kind: 'diagram', ...props }),
     parts: [{ field: 'label' }],
     defaultSize: NOMINAL_SIZES.rect,
     resizable: true,
@@ -482,7 +482,7 @@ export const defaultNodeRegistry: NodeRegistry = createNodeRegistry(defaultNodeT
 
 /**
  * The link variants, in the order the palette and the Properties panel list them, the default (Orthogonal) first. A
- * link's stored `type` is the variant: `ortho` leaves each port along its normal and turns at right angles, `smart`
+ * link's stored `path` is the variant: `ortho` leaves each port along its normal and turns at right angles, `smart`
  * (named Elbow) leaves each port along its normal and joins the two with one segment, and `line` (named Straight)
  * runs between the ends as they are.
  */

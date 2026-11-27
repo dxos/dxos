@@ -35,11 +35,11 @@ group subagents-body gap=24 {
 
 group space-body gap=24 {
   group space-col-0 gap=16 autoRows=144 alignContent=center {
-    node research-space kind=graph border=true extra=0.45 data-fill=0.6 hue=neutral pitch=22 seed=3 size=24 width=144 height=144
-    node reply-space kind=graph border=true extra=0.45 data-fill=0.6 hue=neutral pitch=22 seed=4 size=24 width=144 height=144
-    node summary-space kind=graph border=true extra=0.45 data-fill=0.6 hue=neutral pitch=22 seed=7 size=24 width=144 height=144
-    node calendar-space kind=graph border=true extra=0.45 data-fill=0.6 hue=neutral pitch=22 seed=5 size=24 width=144 height=144
-    node travel-space kind=graph border=true extra=0.45 data-fill=0.6 hue=neutral pitch=22 seed=6 size=24 width=144 height=144
+    node research-space kind=graph stroke=solid extra=0.45 data-fill=0.6 hue=neutral pitch=22 seed=3 size=24 width=144 height=144
+    node reply-space kind=graph stroke=solid extra=0.45 data-fill=0.6 hue=neutral pitch=22 seed=4 size=24 width=144 height=144
+    node summary-space kind=graph stroke=solid extra=0.45 data-fill=0.6 hue=neutral pitch=22 seed=7 size=24 width=144 height=144
+    node calendar-space kind=graph stroke=solid extra=0.45 data-fill=0.6 hue=neutral pitch=22 seed=5 size=24 width=144 height=144
+    node travel-space kind=graph stroke=solid extra=0.45 data-fill=0.6 hue=neutral pitch=22 seed=6 size=24 width=144 height=144
   }
 }
 

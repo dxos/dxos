@@ -7,17 +7,16 @@ import React, { useState } from 'react';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
-import { useObject } from '@dxos/echo-react';
 import type * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Canvas2DHost, SceneEditor } from '@dxos/react-ui-canvas-editor';
 import * as Panel from '@dxos/react-ui/Panel';
 import { Scene } from '@dxos/scene';
 
-import { canvasDimension, sceneClipboardCodec } from '#model';
+import { sceneClipboardCodec } from '#model';
 import { Canvas } from '#types';
 
-import { useCanvasLoaded } from '../CanvasStage/index.ts';
+import { useCanvasDimension } from '../CanvasStage/index.ts';
 import { CanvasCursors } from './CanvasCursors.tsx';
 import { CanvasEditCommands } from './CanvasEditCommands.tsx';
 import { CanvasDatabaseContext } from './CanvasViewNodeView.tsx';
@@ -48,9 +47,8 @@ type DimensionArticleProps = Pick<
 };
 
 const DimensionArticle = (props: DimensionArticleProps) => {
-  useObject(props.canvas);
-  useCanvasLoaded(props.canvas);
-  return canvasDimension(props.canvas) === '3d' ? <CanvasArticle3D {...props} /> : <CanvasArticle2D {...props} />;
+  const dimension = useCanvasDimension(props.canvas);
+  return dimension === '3d' ? <CanvasArticle3D {...props} /> : <CanvasArticle2D {...props} />;
 };
 
 const CanvasArticle2D = (props: DimensionArticleProps) => {

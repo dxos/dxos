@@ -155,7 +155,7 @@ describe('CanvasLayoutBuilder', () => {
     const source = db.add(Drawing.makeCanvas({ schema: Canvas.TLDRAW_SCHEMA, content: frameWithChildren() }));
     const { canvas, upserted } = await run(tldrawConverter.convert(source, { from: tldraw, to: canvasVariant }));
     expect(Canvas.isCanvas(canvas)).toBe(true);
-    const nodes = Object.values(layoutOf(canvas).elements).filter((element) => element.type !== 'link');
+    const nodes = Object.values(layoutOf(canvas).elements).filter((element) => element.kind !== 'link');
     expect(nodes.map((element) => element.id).sort()).toEqual([...upserted].sort());
     // The frames sit on their own layer under the content, as the import maps them.
     expect(layoutOf(canvas).layers?.frames).toBeDefined();
@@ -174,8 +174,8 @@ describe('CanvasLayoutBuilder', () => {
       expect.arrayContaining(['member', 'partner', 'pair']),
     );
     const model = layoutOf(canvas).model?.target;
-    expect(Obj.instanceOf(Scene.Model2D, model) && model.objects['instance:group-object']?.parts?.target).toBe(parts);
-    expect(layoutOf(canvas).elements.group).toMatchObject({ object: 'instance:group-object' });
+    expect(Obj.instanceOf(Scene.Model2D, model) && model.objects['group-object']?.parts?.target).toBe(parts);
+    expect(layoutOf(canvas).elements.group).toMatchObject({ object: 'group-object' });
     expect(layoutOf(canvas).elements.tie).toMatchObject({ target: { node: 'group' } });
   });
 

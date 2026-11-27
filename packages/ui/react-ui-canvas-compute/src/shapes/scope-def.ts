@@ -16,7 +16,7 @@ import { ScopeComponent } from './Scope.tsx';
 
 export const ScopeShape = ComputeShape.mapFields(
   Struct.assign({
-    type: Schema.Literal('scope'),
+    kind: Schema.Literal('scope'),
   }),
 );
 
@@ -26,7 +26,7 @@ export type CreateScopeProps = CreateShapeProps<ScopeShape>;
 
 export const createScope = (props: CreateScopeProps) =>
   createShape<ScopeShape>({
-    type: 'scope',
+    kind: 'scope',
     size: { width: 2 * MAJOR_GRID, height: 2 * MAJOR_GRID },
     classNames: 'rounded-full border-primary-800',
     ...props,

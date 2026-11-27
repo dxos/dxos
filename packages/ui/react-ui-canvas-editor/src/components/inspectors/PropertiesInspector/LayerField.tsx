@@ -36,12 +36,12 @@ export const LayerField: FormFieldRenderer = ({ type, label, jsonPath, readonly,
 };
 
 /**
- * The layer and the style class side by side in one row, rendered at `layer` (`class` is hidden); the class select
- * only while the host offers classes.
+ * The layer and the style class side by side in one row, rendered at `layer` (`style`, the class's name, is hidden);
+ * the class select only while the host offers classes.
  */
 export const LayerClassField: FormFieldRenderer = (props) => {
   const styles = useContext(StyleClassesContext);
-  const classField = useFormFieldState('LayerClassField', ['class']);
+  const classField = useFormFieldState('LayerClassField', ['style']);
   return (
     <Layout.Container
       layout='row'
@@ -54,7 +54,7 @@ export const LayerClassField: FormFieldRenderer = (props) => {
     >
       <LayerField {...props} />
       {styles && (
-        <ClassField {...classField} type={Schema.String.ast} label='Class' jsonPath='class' readonly={props.readonly} />
+        <ClassField {...classField} type={Schema.String.ast} label='Class' jsonPath='style' readonly={props.readonly} />
       )}
     </Layout.Container>
   );

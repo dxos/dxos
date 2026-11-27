@@ -44,19 +44,16 @@ const isLink = (element: Element): boolean => element.source !== undefined || el
  * it moves as given.
  */
 /** Whether an element is a hull as it is stored: a group's Instance drawing a border round its parts. */
-const isHullGroup = (element: Element): boolean => {
-  const canvas: unknown = element.props?.canvas;
-  return typeof canvas === 'object' && canvas !== null && Reflect.get(canvas, 'hull') !== undefined;
-};
+const isHullGroup = (element: Element): boolean => Reflect.get(element, 'hull') !== undefined;
 
 const onLattice = (element: Element): element is Framed =>
   element.center !== undefined &&
   element.size !== undefined &&
   !isLink(element) &&
-  element.type !== 'hull' &&
+  element.kind !== 'hull' &&
   !isHullGroup(element) &&
   !element.overrides?.guide &&
-  element.overrides?.border !== false;
+  element.overrides?.stroke !== 'none';
 
 const occupancy = (layout: Scene.LayoutRecord2D, spec: LatticeSpec, except: ReadonlySet<string>): Occupancy => {
   const cells: Occupancy = new Map();

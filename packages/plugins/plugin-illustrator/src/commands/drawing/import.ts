@@ -9,8 +9,9 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as FileSystem from 'effect/FileSystem';
 
-import { CommandConfig, Common, FormBuilder, flushAndSync, print, spaceLayer } from '@dxos/cli-util';
+import { CommandConfig, Common, FormBuilder, flushAndSync, getSpace, print, spaceLayer } from '@dxos/cli-util';
 import { Database } from '@dxos/echo';
+import { Legacy } from '@dxos/scene';
 
 import { DrawingFile } from '#model';
 
@@ -20,7 +21,13 @@ export const handler = Effect.fn(function* ({ file }: { file: string }) {
   const fs = yield* FileSystem.FileSystem;
   const { db } = yield* Database.Service;
 
+  // A file embeds its objects at the version they were stored at. An object whose type the client does not know is
+  // added with no type, so the earlier scene types are made known before the import, and migrated after it: a space
+  // migrates only what it holds when it loads.
+  const space = yield* getSpace(db.spaceId);
+  space.db.graph.registry.add(Legacy.Types);
   const drawing = yield* DrawingFile.importDxSvg(yield* fs.readFileString(file));
+  yield* Effect.promise(() => space.db.runMigrations([...Legacy.Migrations]));
   yield* flushAndSync({ indexes: true });
 
   if (json) {

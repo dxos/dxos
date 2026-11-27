@@ -5,12 +5,12 @@
 //
 // A `CanvasBoard` as a 2D scene layout (COMMON-CORE.md decision 10): the board keeps its stored graph (`layout.nodes`
 // are shapes, `layout.edges` connections), so boards the old editor wrote open unchanged, and the shared editor reads
-// and edits it as a `LayoutRecord2D` through `LayoutIntent`s. Three things are translated rather than migrated: z-order
-// (array order in the board, a fractional key on the element), style (`guide` / `style` / `class` on a shape,
-// `overrides` / `style` on the element) and link ends (a connection's `input` / `output` property names, an endpoint's
-// anchor-id port). A compute shape's own fields (its compute `node`, a value) are under the shape's `data` and the
-// element's alike, as a plugin kind's are (decisions 13 and 21); a board that stores them beside the shape's reads the
-// same, and its next write stores them under `data`.
+// and edits it as a `LayoutRecord2D` through `LayoutIntent`s. A shape is the element itself but for its z-order (array
+// order in the board, a fractional key on the element), and a connection is a link but for its ends (a connection's
+// `input` / `output` property names, an endpoint's anchor-id port). A compute shape's own fields (its compute `node`, a
+// value) are under the shape's `data` and the element's alike, as a plugin kind's are (decisions 13 and 21). A board
+// stored in an earlier form (a shape's `type`, its `guide` / `style` / `class`, a note's `text`, its kind's fields
+// beside its own, a connection's `type`) reads the same, and its next write stores the current one.
 //
 
 import * as Equal from 'effect/Equal';
@@ -19,7 +19,16 @@ import * as Schema from 'effect/Schema';
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
 import { type VersionedSource, initialKeys, readPath, sortByZ, writePath } from '@dxos/react-ui-canvas/headless';
-import { type LayoutIntent, LINK_TYPES, NodeStyle, Scene, applyIntent } from '@dxos/scene';
+import {
+  DEFAULT_LINK_PATH,
+  type LayoutIntent,
+  LINK_KIND,
+  LINK_PATHS,
+  Scene,
+  Style2D,
+  applyIntent,
+  upgradeNode,
+} from '@dxos/scene';
 
 import { computeKinds } from '../registry.ts';
 import { createAnchorId, parseAnchorId } from '../shapes/defs.ts';
@@ -38,10 +47,7 @@ export type BoardLayout = { nodes: BoardShape[]; edges: BoardConnection[] };
 /** An element of a 2D layout, with any fields its kind adds. */
 export type BoardElement = Scene.LayoutRecord2D['elements'][string];
 
-/** A connection naming no link type is drawn as a smart link, the default for every generated diagram. */
-const DEFAULT_LINK_TYPE = 'smart';
-
-const isNodeStyle = Schema.is(NodeStyle);
+const isStyle = Schema.is(Style2D);
 const isLayoutRecord = Schema.is(Scene.LayoutRecord2D);
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
@@ -57,19 +63,20 @@ export const computeNodeId = (element: { readonly data?: unknown }): string | un
 //
 
 /**
- * The element a shape stands for: geometry and look in the element's slots, its kind's own fields under `data`. A
- * shape stored with those fields beside its own reads the same, a field `data` also holds giving way to it.
+ * The element a shape stands for: the shape itself, its kind's own fields under `data`. A shape stored in an earlier
+ * form reads in the current words, a field `data` also holds giving way to it and a `guide` of its own joining its
+ * look.
  */
 export const elementFromShape = (shape: BoardShape, z: string): BoardElement => {
-  const { id, guide, style, class: named, z: _z, ...own } = shape;
-  const overrides = { ...(typeof guide === 'boolean' ? { guide } : {}), ...(isNodeStyle(style) ? style : {}) };
-  const type = text(shape.type);
+  const { guide, z: _z, ...stored } = shape;
+  const { id: _id, kind: named, overrides, ...own } = upgradeNode(stored);
+  const kind = text(named);
+  const look = { ...(typeof guide === 'boolean' ? { guide } : {}), ...(isStyle(overrides) ? overrides : {}) };
   return {
-    ...computeKinds.normalize({ ...own, ...(type !== undefined ? { type } : {}) }),
-    id,
+    ...computeKinds.normalize({ ...own, ...(kind !== undefined ? { kind } : {}) }),
+    id: shape.id,
     z,
-    ...(Object.keys(overrides).length > 0 ? { overrides } : {}),
-    ...(typeof named === 'string' ? { style: named } : {}),
+    ...(Object.keys(look).length > 0 ? { overrides: look } : {}),
   };
 };
 
@@ -78,14 +85,16 @@ export const elementFromShape = (shape: BoardShape, z: string): BoardElement => 
  * names it stores become the anchor ids the compute node definitions draw ports for.
  */
 const elementFromEdge = (edge: BoardConnection, z: string): BoardElement => {
-  const type = LINK_TYPES.find((candidate) => candidate === edge.type) ?? DEFAULT_LINK_TYPE;
+  // A connection stored in an earlier form names its path as its `type`.
+  const stated = edge.path ?? edge.type;
   return {
     id: edge.id,
-    type: 'link',
+    kind: LINK_KIND,
     z,
     source: { node: edge.source, port: createAnchorId('output', text(edge.output) ?? DEFAULT_OUTPUT) },
     target: { node: edge.target, port: createAnchorId('input', text(edge.input) ?? DEFAULT_INPUT) },
-    props: { canvas: { type, ends: { end: 'arrow' } } },
+    path: LINK_PATHS.find((candidate) => candidate === stated) ?? DEFAULT_LINK_PATH,
+    head: 'arrow',
   };
 };
 
@@ -115,32 +124,26 @@ export const boardLayout = (
 // Write
 //
 
-/** The shape an element is stored as: its fields and `data`, its look back in the shape's `guide` / `style` / `class`. */
+/** The shape an element is stored as: the element itself, its place in the paint order left to the array's. */
 export const shapeFromElement = (element: BoardElement): BoardShape => {
-  const { z: _z, overrides, style: named, ...own } = element;
-  const { guide, ...look } = overrides ?? {};
-  return {
-    ...own,
-    ...(guide !== undefined ? { guide } : {}),
-    ...(Object.keys(look).length > 0 ? { style: look } : {}),
-    ...(named !== undefined ? { class: named } : {}),
-  };
+  const { z: _z, ...shape } = element;
+  return shape;
 };
 
-/** The connection a link is stored as; the default link type is written only where the stored connection has one. */
-const edgeFromElement = ({ id, source, target, props }: BoardElement, stored?: BoardConnection): BoardConnection => {
-  const type = (isRecord(props?.canvas) ? text(props.canvas.type) : undefined) ?? DEFAULT_LINK_TYPE;
-  return {
-    id,
-    ...(type !== DEFAULT_LINK_TYPE || stored?.type !== undefined ? { type } : {}),
-    source: source?.node ?? '',
-    target: target?.node ?? '',
-    output: parseAnchorId(source?.port ?? '')[1] || DEFAULT_OUTPUT,
-    input: parseAnchorId(target?.port ?? '')[1] || DEFAULT_INPUT,
-  };
-};
+/** The connection a link is stored as; the default path is written only where the stored connection names one. */
+const edgeFromElement = (
+  { id, source, target, path = DEFAULT_LINK_PATH }: BoardElement,
+  stored?: BoardConnection,
+): BoardConnection => ({
+  id,
+  ...(path !== DEFAULT_LINK_PATH || stored?.path !== undefined || stored?.type !== undefined ? { path } : {}),
+  source: source?.node ?? '',
+  target: target?.node ?? '',
+  output: parseAnchorId(source?.port ?? '')[1] || DEFAULT_OUTPUT,
+  input: parseAnchorId(target?.port ?? '')[1] || DEFAULT_INPUT,
+});
 
-const isLink = (element: BoardElement): boolean => element.type === 'link';
+const isLink = (element: BoardElement): boolean => element.kind === LINK_KIND;
 
 /**
  * The layout written into a board's graph in place: each shape and connection updated, added or removed on its own,

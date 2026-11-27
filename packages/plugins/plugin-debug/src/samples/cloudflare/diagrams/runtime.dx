@@ -8,7 +8,7 @@ group client-wrap rows="64 1fr" {
     }
   }
   group client-cell rows="496 1fr" {
-    group client-section cols=2 gap=32 padding=8 border=true {
+    group client-section cols=2 gap=32 padding=8 stroke=solid {
       group client-col rows="154 1fr" gap=16 {
         node client "Client" kind=card icon=browser iconTone=teal {
           item "Composer app tab"
@@ -56,7 +56,7 @@ group edge-section rows="64 1fr" {
     }
     group edge-head-rest { }
   }
-  group edge-body cols=2 gap=32 padding=8 border=true {
+  group edge-body cols=2 gap=32 padding=8 stroke=solid {
     group space-col gap=16 autoRows=154 {
       node replicator "Replicator DO" kind=card icon=arrows-clockwise iconTone=accent {
         item "Automerge sync"

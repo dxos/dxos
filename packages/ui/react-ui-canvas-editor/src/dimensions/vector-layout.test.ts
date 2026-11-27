@@ -31,8 +31,9 @@ describe('vector fields', () => {
   });
 
   test('2D vectors and sizes are stacked vector fields', () => {
-    expect(isVector(Scene.Vec2.ast)).toBe(true);
-    expect(isVector(Scene.Size2.ast)).toBe(true);
+    // A point and a size as a form edits them, where a drawing states one outside an element.
+    expect(isVector(Scene.Camera2D.fields.center.ast)).toBe(true);
+    expect(isVector(Scene.Object2D.fields.size.ast)).toBe(true);
     for (const name of ['center', 'size']) {
       const signature = SchemaAST.isObjects(Scene.Element2D.ast)
         ? Scene.Element2D.ast.propertySignatures.find((p) => p.name === name)?.type

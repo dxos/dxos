@@ -19,11 +19,11 @@ import {
   type Node,
   type Point,
   type Port,
-  type SplineLink,
   endpointNode,
   isPointEndpoint,
   isPolylineNode,
   isShapeNode,
+  linkPath,
 } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
@@ -91,10 +91,10 @@ export type ControlFrameProps = {
   onHandlePointerDown?: (node: Node, handle: Handle, event: React.PointerEvent) => void;
   onPortPointerDown?: (node: Node, port: Port, event: React.PointerEvent) => void;
   onEndPointerDown?: (link: Link, end: LinkEnd, event: React.PointerEvent) => void;
-  onPointPointerDown?: (link: SplineLink, index: number, event: React.PointerEvent) => void;
+  onPointPointerDown?: (link: Link, index: number, event: React.PointerEvent) => void;
   /** `index` is where in the link's points a control point at `point` would be inserted. */
-  onMidpointPointerDown?: (link: SplineLink, index: number, point: Point, event: React.PointerEvent) => void;
-  onPointContextMenu?: (link: SplineLink, index: number, event: React.MouseEvent) => void;
+  onMidpointPointerDown?: (link: Link, index: number, point: Point, event: React.PointerEvent) => void;
+  onPointContextMenu?: (link: Link, index: number, event: React.MouseEvent) => void;
   onEndContextMenu?: (link: Link, end: LinkEnd, event: React.MouseEvent) => void;
   /** The node in vertex edit mode: its vertices are drawn to drag, and its resize handles are not. */
   vertexEditing?: Extract<Editing, { kind: 'vertices' }>;
@@ -236,8 +236,8 @@ export const ControlFrame = memo(
       if (!geometry) {
         return null;
       }
-      const points =
-        link.type === 'spline' ? (drag?.kind === 'point' && drag.id === link.id ? drag.points : link.points) : [];
+      const spline = linkPath(link) === 'spline';
+      const points = spline ? (drag?.kind === 'point' && drag.id === link.id ? drag.points : (link.points ?? [])) : [];
       const ends: [LinkEnd, Point][] = [
         ['source', geometry.source.point],
         ['target', geometry.target.point],
@@ -264,7 +264,7 @@ export const ControlFrame = memo(
           ))}
           {/* Midpoints first, so a control point wins wherever the two land on each other. */}
           {!hoverOnly &&
-            link.type === 'spline' &&
+            spline &&
             midpoints(geometry.source.point, points, geometry.target.point).map(({ index, point }) => (
               <circle
                 key={`midpoint-${index}`}
@@ -275,7 +275,7 @@ export const ControlFrame = memo(
                 onPointerDown={(event) => onMidpointPointerDown?.(link, index, point, event)}
               />
             ))}
-          {link.type === 'spline' &&
+          {spline &&
             points.map((point, index) => (
               <rect
                 key={index}
@@ -421,7 +421,7 @@ export const ControlFrame = memo(
           />
         )}
         {drag?.kind === 'vertices' && (
-          <VertexBand drag={drag} unit={unit} curved={registry[drag.type]?.curved === true} />
+          <VertexBand drag={drag} unit={unit} curved={registry[drag.node]?.curved === true} />
         )}
         {/* A stroke being drawn freehand: the pointer's path so far, which is the line that will land. */}
         {drag?.kind === 'freehand' && (

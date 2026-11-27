@@ -19,12 +19,12 @@ import { createComputeNode, isValidComputeNode } from './node-defs.ts';
  * a known compute id, so a shape restored by undo gets back the node its links name.
  */
 export const syncCreate = (model: ComputeGraphModel, shape: ComputeShape, id?: string): ComputeNode | undefined => {
-  invariant(shape.type);
-  if (!isValidComputeNode(shape.type)) {
+  invariant(shape.kind);
+  if (!isValidComputeNode(shape.kind)) {
     return undefined;
   }
   const computeNode = { ...createComputeNode(shape), ...(id ? { id } : {}) };
-  if (shape.type === 'trigger') {
+  if (shape.kind === 'trigger') {
     linkTriggerToCompute(model, computeNode, shape as TriggerShape);
   }
   model.addNode(computeNode);
@@ -106,7 +106,7 @@ export const deleteTriggerObjects = (computeGraph: ComputeGraphModel, shapes: Co
     return;
   }
   for (const shape of shapes) {
-    if (shape.type === 'trigger') {
+    if (shape.kind === 'trigger') {
       const trigger = shape as TriggerShape;
       const functionTrigger = trigger.data?.functionTrigger?.target;
       if (functionTrigger) {

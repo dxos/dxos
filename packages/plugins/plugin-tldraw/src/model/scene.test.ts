@@ -43,6 +43,12 @@ const hat: Scene.WorldObject = {
 
 const upsert = (object: Scene.WorldObject): Scene.Command => ({ op: 'upsert-object', object });
 
+/**
+ * tldraw types its record map as a fixed-key object without an index signature;
+ * validating an arbitrary record requires a string-keyed view.
+ */
+const recordValidators = () => createTLSchema().types as Record<string, { validate: (record: unknown) => unknown }>;
+
 describe('scene DSL', () => {
   test('renders objects and reads back a coherent scene', ({ expect }) => {
     const content = {};
@@ -94,11 +100,37 @@ describe('scene DSL', () => {
       }),
     ]);
 
-    const schema = createTLSchema();
-    // tldraw types its record map as a fixed-key object without an index signature;
-    // validating an arbitrary record requires a string-keyed view.
-    const validators = schema.types as Record<string, { validate: (record: unknown) => unknown }>;
+    const validators = recordValidators();
     for (const record of Object.values(content) as any[]) {
+      expect(() => validators[record.typeName].validate(record), record.id).to.not.throw();
+    }
+  });
+
+  test('a style tldraw has no word for takes the nearest it has, and the records stay valid', ({ expect }) => {
+    const content: Record<string, any> = {};
+    applyCommands(content, [
+      upsert({
+        id: 'swatches',
+        origin: { x: 0, y: 0 },
+        elements: [
+          { kind: 'rect', id: 'light', x: 0, y: 0, w: 40, h: 20, color: 'blue/3' },
+          { kind: 'rect', id: 'toned', x: 50, y: 0, w: 40, h: 20, color: 'blue/2' },
+          { kind: 'rect', id: 'literal', x: 100, y: 0, w: 40, h: 20, color: '#1e90ff', stroke: 'none' },
+          { kind: 'rect', id: 'hue', x: 150, y: 0, w: 40, h: 20, color: 'teal', fill: 'glass' },
+          { kind: 'text', id: 'caption', x: 0, y: 40, text: 'Swatches', color: 'rgb(30 144 255)' },
+        ],
+      }),
+    ]);
+
+    const props = (element: string) => content[`shape:swatches/${element}`].props;
+    expect(props('light').color).to.eq('light-blue');
+    expect(props('toned').color).to.eq('blue');
+    expect(props('literal')).to.include({ color: 'black', dash: 'draw' });
+    expect(props('hue')).to.include({ color: 'black', fill: 'solid' });
+    expect(props('caption').color).to.eq('black');
+
+    const validators = recordValidators();
+    for (const record of Object.values(content)) {
       expect(() => validators[record.typeName].validate(record), record.id).to.not.throw();
     }
   });

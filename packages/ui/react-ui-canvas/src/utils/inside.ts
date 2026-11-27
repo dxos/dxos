@@ -9,7 +9,7 @@
 //
 // The parts are shown where the Instance draws them, so an edit lands in the scene's own coordinates and has to be
 // written back into the definition's. Which of the two it is written to is the rule the user set: a part's text
-// belongs to this Instance (`overrides`), and everything else — style, geometry, what parts there are — belongs to
+// belongs to this Instance (`partOverrides`), and everything else — look, geometry, what parts there are — belongs to
 // the definition, so it reaches every Instance of it.
 //
 
@@ -79,10 +79,10 @@ export const insideScene = (
   };
 };
 
-/** What an edit made inside an Object writes: the definition it changed, and this Instance's own overrides. */
+/** What an edit made inside an Object writes: the definition it changed, and this Instance's own part overrides. */
 export type InsideWrites = {
   composite?: RenderList2D;
-  overrides?: InstanceNode['overrides'];
+  partOverrides?: InstanceNode['partOverrides'];
   /** Fields of the Instance itself that a bound part wrote (a UML class's `data`, with its new `attributes`). */
   bound?: Record<string, unknown>;
 };
@@ -125,7 +125,7 @@ export const insideWrites = (
   // The parts are compared against what this Instance draws, so an override it already carries reads as unchanged.
   const shown = instanceView(instance, composite, (node) => nodeParts(registry, node));
   const bound: Record<string, unknown> = {};
-  const overrides: Record<NodeId, Record<string, unknown>> = { ...instance.overrides };
+  const overrides: Record<NodeId, Record<string, unknown>> = { ...instance.partOverrides };
   const nodes: Record<NodeId, Node> = {};
   let overridesChanged = false;
 
@@ -188,8 +188,8 @@ export const insideWrites = (
   return {
     ...(Object.keys(bound).length > 0 ? { bound } : {}),
     ...(changed(next, composite) ? { composite: next } : {}),
-    ...(overridesChanged || changed(overrides, instance.overrides ?? {})
-      ? { overrides: Object.keys(overrides).length > 0 ? overrides : undefined }
+    ...(overridesChanged || changed(overrides, instance.partOverrides ?? {})
+      ? { partOverrides: Object.keys(overrides).length > 0 ? overrides : undefined }
       : {}),
   };
 };

@@ -5,6 +5,8 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React from 'react';
 
+import { linkMarkers } from '@dxos/scene';
+
 import { type MenuLinkEnd } from '../../engine/index.ts';
 import { endMarker } from '../../utils/index.ts';
 import { LinkEndMenuItems } from '../SceneContextMenu/index.ts';
@@ -23,7 +25,7 @@ export const CanvasLinkEndMenu = ({ link: id, end }: MenuLinkEnd) => {
   return (
     <LinkEndMenuItems
       end={end}
-      marker={endMarker(link.ends, end)}
+      marker={endMarker(linkMarkers(link), end)}
       disabled={!capabilities.update || link.locked === true}
       onChange={(marker) => controller.document.setEndMarker(id, end, marker)}
     />

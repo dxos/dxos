@@ -710,14 +710,14 @@ verdict F-9.1: A stored `frame` reads as `view`, and the next write stores `view
 ```mdl
 verdict F-9.2: Group makes an anonymous Object and one Instance, crossing links on exposed ports.
   status: done
-  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/compose.ts#composeSelection, github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/controller.ts#createCanvasController]
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/compose.ts#groupPlacement, github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/controller.ts#createCanvasController]
   tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/controller.test.ts, github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/compose.test.ts]
 ```
 
 ```mdl
 verdict F-9.3: Ungroup explodes an Instance under fresh ids with its tracks; an anonymous definition goes.
   status: done
-  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/compose.ts#ungroupInstance, github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/controller.ts#createCanvasController]
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/compose.ts#ungroupPlacement, github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/controller.ts#createCanvasController]
   tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/controller.test.ts, github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/compose.test.ts]
 ```
 
@@ -764,10 +764,10 @@ verdict F-9.8: The Views panel shows the hierarchy, selects, opens, restacks, fi
 ```mdl
 verdict F-9.9: Group refuses `view` nodes, and a create or paste of one into an Object's definition is refused.
   status: done
-  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/compose.ts#composeSelection, github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/projection.ts#reduceIntent]
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/compose.ts#groupPlacement, github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/projection.ts#reduceIntent]
   tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/controller.test.ts, github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/projection.test.ts]
   walkthrough:
-    - Group refuses a selection that holds a `view` node. github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/compose.ts#composeSelection
+    - Group refuses a selection that holds a `view` node. github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/compose.ts#groupPlacement
     - The freehand reducer drops a `view` create, alone or in a paste's batch, on an Object's definition. github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/projection.ts#reduceIntent
   note: |
     A projection that does not reduce through `reduceIntent` (constrained, dynamic, compute) is not guarded; none is used on an Object's definition.

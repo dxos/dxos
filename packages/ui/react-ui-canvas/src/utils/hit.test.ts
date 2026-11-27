@@ -10,16 +10,16 @@ import { type RenderList2D } from '../model/index.ts';
 import { boundsFromPoints, contentBounds, hitTest, nodesIntersecting } from './hit.ts';
 
 const nodes: Record<string, BuiltinNode> = {
-  a: { type: 'rect', id: 'a', z: 'M', center: { x: 100, y: 100 }, size: { width: 100, height: 100 } },
-  b: { type: 'ellipse', id: 'b', z: 'V', center: { x: 150, y: 100 }, size: { width: 100, height: 100 } },
-  t: { type: 'note', id: 't', z: 'F', center: { x: 500, y: 500 }, size: { width: 50, height: 20 }, text: 'x' },
+  a: { kind: 'rect', id: 'a', z: 'M', center: { x: 100, y: 100 }, size: { width: 100, height: 100 } },
+  b: { kind: 'ellipse', id: 'b', z: 'V', center: { x: 150, y: 100 }, size: { width: 100, height: 100 } },
+  t: { kind: 'note', id: 't', z: 'F', center: { x: 500, y: 500 }, size: { width: 50, height: 20 }, label: 'x' },
 };
 
 const scene: RenderList2D = {
   id: 's',
   nodes,
   links: {
-    l: { type: 'line', id: 'l', z: 'A', source: { node: 'a' }, target: { node: 'b' } },
+    l: { kind: 'link', path: 'line', id: 'l', z: 'A', source: { node: 'a' }, target: { node: 'b' } },
   },
 };
 
@@ -39,7 +39,7 @@ describe('hit', () => {
   test('hitTest reads a rotated node in its own axes', ({ expect }) => {
     // A 200 × 20 bar about (0, 0): flat it spans x, turned 90° it spans y.
     const bar: BuiltinNode = {
-      type: 'rect',
+      kind: 'rect',
       id: 'bar',
       z: 'A',
       center: { x: 0, y: 0 },

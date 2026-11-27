@@ -17,20 +17,24 @@ import {
   type DiagramNode,
   type DiagramShape,
   type EllipseNode,
+  FIXED_HUES,
   type Layer,
+  type LineStyle,
   type Link,
+  type LinkEnds,
   type Node,
-  NODE_TYPES,
-  type NodeStyle,
+  NODE_KINDS,
   type NoteNode,
   type RectNode,
   Scene,
   Shape,
+  type Style2D,
   endpointNode,
   isDiagramNode,
   isEllipseNode,
   isHullNode,
   isNoteNode,
+  linkPath,
   solveGrids,
 } from '@dxos/scene';
 
@@ -65,70 +69,48 @@ import {
 /** The node or link id of a DSL element. */
 export const elementId = (object: string, element: string) => `${object}/${element}`;
 
-/** DSL colours onto theme hues; black and white keep the default look. */
-const HUES: Partial<Record<Shape.Color, string>> = {
-  'grey': 'neutral',
-  'light-violet': 'violet',
-  'violet': 'violet',
-  'blue': 'blue',
-  'light-blue': 'sky',
-  'yellow': 'yellow',
-  'orange': 'orange',
-  'green': 'green',
-  'light-green': 'lime',
-  'light-red': 'rose',
-  'red': 'red',
-};
+type StyleFields = Pick<Shape.Box, 'color' | 'fill' | 'stroke' | 'align' | 'valign' | 'fontSize'>;
 
-type StyleFields = Pick<Shape.Box, 'color' | 'fill' | 'stroke' | 'border' | 'align' | 'valign' | 'fontSize'>;
+/** The colour a node takes from a DSL element: the element's own, which the theme resolves; black and white keep the default look. */
+const colorOf = (color: Shape.Color | undefined): Shape.Color | undefined =>
+  color === undefined || FIXED_HUES.some((fixed) => fixed === color) ? undefined : color;
 
-const styleOf = (element: StyleFields): NodeStyle | undefined => {
-  const hue = element.color ? HUES[element.color] : undefined;
-  const fill = element.fill === 'none' ? false : undefined;
+const styleOf = (element: StyleFields): Style2D | undefined => {
+  const color = colorOf(element.color);
   // A tinted shape is a group's backdrop: a guide, an annotation the lattice and the link router pass over.
   const guide = element.fill === 'tint' ? true : undefined;
-  const lineStyle = element.stroke === 'dashed' || element.stroke === 'dotted' ? element.stroke : undefined;
-  const style: NodeStyle = {
-    ...(hue ? { hue } : {}),
-    ...(fill !== undefined ? { fill } : {}),
+  // A solid fill is what a shape that states none draws, so it is not written down.
+  const fill = guide || element.fill === 'solid' ? undefined : element.fill;
+  const style: Style2D = {
+    ...(color ? { color } : {}),
+    ...(fill ? { fill } : {}),
     ...(guide ? { guide } : {}),
-    ...(lineStyle ? { lineStyle } : {}),
-    ...(element.border !== undefined ? { border: element.border } : {}),
-    ...(element.align ? { alignHorizontal: element.align } : {}),
-    ...(element.valign ? { alignVertical: element.valign } : {}),
+    ...(element.stroke ? { stroke: element.stroke } : {}),
+    ...(element.align ? { align: element.align } : {}),
+    ...(element.valign ? { valign: element.valign } : {}),
     ...(element.fontSize !== undefined ? { fontSize: element.fontSize } : {}),
   };
   return Object.keys(style).length > 0 ? style : undefined;
 };
 
-/** The DSL color for a hue; a hue two colors share reads as the stronger. */
-const COLORS: Partial<Record<string, Shape.Color>> = {
-  neutral: 'grey',
-  violet: 'violet',
-  blue: 'blue',
-  sky: 'light-blue',
-  yellow: 'yellow',
-  orange: 'orange',
-  green: 'green',
-  lime: 'light-green',
-  rose: 'light-red',
-  red: 'red',
-};
-
 /** The DSL fields {@link styleOf} read, for a style a shape already has on the canvas. */
-const fieldsOf = (style: NodeStyle | undefined): StyleFields => {
-  const color = style?.hue ? COLORS[style.hue] : undefined;
-  const fill = style?.guide ? 'tint' : style?.fill === false ? 'none' : undefined;
+const fieldsOf = (style: Style2D | undefined): StyleFields => {
+  const fill = style?.guide ? 'tint' : style?.fill === 'solid' ? undefined : style?.fill;
   return {
-    ...(color ? { color } : {}),
+    ...(style?.color ? { color: style.color } : {}),
     ...(fill ? { fill } : {}),
-    ...(style?.lineStyle === 'dashed' || style?.lineStyle === 'dotted' ? { stroke: style.lineStyle } : {}),
-    ...(style?.border !== undefined ? { border: style.border } : {}),
-    ...(style?.alignHorizontal ? { align: style.alignHorizontal } : {}),
-    ...(style?.alignVertical ? { valign: style.alignVertical } : {}),
+    ...(style?.stroke ? { stroke: style.stroke } : {}),
+    ...(style?.align ? { align: style.align } : {}),
+    ...(style?.valign ? { valign: style.valign } : {}),
     ...(style?.fontSize !== undefined ? { fontSize: style.fontSize } : {}),
   };
 };
+
+/** The DSL fields of a link's own look: the common base a link and a shape share. */
+const lineFieldsOf = (style: LineStyle | undefined): StyleFields => ({
+  ...(style?.color ? { color: style.color } : {}),
+  ...(style?.stroke ? { stroke: style.stroke } : {}),
+});
 
 /** The size of a box's title (a group's name), the layout's small text. */
 const TITLE_FONT_SIZE = 14;
@@ -150,7 +132,7 @@ const titleOf = (elements: readonly Shape.Element[], box: Shape.Box): Shape.Text
   );
 
 /** Whether a node's label reads as a title, from the top-left corner of its box. */
-const isTitled = ({ style }: Node): boolean => style?.alignHorizontal === 'left' && style.alignVertical === 'top';
+const isTitled = ({ overrides }: Node): boolean => overrides?.align === 'left' && overrides.valign === 'top';
 
 /** Px per character and line height of a small label, for sizing its box to its text (a note's default is a page). */
 const LABEL_CHAR = 7;
@@ -168,19 +150,21 @@ const nodeAt = (nodes: readonly Node[], point: { x: number; y: number }, slack =
     .sort((left, right) => left.size.width * left.size.height - right.size.width * right.size.height)[0];
 
 /** The canvas markers of a connector's ends; one the canvas has no marker for is an arrow. */
-const endsOf = (arrow: Shape.Arrow): Link['ends'] => {
+const endsOf = (arrow: Shape.Arrow): LinkEnds => {
   const markers = Shape.markersOf(arrow);
   const marker = (value: Shape.Marker | undefined) =>
-    value === 'triangle' || value === 'circle' || value === 'diamond' || value === 'diamond-filled'
+    value === 'triangle' ||
+    value === 'circle' ||
+    value === 'diamond' ||
+    value === 'diamond-filled' ||
+    value === 'crowsfoot'
       ? value
-      : value === 'crowsfoot'
-        ? 'many'
-        : value
-          ? 'arrow'
-          : undefined;
-  const start = marker(markers.start);
-  const end = marker(markers.end);
-  return start || end ? { ...(start ? { start } : {}), ...(end ? { end } : {}) } : undefined;
+      : value
+        ? 'arrow'
+        : undefined;
+  const tail = marker(markers.tail);
+  const head = marker(markers.head);
+  return { ...(tail ? { tail } : {}), ...(head ? { head } : {}) };
 };
 
 /**
@@ -191,33 +175,25 @@ const endsOf = (arrow: Shape.Arrow): Link['ends'] => {
  * Only the markers an arrow can spell are given back. A `diamond` end has no `ArrowHead`, and a marker reached
  * through a `relation` cannot be read back as that relation, since several relations draw the same marker.
  */
-const arrowEnds = (
-  ends: Link['ends'],
-  connector: Link['connector'],
-): { head?: Shape.ArrowHead; tail?: Shape.ArrowTail } => {
-  // A link with no end marker draws no arrowhead, and an arrow's default head IS an arrow, so the absence has to be
+const arrowEnds = ({
+  tail: source,
+  head: target,
+  connector,
+}: Pick<Link, 'tail' | 'head' | 'connector'>): { head?: Shape.ArrowHead; tail?: Shape.ArrowTail } => {
+  // A link with no head marker draws no arrowhead, and an arrow's default head IS an arrow, so the absence has to be
   // written down: the deck's two dashed connectors grew arrowheads without this. A headless arrow with no tail is
-  // stored with no `ends` at all (see `endsOf`), so that reads as headless too, unless a connector says the markers.
+  // stored with no marker at all (see `endsOf`), so that reads as headless too, unless a connector says the markers.
   const head: Shape.ArrowHead | undefined =
-    ends?.end === 'triangle'
-      ? 'triangle'
-      : ends?.end === 'many'
-        ? 'crowsfoot'
-        : ends?.end === 'arrow'
-          ? 'arrow'
-          : ends
-            ? ends.end === undefined
-              ? 'none'
-              : undefined
-            : connector === undefined
-              ? 'none'
-              : undefined;
-  const tail: Shape.ArrowTail | undefined =
-    ends?.start === 'circle' || ends?.start === 'arrow' ? ends.start : undefined;
+    target === 'triangle' || target === 'crowsfoot' || target === 'arrow'
+      ? target
+      : target === undefined && (source !== undefined || connector === undefined)
+        ? 'none'
+        : undefined;
+  const tail: Shape.ArrowTail | undefined = source === 'circle' || source === 'arrow' ? source : undefined;
   return { ...(head ? { head } : {}), ...(tail ? { tail } : {}) };
 };
 
-const withStyle = (node: Node, style: NodeStyle | undefined): Node => (style ? { ...node, style } : node);
+const withStyle = (node: Node, overrides: Style2D | undefined): Node => (overrides ? { ...node, overrides } : node);
 
 const managed = (content: ContentMap): ElementRecord[] => Object.values(content).filter(isElementRecord);
 
@@ -232,7 +208,8 @@ const nodesIn = (content: ContentMap, scene: string): Node[] =>
     .map((record) => record.node);
 
 /** A group's backdrop: a guide, a hull, or a diagram's tinted group frame. */
-const isBackdrop = (node: Node): boolean => node.style?.guide === true || isHullNode(node) || isDiagramBackdrop(node);
+const isBackdrop = (node: Node): boolean =>
+  node.overrides?.guide === true || isHullNode(node) || isDiagramBackdrop(node);
 
 /** Small text's width and height (scene px) as the diagram renderer sets it, for the frame of a diagram text node. */
 const textFrame = (element: Shape.Text, scale: number): { w: number; h: number } => {
@@ -300,7 +277,7 @@ const placeOnLayers = (content: ContentMap, scene: string, records: ContentMap) 
 const withStoredStyle = (content: ContentMap, object: string, element: Shape.Element): Shape.Element => {
   const record = managed(content).find(({ dsl }) => dsl?.object === object && dsl.element === element.id);
   return (element.kind === 'rect' || element.kind === 'ellipse') && record && isNodeRecord(record)
-    ? { ...fieldsOf(record.node.style), ...element }
+    ? { ...fieldsOf(record.node.overrides), ...element }
     : element;
 };
 
@@ -414,7 +391,7 @@ export const SceneHandler: ContentHandler = {
         if (shape) {
           const title = titles.get(element.id);
           const node: DiagramNode = {
-            type: 'diagram',
+            kind: 'diagram',
             id,
             z: nextZ(),
             center: place(shape.frame.x + shape.frame.w / 2, shape.frame.y + shape.frame.h / 2),
@@ -445,15 +422,15 @@ export const SceneHandler: ContentHandler = {
       }
       // A contributed kind draws its own frame, label and parts, so the box restores the kind and its fields
       // whatever box shape carries it — an ellipse naming one kept the kind through the text and lost it here.
-      // A built-in type name is NOT a contributed kind: `kind=diagram` would store a diagram node with no
+      // A built-in kind name is NOT a contributed kind: `kind=diagram` would store a diagram node with no
       // `element`, and reading the drawing back then threw on its missing `kind`.
-      if (isBox(element) && element.type && !isBuiltinType(element.type)) {
+      if (isBox(element) && element.component && !isBuiltinKind(element.component)) {
         const size = { width: element.w * placement.scale, height: element.h * placement.scale };
         const center = place(element.x + element.w / 2, element.y + element.h / 2);
         const label = element.text ?? titles.get(element.id)?.text;
         const kind: Node = {
           ...(element.data ? { data: element.data } : {}),
-          type: element.type,
+          kind: element.component,
           id,
           z: nextZ(),
           center,
@@ -475,7 +452,7 @@ export const SceneHandler: ContentHandler = {
           const size = { width: element.w * placement.scale, height: element.h * placement.scale };
           const center = place(element.x + element.w / 2, element.y + element.h / 2);
           const node: Node & Record<string, unknown> = {
-            type: 'grid',
+            kind: 'grid',
             id,
             z: nextZ(),
             center,
@@ -496,7 +473,7 @@ export const SceneHandler: ContentHandler = {
               ...(element.alignContent !== undefined ? { alignContent: element.alignContent } : {}),
             },
           };
-          put(element.id, withStyle(node, { fill: false, border: false, ...styleOf(element) }));
+          put(element.id, withStyle(node, { fill: 'none', stroke: 'none', ...styleOf(element) }));
           break;
         }
         case 'rect':
@@ -506,21 +483,18 @@ export const SceneHandler: ContentHandler = {
           const center = place(element.x + element.w / 2, element.y + element.h / 2);
           const title = titles.get(element.id)?.text;
           const style = styleOf(element);
-          const node: RectNode = { type: 'rect', id, z: nextZ(), center, size, label: element.text ?? title };
+          const node: RectNode = { kind: 'rect', id, z: nextZ(), center, size, label: element.text ?? title };
           // A title reads from the box's top-left corner, small, as the layout set it; a label stays centred.
           put(
             element.id,
-            withStyle(
-              node,
-              title ? { ...style, alignHorizontal: 'left', alignVertical: 'top', fontSize: TITLE_FONT_SIZE } : style,
-            ),
+            withStyle(node, title ? { ...style, align: 'left', valign: 'top', fontSize: TITLE_FONT_SIZE } : style),
           );
           break;
         }
         case 'ellipse': {
           const center = place(element.x + element.w / 2, element.y + element.h / 2);
           const size = { width: element.w * placement.scale, height: element.h * placement.scale };
-          const node: EllipseNode = { type: 'ellipse', id, z: nextZ(), center, size, label: element.text };
+          const node: EllipseNode = { kind: 'ellipse', id, z: nextZ(), center, size, label: element.text };
           put(element.id, withStyle(node, styleOf(element)));
           break;
         }
@@ -528,7 +502,7 @@ export const SceneHandler: ContentHandler = {
           const diameter = element.r * 2 * placement.scale;
           const center = place(element.cx, element.cy);
           const node: EllipseNode = {
-            type: 'ellipse',
+            kind: 'ellipse',
             id,
             z: nextZ(),
             center,
@@ -544,13 +518,13 @@ export const SceneHandler: ContentHandler = {
             const width = element.w ?? element.text.length * LABEL_CHAR + 16;
             const height = LABEL_HEIGHT;
             const node: RectNode = {
-              type: 'rect',
+              kind: 'rect',
               id,
               z: nextZ(),
               center: place(element.x + width / 2, element.y + height / 2),
               size: { width: width * placement.scale, height: height * placement.scale },
               label: element.text,
-              style: { fill: false, border: false, alignHorizontal: 'left', fontSize: 12 },
+              overrides: { fill: 'none', stroke: 'none', align: 'left', fontSize: 12 },
             };
             put(element.id, node);
             break;
@@ -558,12 +532,12 @@ export const SceneHandler: ContentHandler = {
           const width = element.w ?? DEFAULT_SIZES.note.width;
           const height = DEFAULT_SIZES.note.height;
           const node: NoteNode = {
-            type: 'note',
+            kind: 'note',
             id,
             z: nextZ(),
             center: place(element.x + width / 2, element.y + height / 2),
             size: { width: width * placement.scale, height: height * placement.scale },
-            text: element.text,
+            label: element.text,
           };
           put(element.id, withStyle(node, styleOf(element)));
           break;
@@ -572,7 +546,7 @@ export const SceneHandler: ContentHandler = {
           // No nested drawing yet: a portal shows as a titled box that carries the drawing it names.
           const size = { width: element.w * placement.scale, height: element.h * placement.scale };
           const center = place(element.x + element.w / 2, element.y + element.h / 2);
-          const node: RectNode = { type: 'rect', id, z: nextZ(), center, size, label: element.text ?? element.ref };
+          const node: RectNode = { kind: 'rect', id, z: nextZ(), center, size, label: element.text ?? element.ref };
           records[nodeKey(id)] = {
             kind: 'node',
             scene,
@@ -583,9 +557,9 @@ export const SceneHandler: ContentHandler = {
         }
         case 'arrow': {
           // A laid-out connector carries points, not refs: each end binds to the node it lands on.
-          // A caption (an unbordered label, from this upsert or an earlier one) is never an end.
+          // A caption (a label with no outline, from this upsert or an earlier one) is never an end.
           const shapes = [...nodesIn(content, scene), ...nodesOf(records)].filter(
-            (node) => node.style?.border !== false && !(isDiagramNode(node) && node.element.kind === 'text'),
+            (node) => node.overrides?.stroke !== 'none' && !(isDiagramNode(node) && node.element.kind === 'text'),
           );
           // A routed connector is its bends (`<id>-path`) then the arrow's last leg: the path starts at the source.
           const path = object.elements.find((other) => other.kind === 'line' && other.id === `${element.id}-path`);
@@ -604,7 +578,7 @@ export const SceneHandler: ContentHandler = {
           const source = { node: from, ...endPort(element.from) };
           const target = { node: to, ...endPort(element.to) };
           const caption = captions.get(element.id);
-          const text = element.text || caption?.text;
+          const label = element.text || caption?.text;
           if (diagram) {
             // The layout's route, bends and caption included, as long as the boxes stay where the layout put them.
             // A stated route first: an arrow carrying `via` says where it runs, and reading it back out of the
@@ -631,8 +605,8 @@ export const SceneHandler: ContentHandler = {
                 : {}),
             };
             const link: Link = {
-              ...createLink({ type: element.path ?? 'smart', id, z: nextZ(), source, target }),
-              ...(text ? { text } : {}),
+              ...createLink({ path: element.path ?? 'smart', id, z: nextZ(), source, target }),
+              ...(label ? { label } : {}),
               connector,
             };
             records[linkKey(id)] = { kind: 'link', scene, link, dsl: identity(element.id) } satisfies LinkRecord;
@@ -642,18 +616,18 @@ export const SceneHandler: ContentHandler = {
           // The stroke the arrow states, or the dashes its relation draws where it states none.
           const pattern =
             element.stroke === 'dotted' ? 'dotted' : Shape.markersOf(element).dashed ? 'dashed' : undefined;
-          // A link's own line style, which is where a plain canvas keeps what a routed link keeps on its connector.
-          const lineStyle: Link['style'] = {
-            ...(pattern ? { lineStyle: pattern } : {}),
-            ...(element.color && HUES[element.color] ? { hue: HUES[element.color] } : {}),
+          // A link's own look, which is where a plain canvas keeps what a routed link keeps on its connector.
+          const color = colorOf(element.color);
+          const overrides: LineStyle = {
+            ...(pattern ? { stroke: pattern } : {}),
+            ...(color ? { color } : {}),
           };
           // Routed by the canvas (on a lattice, along its gutters) rather than through the layout's bends: the canvas
           // attaches at its own ports, so a route through the layout's points would kink at each end.
           const link: Link = {
-            ...createLink({ type: element.path ?? 'smart', id, z: nextZ(), source, target }),
-            ...(ends ? { ends } : {}),
-            ...(text ? { text } : {}),
-            ...(Object.keys(lineStyle).length ? { style: lineStyle } : {}),
+            ...createLink({ path: element.path ?? 'smart', id, z: nextZ(), source, target, ends }),
+            ...(label ? { label } : {}),
+            ...(Object.keys(overrides).length ? { overrides } : {}),
             // A stated route overrides the canvas's own: the author said where the connector runs, and a link with
             // no route is still left to the canvas, which attaches at its own ports.
             ...(element.route?.length
@@ -758,7 +732,7 @@ export const SceneHandler: ContentHandler = {
             elements.push({ kind: 'text', id: element, x: local.x, y: local.y, w: local.w, text });
           } else if (record.dsl?.portal !== undefined) {
             elements.push({ kind: 'portal', id: element, ...local, ref: record.dsl.portal, ...(text ? { text } : {}) });
-          } else if (node.type === 'grid') {
+          } else if (node.kind === 'grid') {
             // The rule back out of the node, so the text says how the children are placed rather than only where
             // they landed. Their frames stay as they are: a cached projection the next render re-solves.
             const rule = dataOf(node) ?? {};
@@ -783,21 +757,21 @@ export const SceneHandler: ContentHandler = {
               ...placeOf('justifyContent', rule.justifyContent),
               ...placeOf('alignContent', rule.alignContent),
               ...(text ? { text } : {}),
-              // A grid's own defaults are not worth writing down: it draws no fill and no border unless told to,
+              // A grid's own defaults are not worth writing down: it draws no fill and no outline unless told to,
               // so emitting them would put two words on every grid that say only "as usual".
-              ...gridStyle(node.style),
+              ...gridStyle(node.overrides),
               ...placedBy(node),
             });
-          } else if (!isBuiltinType(node.type)) {
+          } else if (!isBuiltinKind(node.kind)) {
             const data = dataOf(node);
             elements.push({
               kind: 'rect',
               id: element,
               ...local,
-              type: node.type,
+              component: node.kind,
               ...(data ? { data } : {}),
               ...(text ? { text } : {}),
-              ...fieldsOf(node.style),
+              ...fieldsOf(node.overrides),
               ...placedBy(node),
             });
           } else if (text && !isEllipseNode(node) && isTitled(node)) {
@@ -822,7 +796,7 @@ export const SceneHandler: ContentHandler = {
               id: element,
               ...local,
               ...(text ? { text } : {}),
-              ...fieldsOf(node.style),
+              ...fieldsOf(node.overrides),
               ...placedBy(node),
             });
           }
@@ -838,11 +812,9 @@ export const SceneHandler: ContentHandler = {
               id: element,
               from,
               to,
-              ...(record.link.text ? { text: record.link.text } : {}),
+              ...(record.link.label ? { text: record.link.label } : {}),
               // `smart` is what an arrow with no `path` becomes, so writing it back would be noise.
-              ...(record.link.type !== 'smart' && (Shape.Path.literals as readonly string[]).includes(record.link.type)
-                ? { path: record.link.type as Shape.Path }
-                : {}),
+              ...arrowPath(record.link),
               ...(record.link.connector?.route?.length
                 ? { route: record.link.connector.route.map(({ x, y }) => ({ x: x - origin.x, y: y - origin.y })) }
                 : {}),
@@ -851,8 +823,8 @@ export const SceneHandler: ContentHandler = {
               // built record by record (the Agents slide stores `blue` on the link and `light-blue` on the
               // connector). The connector still fills in what the link does not say, such as a `relation`.
               ...(record.link.connector ? connectorStyle(record.link.connector) : {}),
-              ...fieldsOf(record.link.style),
-              ...arrowEnds(record.link.ends, record.link.connector),
+              ...lineFieldsOf(record.link.overrides),
+              ...arrowEnds(record.link),
             });
           }
         }
@@ -921,8 +893,8 @@ const translate = (element: Shape.Element, dx: number, dy: number): Shape.Elemen
 
 const zOf = (record: ElementRecord) => (isNodeRecord(record) ? record.node.z : record.link.z);
 
-// The DSL bridge has no plugin context, so it reads a node's text by the built-in types' parts; a
-// contributed type's text reads back empty.
+// The DSL bridge has no plugin context, so it reads a node's text by the built-in kinds' parts; a
+// contributed kind's text reads back empty.
 const textOf = (node: Node): string => nodeTitle(defaultNodeRegistry, node) ?? '';
 
 /** The four closed shapes that share a frame, and the only elements a contributed `kind=` may ride on. */
@@ -938,18 +910,24 @@ const placeOf = <Name extends 'justifyContent' | 'alignContent'>(
     ? ({ [name]: value as Shape.Place } as Partial<Record<Name, Shape.Place>>)
     : {};
 
-/** A grid's style, less the no-fill and no-border it takes by default. */
-const gridStyle = (style: NodeStyle | undefined): StyleFields => {
-  const { fill, border, ...rest } = fieldsOf(style);
+/** A grid's style, less the no-fill and no-outline it takes by default. */
+const gridStyle = (style: Style2D | undefined): StyleFields => {
+  const { fill, stroke, ...rest } = fieldsOf(style);
   return {
     ...rest,
     ...(fill !== undefined && fill !== 'none' ? { fill } : {}),
-    ...(border === true ? { border } : {}),
+    ...(stroke !== undefined && stroke !== 'none' ? { stroke } : {}),
   };
 };
 
-/** Whether the type is one the engine draws itself, as against a kind a plugin contributed. */
-const isBuiltinType = (type: string): boolean => NODE_TYPES.includes(type as (typeof NODE_TYPES)[number]);
+/** Whether the kind is one the engine draws itself, as against a kind a plugin contributed. */
+const isBuiltinKind = (kind: string): boolean => NODE_KINDS.some((builtin) => builtin === kind);
+
+/** The path an arrow states for a link: none for the default, or for a spline, which an arrow has no spelling for. */
+const arrowPath = (link: Link): { path?: Shape.Path } => {
+  const path = Shape.Path.literals.find((candidate) => candidate === linkPath(link));
+  return path === undefined || path === 'smart' ? {} : { path };
+};
 
 /**
  * A contributed kind's own fields: the `data` bag the kind keeps them in, flat, scalars only. The DSL has no

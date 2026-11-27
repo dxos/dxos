@@ -371,8 +371,8 @@ describe('SceneEditor', () => {
         onClick={() =>
           onTransaction?.(() => {
             onIntent('root', { kind: 'create', element: { id: 'p', object: 'o' } });
-            onIntent('inside', { kind: 'create', element: { id: 'q', type: 'rect' } });
-            onModelIntent?.({ kind: 'define', model: 'm', object: { id: 'o', type: 'view', parts: 'inside' } });
+            onIntent('inside', { kind: 'create', element: { id: 'q', kind: 'rect' } });
+            onModelIntent?.({ kind: 'define', model: 'm', object: { id: 'o', kind: 'view', parts: 'inside' } });
           })
         }
       />

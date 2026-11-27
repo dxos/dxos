@@ -11,7 +11,7 @@ links, portals, the 2D Properties form and 2D styles.
 
 The 2D dimension (`Dimension2D`, in react-ui-canvas-editor) draws through react-ui-canvas's own engine, `Canvas.Root`:
 an infinite, multi-depth diagram surface where a View is typed nodes and typed links in one flat coordinate space and
-a node of type `view` opens onto another View, which is what depth means. The engine takes the document itself: it
+a node of kind `view` opens onto another View, which is what depth means. The engine takes the document itself: it
 reads the open scene's 2D layouts into render lists (`RenderList2D`, by `toRenderLists2D`) held in its private draw
 state (`DrawState`), a gesture edits that draw state in memory as `SceneEdit`s, and on release the change reaches the
 host as one `LayoutIntent` per changed layout (`layoutWrites`) — plus a `ModelIntent` defining the object a new
@@ -52,12 +52,12 @@ container tree. The word _scene_ means the drawn world (the scene layer, scene c
 | Term          | Definition                                                                                                                                                                                                         |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Canvas**    | The surface. It shows one **root View** and navigates down from it; the navigation path always starts at the root.                                                                                                 |
-| **Node**      | A positioned element: a centre, a size, a type and a style. Every node lives in exactly one container.                                                                                                             |
+| **Node**      | A positioned element: a centre, a size, a kind and a style. Every node lives in exactly one container.                                                                                                             |
 | **Link**      | A connection between two endpoints, each a node (and optional port) or a free point. A link lives in the container of its endpoints, not under its source node, since a link's source can change.                  |
 | **Container** | Anything that holds an ordered list of nodes and links: a View or an Object definition.                                                                                                                            |
 | **View**      | A `view` node and the contents record it opens: nodes and links with a layout. Drilling into a View makes it the canvas's current View. The root View is the one View no node contains.                            |
 | **Object**    | A reusable container definition (`ViewKind` `composite`), drawn wherever it is placed. An Object is not drilled into: it opens in **isolation** to edit its definition, and every placement redraws.              |
-| **Instance**  | A node that places an Object: the Object's contents scaled into the instance's box (`fit`), with per-instance `overrides`.                                                                                         |
+| **Instance**  | A node that places an Object: the Object's contents scaled into the instance's box (`fit`), with per-instance `partOverrides`.                                                                                     |
 | **Group**     | What the Group command makes: an **anonymous Object** and one Instance of it in place of the selection. It joins the Objects library when it is **named** or **placed a second time**.                             |
 | **Tag**       | A label on any node, link, Instance or Object, many per element. A tag hides, locks or sets the opacity of everything it labels. It has no effect on drawing order. **(planned)**; until then, `Layer` does this. |
 | **Order**     | A container's children are an ordered list, drawn first at the back. Moving an element in the Views tree restacks it.                                                                                              |
@@ -75,12 +75,12 @@ Each engine concept is a part of the scene model, which is what is stored:
 | Engine         | Scene model (`org.dxos.scene`)                                                                                   |
 | -------------- | ---------------------------------------------------------------------------------------------------------------- |
 | Root View      | The open `Scene`'s `Layout2D`.                                                                                    |
-| `view` node    | An `Element2D` placing the composite object `view:<layout>`, whose parts are that View's layout.                 |
+| `view` node    | An `Element2D` placing an object of kind `view`, whose parts are that View's layout.                             |
 | Object         | A `Layout2D` with `kind: composite` (`anonymous` when Group made it), the parts of a model object.               |
-| Instance       | An `Element2D` placing the object `instance:<composite>`, with the composite transform (`scale`, `fit`).         |
-| Node, Link     | An `Element2D`; a link is one with `source` and `target` endpoints. Fields the base lacks live in `props.canvas`. |
+| Instance       | An `Element2D` placing an Object, or an object of kind `group` or `hull`, with its transform (`scale`, `fit`).   |
+| Node, Link     | An `Element2D`: the stored element is the node or the link itself, a link being one of kind `link` with `source` and `target` endpoints. |
 | Layer          | An entry of `Layout2D.layers`; `node.layer` is the element's `layer`.                                            |
-| Style class    | A named style of the root model (`NamedStyle2D`); a node's `class` is the element's `style`, its `style` the element's `overrides`. |
+| Style class    | A named style of the root model (`NamedStyle2D`); a node or a link names one in `style` and keeps its own look in `overrides`, as its element does. |
 
 ## Extensions
 
@@ -151,79 +151,91 @@ type Tag
 ```mdl
 type NodeBase
   desc: >
-    What every node is, whatever its type adds (decision 1). The frame is `size` centred on `center`;
+    What every node is, whatever its kind adds (decision 1). The frame is `size` centred on `center`;
     everything the engine does — hit testing, ports, resize, marquee, portal mapping — reads only these
     fields, which is why a host type is a first-class citizen rather than a special case. `z` is a
     fractional order key (`utils/order.ts`), shared with links: one namespace, one selection, one undo
     log, one `update` intent for both.
   fields:
     id: NodeId
-    type: NodeType                    # a built-in (below) or a host's own
+    kind: NodeKind                    # a built-in (below) or a host's own
     z: string                         # fractional order key: the node's place in its container's order
     locked?: boolean                  # no intent moves, resizes or deletes it
     center: Point
     size: Size
     rotation?: number                 # degrees clockwise about the centre
-    ports?: Port[]                    # absent: the type's definition supplies them (decision 12)
+    ports?: Port[]                    # absent: the kind's definition supplies them (decision 12)
     layer?: LayerId
-    class?: string                    # a style class: the element's named `style`
-    style?: NodeStyle                 # the element's `overrides`
+    style?: string                    # a style class, by id
+    overrides?: NodeStyle             # the node's own look, field by field over its style class
     tags?: TagId[]                    # (planned)
 ```
 
 ```mdl
 type BuiltinNode
   desc: >
-    The engine's own types, each `NodeBase` plus its own fields; `isRectNode`-style guards narrow to
-    them, sound because the registry maps one type name to one schema. A host's types (a UML class, a
+    The engine's own kinds, each `NodeBase` plus its own fields; `isRectNode`-style guards narrow to
+    them, sound because the registry maps one kind name to one schema. A host's kinds (a UML class, a
     compute shape) are `NodeBase` to the engine and render through their own `NodeDef.component`.
   literals: RectNode | EllipseNode | CloudNode | PolygonNode | PolylineNode | NoteNode | ViewNode | InstanceNode | PathNode | GeneratorNode | DiagramNode
   fields:
     RectNode: { label?: string }
     EllipseNode: { label?: string }       # inscribed in the frame; one port per side, at its centre
-    NoteNode: { text: string }
+    NoteNode: { label: string }
     ViewNode: { scene: ViewId, link? }    # opens the View it names, drawn live inside its frame; stored `frame` reads as `view`
-    InstanceNode: { composite: ViewId, overrides?, fit?: 'fit' | 'fill' | 'none' }   # places an Object
-    PathNode: { d: string, viewBox: Bounds, fill? }
+    InstanceNode: { composite: ViewId, partOverrides?, fit?: 'fit' | 'fill' | 'none' }   # places an Object
+    PathNode: { d: string, viewBox: Bounds }   # filled with the node's colour, a literal exactly as written
     GeneratorNode: { generator: string, params?, seed? }   # docs/ANIMATION.md §6
 ```
 
 ```mdl
 type NodeStyle
   desc: >
-    Presentation a node carries; every field optional, the frame supplying the default look. `hue` is a
-    theme hue colouring fill, text and border together (never a raw colour), so a View stays themed in
-    both modes.
+    What a node draws with: the scene model's `Style2D`, of which `NodeStyle` is an alias. Every field is
+    optional, and the canvas theme supplies the default. `color` colours fill, text and border together. A
+    theme name keeps a View themed in both modes; a CSS literal draws as written in every theme.
   fields:
-    hue?: string                      # a theme hue, annotated for the Form's hue picker
-    rounded?: boolean
-    fill?: boolean
-    border?: boolean
+    color?: Color                     # a theme name, alone or at a tone (`blue`, `blue/2`, `default/0`), or a CSS literal (`#1e90ff`)
+    opacity?: number                  # 0 to 1; unset is 1
+    stroke?: 'none' | 'solid' | 'dashed' | 'dotted' | 'sketchy'    # the border
+    fill?: 'none' | 'solid' | 'tint' | 'pattern' | 'glass'         # unset, a closed shape is filled with its colour
+    corners?: 'all' | 'top' | 'bottom' | 'none'                    # unset is the look's own corner
+    weight?: 's' | 'm' | 'l' | 'xl'   # stroke weight and text size together, as a diagram scales them
     guide?: boolean                   # dashed and unfilled: an annotation, not content
+    font?: string                     # a font slot of the theme (`body`, `mono`, or the theme's own); unset is `body`
     fontSize?: number                 # text size in the node's own scene units; overrides the canvas's class
-    className?: string                # a host's own look
+    textColor?: Color                 # the text alone; unset, it takes what the colour and fill give it
+    align?: 'left' | 'center' | 'right'
+    valign?: 'top' | 'middle' | 'bottom'
 ```
 
 ```mdl
 type Link
   desc: >
-    A typed edge: `line` (straight), `curve` (cubic Bézier leaving each port along its side's normal),
+    An edge between two endpoints. Every link is of kind `link`, and how it runs is its `path`: `line`
+    (straight), `ortho` (leaving each port along its side's normal and turning at right angles),
+    `curve` (cubic Bézier leaving each port along its side's normal),
     `spline` (the polyline through its control `points`, each interior point rounded by a quadratic that
     takes the point as its control, so a corner reads as a corner) or `smart` (routed rather than drawn:
     a stub leaves each port along its normal by half a major cell and one segment joins them, rounded the
-    same way — nothing stored, so the route follows the nodes). A link that names no type is `smart`, and
+    same way — nothing stored, so the route follows the nodes). A link that names no path is `smart`, and
     fixtures and generated diagrams draw smart links. A link is NOT a node with a special kind — node-only
     operations never have to filter links out (decision 9).
   fields:
     id: LinkId
-    type: 'line' | 'curve' | 'spline' | 'smart'
+    kind: 'link'
     z: string
     locked?: boolean
     source: Endpoint
     target: Endpoint
-    directed?: boolean                # shorthand for ends: { end: 'arrow' }
-    ends?: { start?: Marker, end?: Marker }    # 'arrow' | 'circle'; replaces what directed implies
-    points?: Point[]                  # spline only, in order
+    path?: 'line' | 'ortho' | 'curve' | 'spline' | 'smart'    # unset is `smart`
+    points?: Point[]                  # the control points a spline runs through, in order
+    tail?: Marker                     # the marker at the source: arrow, circle, triangle, diamond, diamond-filled or crowsfoot
+    head?: Marker                     # the marker at the target; an arrow here reads as the link's direction
+    label?: string                    # a caption at the middle of the route
+    layer?: LayerId
+    style?: string                    # a style class, by id
+    overrides?: LineStyle             # the link's own colour, stroke and caption size
 ```
 
 ```mdl
@@ -242,14 +254,16 @@ type Endpoint
 ```mdl
 type Port
   desc: >
-    An attachment point on a node's frame. Ports come from the type, not the instance (decision 12);
-    `portsPerSide` spreads them along each side (never at a corner) and they draw at the major grid line
-    nearest each offset, so a link lands on a line rather than near one. `accepts` constrains which end
+    An attachment point on a node, stated as a fraction of its frame (`0,0` the top-left corner, `1,1`
+    the bottom-right), so it keeps its place however the node is resized: the point a draw.io
+    `<constraint x y>` states. Ports come from the kind, not the instance (decision 12);
+    `portsPerSide` spreads them along each side (never at a corner). `accepts` constrains which end
     of a link may land here, and a link between two constrained ports is directed by that alone.
   fields:
-    id: PortId                        # '<side><index>', e.g. 'e2'
-    side: 'n' | 'e' | 's' | 'w'
-    offset: number                    # 0..1 along that side
+    id: PortId                        # a generated port's id is its side's compass letter and its index, e.g. 'e2'
+    x: number                         # 0..1 across the frame
+    y: number                         # 0..1 down the frame
+    side?: 'top' | 'right' | 'bottom' | 'left'    # the side a link leaves from; unset, the nearest edge
     accepts?: 'in' | 'out' | 'any'    # default any
 ```
 
@@ -274,7 +288,7 @@ type NodeDef
     and ports come for free. A host composes its registry (and with `createViewSchema` its View
     schema) from the built-ins and its own — this is the whole of what "open node types" means.
   fields:
-    type: NodeType
+    type: NodeKind                    # the registry key: the kind of the nodes it defines
     name: string
     icon: string
     key?: string                      # palette shortcut; a large registry leaves most without one
@@ -336,8 +350,8 @@ type CanvasHistory
 
 ```mdl
 type Tool
-  desc: The active tool; a node type draws that node, a link type is what a port drag creates.
-  literals: { kind: 'select' } | { kind: 'hand' } | { kind: 'node', type } | { kind: 'link', type }
+  desc: The active tool; a node tool draws a node of its kind, a link tool's path is what a port drag creates.
+  literals: { kind: 'select' } | { kind: 'hand' } | { kind: 'node', node: NodeKind } | { kind: 'link', path: LinkPath }
 ```
 
 ## Components
@@ -379,7 +393,7 @@ component Canvas
     path: ViewId[]                    # root to the View being edited; its length is the depth
     isolated?: ViewId                 # the Object open in isolation
     selection: Set<ElementId>         # nodes and links together
-    hover, point, tool, linkType, snap, debug, drag, editing, clipboard
+    hover, point, tool, linkPath, snap, debug, drag, editing, clipboard
   layout: |
     ┌─ scene-view ────────────────────────────────┐
     │ [toolbar]                       [breadcrumbs]│
@@ -561,7 +575,7 @@ op removeLayer
 ```mdl
 op update
   desc: >
-    Property edits — a label, a text body, geometry, a spline's control points, a style. `id` and `type`
+    Property edits — a label, a text body, geometry, a spline's control points, a style. `id` and `kind`
     are never changed by an update, whatever the values carry.
   input:
     id: ElementId
@@ -659,19 +673,20 @@ feat F-3: Selection and editing
   req F-3.8: Picking a shape or link tool clears the selection; the node the gesture makes becomes it.
   req F-3.9: Double-click edits a node's text part in place; Enter commits, Escape rejects.
   req F-3.10: The engine's properties form edits the selected element's own schema through `update` intents,
-    `style.fontSize` among them: set, it overrides the view's own size class for every text part.
+    `overrides.fontSize` among them: set, it overrides the view's own size class for every text part.
   req F-3.11: A `view` node's View field picks any View of the drawing for it to open, so several nodes may
     share one View; a View that would open the current path again is not offered (`viewOptions`).
   req F-3.12: Style classes are named looks kept beside the Views (`DrawState.styles`), read from the root model's
     named styles: an element
-    naming one in `class` derives its style or line from it. Taking a class drops the element's own
+    naming one in `style` derives its look or line from it. Taking a class drops the element's own
     look; editing a classed element's look edits the class, so every element of it changes together.
     "New class from selection" makes a class of the selected element's look and moves the element onto it.
-  req F-3.14: Nodes and links share one `style` object: its common base (`lineStyleFields`: colour and line
-    style) is a link's whole style and the start of a node's (`NodeStyle`), which adds fill, tone, frame and text.
+  req F-3.14: Nodes and links share one look, their `overrides`: its common base (`lineStyleFields`: `color` and
+    `stroke`) is a link's style with its caption's size (`LineStyle`) and the start of a node's (`NodeStyle`), which
+    adds fill, corners, opacity and text.
     A selection of several kinds edits only the fields every kind declares (`commonSchema` intersects nested
     structs), with one style picker that offers the fill rows only when every element is a node; a class's style
-    restyles nodes and links alike, a link taking its common base.
+    restyles nodes and links alike, a link taking its colour, stroke and caption size.
   req F-3.15: A View has ordered layers (`View.layers`, one implicit when it names none) and every node and link
     is on exactly one (`layer`; unset, the bottom one). Elements paint by layer, then by their own order; a hidden
     layer is neither drawn nor hit. The layers panel (`Canvas.Layers`) adds, deletes, merges down, shows or
@@ -779,6 +794,13 @@ feat F-9: Views, Objects and Tags
   req F-9.9: An Object cannot contain a View, so an Object stays a drawing rather than a navigable place:
     Group refuses a selection holding a `view` node, and a `view` node created or pasted into an Object's
     definition is refused.
+  req F-9.10: A group the scene model made (an element placing a `group` object, stored with no centre)
+    draws as an Instance of its composite at true size: its members where they are, its box round them. Moved,
+    it stores the origin its members are placed from, and it keeps placing the group's own object, so it can
+    be ungrouped. A group of a group draws its box round the inner group's members too.
+  req F-9.11: A node places the object that already places its layout, else a new one named for the layout:
+    one definition has one object. The Objects panel lists reusable Objects only, and Group is offered for one
+    element or more.
 ```
 
 ```mdl
@@ -795,10 +817,19 @@ feat F-10: The 2D viewport in the editor
   req F-10.4: Selection, tool, drill path and camera are the engine's atoms, which the editor's aspects read and
     write; snapping, axes and guides go from the host's display into the engine's; a tool the engine changes itself (a
     create tool giving way to select) is the editor's at once.
-  req F-10.5: The 2D Properties form is the engine's own form over the selection's types (ports, link ends, line
-    type, a frame's object and role), inside `Canvas.Root` with every other part; it edits a whole selection.
+  req F-10.5: The 2D Properties form is the engine's own form over the selection's kinds (ports, a link's tail,
+    head and path, a frame's object and role), inside `Canvas.Root` with every other part; it edits a whole selection.
   req F-10.6: Double-clicking a portal drills into it, as the open layout; an Object opens in isolation from the
     Objects section and is never drilled into ([F-1.8]).
+  req F-10.7: The reader has one path for every element, whoever wrote it: an element the editor wrote reads back as
+    the node or link it was written from, and one a `.dx` document wrote takes a paint order in the layout's own
+    order and the defaults of the fields its kind requires. A layout that declares layers is read as written: a node
+    keeps the layer its element names, and one that names no layer of the list draws on the bottom one. A layout
+    that declares none has the default layer, which its list declares and every element is on.
+  req F-10.8: A hidden element is left out of a render list, except in a composite's definition, where a hidden part
+    is one an instance may show again. A solid's operands are left out of every list, hidden or not, because the solid
+    names them.
+  req F-10.9: The inspector panel's titles and labels do not select as text; a field's own text does.
 ```
 
 ```mdl
@@ -837,14 +868,28 @@ feat F-13: Diagrams on the canvas
 
 ```mdl
 feat F-14: 2D styles and composites
-  req F-14.1: `Style2D` is the canvas node style plus the `sketchy` line style, `pattern` and `weight`; diagram
-    styles map onto it, so a diagram-styled element can take a catalog style.
-  req F-14.2: (planned) The canvas draws `sketchy`, `pattern` and `weight`; the engine's node style has no field for
-    them yet, so the viewport drops them.
+  req F-14.1: `Style2D` is the one 2D look: the canvas node style (`NodeStyle`), a model's named style and a catalog's
+    entry state the same fields, the `sketchy` stroke, the `pattern` fill and `weight` among them; diagram styles map
+    onto it, so a diagram-styled element can take a catalog style.
+  req F-14.2: (planned) The canvas draws a `sketchy` stroke, `pattern` and `glass` fills and `weight`. Until then
+    `sketchy` draws solid, `pattern` and `glass` draw as a solid fill, and `weight` is not drawn; a `tint` fill draws
+    at the lightest tone.
   req F-14.3: The canvas draws a placed composite at its instance scale; a non-uniform scale draws uniformly,
     letterboxed in the frame.
-  req F-14.4: Node fields the element base has no slot for are kept under the element's `props.canvas`, and a node's
-    `class` and `style` map to the element's `style` and `overrides` at the viewport's boundary.
+  req F-14.4: A stored element is the node or the link itself. `Element2D` carries every node and link field at its
+    top (`ports`, `portsPerSide`, `partOverrides`, `parent`, `extent`, `exposed`, `bind`, `optional`, `grow`,
+    `follows`; a link's `path`, `points`, `tail`, `head`, `connector`), a built-in kind's own fields beside them and a
+    plugin kind's under `data`; a node's and a link's `style` and `overrides` are the element's. `props` holds only
+    what other writers keep there (a solid's `op` and `operands`, a `.dx` link's `end`). A placed composite is stored
+    with the object it places, whose kind says which container it is (org.dxos.scene#F-1.8), and its own `kind`.
+  req F-14.5: A colour is resolved through the look's theme slots: a name is one of the theme's named colours, else
+    one of its hues, drawn at the tone it states (0 an outline, 1 strong, 2 medium, 3 light; a text's 1 to 3), and
+    `default` is the look's own colour. A CSS literal is drawn as written in every theme. A `font` names a font slot
+    of the theme; every theme fills `body` and `mono`, and a slot the theme does not define draws as its body face.
+  req F-14.6: A layout, model or style catalog stored in the earlier words (a `props.canvas` bag, `type`, `class`,
+    `hue` and `tone`, a port on a side at an offset) is migrated by the scene model, whose layout, model and style
+    catalog types are at version 0.2.0, each with a migration from 0.1.0 ([org.dxos.scene#F-5]). The 2D reader (`toRenderList2D`) does not
+    read those words.
 ```
 
 ```mdl
@@ -912,9 +957,6 @@ feat F-17: Link ends
 
 - **Diagram objects as relative composites** ([F-13.3]): done with the diagram handler's rewrite onto the scene
   model, together with link ends that name an element inside a composite.
-- **The engine's `class`/`style` names** go with the View model they are stored in: they are retired when the engine
-  reads elements directly, and are never migrated. Until then node fields with no element slot stay under
-  `props.canvas`.
 
 ## Rules
 
@@ -1710,6 +1752,161 @@ decision D-68: `centreOn` is removed from the navigation commands; no host uses 
   supersedes: D-67
   affects: [F-1]
   why: Its one caller, the canvas plugin's drawing `Locator`, is gone; a follower now sets the camera through the host's `camera` prop.
+```
+
+```mdl
+decision D-69: The 2D engine's nodes, links, styles and ports are written in a normalized vocabulary. Type names and attributes are standardized so that they are consistent. A property such as the font family is general and names a slot of a theme, the default and the monospace face being slots. Every colour property takes the same generic colour patterns and named theme colours. A port states its place in draw.io's constraint format.
+  date: 2026-11-24
+  by: user:richburdon
+  affects: [NodeBase, NodeStyle, Link, Port, Tool, F-3.14, F-14.1, F-14.5]
+```
+
+```mdl
+decision D-70: The editor's node and link are the stored element, and the stored format takes one revision for [D-69], with a migration from the one before.
+  date: 2026-11-24
+  by: user:richburdon
+  supersedes: D-17
+  affects: [F-14.4, F-14.6]
+```
+
+```mdl
+decision D-71: The engine's node and link, the stored element and the diagram's shapes state a thing with one word. A node and a link have a `kind`. A link's markers are `tail` and `head`, and its caption, like a note's text, is `label`. An element names a style class in `style` and keeps its own look in `overrides`; a placed composite's per-part values are `partOverrides`. A look states `color`, `textColor`, `stroke`, `fill`, `corners`, `font`, `align` and `valign`, and a side is `top`, `right`, `bottom` or `left`. Fills in [D-69], with the scene model's words ([org.dxos.scene#D-112]).
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [NodeBase, BuiltinNode, NodeStyle, Link, Port, Tool, Canvas, update, F-3.10, F-3.12, F-3.14, F-10.5]
+  why: With one word for one thing, nothing maps a node's fields onto an element's at the viewport's boundary, as `class` and `style` were mapped onto `style` and `overrides`.
+```
+
+```mdl
+decision D-72: Every link is of kind `link`, and how it runs is its `path` (`line`, `ortho`, `curve`, `spline` or `smart`; unset is `smart`). `points` is a field of every link, which only a spline uses. Fills in [D-69], as [org.dxos.scene#D-118] does for the model.
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Link, Tool, Canvas]
+  why: `path` is the word the DSL's arrow already uses for how it runs.
+  rejected:
+    - Keeping five link kinds, one for each path.
+```
+
+```mdl
+decision D-73: A colour is one string: a theme name, alone or at a tone (`blue`, `blue/2`), or a CSS literal. `default` names the look's own colour, so `default/<tone>` states a tone with no hue. A node's tone is 0 (an outline) to 3 (the lightest fill) and a text's 1 to 3. Fills in [D-69], as [org.dxos.scene#D-114] and [org.dxos.scene#D-115] do for the model.
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [NodeStyle, F-14.5]
+  why: The earlier node style allowed a tone with no hue, which a name at a tone could not say without a name for the look's own colour.
+```
+
+```mdl
+decision D-74: A named theme colour has no sigil and shares one namespace with the hues: the canvas looks a name up among the theme's named colours first, then as a hue. Fills in [D-69], as [org.dxos.scene#D-114] does for the model.
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [NodeStyle, F-14.5]
+  why: The 13 colour names existing diagrams use stay valid; `grey` and the four `light-` names are named colours of the default theme.
+  rejected:
+    - A `$name` sigil on a named theme colour.
+```
+
+```mdl
+decision D-75: A style's `font` names a font slot of the theme. Every theme fills `body` and `mono`; a text with no font is set in `body`, and a slot the theme does not define draws as its body face. Fills in [D-69], as [org.dxos.scene#D-116] does for the model.
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [NodeStyle, F-14.5]
+  why: Slots that every theme fills let a drawing name a face whatever theme draws it.
+```
+
+```mdl
+decision D-76: A port is a point of its node's frame, `x` and `y` as fractions of it (`0,0` the top-left corner, `1,1` the bottom-right): the point a draw.io `<constraint x y>` states. `side` is optional and says which way a link leaves; unset, it is the nearest edge. A generated port keeps its id (`e2`). Fills in [D-69], as [org.dxos.scene#D-117] does for the model.
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Port]
+  why: A fraction of the frame keeps the port's place however the node is resized, and stored link ends name generated ports by those ids.
+```
+
+```mdl
+decision D-77: An `Element2D` carries every node and link field at its top, a built-in kind's own fields beside them and a plugin kind's under `data`. Nothing is kept under `props.canvas`: `props` holds only what other writers keep there (a solid's `op` and `operands`, a `.dx` link's `end`). A placed composite is stored with the object it places and its own `kind`. Fills in [D-70], as [org.dxos.scene#D-119] does for the model.
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  supersedes: D-10
+  affects: [F-14.4]
+  why: A render list read back from its layout is then the one that was written, and a kind that draws a composite (a card, a UML class) reads back as that kind.
+```
+
+```mdl
+decision D-78: The 2D reader reads a layout the editor wrote and a layout written as text by the same path. A layout that declares layers is read as written: a node keeps the layer its element names. A layout that declares none reads with the default layer declared and every element on it. Fills in [D-70].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-10.7]
+  why: The editor adds a layer beside the ones its list declares and pins every element to its layer. A list with no layer made that pin a write of every element, which the standalone editor's host answered with a document that still declared no layers, so the new layer was dropped.
+  rejected:
+    - The default layer for any element that names none, in a layout that declares layers too: a list the editor wrote then read back different from what was written.
+    - No default layer at all: the standalone editor could then not add a layer.
+```
+
+```mdl
+decision D-79: A hidden element is left out of a render list, except in a composite's definition. A solid's operands are left out because the solid names them, not because they are hidden. Fills in [D-70].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-10.8]
+  why: An instance may show a hidden part of its composite again, so the definition's list must hold it; a solid stands for its operands, which the reader still reads to frame the solid and work out its outline.
+```
+
+```mdl
+decision D-80: Until the canvas draws them ([F-14.2]), a `sketchy` stroke draws solid, `pattern` and `glass` fills draw as a solid fill, and a `tint` fill draws at the lightest tone. Fills in [D-71].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-14.2]
+  why: The fill and stroke words are shared with renderers that have a hatching, a material and a hand-drawn stroke; a renderer without one draws its plain form, so the drawing still reads.
+```
+
+```mdl
+decision D-81: Inspector headers and text labels do not select as text.
+  date: 2026-11-24
+  by: user:richburdon
+  affects: [F-10.9]
+```
+
+```mdl
+decision D-82: A placed composite with no centre is placed at the origin at true size, as 3D places one, and a `group` object reads as an Instance that names the object it was read from. Fills in [D-14].
+  date: 2026-11-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-9.10]
+  why: The scene model's Group stores no centre, since its members keep their places, and the 2D reader drew nothing for an element without one: the grouped elements disappeared. The first write then replaced the group's object with one the Instance node made for itself, which Ungroup refused.
+  rejected: Storing a centre and a size on the group when it is made, which would have two frames to keep in step, the element's and its members'.
+```
+
+```mdl
+decision D-83: A placed composite's box counts a part that has no frame of its own by that part's own parts, to any depth, and a group with a centre and no size is placed from that centre. Fills in [D-82].
+  date: 2026-11-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-9.10]
+  why: A group holding a group that was never moved drew a box round its other members only and clipped the inner group away, and an inner group released from a moved one drew at a default size.
+```
+
+```mdl
+decision D-84: The 2D reader draws an element by its container (org.dxos.scene#D-125): a View as a `view` node, a group, a hull or an Object as an instance. The writers stop making `view:` and `instance:` objects: a node keeps the object that places its layout, a new object takes the layout's id and the container's kind, and an object whose container changed is retyped. Fills in [D-77].
+  date: 2026-11-26
+  by: user:richburdon
+  affects: [F-9.11]
+  why: The writer made a second object for a definition the model had already named, which Ungroup then refused, and Make object drew as a View because nothing but the element's own kind said what it was.
+```
+
+```mdl
+decision D-85: Group and Ungroup in the 2D engine are the model's `group` and `ungroup` intents (org.dxos.scene#D-128), in the standalone editor as in a host: the engine gives where the group stands (`groupPlacement`) and how an instance draws its parts (`ungroupPlacement`), and `composeSelection` and `ungroupInstance` are removed. A group made in a host is framed over its members and they follow its frame, as in the standalone editor. Fills in [D-84].
+  date: 2026-11-26
+  by: user:richburdon
+  affects: [F-9.2, F-9.3]
+  why: A group made in a host was placed from the origin and drew letterboxed when resized, while one made in the standalone editor stretched with its frame; one implementation gives both the same group.
 ```
 
 ## Appendix: Extension Definitions

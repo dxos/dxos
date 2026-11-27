@@ -11,9 +11,10 @@ import * as Schema from 'effect/Schema';
 
 import { type ContentMap } from '@dxos/diagram';
 import {
+  DASHES,
   Layer,
-  LINE_STYLES,
   Link,
+  LINK_KIND,
   type Node,
   NodeBase,
   Scene,
@@ -22,7 +23,10 @@ import {
   type ViewId,
   type ViewNode,
   isViewNode,
-  withLegacyNodeType,
+  upgradeLink,
+  upgradeNode,
+  upgradeStyleClass,
+  withLegacyNodeKind,
   withLegacyParams,
 } from '@dxos/scene';
 
@@ -57,7 +61,7 @@ export const SceneRecord = Schema.Struct({
 });
 export type SceneRecord = Schema.Schema.Type<typeof SceneRecord>;
 
-/** One per node, under `node:<id>`; `node` is any node the engine handles, its type the registry's. */
+/** One per node, under `node:<id>`; `node` is any node the engine handles, its kind the registry's. */
 export const NodeRecord = Schema.Struct({
   kind: Schema.Literal('node'),
   scene: Schema.String,
@@ -135,20 +139,20 @@ export const migrateContent = (content: ContentMap): boolean => {
     root: ROOT_VIEW_ID,
   } satisfies CanvasRecord;
   for (const [key, value] of Object.entries(content)) {
-    const record: unknown = value;
-    if (isNodeRecord(record)) {
-      const node = withLegacyNodeType(clone(record.node));
+    const record = readElementRecord(value);
+    if (record?.kind === 'node') {
+      const { node } = record;
       const portal = isViewNode(node) && node.scene === LEGACY_ROOT_VIEW_ID;
       if (record.scene === LEGACY_ROOT_VIEW_ID || portal) {
         const next: Node = isViewNode(node) && portal ? toRoot(node) : node;
         content[key] = {
-          ...clone(record),
+          ...record,
           scene: record.scene === LEGACY_ROOT_VIEW_ID ? ROOT_VIEW_ID : record.scene,
           node: next,
         } satisfies NodeRecord;
       }
-    } else if (isLinkRecord(record) && record.scene === LEGACY_ROOT_VIEW_ID) {
-      content[key] = { ...clone(record), scene: ROOT_VIEW_ID } satisfies LinkRecord;
+    } else if (record?.kind === 'link' && record.scene === LEGACY_ROOT_VIEW_ID) {
+      content[key] = { ...record, scene: ROOT_VIEW_ID } satisfies LinkRecord;
     }
   }
   return true;
@@ -167,7 +171,7 @@ const layersByScene = (content: ContentMap): Map<ViewId, Layer[]> => {
   return layers;
 };
 
-/** The element record's element with its layer named: the one it is drawn on (`elementLayer`). */
+/** The element record's element with its layer named: the one it is drawn on (`elementLayer`). Takes a fresh clone. */
 const placed = (record: ElementRecord, layers: readonly Layer[]): ElementRecord | undefined => {
   const element = record.kind === 'node' ? record.node : record.link;
   const layer = elementLayer(element, layers);
@@ -175,8 +179,8 @@ const placed = (record: ElementRecord, layers: readonly Layer[]): ElementRecord 
     return undefined;
   }
   return record.kind === 'node'
-    ? { ...clone(record), node: { ...clone(record.node), layer } }
-    : { ...clone(record), link: { ...clone(record.link), layer } };
+    ? { ...record, node: { ...record.node, layer } }
+    : { ...record, link: { ...record.link, layer } };
 };
 
 /**
@@ -190,11 +194,9 @@ export const hasUnplacedLayers = (content: ContentMap): boolean => {
     if (isSceneRecord(record)) {
       return Object.keys(record.layers ?? {}).length === 0;
     }
-    if (isElementRecord(record)) {
-      const scene = layers.get(record.scene);
-      return scene !== undefined && placed(record, scene) !== undefined;
-    }
-    return false;
+    const element = readElementRecord(record);
+    const scene = element && layers.get(element.scene);
+    return element !== undefined && scene !== undefined && placed(element, scene) !== undefined;
   });
 };
 
@@ -213,9 +215,10 @@ export const migrateLayers = (content: ContentMap): boolean => {
     const record: unknown = value;
     if (isSceneRecord(record) && Object.keys(record.layers ?? {}).length === 0) {
       content[key] = { ...clone(record), layers: { [DEFAULT_LAYER.id]: DEFAULT_LAYER } } satisfies SceneRecord;
-    } else if (isElementRecord(record)) {
-      const scene = layers.get(record.scene);
-      const next = scene && placed(record, scene);
+    } else {
+      const element = readElementRecord(record);
+      const scene = element && layers.get(element.scene);
+      const next = element && scene && placed(element, scene);
       if (next) {
         content[key] = next;
       }
@@ -241,7 +244,8 @@ export const pruneOrphanedViews = (content: ContentMap): boolean => {
   }
   for (const [key, value] of Object.entries(content)) {
     const record: unknown = value;
-    if ((isSceneRecord(record) && orphans.has(record.id)) || (isElementRecord(record) && orphans.has(record.scene))) {
+    const element = readElementRecord(record);
+    if ((isSceneRecord(record) && orphans.has(record.id)) || (element && orphans.has(element.scene))) {
       delete content[key];
     }
   }
@@ -310,25 +314,134 @@ export const rootOf = (content: ContentMap): ViewId | undefined => {
   return isCanvasRecord(canvas) ? canvas.root : undefined;
 };
 
-/**
- * A link saved with the retired `directed: true` reads as an arrow at its end; the next write stores it as
- * `ends`, since the record then differs from the link. Takes a fresh clone, which it edits in place.
- */
-const withLegacyDirection = (link: Link): Link => {
-  const legacy: unknown = Reflect.get(link, 'directed');
-  if (legacy === undefined) {
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+/** A link saved with the retired `directed: true` reads as an arrow at its head, unless it names its own markers. */
+const withLegacyDirection = (link: Record<string, unknown>): Record<string, unknown> => {
+  const { directed, ...rest } = link;
+  if (directed === undefined) {
     return link;
   }
-  Reflect.deleteProperty(link, 'directed');
-  return legacy === true && !link.ends ? { ...link, ends: { end: 'arrow' } } : link;
+  const marked = isRecord(rest.ends) || rest.tail !== undefined || rest.head !== undefined;
+  return directed === true && !marked ? { ...rest, head: 'arrow' } : rest;
+};
+
+/** A link saved with the retired `line` (`{ hue, dash }`) reads as its own look, unless it has one already. */
+const withLegacyLine = (link: Record<string, unknown>): Record<string, unknown> => {
+  const { line, ...rest } = link;
+  if (line === undefined) {
+    return link;
+  }
+  if (!isRecord(line) || isRecord(rest.style) || isRecord(rest.overrides)) {
+    return rest;
+  }
+  const stroke = DASHES.find((candidate) => candidate === line.dash);
+  const overrides = { ...(typeof line.hue === 'string' ? { color: line.hue } : {}), ...(stroke ? { stroke } : {}) };
+  return Object.keys(overrides).length > 0 ? { ...rest, overrides } : rest;
+};
+
+/**
+ * A node saved before its opacity moved into its own look, or a frame saved before its `object`, `contents` and `role`
+ * moved into its `link`, reads in the current shape. Takes a fresh clone, which it edits in place.
+ */
+const withLegacyNode = (node: Node): Node => {
+  const opacity: unknown = Reflect.get(node, 'opacity');
+  const object: unknown = Reflect.get(node, 'object');
+  const contents: unknown = Reflect.get(node, 'contents');
+  const role: unknown = Reflect.get(node, 'role');
+  Reflect.deleteProperty(node, 'opacity');
+  let overrides = node.overrides;
+  if (typeof opacity === 'number' && overrides?.opacity === undefined) {
+    overrides = { ...overrides, opacity };
+  }
+  // Only a frame ever carried `object`, `contents` and `role`; on another kind they are a host's own fields.
+  const framed = isViewNode(node) && (object !== undefined || contents !== undefined || role !== undefined);
+  if (!framed) {
+    return overrides === node.overrides ? node : { ...node, overrides };
+  }
+  Reflect.deleteProperty(node, 'object');
+  Reflect.deleteProperty(node, 'contents');
+  Reflect.deleteProperty(node, 'role');
+  const current: unknown = Reflect.get(node, 'link');
+  const link = {
+    ...(object !== undefined ? { object } : {}),
+    ...(typeof role === 'string' ? { role } : {}),
+    ...(typeof contents === 'boolean' ? { contents } : {}),
+    ...(isRecord(current) ? current : {}),
+  };
+  return Object.assign({}, node, overrides ? { overrides } : {}, { link });
+};
+
+/** A stored node in the current shape (`readNode`). Takes a fresh clone, which it may edit in place. */
+const currentNode = (stored: Record<string, unknown>): Node | undefined => {
+  // A node stating its `kind` is in the current words, and is kept field for field so a write finds it unchanged.
+  const node = typeof stored.kind === 'string' ? stored : upgradeNode(stored);
+  return Schema.is(NodeBase)(node) ? withLegacyNode(withLegacyParams(withLegacyNodeKind(node))) : undefined;
+};
+
+/** A stored link in the current shape (`readLink`). Takes a fresh clone, which it may edit in place. */
+const currentLink = (stored: Record<string, unknown>): Link | undefined => {
+  // Every link of the current words states the one kind a link has, and is kept field for field as a node is.
+  const link = stored.kind === LINK_KIND ? stored : upgradeLink(withLegacyLine(withLegacyDirection(stored)));
+  return Schema.is(Link)(link) ? link : undefined;
+};
+
+/**
+ * A stored node in the current shape, whatever revision wrote it: the earlier words (`type`,
+ * `class`, a hue and a tone), its legacy kind name (`frame`), settings beside the shared fields, opacity and frame
+ * fields moved. Nothing where the value is not a node. Returns a fresh clone.
+ */
+export const readNode = (stored: unknown): Node | undefined =>
+  isRecord(stored) ? currentNode(clone(stored)) : undefined;
+
+/**
+ * A stored link in the current shape, whatever revision wrote it: the earlier words (`type`,
+ * `ends`, `text`, `class`) and the retired `directed` and `line` read as its path, markers, label and look. Nothing
+ * where the value is not a link. Returns a fresh clone.
+ */
+export const readLink = (stored: unknown): Link | undefined =>
+  isRecord(stored) ? currentLink(clone(stored)) : undefined;
+
+/** A stored node record with its node in the current shape (`readNode`); nothing where the value is not one. */
+export const readNodeRecord = (value: unknown): NodeRecord | undefined => {
+  if (!isRecord(value) || value.kind !== 'node') {
+    return undefined;
+  }
+  const { node: stored, ...rest } = clone(value);
+  const node = isRecord(stored) ? currentNode(stored) : undefined;
+  const record = node && { ...rest, node };
+  return isNodeRecord(record) ? record : undefined;
+};
+
+/** A stored link record with its link in the current shape (`readLink`); nothing where the value is not one. */
+export const readLinkRecord = (value: unknown): LinkRecord | undefined => {
+  if (!isRecord(value) || value.kind !== 'link') {
+    return undefined;
+  }
+  const { link: stored, ...rest } = clone(value);
+  const link = isRecord(stored) ? currentLink(stored) : undefined;
+  const record = link && { ...rest, link };
+  return isLinkRecord(record) ? record : undefined;
+};
+
+/** A stored node or link record in the current shape; nothing where the value is neither. */
+export const readElementRecord = (value: unknown): ElementRecord | undefined =>
+  readNodeRecord(value) ?? readLinkRecord(value);
+
+/** A stored style class in the current words; nothing where the value is not one (written by a newer host). */
+const readStyleClass = (stored: unknown): StyleClass | undefined => {
+  const styleClass = isRecord(stored) ? upgradeStyleClass(clone(stored)) : undefined;
+  return Schema.is(StyleClass)(styleClass) ? styleClass : undefined;
 };
 
 /** The drawing's style classes; a record that is not one (written by a newer host) is left out. */
 export const readStyles = (styles: Record<string, unknown> | undefined): StyleMap => {
   const result: Record<string, StyleClass> = {};
-  for (const [id, record] of Object.entries(clone(styles ?? {}))) {
-    if (Schema.is(StyleClass)(record)) {
-      result[id] = record;
+  for (const [id, stored] of Object.entries(styles ?? {})) {
+    const styleClass = readStyleClass(stored);
+    if (styleClass) {
+      result[id] = styleClass;
     }
   }
   return result;
@@ -340,7 +453,7 @@ export const readStyles = (styles: Record<string, unknown> | undefined): StyleMa
  */
 export const writeStyles = (target: Record<string, unknown>, styles: StyleMap): void => {
   for (const id of Object.keys(target)) {
-    if (!(id in styles) && Schema.is(StyleClass)(target[id])) {
+    if (!(id in styles) && readStyleClass(target[id])) {
       delete target[id];
     }
   }
@@ -352,18 +465,14 @@ export const writeStyles = (target: Record<string, unknown>, styles: StyleMap): 
 };
 
 /** The style class a node or link record names. */
-const elementClass = (record: unknown): string | undefined => {
-  if (isNodeRecord(record)) {
-    return record.node.class;
-  }
-  return isLinkRecord(record) ? record.link.class : undefined;
-};
+const elementClass = (record: ElementRecord | undefined): string | undefined =>
+  record?.kind === 'node' ? record.node.style : record?.link.style;
 
 /** How many nodes and links name each style class. */
 export const styleClassUses = (content: ContentMap): Record<string, number> => {
   const uses: Record<string, number> = {};
   for (const record of Object.values(content)) {
-    const id = elementClass(record);
+    const id = elementClass(readElementRecord(record));
     if (id) {
       uses[id] = (uses[id] ?? 0) + 1;
     }
@@ -376,90 +485,27 @@ export const styleClassUses = (content: ContentMap): Record<string, number> => {
  * themselves), so deleting a class changes how nothing looks, only what restyles together.
  */
 export const deleteStyleClass = (content: ContentMap, styles: Record<string, unknown>, id: string): void => {
-  const [styleClass] = Object.values(readStyles({ [id]: styles[id] }));
+  const styleClass = readStyleClass(styles[id]);
   delete styles[id];
-  for (const [key, record] of Object.entries(content)) {
-    if (isNodeRecord(record) && record.node.class === id) {
-      const { class: _, ...node } = record.node;
-      const style = { ...styleClass?.style, ...node.style };
-      content[key] = { ...record, node: { ...node, ...(Object.keys(style).length > 0 ? { style } : {}) } };
-    } else if (isLinkRecord(record) && record.link.class === id) {
-      const { class: _, ...link } = record.link;
+  for (const [key, value] of Object.entries(content)) {
+    const record = readElementRecord(value);
+    if (record?.kind === 'node' && record.node.style === id) {
+      const { style: _, ...node } = record.node;
+      const overrides = { ...styleClass?.style, ...node.overrides };
+      content[key] = { ...record, node: { ...node, ...(Object.keys(overrides).length > 0 ? { overrides } : {}) } };
+    } else if (record?.kind === 'link' && record.link.style === id) {
+      const { style: _, ...link } = record.link;
       // A link keeps the common base of the class's style, all it ever drew.
       const base = styleClass?.style;
-      const style = {
-        ...(base?.hue ? { hue: base.hue } : {}),
-        ...(base?.lineStyle ? { lineStyle: base.lineStyle } : {}),
-        ...link.style,
+      const overrides = {
+        ...(base?.color ? { color: base.color } : {}),
+        ...(base?.stroke ? { stroke: base.stroke } : {}),
+        ...link.overrides,
       };
-      content[key] = { ...record, link: { ...link, ...(Object.keys(style).length > 0 ? { style } : {}) } };
+      content[key] = { ...record, link: { ...link, ...(Object.keys(overrides).length > 0 ? { overrides } : {}) } };
     }
   }
 };
-
-/**
- * A link saved with the retired `line` (`{ hue, dash }`) reads as its `style`; the next write stores it so. Takes a
- * fresh clone, which it edits in place.
- */
-const withLegacyLine = (link: Link): Link => {
-  const legacy: unknown = Reflect.get(link, 'line');
-  if (legacy === undefined) {
-    return link;
-  }
-  Reflect.deleteProperty(link, 'line');
-  if (typeof legacy !== 'object' || legacy === null || link.style) {
-    return link;
-  }
-  const hue: unknown = Reflect.get(legacy, 'hue');
-  const dash: unknown = Reflect.get(legacy, 'dash');
-  const lineStyle = LINE_STYLES.find((candidate) => candidate === dash);
-  const style = { ...(typeof hue === 'string' ? { hue } : {}), ...(lineStyle ? { lineStyle } : {}) };
-  return Object.keys(style).length > 0 ? { ...link, style } : link;
-};
-
-const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
-
-/**
- * A node saved before its opacity moved into its style, or a frame saved before its `object`, `contents` and `role`
- * moved into its `link`, reads in the current shape; the next write stores it so. Takes a fresh clone, which it edits in
- * place.
- */
-const withLegacyNode = (node: Node): Node => {
-  const opacity: unknown = Reflect.get(node, 'opacity');
-  const object: unknown = Reflect.get(node, 'object');
-  const contents: unknown = Reflect.get(node, 'contents');
-  const role: unknown = Reflect.get(node, 'role');
-  Reflect.deleteProperty(node, 'opacity');
-  let style = node.style;
-  if (typeof opacity === 'number' && style?.opacity === undefined) {
-    style = { ...style, opacity };
-  }
-  // Only a frame ever carried `object`, `contents` and `role`; on another type they are a host's own fields.
-  const framed = isViewNode(node) && (object !== undefined || contents !== undefined || role !== undefined);
-  if (!framed) {
-    return style === node.style ? node : { ...node, style };
-  }
-  Reflect.deleteProperty(node, 'object');
-  Reflect.deleteProperty(node, 'contents');
-  Reflect.deleteProperty(node, 'role');
-  const current: unknown = Reflect.get(node, 'link');
-  const link = {
-    ...(object !== undefined ? { object } : {}),
-    ...(typeof role === 'string' ? { role } : {}),
-    ...(typeof contents === 'boolean' ? { contents } : {}),
-    ...(isRecord(current) ? current : {}),
-  };
-  return Object.assign({}, node, style ? { style } : {}, { link });
-};
-
-/**
- * A stored node in the current shape: its legacy type name (`frame`), settings beside the shared fields, opacity
- * and frame fields moved. Returns a fresh clone.
- */
-export const upgradeNode = (node: Node): Node => withLegacyNode(withLegacyParams(withLegacyNodeType(clone(node))));
-
-/** A stored link in the current shape: the retired `directed` and `line` moved into `ends` and `style`. Returns a fresh clone. */
-export const upgradeLink = (link: Link): Link => withLegacyLine(withLegacyDirection(clone(link)));
 
 /**
  * The content with every record in the current shape: the legacy root scene renamed (`migrateContent`) and each
@@ -469,11 +515,9 @@ export const upgradeSceneContent = (content: ContentMap): ContentMap => {
   const next = clone(content);
   migrateContent(next);
   for (const [key, value] of Object.entries(next)) {
-    const record: unknown = value;
-    if (isNodeRecord(record)) {
-      next[key] = { ...record, node: upgradeNode(record.node) } satisfies NodeRecord;
-    } else if (isLinkRecord(record)) {
-      next[key] = { ...record, link: upgradeLink(record.link) } satisfies LinkRecord;
+    const record = readElementRecord(value);
+    if (record) {
+      next[key] = record;
     }
   }
   return next;
@@ -491,11 +535,12 @@ export const readViews = (content: ContentMap): RenderLists2D => {
       links[record.id] = {};
     }
   }
-  for (const record of Object.values(content)) {
-    if (isNodeRecord(record) && nodes[record.scene]) {
-      nodes[record.scene][record.node.id] = upgradeNode(record.node);
-    } else if (isLinkRecord(record) && links[record.scene]) {
-      links[record.scene][record.link.id] = upgradeLink(record.link);
+  for (const value of Object.values(content)) {
+    const record = readElementRecord(value);
+    if (record?.kind === 'node' && nodes[record.scene]) {
+      nodes[record.scene][record.node.id] = record.node;
+    } else if (record?.kind === 'link' && links[record.scene]) {
+      links[record.scene][record.link.id] = record.link;
     }
   }
   const scenes: Record<ViewId, RenderList2D> = {};
@@ -537,9 +582,11 @@ export const writeViews = (content: ContentMap, scenes: RenderLists2D): boolean 
       changed = true;
     }
     for (const node of Object.values(scene.nodes)) {
-      const existing = content[nodeKey(node.id)];
-      if (!isNodeRecord(existing) || existing.scene !== scene.id || !same(existing.node, node)) {
-        const dsl = isNodeRecord(existing) ? existing.dsl : undefined;
+      // Compared as stored, so a record an earlier revision wrote is written again in the current words.
+      const stored: unknown = content[nodeKey(node.id)];
+      const existing = readNodeRecord(stored);
+      if (!existing || existing.scene !== scene.id || !isRecord(stored) || !same(stored.node, node)) {
+        const dsl = existing?.dsl;
         content[nodeKey(node.id)] = {
           kind: 'node',
           scene: scene.id,
@@ -550,9 +597,10 @@ export const writeViews = (content: ContentMap, scenes: RenderLists2D): boolean 
       }
     }
     for (const link of Object.values(scene.links)) {
-      const existing = content[linkKey(link.id)];
-      if (!isLinkRecord(existing) || existing.scene !== scene.id || !same(existing.link, link)) {
-        const dsl = isLinkRecord(existing) ? existing.dsl : undefined;
+      const stored: unknown = content[linkKey(link.id)];
+      const existing = readLinkRecord(stored);
+      if (!existing || existing.scene !== scene.id || !isRecord(stored) || !same(stored.link, link)) {
+        const dsl = existing?.dsl;
         content[linkKey(link.id)] = {
           kind: 'link',
           scene: scene.id,
@@ -565,10 +613,11 @@ export const writeViews = (content: ContentMap, scenes: RenderLists2D): boolean 
   }
 
   for (const [key, record] of Object.entries(content)) {
+    const element = readElementRecord(record);
     const stale =
       (isSceneRecord(record) && !scenes[record.id]) ||
-      (isNodeRecord(record) && !scenes[record.scene]?.nodes[record.node.id]) ||
-      (isLinkRecord(record) && !scenes[record.scene]?.links[record.link.id]);
+      (element?.kind === 'node' && !scenes[element.scene]?.nodes[element.node.id]) ||
+      (element?.kind === 'link' && !scenes[element.scene]?.links[element.link.id]);
     if (stale) {
       delete content[key];
       changed = true;

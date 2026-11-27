@@ -26,8 +26,8 @@ const document: Scene.SceneDocument = {
       id: 'root',
       dim: '3d',
       elements: {
-        a: { id: 'a', type: 'cube', center: { x: 10, y: 0, z: 0 } },
-        b: { id: 'b', type: 'cube', center: { x: 12, y: 0, z: 0 } },
+        a: { id: 'a', kind: 'cube', center: { x: 10, y: 0, z: 0 } },
+        b: { id: 'b', kind: 'cube', center: { x: 12, y: 0, z: 0 } },
       },
     },
   ],

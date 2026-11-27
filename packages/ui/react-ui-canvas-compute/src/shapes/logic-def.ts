@@ -21,7 +21,7 @@ import { IfComponent, IfElseComponent } from './Logic.tsx';
 
 export const IfShape = ComputeShape.mapFields(
   Struct.assign({
-    type: Schema.Literal('if'),
+    kind: Schema.Literal('if'),
   }),
 );
 
@@ -29,7 +29,7 @@ export type IfShape = Schema.Schema.Type<typeof IfShape>;
 
 export const IfElseShape = ComputeShape.mapFields(
   Struct.assign({
-    type: Schema.Literal('if-else'),
+    kind: Schema.Literal('if-else'),
   }),
 );
 
@@ -42,7 +42,7 @@ export type IfElseShape = Schema.Schema.Type<typeof IfElseShape>;
 export type CreateIfProps = CreateShapeProps<IfShape>;
 
 export const createIf = (props: CreateIfProps) =>
-  createShape<IfShape>({ type: 'if', size: { width: 3 * MAJOR_GRID, height: getHeight(IfInput) }, ...props });
+  createShape<IfShape>({ kind: 'if', size: { width: 3 * MAJOR_GRID, height: getHeight(IfInput) }, ...props });
 
 export const ifNodeDef = defineComputeNode<IfShape>({
   type: 'if',
@@ -59,7 +59,7 @@ export type CreateIfElseProps = CreateShapeProps<IfElseShape>;
 
 export const createIfElse = (props: CreateIfElseProps) =>
   createShape<IfElseShape>({
-    type: 'if-else',
+    kind: 'if-else',
     size: { width: 3 * MAJOR_GRID, height: getHeight(IfElseInput) },
     ...props,
   });

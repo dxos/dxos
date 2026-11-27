@@ -25,7 +25,7 @@ import {
   writeViews,
 } from '@dxos/react-ui-canvas/headless';
 import { type RenderList2D, type RenderLists2D } from '@dxos/react-ui-canvas/headless';
-import { Scene, fromEcho } from '@dxos/scene';
+import { LINK_KIND, Scene, fromEcho } from '@dxos/scene';
 
 import { Canvas } from '#types';
 
@@ -63,7 +63,7 @@ export const readCanvasContent = (canvas: Canvas.Canvas): ContentMap => {
   for (const layout of doc.layouts) {
     for (const [id, element] of Object.entries(layout.elements)) {
       const dsl: unknown = element.dsl;
-      const key = element.type === 'link' ? linkKey(id) : nodeKey(id);
+      const key = element.kind === LINK_KIND ? linkKey(id) : nodeKey(id);
       const record = content[key];
       if (isDslIdentity(dsl) && (isNodeRecord(record) || isLinkRecord(record))) {
         content[key] = { ...record, dsl };

@@ -91,15 +91,22 @@ feat F-1: Camera
 feat F-2: Selection, gizmos and faces
   uses: [org.dxos.scene]
   req F-2.1: A click selects, Shift toggles and empty space clears; a selection is drawn in the theme's focus colour
-    as a silhouette outline and a world-aligned bounding box per element ([org.dxos.scene#D-58]).
+    as a silhouette outline and a world-aligned bounding box per element ([org.dxos.scene#D-58]). The box stays round
+    its element on every frame of a drag, before the document has the move.
   req F-2.2: Move, Rotate and Scale put a gizmo on the one selected element; it moves the mesh in memory and its
     release is one intent in the open layout's coordinates. A scale sets the scale it ends at ([org.dxos.scene#D-48]).
+    A scale handle sizes the element in step with its travel: the side it pulls follows the handle, and the even
+    handle keeps the element's proportions.
   req F-2.3: Snapping moves a gizmo by the grid unit, turns it by 15 degrees and scales by a tenth, and places a new
     element on a grid point ([org.dxos.scene#D-64]).
   req F-2.4: Double-clicking a plain element selects the face it lands on, drawn as a translucent pane in the
     selection colour over that side of its bounds; the Properties section names it. Double-clicking a composite drills
     into its parts instead ([org.dxos.scene#D-86], [org.dxos.scene#D-87]).
   req F-2.5: Escape cancels a shape being sized, then clears a selected face, then drills out of a composite.
+  req F-2.6: The select-all chord selects every element of the open layout, as in 2D. The editor takes the chord, so
+    the browser does not select the page's text.
+  req F-2.7: A selected group, which draws no mesh of its own, is drawn selected through its members: each is
+    outlined, and one box goes round them all.
 ```
 
 ```mdl
@@ -139,8 +146,11 @@ feat F-6: Looks and materials
     solids), each a default style catalog: CAD offers Part, Highlight and Clearance, Presentation Metal, Glass and
     Glow, the two Neu looks Body, Accent and Ghost. Every look can be picked in a read-only scene and in a
     host that stores no look.
-  req F-6.2: An element's `Style3D` draws as a material over its hue and tone: a solid, tinted or glass surface,
-    edges, opacity, metalness, roughness and glow.
+  req F-6.2: An element's `Style3D` (`color`, `fill`, `stroke`, `corners`, `opacity`, `metalness`, `roughness`,
+    `emissive`) draws as a material over its colour: a `solid`, `tint` or `glass` fill, edges where it states a
+    `stroke` other than `none`, a cube's corners rounded where it states `corners` other than `none`, and opacity,
+    metalness, roughness and glow. A material draws a colour's hue and not its tone, and a hex or `rgb()` literal as
+    written; a `pattern` fill draws solid.
   req F-6.3: Neu Light is always light and Neu Dark always dark, whatever the app's mode: its bodies and the ground
     plane under them are the 2D Neu ground of that mode (`NEU_PALETTE`), lit softly, each solid body casting a soft
     contact shadow at its foot; an element's hue draws only as its edges, or as a rim on a solid sphere.
@@ -353,6 +363,59 @@ decision D-20: The 3D renderer, the solids, `Scene3DView` and mesh import and ex
   for: user:richburdon
   affects: [Viewport3D, Scene3DEditor, SceneRenderer3D]
   why: react-ui-scene is removed, and its 3D parts split along the surface and the application as the 2D ones do.
+```
+
+```mdl
+decision D-21: A 3D look is written in the normalized vocabulary: its type names and attributes are standardized so that they are consistent, and its colour property takes the same generic colour patterns and named theme colours as every other.
+  date: 2026-11-24
+  by: user:richburdon
+  affects: [F-6.2]
+```
+
+```mdl
+decision D-22: `Style3D` states what it shares with the 2D look in the 2D look's words: `color`, `fill` (the surface: `solid`, `tint`, `glass`), `stroke` (the solid's edges, drawn where one other than `none` is stated), `corners` (rounded where one other than `none` is stated) and `opacity`; `metalness`, `roughness` and `emissive` stay its own. A material draws a colour's hue and not its tone, and a `pattern` fill, which has no material, draws solid. A Neu body is still edged whatever its `stroke`, as [D-13] says of `border`. Fills in [D-21], with the scene model's words ([org.dxos.scene#D-113]).
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-6.2, F-6.3]
+  why: With the shared fields named alike, a style lifts to 3D and flattens to 2D field for field.
+```
+
+```mdl
+decision D-23: When a 3D object moves, its bounding box moves with it.
+  date: 2026-11-24
+  by: user:richburdon
+  affects: [F-2.1]
+```
+
+```mdl
+decision D-24: The select-all chord on the main canvas selects all the objects on the canvas, in 3D as in 2D, and nothing in the inspectors.
+  date: 2026-11-24
+  by: user:richburdon
+  affects: [F-2.6]
+```
+
+```mdl
+decision D-25: The 3D scale tool scales linearly as its handle is dragged.
+  date: 2026-11-24
+  by: user:richburdon
+  affects: [F-2.2]
+```
+
+```mdl
+decision D-26: A scale handle's travel along its axis is added to the element's half-length on that axis, so the side it pulls follows the handle. The even handle's travel is added to the height, and the other axes keep their proportion to it. Fills in [D-25].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-2.2]
+  why: The gizmo's own step multiplies the size on every pointer move, so the growth compounds and depends on how often the pointer reports.
+```
+
+```mdl
+decision D-27: A selected group is outlined through its members, with one box round them all.
+  date: 2026-11-26
+  by: user:richburdon
+  affects: [F-2.7]
 ```
 
 ---

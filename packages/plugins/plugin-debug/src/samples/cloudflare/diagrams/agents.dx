@@ -2,7 +2,7 @@ diagram kind=grid size=1600x880 gap=32 padding=48 autoCols=1504
 
 group layer-ui-section cols="176 1fr" gap=24 {
   node layer-ui-label "Control" kind=heading icon=steering-wheel tone=sheet
-  group layer-ui-body cols=3 gap=160 padding=16 border=true {
+  group layer-ui-body cols=3 gap=160 padding=16 stroke=solid {
     group layer-ui-col-0 gap=48 {
       node goal "Goal" kind=card icon=target iconTone=sheet
       node project "Project" kind=card icon=folder iconTone=sheet
@@ -20,7 +20,7 @@ group layer-ui-section cols="176 1fr" gap=24 {
 
 group layer-activity-section cols="176 1fr" gap=24 {
   node layer-activity-label "Execution" kind=heading icon=lightning tone=accent
-  group layer-activity-body cols=3 gap=160 padding=16 border=true {
+  group layer-activity-body cols=3 gap=160 padding=16 stroke=solid {
     group layer-activity-col-0 gap=48 {
       node scheduler "Scheduler" kind=card icon=alarm iconTone=accent
       node feed "Feed" kind=card icon=queue iconTone=accent
@@ -38,7 +38,7 @@ group layer-activity-section cols="176 1fr" gap=24 {
 
 group layer-knowledge-section cols="176 1fr" gap=24 {
   node layer-knowledge-label "Knowledge" kind=heading icon=books tone=message
-  group layer-knowledge-body cols=3 gap=160 padding=16 border=true {
+  group layer-knowledge-body cols=3 gap=160 padding=16 stroke=solid {
     group layer-knowledge-col-0 gap=48 {
       node memory "Memory" kind=card icon=brain iconTone=message
       node schema "Schema" kind=card icon=brackets-curly iconTone=message

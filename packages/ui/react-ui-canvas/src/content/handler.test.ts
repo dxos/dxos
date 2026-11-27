@@ -45,7 +45,7 @@ describe('SceneHandler', () => {
     expect(Object.keys(root.nodes).sort()).toEqual(['face/caption', 'face/eye', 'face/head']);
     expect(Object.keys(root.links)).toEqual(['face/look']);
     const head = root.nodes[elementId('face', 'head')];
-    expect(isRectNode(head) && [head.center, head.size, head.label, head.style?.hue]).toEqual([
+    expect(isRectNode(head) && [head.center, head.size, head.label, head.overrides?.color]).toEqual([
       { x: 192, y: 128 },
       { width: 256, height: 128 },
       'Head',
@@ -54,7 +54,7 @@ describe('SceneHandler', () => {
     const eye = root.nodes[elementId('face', 'eye')];
     expect(isEllipseNode(eye) && [eye.center, eye.size.width]).toEqual([{ x: 128, y: 96 }, 32]);
     expect(root.links['face/look'].source).toEqual({ node: 'face/head' });
-    expect(root.links['face/look'].type).toBe('smart');
+    expect([root.links['face/look'].kind, root.links['face/look'].path]).toEqual(['link', 'smart']);
 
     const { scene, unmanaged } = SceneHandler.read(content);
     expect(unmanaged).toBe(0);
@@ -82,7 +82,7 @@ describe('SceneHandler', () => {
     const scene = rootOf(content);
     // A kind's node holds fields the engine does not declare, which is the whole point of a kind.
     const node: Node & Record<string, unknown> = {
-      type: 'card',
+      kind: 'card',
       id: elementId('deck', 'card-1'),
       z: 'a1',
       center: { x: 100, y: 64 },
@@ -104,7 +104,7 @@ describe('SceneHandler', () => {
     const rebuilt: ContentMap = {};
     applyCommands(rebuilt, commands, SceneHandler);
     const rebuiltNode = readViews(rebuilt)[ROOT_VIEW_ID].nodes[elementId('deck', 'card-1')];
-    expect([rebuiltNode.type, nodeTitle(defaultNodeRegistry, rebuiltNode), Reflect.get(rebuiltNode, 'data')]).toEqual([
+    expect([rebuiltNode.kind, nodeTitle(defaultNodeRegistry, rebuiltNode), Reflect.get(rebuiltNode, 'data')]).toEqual([
       'card',
       'Calendar',
       { tone: 'event', variant: 'simple', fill: 0.55 },
@@ -183,9 +183,9 @@ describe('SceneHandler', () => {
     };
     const content: ContentMap = {};
     applyCommands(content, [{ op: 'upsert-object', object }], SceneHandler);
-    // What the canvas draws: the link's own line style.
+    // What the canvas draws: the link's own stroke.
     const drawn = Object.values(content).flatMap((record) =>
-      record.kind === 'link' ? [`${record.link.id.split('/').pop()}:${record.link.style?.lineStyle}`] : [],
+      record.kind === 'link' ? [`${record.link.id.split('/').pop()}:${record.link.overrides?.stroke}`] : [],
     );
     expect(drawn).toEqual([
       'link-0:undefined',
@@ -243,7 +243,7 @@ describe('SceneHandler', () => {
           w: 256,
           h: 128,
           text: 'Types',
-          type: 'card',
+          component: 'card',
           data: { icon: 'brackets-curly', items: rows },
         },
       ],
@@ -285,7 +285,7 @@ describe('SceneHandler', () => {
     const before = readViews(content);
     const root = before[ROOT_VIEW_ID];
     const byhand = {
-      type: 'rect' as const,
+      kind: 'rect' as const,
       id: 'byhand',
       z: 'z',
       center: { x: 640, y: 640 },
@@ -346,22 +346,23 @@ describe('SceneHandler', () => {
     );
     const root = readViews(content)[ROOT_VIEW_ID];
     const link = root.links[elementId('edges', 'a-b-0')];
-    // The caption is the link's own text, not a shape beside it.
-    expect([link.type, link.source, link.target, link.ends, link.text]).toEqual([
+    // The caption is the link's own label, not a shape beside it.
+    expect([link.path, link.source, link.target, link.tail, link.head, link.label]).toEqual([
       'smart',
       { node: 'a/box' },
       { node: 'b/box' },
-      { end: 'arrow' },
+      undefined,
+      'arrow',
       'calls',
     ]);
     expect(root.nodes[elementId('edges', 'a-b-0-label')]).toBeUndefined();
-    // A crow's foot is the canvas's `many` end.
-    expect(root.links[elementId('edges', 'a-b-1')].ends).toEqual({ end: 'many' });
+    // A crow's foot is the canvas's own marker of that name.
+    expect(root.links[elementId('edges', 'a-b-1')].head).toBe('crowsfoot');
     // The group is a guide (off the lattice) titled at its top-left corner; its title is no shape of its own.
     const group = root.nodes[elementId('group', 'frame')];
-    expect(isRectNode(group) && [group.label, group.style]).toEqual([
+    expect(isRectNode(group) && [group.label, group.overrides]).toEqual([
       'Group',
-      expect.objectContaining({ lineStyle: 'dashed', guide: true, alignHorizontal: 'left', alignVertical: 'top' }),
+      expect.objectContaining({ stroke: 'dashed', guide: true, align: 'left', valign: 'top' }),
     ]);
     expect(root.nodes[elementId('group', 'label')]).toBeUndefined();
     // The group is decoration, on a backdrop layer below the boxes and links it groups.
@@ -396,7 +397,7 @@ describe('SceneHandler', () => {
     seedContent(again);
     applyCommands(again, [{ op: 'upsert-object', object }], SceneHandler);
     const node = readViews(again)[ROOT_VIEW_ID].nodes[elementId('group', 'frame')];
-    expect(isRectNode(node) && [node.label, node.style?.alignHorizontal, node.style?.alignVertical]).toEqual([
+    expect(isRectNode(node) && [node.label, node.overrides?.align, node.overrides?.valign]).toEqual([
       'Group',
       'left',
       'top',
@@ -447,14 +448,14 @@ describe('SceneHandler', () => {
           SceneHandler,
         );
       }
-      expect(nodeOf(content, 'frame').style).toMatchObject({ hue: 'violet', guide: true, lineStyle: 'dashed' });
+      expect(nodeOf(content, 'frame').overrides).toMatchObject({ color: 'violet', guide: true, stroke: 'dashed' });
 
       applyCommands(
         content,
         [{ op: 'upsert-elements', objectId: 'group', elements: [{ ...frame, x: 40, color: 'green' }] }],
         SceneHandler,
       );
-      expect(nodeOf(content, 'frame').style).toMatchObject({ hue: 'green', guide: true, lineStyle: 'dashed' });
+      expect(nodeOf(content, 'frame').overrides).toMatchObject({ color: 'green', guide: true, stroke: 'dashed' });
       expect(labelOf(content, 'frame')).toBe('Renamed');
     });
 
@@ -462,7 +463,7 @@ describe('SceneHandler', () => {
       const content = titled([{ ...frame, color: 'violet' }, label]);
       applyCommands(content, [{ op: 'remove-elements', objectId: 'group', elementIds: ['frame-title'] }], SceneHandler);
       expect(labelOf(content, 'frame')).toBeUndefined();
-      expect(nodeOf(content, 'frame').style).toMatchObject({ hue: 'violet' });
+      expect(nodeOf(content, 'frame').overrides).toMatchObject({ color: 'violet' });
       const [object] = SceneHandler.read(content).scene.objects;
       expect(object.elements.map(({ id }) => id)).toEqual(['frame']);
     });
@@ -632,7 +633,7 @@ describe('SceneHandler on a canvas of diagram shapes', () => {
         route && link.connector ? diagramLinkMarkup(link, link.connector, route, SvgFile.markerIds('dx')) : []
       ).map(SvgFile.serialize);
       expect(markup.join('')).toContain(`marker-end="url(#dx-arrow)"`);
-      expect(markup.join('')).toContain(link.text ?? '');
+      expect(markup.join('')).toContain(link.label ?? '');
     }
 
     // The canvas reads back the DSL it was given, at the box's new place.

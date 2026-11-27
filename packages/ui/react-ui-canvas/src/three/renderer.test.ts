@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { NullEngine } from '@babylonjs/core';
+import { NullEngine, PointerDragBehavior, Vector3 } from '@babylonjs/core';
 import { describe, expect, test } from 'vitest';
 
-import { type Scene } from '@dxos/scene';
+import { type Scene, applyModelIntent } from '@dxos/scene';
 
 import { NEU_PALETTE } from '../model/index.ts';
 import { GROUND_PLANE, planeThrough } from './plane.ts';
@@ -47,7 +47,7 @@ describe('SceneRenderer3D neu', () => {
         {
           id: 'root',
           dim: '3d',
-          elements: { a: { id: 'a', type: 'cube', center: { x: 0, y: 1, z: 0 }, scale: { x: 2, y: 2, z: 2 } } },
+          elements: { a: { id: 'a', kind: 'cube', center: { x: 0, y: 1, z: 0 }, scale: { x: 2, y: 2, z: 2 } } },
         },
       ],
       models: [],
@@ -104,8 +104,8 @@ describe('SceneRenderer3D.pick', () => {
   test('selecting outlines the item by its silhouette, and deselecting removes it', () => {
     const view = renderer(
       doc([
-        { id: 'a', type: 'cube', center: { x: 0, y: 0, z: 0 } },
-        { id: 'b', type: 'sphere', center: { x: 3, y: 0, z: 0 } },
+        { id: 'a', kind: 'cube', center: { x: 0, y: 0, z: 0 } },
+        { id: 'b', kind: 'sphere', center: { x: 3, y: 0, z: 0 } },
       ]),
     );
     view.select(['a']);
@@ -118,7 +118,7 @@ describe('SceneRenderer3D.pick', () => {
   });
 
   test('a selected item gets a world-aligned box of its bounds in the selection colour, removed on deselect', () => {
-    const view = renderer(doc([{ id: 'a', type: 'cube', center: { x: 1, y: 2, z: 3 }, scale: { x: 2, y: 4, z: 6 } }]));
+    const view = renderer(doc([{ id: 'a', kind: 'cube', center: { x: 1, y: 2, z: 3 }, scale: { x: 2, y: 4, z: 6 } }]));
     view.select(['a']);
     const box = view.boxes.a;
     expect(box?.color).toBe('#ff8800');
@@ -137,7 +137,7 @@ describe('SceneRenderer3D.pick', () => {
   });
 
   test("a selected item's box follows it when it moves, and keeps to the new selection colour", () => {
-    const cube = (x: number): Scene.Element3D => ({ id: 'a', type: 'cube', center: { x, y: 0, z: 0 } });
+    const cube = (x: number): Scene.Element3D => ({ id: 'a', kind: 'cube', center: { x, y: 0, z: 0 } });
     const view = renderer(doc([cube(0)]));
     view.select(['a']);
     expect(view.boxes.a?.min.x).toBeCloseTo(-0.5);
@@ -148,11 +148,100 @@ describe('SceneRenderer3D.pick', () => {
     view.dispose();
   });
 
+  test('a selected group, which draws no mesh of its own, has one box round its members', () => {
+    const flat = doc([
+      { id: 'a', kind: 'cube', center: { x: 0, y: 0, z: 0 } },
+      { id: 'b', kind: 'cube', center: { x: 4, y: 0, z: 0 } },
+      { id: 'c', kind: 'cube', center: { x: 0, y: 0, z: 8 } },
+    ]);
+    const model: Scene.ModelRecord = { id: 'm', dim: '3d', objects: {} };
+    const grouped = applyModelIntent(
+      {
+        ...flat,
+        layouts: flat.layouts.map((layout) => ({ ...layout, model: 'm' })),
+        models: [model],
+      },
+      { kind: 'group', model: 'm', layout: 'root', id: 'g', members: ['a', 'b'] },
+    );
+    expect(grouped.problems).toEqual([]);
+    const view = renderer(grouped.doc);
+    view.select(['g']);
+    // One box, from the left of A to the right of B, and none round the element left out of the group.
+    expect(Object.keys(view.boxes)).toEqual(['g']);
+    expect(view.boxes.g?.min.x).toBeCloseTo(-0.5);
+    expect(view.boxes.g?.max.x).toBeCloseTo(4.5);
+    expect(view.boxes.g?.max.z).toBeCloseTo(0.5);
+    view.select([]);
+    expect(view.boxes).toEqual({});
+    view.dispose();
+  });
+
+  test("a selected item's box follows its mesh on every frame of a gizmo drag, before the document has the move", () => {
+    const view = renderer(doc([{ id: 'a', kind: 'cube', center: { x: 0, y: 0, z: 0 } }]));
+    view.select(['a']);
+    view.attachGizmo('a', 'move', () => {});
+    const scene = view.gizmoLayer?.originalScene;
+    const mesh = scene?.getMeshByName('item-a');
+    expect(mesh).toBeTruthy();
+    // A gizmo moves, turns and scales the mesh itself; the document changes only on the release.
+    mesh?.position.set(3, 0, 0);
+    scene?.render();
+    expect(view.boxes.a?.min.x).toBeCloseTo(2.5);
+    expect(view.boxes.a?.max.x).toBeCloseTo(3.5);
+    mesh?.scaling.set(2, 1, 1);
+    scene?.render();
+    expect(view.boxes.a?.min.x).toBeCloseTo(2);
+    expect(view.boxes.a?.max.x).toBeCloseTo(4);
+    view.dispose();
+  });
+
+  test('a scale handle sizes the item in step with its travel: the side it pulls follows it, however far it has gone', () => {
+    const view = renderer(doc([{ id: 'a', kind: 'cube', center: { x: 0, y: 0, z: 0 }, scale: { x: 2, y: 1, z: 1 } }]));
+    view.select(['a']);
+    view.attachGizmo('a', 'scale', () => {});
+    const mesh = view.gizmoLayer?.originalScene.getMeshByName('item-a');
+    // The handles' drags, in the order Babylon makes them: the even one, then x, y and z.
+    const handles =
+      view.gizmoLayer?.utilityLayerScene.meshes.flatMap((handle) =>
+        handle.behaviors.flatMap((behavior) => (behavior instanceof PointerDragBehavior ? [behavior] : [])),
+      ) ?? [];
+    expect(handles).toHaveLength(4);
+    const press = { dragPlanePoint: Vector3.Zero(), pointerId: 1, pointerInfo: null };
+    const pull = (handle: PointerDragBehavior, axis: Vector3, distance: number) =>
+      handle.onDragObservable.notifyObservers({
+        ...press,
+        delta: axis.scale(distance),
+        dragPlaneNormal: Vector3.Forward(),
+        dragDistance: distance,
+      });
+
+    // The cube is 2 long: a handle taken 0.5 along x takes that side 0.5 on, and the far side as far the other way.
+    handles[1].onDragStartObservable.notifyObservers(press);
+    const lengths = [0.5, 0.5, 0.5].map(() => {
+      pull(handles[1], Vector3.Right(), 0.5);
+      return view.extent('a', { x: 1, y: 0, z: 0 });
+    });
+    expect(lengths[0]).toBeCloseTo(3);
+    expect(lengths[1]).toBeCloseTo(4);
+    expect(lengths[2]).toBeCloseTo(5);
+    expect(mesh?.scaling.y).toBeCloseTo(1);
+    handles[1].onDragEndObservable.notifyObservers(press);
+
+    // The even handle keeps the proportions: its travel goes onto the height, and the other sides in the same ratio.
+    handles[0].onDragStartObservable.notifyObservers(press);
+    pull(handles[0], Vector3.Up(), 0.25);
+    pull(handles[0], Vector3.Up(), 0.25);
+    expect(view.extent('a', { x: 0, y: 1, z: 0 })).toBeCloseTo(2);
+    expect(view.extent('a', { x: 1, y: 0, z: 0 })).toBeCloseTo(10);
+    handles[0].onDragEndObservable.notifyObservers(press);
+    view.dispose();
+  });
+
   test('intersecting or coplanar items never cut into the outline: only selected items reach its mask', () => {
     const view = renderer(
       doc([
-        { id: 'a', type: 'cube', center: { x: 0, y: 0, z: 0 } },
-        { id: 'b', type: 'cube', center: { x: 0.5, y: 0, z: 0.5 } },
+        { id: 'a', kind: 'cube', center: { x: 0, y: 0, z: 0 } },
+        { id: 'b', kind: 'cube', center: { x: 0.5, y: 0, z: 0.5 } },
       ]),
     );
     view.setGrid(true);
@@ -166,8 +255,8 @@ describe('SceneRenderer3D.pick', () => {
   test('a selected box is drawn over the scene, so a face it lies on cannot stripe it', () => {
     const view = renderer(
       doc([
-        { id: 'a', type: 'cube', center: { x: 0, y: 0, z: 0 } },
-        { id: 'b', type: 'cube', center: { x: 1, y: 0, z: 0 } },
+        { id: 'a', kind: 'cube', center: { x: 0, y: 0, z: 0 } },
+        { id: 'b', kind: 'cube', center: { x: 1, y: 0, z: 0 } },
       ]),
     );
     view.select(['a']);
@@ -176,7 +265,7 @@ describe('SceneRenderer3D.pick', () => {
   });
 
   test("a selected face is drawn over that side of the item's bounds in the selection colour, and cleared", () => {
-    const view = renderer(doc([{ id: 'a', type: 'cube', center: { x: 1, y: 2, z: 3 }, scale: { x: 2, y: 4, z: 6 } }]));
+    const view = renderer(doc([{ id: 'a', kind: 'cube', center: { x: 1, y: 2, z: 3 }, scale: { x: 2, y: 4, z: 6 } }]));
     view.selectFace('a', { x: 1, y: 0, z: 0 });
     expect(view.face?.key).toBe('a');
     expect(view.face?.center.x).toBeCloseTo(2);
@@ -192,7 +281,7 @@ describe('SceneRenderer3D.pick', () => {
   });
 
   test("a hovered face is outlined round that side of the item's bounds, a closed loop, and cleared", () => {
-    const view = renderer(doc([{ id: 'a', type: 'cube', center: { x: 1, y: 2, z: 3 }, scale: { x: 2, y: 4, z: 6 } }]));
+    const view = renderer(doc([{ id: 'a', kind: 'cube', center: { x: 1, y: 2, z: 3 }, scale: { x: 2, y: 4, z: 6 } }]));
     view.hoverFace('a', { x: 1, y: 0, z: 0 });
     const outline = view.hoveredFace?.outline.map(({ x, y, z }) =>
       [x, y, z].map((value) => Math.round(value * 100) / 100),
@@ -210,7 +299,7 @@ describe('SceneRenderer3D.pick', () => {
   });
 
   test('with snapping on, a gizmo moves by the minor grid unit, turns by 15 degrees and scales by a tenth; off, freely', () => {
-    const view = renderer(doc([{ id: 'a', type: 'cube', center: { x: 0, y: 0, z: 0 } }]));
+    const view = renderer(doc([{ id: 'a', kind: 'cube', center: { x: 0, y: 0, z: 0 } }]));
     view.setSnap(true);
     view.attachGizmo('a', 'move', () => {});
     expect(view.gizmoSnap).toEqual({ move: 0.25, rotate: 15, scale: 0.1 });
@@ -220,7 +309,7 @@ describe('SceneRenderer3D.pick', () => {
   });
 
   test("an item's extent along an axis is its world size that way; an item not drawn has none", () => {
-    const view = renderer(doc([{ id: 'a', type: 'cube', center: { x: 0, y: 0, z: 0 }, scale: { x: 2, y: 4, z: 6 } }]));
+    const view = renderer(doc([{ id: 'a', kind: 'cube', center: { x: 0, y: 0, z: 0 }, scale: { x: 2, y: 4, z: 6 } }]));
     expect(view.extent('a', { x: 0, y: 1, z: 0 })).toBeCloseTo(4);
     expect(view.extent('a', { x: 0, y: 0, z: -1 })).toBeCloseTo(6);
     expect(view.extent('missing', { x: 1, y: 0, z: 0 })).toBeUndefined();
@@ -228,7 +317,7 @@ describe('SceneRenderer3D.pick', () => {
   });
 
   test('a scale gizmo on an item whose aspect is locked offers only its even handle; otherwise every axis', () => {
-    const view = renderer(doc([{ id: 'a', type: 'cube', center: { x: 0, y: 0, z: 0 } }]));
+    const view = renderer(doc([{ id: 'a', kind: 'cube', center: { x: 0, y: 0, z: 0 } }]));
     view.attachGizmo('a', 'scale', () => {}, { uniform: true });
     expect(view.scaleAxes).toBe(false);
     view.attachGizmo('a', 'scale', () => {});
@@ -237,7 +326,7 @@ describe('SceneRenderer3D.pick', () => {
   });
 
   test('the ground grid is hidden until shown, and hides again', () => {
-    const view = renderer(doc([{ id: 'a', type: 'cube', center: { x: 0, y: 0, z: 0 } }]));
+    const view = renderer(doc([{ id: 'a', kind: 'cube', center: { x: 0, y: 0, z: 0 } }]));
     expect(view.grid).toBe(false);
     view.setGrid(true);
     expect(view.grid).toBe(true);
@@ -247,7 +336,7 @@ describe('SceneRenderer3D.pick', () => {
   });
 
   test('the axes are hidden until shown, and hide again', () => {
-    const view = renderer(doc([{ id: 'a', type: 'cube', center: { x: 0, y: 0, z: 0 } }]));
+    const view = renderer(doc([{ id: 'a', kind: 'cube', center: { x: 0, y: 0, z: 0 } }]));
     expect(view.axes).toBe(false);
     view.setAxes(true);
     expect(view.axes).toBe(true);
@@ -257,20 +346,20 @@ describe('SceneRenderer3D.pick', () => {
   });
 
   test('the ground grid is never picked', () => {
-    const view = renderer(doc([{ id: 'a', type: 'cube', center: { x: 20, y: 0, z: 0 } }]));
+    const view = renderer(doc([{ id: 'a', kind: 'cube', center: { x: 20, y: 0, z: 0 } }]));
     view.setGrid(true);
     expect(view.pick({ x: 400, y: 300 }).item).toBeUndefined();
     view.dispose();
   });
 
   test('the screen centre over a cube at the origin picks its key', () => {
-    const view = renderer(doc([{ id: 'a', type: 'cube', center: { x: 0, y: 0, z: 0 } }]));
+    const view = renderer(doc([{ id: 'a', kind: 'cube', center: { x: 0, y: 0, z: 0 } }]));
     expect(view.pick({ x: 400, y: 300 })).toMatchObject({ item: 'a' });
     view.dispose();
   });
 
   test('empty space picks a point on the work plane, which is the ground until it moves', () => {
-    const view = renderer(doc([{ id: 'a', type: 'cube', center: { x: 20, y: 0, z: 0 } }]));
+    const view = renderer(doc([{ id: 'a', kind: 'cube', center: { x: 20, y: 0, z: 0 } }]));
     expect(view.plane).toEqual(GROUND_PLANE);
     view.setPlane(planeThrough(GROUND_PLANE, { x: 0, y: -2, z: 0 }));
     expect(view.pick({ x: 400, y: 300 }).point?.y).toBeCloseTo(-2);
@@ -278,7 +367,7 @@ describe('SceneRenderer3D.pick', () => {
   });
 
   test("an item's bounds and the middle of one of its faces, in the world; an item not drawn has none", () => {
-    const view = renderer(doc([{ id: 'a', type: 'cube', center: { x: 1, y: 2, z: 3 }, scale: { x: 2, y: 4, z: 6 } }]));
+    const view = renderer(doc([{ id: 'a', kind: 'cube', center: { x: 1, y: 2, z: 3 }, scale: { x: 2, y: 4, z: 6 } }]));
     const round = (point?: Scene.Vec3) => point && [point.x, point.y, point.z].map((value) => Number(value.toFixed(2)));
     expect(round(view.bounds('a')?.min)).toEqual([0, 0, 0]);
     expect(round(view.bounds('a')?.max)).toEqual([2, 4, 6]);
@@ -291,8 +380,8 @@ describe('SceneRenderer3D.pick', () => {
   test("every other item's world bounds, for snapping a moving one against", () => {
     const view = renderer(
       doc([
-        { id: 'a', type: 'cube', center: { x: 0, y: 0.5, z: 0 } },
-        { id: 'b', type: 'cube', center: { x: 3, y: 0.5, z: 0 } },
+        { id: 'a', kind: 'cube', center: { x: 0, y: 0.5, z: 0 } },
+        { id: 'b', kind: 'cube', center: { x: 3, y: 0.5, z: 0 } },
       ]),
     );
     const boxes = view.itemBounds(['a']);
@@ -306,13 +395,13 @@ describe('SceneRenderer3D.pick', () => {
     const document = doc(
       [
         { id: 'a', object: 'box', center: { x: 0, y: 0, z: 0 }, scale: { x: 3, y: 3, z: 3 } },
-        { id: 'c', type: 'cube', center: { x: 5, y: 0, z: 0 } },
+        { id: 'c', kind: 'cube', center: { x: 5, y: 0, z: 0 } },
       ],
       {
         layouts: [
-          { id: 'inside', dim: '3d', elements: { b: { id: 'b', type: 'cube', center: { x: 0, y: 0, z: 0 } } } },
+          { id: 'inside', dim: '3d', elements: { b: { id: 'b', kind: 'cube', center: { x: 0, y: 0, z: 0 } } } },
         ],
-        models: [{ id: 'm', dim: '3d', objects: { box: { id: 'box', type: 'sphere', parts: 'inside' } } }],
+        models: [{ id: 'm', dim: '3d', objects: { box: { id: 'box', kind: 'sphere', parts: 'inside' } } }],
       },
     );
     const view = renderer({
@@ -327,8 +416,8 @@ describe('SceneRenderer3D.pick', () => {
   test('a pick can skip items, so a drag sees what lies behind the bodies it moves', () => {
     const view = renderer(
       doc([
-        { id: 'front', type: 'cube', center: { x: 0, y: 0, z: 0 } },
-        { id: 'back', type: 'cube', center: { x: 0, y: -2, z: 0 }, scale: { x: 6, y: 1, z: 6 } },
+        { id: 'front', kind: 'cube', center: { x: 0, y: 0, z: 0 } },
+        { id: 'back', kind: 'cube', center: { x: 0, y: -2, z: 0 }, scale: { x: 6, y: 1, z: 6 } },
       ]),
     );
     // The camera looks down at the front cube, and past it onto the broad back one below.
@@ -340,7 +429,7 @@ describe('SceneRenderer3D.pick', () => {
   });
 
   test('a snapped point is marked in the snap colour, and an axis a drag is held to is drawn in its colour; both clear', () => {
-    const view = renderer(doc([{ id: 'a', type: 'cube', center: { x: 0, y: 0, z: 0 } }]));
+    const view = renderer(doc([{ id: 'a', kind: 'cube', center: { x: 0, y: 0, z: 0 } }]));
     view.snapPoint({ x: 1, y: 2, z: 3 });
     expect(view.snappedPoint).toEqual({ x: 1, y: 2, z: 3 });
     view.snapPoint(undefined);
@@ -363,7 +452,7 @@ describe('SceneRenderer3D.pick', () => {
       lockstepMaxSteps: 1,
     });
     const view = new SceneRenderer3D({ engine, theme: 'cad', background: '#ffffff', snap: '#f59e0b' });
-    view.render(renderList(doc([{ id: 'b', type: 'cube', center: { x: 3, y: 0.5, z: 0 } }])), CAMERA);
+    view.render(renderList(doc([{ id: 'b', kind: 'cube', center: { x: 3, y: 0.5, z: 0 } }])), CAMERA);
     expect(view.snapped).toEqual([]);
     view.snapFaces([{ key: 'b', normal: { x: -1, y: 0, z: 0 } }]);
     expect(view.snapped).toEqual([{ key: 'b', normal: { x: -1, y: 0, z: 0 }, color: '#f59e0b' }]);
@@ -375,7 +464,7 @@ describe('SceneRenderer3D.pick', () => {
   });
 
   test('the face arrow stands where it is put, along its face, and hides', () => {
-    const view = renderer(doc([{ id: 'a', type: 'cube', center: { x: 0, y: 0, z: 0 } }]));
+    const view = renderer(doc([{ id: 'a', kind: 'cube', center: { x: 0, y: 0, z: 0 } }]));
     expect(view.faceArrow).toBeUndefined();
     view.showFaceArrow({ point: { x: 0, y: 0.5, z: 0 }, normal: { x: 0, y: 1, z: 0 } });
     expect(view.faceArrow).toEqual({ point: { x: 0, y: 0.5, z: 0 }, normal: { x: 0, y: 1, z: 0 } });
@@ -387,7 +476,7 @@ describe('SceneRenderer3D.pick', () => {
   });
 
   test('empty space picks only a ground point', () => {
-    const view = renderer(doc([{ id: 'a', type: 'cube', center: { x: 20, y: 0, z: 0 } }]));
+    const view = renderer(doc([{ id: 'a', kind: 'cube', center: { x: 20, y: 0, z: 0 } }]));
     const hit = view.pick({ x: 400, y: 300 });
     expect(hit.item).toBeUndefined();
     expect(hit.point?.y).toBeCloseTo(0);
@@ -396,8 +485,8 @@ describe('SceneRenderer3D.pick', () => {
 
   test('through a composite frame, an element of its parts picks its composite/element key', () => {
     const document = doc([{ id: 'a', object: 'box', center: { x: 0, y: 0, z: 0 }, scale: { x: 3, y: 3, z: 3 } }], {
-      layouts: [{ id: 'inside', dim: '3d', elements: { b: { id: 'b', type: 'cube', center: { x: 0, y: 0, z: 0 } } } }],
-      models: [{ id: 'm', dim: '3d', objects: { box: { id: 'box', type: 'sphere', parts: 'inside' } } }],
+      layouts: [{ id: 'inside', dim: '3d', elements: { b: { id: 'b', kind: 'cube', center: { x: 0, y: 0, z: 0 } } } }],
+      models: [{ id: 'm', dim: '3d', objects: { box: { id: 'box', kind: 'sphere', parts: 'inside' } } }],
     });
     const withModel: Scene.SceneDocument = {
       ...document,
@@ -410,7 +499,7 @@ describe('SceneRenderer3D.pick', () => {
   });
 
   test('each renderer draws its gizmos on a layer of its own, which outlives another renderer', () => {
-    const elements: Scene.Element3D[] = [{ id: 'a', type: 'cube', center: { x: 0, y: 0, z: 0 } }];
+    const elements: Scene.Element3D[] = [{ id: 'a', kind: 'cube', center: { x: 0, y: 0, z: 0 } }];
     const first = renderer(doc(elements));
     const second = renderer(doc(elements));
     first.attachGizmo('a', 'move', () => {});
@@ -451,12 +540,12 @@ describe('SceneRenderer3D neu ground', () => {
     const document = sceneOf({
       shell: {
         id: 'shell',
-        type: 'sphere',
+        kind: 'sphere',
         center: { x: 0, y: 0, z: 0 },
         scale: { x: 8, y: 8, z: 8 },
-        overrides: { surface: 'glass' },
+        overrides: { fill: 'glass' },
       },
-      body: { id: 'body', type: 'cube', center: { x: 0, y: -1, z: 0 }, scale: { x: 1, y: 1, z: 1 } },
+      body: { id: 'body', kind: 'cube', center: { x: 0, y: -1, z: 0 }, scale: { x: 1, y: 1, z: 1 } },
     });
     const view = new SceneRenderer3D({ engine: engine(), theme: 'neu-dark', background: '#ffffff' });
     view.render(renderList(document), camera);

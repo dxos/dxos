@@ -12,9 +12,9 @@
 import type * as Types from 'effect/Types';
 
 import { type Database, Obj, Ref } from '@dxos/echo';
-import { fromRenderList2D } from '@dxos/react-ui-canvas/headless';
+import { fromRenderList2D, objectPlacing } from '@dxos/react-ui-canvas/headless';
 import { type RenderList2D, type RenderLists2D } from '@dxos/react-ui-canvas/headless';
-import { Scene, type ViewId, layoutChanges, reachedObjects } from '@dxos/scene';
+import { Scene, type ViewId, isContainerKind, layoutChanges, reachedObjects } from '@dxos/scene';
 
 import { type Canvas } from '#types';
 
@@ -68,17 +68,21 @@ const writeLayout = (
   const current: Record<string, Scene.Element2D> = plain(layout.elements);
   const next: Record<string, Scene.Element2D> = { ...current };
   for (const id of set) {
-    // Props other than the canvas's own belong to other writers, so they are kept, as is the DSL identity.
-    const { canvas: _canvas, ...kept } = current[id]?.props ?? {};
+    // Props belong to other writers, so they are kept, as is the DSL identity.
+    const kept = current[id]?.props ?? {};
     const written = plain(record.elements[id]);
-    const { type, ...element } = { ...written, props: { ...kept, ...written.props } };
+    for (const key of Object.keys(kept)) {
+      // A field those props hold is theirs alone, unless it shares a name with a field every element has.
+      !Object.hasOwn(Scene.Element2D.fields, key) && Reflect.deleteProperty(written, key);
+    }
+    const { kind, ...element } = { ...written, ...(Object.keys(kept).length > 0 ? { props: kept } : {}) };
     const dsl = element.dsl ?? current[id]?.dsl;
     const placed = current[id]?.object;
     const object = placed === undefined ? undefined : objectOf(placed);
     const value =
-      placed !== undefined && object && element.object === undefined && type === object.type
+      placed !== undefined && object && element.object === undefined && kind === object.kind
         ? overObject({ ...element, object: placed }, object)
-        : { ...element, ...(type === undefined ? {} : { type }) };
+        : { ...element, ...(kind === undefined ? {} : { kind }) };
     next[id] = dsl === undefined ? value : { ...value, dsl };
   }
   for (const id of remove) {
@@ -118,9 +122,6 @@ export type LayoutWriter = {
   /** Writes what changed from `previous` (every element, without it) to the layouts. */
   write: (views: RenderLists2D, previous?: RenderLists2D, decorate?: DecorateLayout) => void;
 };
-
-/** The object an `instance` node of a composite places, which an unplaced composite takes too, so it is reached. */
-const COMPOSITE_PREFIX = 'instance:';
 
 export type LayoutWriterOptions = {
   /** The canvas the scene belongs to: the layouts and model a write makes are listed on it. */
@@ -189,49 +190,67 @@ export const makeLayoutWriter = (scene: Scene.Scene2D, { canvas }: LayoutWriterO
     return isModel2D(model) ? model.objects[object] : undefined;
   };
 
-  const plainObject = (object: Scene.StoredObject2D | undefined): Scene.Object2D | undefined => {
-    if (!object) {
-      return undefined;
-    }
-    const { parts, ...rest } = object;
-    const target = parts?.target;
-    return { ...plain(rest), ...(isLayout2D(target) ? { parts: target.key } : {}) };
+  /** The key of the layout a stored object's parts are. */
+  const partsOf = (object: Scene.StoredObject2D): string | undefined => {
+    const target = object.parts?.target;
+    return isLayout2D(target) ? target.key : undefined;
   };
 
+  /** Every object the scene's models hold, by id: what a written node may already place. */
+  const storedObjects = (): Record<string, Scene.StoredObject2D> =>
+    Object.assign({}, ...[...models.values()].map((model) => model.objects));
+
   const write = (views: RenderLists2D, previous: RenderLists2D = {}, decorate: DecorateLayout = (record) => record) => {
-    const placed: Scene.Object2D[] = [];
+    const placed = new Map<string, Scene.Object2D>();
     const written: Array<{ layout: Scene.Layout2D; view: RenderList2D; record: Scene.LayoutRecord2D }> = [];
+    const stored = storedObjects();
+    const anonymous = (parts: string) => (views[parts] ?? layouts.get(parts))?.anonymous === true;
     for (const view of Object.values(views)) {
       if (previous[view.id] === view) {
         continue;
       }
-      const { layout: record, objects } = fromRenderList2D(view);
-      placed.push(...objects);
+      // An element keeps the object it places, and a layout has one object however a node came to place it.
+      const current = layouts.get(view.id)?.elements;
+      const { layout: record, objects } = fromRenderList2D(view, {
+        objectFor: (parts, element) => objectPlacing(stored, partsOf, parts, current?.[element]?.object),
+        anonymous,
+      });
+      objects.forEach((object) => placed.set(object.id, object));
       written.push({ layout: layoutFor(view), view, record: decorate(record) });
     }
     // A composite View no node places (a definition in the library) is reached through an object of its own.
-    const parts = new Set(placed.flatMap((object) => (object.parts ? [object.parts] : [])));
+    const parts = new Set([...placed.values()].flatMap((object) => (object.parts ? [object.parts] : [])));
     const reachedBy = (key: string) =>
-      parts.has(key) ||
-      [...models.values()].some((model) =>
-        Object.values(model.objects).some((object) => object.parts?.target === layouts.get(key)),
-      );
+      parts.has(key) || Object.values(stored).some((object) => object.parts?.target === layouts.get(key));
     for (const { view } of written) {
       if (view.id !== root && !reachedBy(view.id)) {
-        placed.push({ id: `${COMPOSITE_PREFIX}${view.id}`, type: 'rect', parts: view.id });
+        const id = objectPlacing(stored, partsOf, view.id);
+        placed.set(id, { id, kind: view.anonymous ? 'group' : 'rect', parts: view.id });
       }
     }
-    const model = placed.length > 0 ? rootModel() : undefined;
+    const model = placed.size > 0 ? rootModel() : undefined;
     if (model) {
-      const missing = placed.filter((object) => !same(plainObject(model.objects[object.id]), object));
-      if (missing.length > 0) {
+      // An object the model holds is left as it is, but for a kind that names another container than its node now is.
+      const added = [...placed.values()].filter((object) => stored[object.id] === undefined);
+      const retyped = [...placed.values()].filter((object) => {
+        const kind = stored[object.id]?.kind;
+        return kind !== undefined && kind !== object.kind && [kind, object.kind].some(isContainerKind);
+      });
+      if (added.length > 0) {
         Obj.update(model, (model) => {
-          for (const object of missing) {
+          for (const object of added) {
             const { parts, ...rest } = plain(object);
             const target = parts === undefined ? undefined : layouts.get(parts);
             model.objects[object.id] = target ? { ...rest, parts: Ref.make(target) } : rest;
           }
         });
+      }
+      for (const object of retyped) {
+        const owner = [...models.values()].find((candidate) => candidate.objects[object.id] !== undefined);
+        owner &&
+          Obj.update(owner, (owner) => {
+            owner.objects[object.id].kind = object.kind;
+          });
       }
     }
     for (const { layout, view, record } of written) {

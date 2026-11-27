@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { getPropertySignatures } from '@dxos/effect/SchemaAST';
-import { EllipseNode, LineLink, NoteNode, RectNode } from '@dxos/scene';
+import { EllipseNode, Link, NoteNode, RectNode } from '@dxos/scene';
 
 import { commonSchema, mergeValues, patchValues } from './properties.ts';
 
@@ -18,31 +18,35 @@ describe('properties', () => {
     expect(names(commonSchema([RectNode]))).toEqual(names(RectNode));
   });
 
-  test('common properties are the ones every type declares alike', ({ expect }) => {
+  test('common properties are the ones every kind declares alike', ({ expect }) => {
     const rectEllipse = names(commonSchema([RectNode, EllipseNode]));
     expect(rectEllipse).toContain('label');
     expect(rectEllipse).toContain('style');
-    expect(rectEllipse).not.toContain('type');
+    expect(rectEllipse).toContain('overrides');
+    expect(rectEllipse).not.toContain('kind');
 
     const rectNote = names(commonSchema([RectNode, NoteNode]));
     expect(rectNote).toContain('style');
+    expect(rectNote).toContain('overrides');
+    // A note's text is its label, which it requires, so it is not the optional label a box has.
     expect(rectNote).not.toContain('label');
 
-    // A node and a link share only what both declare: `locked`, `layer`, `class`, `style` and `constrain` — a part of
-    // a composite is either kind — (and the hidden `id`/`z`), the style narrowed to the common base both extend.
-    const shared = commonSchema([RectNode, LineLink]);
-    expect(names(shared)).toEqual(['id', 'z', 'locked', 'layer', 'class', 'style', 'constrain']);
-    const style = shared && getPropertySignatures(shared.ast).find((property) => property.name === 'style');
-    const struct = style?.type._tag === 'Union' ? style.type.types.find((type) => type._tag === 'Objects') : undefined;
+    // A node and a link share only what both declare: `locked`, `layer`, `style`, `overrides`, `constrain` — a part
+    // of a composite is either one — and `label` (and the hidden `id`/`z`), the look narrowed to the common base both
+    // extend.
+    const shared = commonSchema([RectNode, Link]);
+    expect(names(shared)).toEqual(['id', 'z', 'locked', 'layer', 'style', 'overrides', 'constrain', 'label']);
+    const look = shared && getPropertySignatures(shared.ast).find((property) => property.name === 'overrides');
+    const struct = look?.type._tag === 'Union' ? look.type.types.find((type) => type._tag === 'Objects') : undefined;
     expect(struct?._tag === 'Objects' && struct.propertySignatures.map((property) => property.name)).toEqual([
-      'hue',
-      'lineStyle',
+      'color',
+      'stroke',
       'fontSize',
     ]);
     expect(commonSchema([Schema.Struct({ a: Schema.String }), Schema.Struct({ b: Schema.String })])).toBeUndefined();
   });
 
-  test('a field bounded differently by two types is not shared', ({ expect }) => {
+  test('a field bounded differently by two schemas is not shared', ({ expect }) => {
     const bounded = (minimum: number) =>
       Schema.Struct({ n: Schema.Number.check(Schema.isGreaterThanOrEqualTo(minimum)), s: Schema.String });
     expect(names(commonSchema([bounded(0), bounded(10)]))).toEqual(['s']);
@@ -52,13 +56,13 @@ describe('properties', () => {
   test('values merge field by field, mixed where they differ', ({ expect }) => {
     const { values, mixed } = mergeValues(
       [
-        { label: 'A', style: { hue: 'red', fill: true }, center: { x: 0, y: 16 } },
-        { label: 'A', style: { hue: 'blue', fill: true }, center: { x: 32, y: 16 } },
+        { label: 'A', overrides: { color: 'red', fill: 'solid' }, center: { x: 0, y: 16 } },
+        { label: 'A', overrides: { color: 'blue', fill: 'solid' }, center: { x: 32, y: 16 } },
       ],
-      ['label', 'style', 'center'],
+      ['label', 'overrides', 'center'],
     );
-    expect(values).toEqual({ label: 'A', style: { hue: 'red', fill: true }, center: { x: 0, y: 16 } });
-    expect([...mixed].sort()).toEqual(['center.x', 'style.hue']);
+    expect(values).toEqual({ label: 'A', overrides: { color: 'red', fill: 'solid' }, center: { x: 0, y: 16 } });
+    expect([...mixed].sort()).toEqual(['center.x', 'overrides.color']);
   });
 
   test('an instance value (a reference) is kept whole, not merged field by field', ({ expect }) => {
@@ -71,10 +75,10 @@ describe('properties', () => {
   });
 
   test('a patch writes only the changed paths and keeps the rest of a nested value', ({ expect }) => {
-    const element = { label: 'A', style: { hue: 'red', rounded: true }, center: { x: 0, y: 16 } };
-    const values = { label: 'B', style: { hue: 'blue', rounded: false }, center: { x: 48, y: 0 } };
-    expect(patchValues(element, values, ['style.hue', 'center.x'])).toEqual({
-      style: { hue: 'blue', rounded: true },
+    const element = { label: 'A', overrides: { color: 'red', corners: 'all' }, center: { x: 0, y: 16 } };
+    const values = { label: 'B', overrides: { color: 'blue', corners: 'none' }, center: { x: 48, y: 0 } };
+    expect(patchValues(element, values, ['overrides.color', 'center.x'])).toEqual({
+      overrides: { color: 'blue', corners: 'all' },
       center: { x: 48, y: 16 },
     });
   });

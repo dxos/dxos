@@ -30,9 +30,9 @@ import { TOOLS_3D } from './tools3d.ts';
 import { Viewport3D } from './Viewport3D.tsx';
 
 const NEU_STYLES = {
-  body: { name: 'Body', hue: 'neutral' } satisfies NamedStyle3D,
-  accent: { name: 'Accent', hue: 'blue' } satisfies NamedStyle3D,
-  ghost: { name: 'Ghost', hue: 'violet', surface: 'tint' } satisfies NamedStyle3D,
+  body: { name: 'Body', color: 'neutral' } satisfies NamedStyle3D,
+  accent: { name: 'Accent', color: 'blue' } satisfies NamedStyle3D,
+  ghost: { name: 'Ghost', color: 'violet', fill: 'tint' } satisfies NamedStyle3D,
 };
 
 /** The 3D looks, each a default style catalog: CAD's flat parts, Presentation's lit materials, Neu's matte solids. */
@@ -41,18 +41,18 @@ export const CATALOGS_3D: readonly EditorCatalog[] = [
     id: 'cad',
     name: 'CAD',
     styles: {
-      part: { name: 'Part', hue: 'neutral', border: true } satisfies NamedStyle3D,
-      highlight: { name: 'Highlight', hue: 'amber', border: true } satisfies NamedStyle3D,
-      clearance: { name: 'Clearance', hue: 'sky', surface: 'glass' } satisfies NamedStyle3D,
+      part: { name: 'Part', color: 'neutral', stroke: 'solid' } satisfies NamedStyle3D,
+      highlight: { name: 'Highlight', color: 'amber', stroke: 'solid' } satisfies NamedStyle3D,
+      clearance: { name: 'Clearance', color: 'sky', fill: 'glass' } satisfies NamedStyle3D,
     },
   },
   {
     id: 'presentation',
     name: 'Presentation',
     styles: {
-      metal: { name: 'Metal', hue: 'neutral', metalness: 0.9, roughness: 0.3 } satisfies NamedStyle3D,
-      glass: { name: 'Glass', hue: 'sky', surface: 'glass' } satisfies NamedStyle3D,
-      glow: { name: 'Glow', hue: 'amber', emissive: 0.8 } satisfies NamedStyle3D,
+      metal: { name: 'Metal', color: 'neutral', metalness: 0.9, roughness: 0.3 } satisfies NamedStyle3D,
+      glass: { name: 'Glass', color: 'sky', fill: 'glass' } satisfies NamedStyle3D,
+      glow: { name: 'Glow', color: 'amber', emissive: 0.8 } satisfies NamedStyle3D,
     },
   },
   // Each Neu look is held in its mode whatever the app's, as 2D's are.

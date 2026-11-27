@@ -8,11 +8,13 @@
 // so `read.ts` can reconstruct the scene and edits can address records by id.
 //
 
-import { Scene } from '@dxos/diagram';
+import { Scene, SvgFile } from '@dxos/diagram';
 import { Shape } from '@dxos/scene';
 
 import {
   type CanvasContent,
+  type Color,
+  COLORS,
   type ConnectorProps,
   type Dash,
   type Fill,
@@ -40,7 +42,8 @@ export type RenderOptions = {
 /** Stable record id for an element: `shape:<objectId>/<elementId>`. */
 export const shapeId = (objectId: string, elementId: string) => `shape:${objectId}/${elementId}`;
 
-const strokeToDash: Record<Shape.Stroke, Dash> = {
+// tldraw draws an outline on every shape, so `none` takes its default dash.
+const strokeToDash: Partial<Record<Shape.Stroke, Dash>> = {
   sketchy: 'draw',
   solid: 'solid',
   dashed: 'dashed',
@@ -53,6 +56,17 @@ const fillToFill: Record<Shape.Fill, Fill> = {
   pattern: 'pattern',
   // tldraw has no wash of a color; its semi-transparent fill keeps a backdrop light.
   tint: 'semi',
+  // tldraw has no material, so glass is a solid surface.
+  glass: 'solid',
+};
+
+/**
+ * tldraw colors a shape with one of the diagram's palette names: a name at tone 3 is its `light-` twin, and a color
+ * outside the palette (another hue, a CSS literal) takes tldraw's default.
+ */
+const toColor = (color: Shape.Color | undefined): Color | undefined => {
+  const { name } = SvgFile.drawnColor(color);
+  return COLORS.find((candidate) => candidate === name);
 };
 
 const boxKindToGeo = {
@@ -63,7 +77,7 @@ const boxKindToGeo = {
 } as const;
 
 const style = (element: Shape.Element): Pick<ShapeProps, 'color' | 'fill' | 'dash' | 'size'> => ({
-  color: element.color,
+  color: toColor(element.color),
   fill: 'fill' in element && element.fill ? fillToFill[element.fill] : undefined,
   dash: element.stroke ? strokeToDash[element.stroke] : undefined,
   size: element.weight,
@@ -153,7 +167,7 @@ export const renderObject = (object: Scene.WorldObject, options: RenderOptions):
           ...point(element),
           w: element.w !== undefined ? length(element.w) : undefined,
           text: element.text,
-          color: element.color,
+          color: toColor(element.color),
           size: element.weight,
         });
         break;

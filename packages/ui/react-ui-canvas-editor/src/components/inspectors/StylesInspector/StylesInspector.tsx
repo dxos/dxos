@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import React from 'react';
+import React, { type CSSProperties } from 'react';
 
-import { hueClasses } from '@dxos/react-ui-canvas';
+import { type SceneLook, drawnColor, hueClasses, useSceneLook } from '@dxos/react-ui-canvas';
 import { OrderedList } from '@dxos/react-ui-list';
 import * as Button from '@dxos/react-ui/Button';
 import * as Menu from '@dxos/react-ui/Menu';
@@ -21,8 +21,8 @@ export type StyleEntry = {
   name: string;
   /** Where it comes from: the drawing's model, or a catalog's name. */
   source: 'model' | string;
-  /** The style's hue, for its swatch. */
-  hue?: string;
+  /** The style's colour, for its swatch. */
+  color?: string;
 };
 
 export type StylesInspectorProps = InspectorProps & {
@@ -36,10 +36,17 @@ export type StylesInspectorProps = InspectorProps & {
   onDelete?: (id: string) => void;
 };
 
-/** A style's swatch: its hue's strong fill and border, as the style grid draws it. */
-const swatch = (hue: string | undefined): string => {
+/**
+ * A style's swatch: its colour's strong fill and border in the look's theme, as the style grid draws it; a literal
+ * colour has no classes, so it is set inline.
+ */
+const swatch = (color: string | undefined, look: SceneLook): { className: string; style?: CSSProperties } => {
+  const { hue, css } = drawnColor(color, look);
+  if (css !== undefined) {
+    return { className: '', style: { backgroundColor: css, borderColor: css } };
+  }
   const { surface, border } = hueClasses(hue, 1);
-  return mx(surface, border);
+  return { className: mx(surface, border) };
 };
 
 /**
@@ -57,6 +64,7 @@ export const StylesInspector = ({
   onDelete,
 }: StylesInspectorProps) => {
   const own = current === undefined ? undefined : styles.find((style) => style.id === current);
+  const look = useSceneLook();
   return (
     <>
       <Toolbar.Root data-testid='styles-toolbar'>
@@ -97,24 +105,28 @@ export const StylesInspector = ({
       >
         {({ items }) => (
           <OrderedList.Content classNames={classNames} data-testid='styles' gutter='none' aria-label='Styles'>
-            {items.map((style) => (
-              <OrderedList.Item
-                key={style.id}
-                id={style.id}
-                classNames='cursor-pointer'
-                data-testid={`style-${style.id}`}
-              >
-                <span
-                  aria-hidden
-                  className={mx('shrink-0 size-4 ms-2 rounded-xs border', swatch(style.hue))}
-                  data-testid={`style-swatch-${style.id}`}
-                />
-                <span className='dx-listbox-item-text grow truncate'>{style.name}</span>
-                {style.source !== 'model' && (
-                  <span className='shrink-0 px-2 text-sm text-fg-muted'>{style.source}</span>
-                )}
-              </OrderedList.Item>
-            ))}
+            {items.map((style) => {
+              const { className, style: inline } = swatch(style.color, look);
+              return (
+                <OrderedList.Item
+                  key={style.id}
+                  id={style.id}
+                  classNames='cursor-pointer'
+                  data-testid={`style-${style.id}`}
+                >
+                  <span
+                    aria-hidden
+                    className={mx('shrink-0 size-4 ms-2 rounded-xs border', className)}
+                    style={inline}
+                    data-testid={`style-swatch-${style.id}`}
+                  />
+                  <span className='dx-listbox-item-text grow truncate'>{style.name}</span>
+                  {style.source !== 'model' && (
+                    <span className='shrink-0 px-2 text-sm text-fg-muted'>{style.source}</span>
+                  )}
+                </OrderedList.Item>
+              );
+            })}
           </OrderedList.Content>
         )}
       </OrderedList.Root>

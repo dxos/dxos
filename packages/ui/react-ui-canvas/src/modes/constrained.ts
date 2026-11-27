@@ -5,7 +5,7 @@
 //
 // Constrained mode on the shared model (decision 14): the layout's `constraints` relate its shapes by element id, and
 // the solver places every shape on the grid from them. A shape a person drops is re-related to its nearest neighbour
-// (east/west and aligned, or north/south), then the solver re-places them all.
+// (right-of/left-of and aligned, or above/below), then the solver re-places them all.
 //
 
 import { type LayoutIntent, type Scene, applyIntent } from '@dxos/scene';
@@ -23,7 +23,7 @@ const samePoint = (left: Point | undefined, right: Point | undefined): boolean =
 
 /**
  * The centre writes that place the layout's shapes where `constraints` solve them (the layout's own by default): rows
- * ranked by north/south, columns within a row by east/west, on the grid and straddling the origin. Only shapes that
+ * ranked by above/below, columns within a row by right-of/left-of, on the grid and straddling the origin. Only shapes that
  * move are written.
  */
 export const constrainedPlacement = (
@@ -51,7 +51,7 @@ export const constrainedPlacement = (
 
 /**
  * `constraints` with `id` re-related from where it was dropped (`at`): the nearest other shape becomes its reference; a
- * mostly horizontal offset makes it east/west of and aligned with that shape, a mostly vertical one north/south of it.
+ * mostly horizontal offset makes it right or left of and aligned with that shape, a mostly vertical one above or below it.
  * Unchanged when there is no other shape.
  */
 const dropAt = (
@@ -80,10 +80,10 @@ const dropAt = (
   const added: Scene.Constraint[] =
     Math.abs(nearest.dx) >= Math.abs(nearest.dy)
       ? [
-          { subject: id, relation: nearest.dx > 0 ? 'east' : 'west', object: nearest.id },
+          { subject: id, relation: nearest.dx > 0 ? 'right-of' : 'left-of', object: nearest.id },
           { subject: id, relation: 'aligned', object: nearest.id },
         ]
-      : [{ subject: id, relation: nearest.dy > 0 ? 'south' : 'north', object: nearest.id }];
+      : [{ subject: id, relation: nearest.dy > 0 ? 'below' : 'above', object: nearest.id }];
   return [...kept, ...added];
 };
 

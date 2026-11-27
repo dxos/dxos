@@ -28,29 +28,27 @@ export const canvasWorld = (canvas: Canvas.Canvas): ReadWorldObject[] => CanvasL
  * How the canvas ends a plain link, in the markers the diagram renderer has at each end: an arrow where it has no match.
  * The renderer draws a diamond only from a relation, so a diamond at the source becomes aggregation or composition.
  */
-const connectorOf = ({ connector, ends }: Link): DiagramConnector => {
+const connectorOf = ({ connector, tail, head: marker }: Link): DiagramConnector => {
   if (connector) {
     return connector;
   }
 
   const head =
-    ends?.end === undefined
+    marker === undefined
       ? 'none'
-      : ends.end === 'many'
-        ? 'crowsfoot'
-        : ends.end === 'triangle' || ends.end === 'arrow'
-          ? ends.end
-          : 'arrow';
-  switch (ends?.start) {
+      : marker === 'crowsfoot' || marker === 'triangle' || marker === 'arrow'
+        ? marker
+        : 'arrow';
+  switch (tail) {
     case 'diamond':
       return { relation: 'aggregation', head };
     case 'diamond-filled':
       return { relation: 'composition', head };
-    case 'many':
+    case 'crowsfoot':
     case 'triangle':
       return { head, tail: 'arrow' };
     default:
-      return { head, tail: ends?.start ?? 'none' };
+      return { head, tail: tail ?? 'none' };
   }
 };
 

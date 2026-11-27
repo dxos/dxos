@@ -2,7 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type LayoutIntent, type Scene, type ViewId, applyIntent, findLayout, layoutChanges } from '@dxos/scene';
+import {
+  type LayerId,
+  type LayoutIntent,
+  type ModelIntent,
+  type Node,
+  Scene,
+  type ViewId,
+  applyIntent,
+  applyModelIntent,
+  findLayout,
+  isContainerKind,
+  isInstanceNode,
+  layoutChanges,
+} from '@dxos/scene';
 
 import {
   type ConstrainContext,
@@ -19,18 +32,35 @@ import {
   expandHulls,
   fitHulls,
   gridPitch,
+  groupPlacement,
   moveToHull,
   reseat,
+  ungroupPlacement,
 } from '../utils/index.ts';
-import { fromRenderList2D, toRenderList2D, toRenderLists2D } from './render-list.ts';
+import {
+  type WriteContext,
+  fromRenderList2D,
+  fromRenderLists2D,
+  objectPlacing,
+  toRenderList2D,
+  toRenderLists2D,
+} from './render-list.ts';
 
 /**
  * One write a 2D engine change makes: an intent on a layout (`created` when the engine opened a layout the document has
- * none for yet, such as a new portal's scene), or an object a new composite places, defined in the root's model.
+ * none for yet, such as a new portal's scene), an object a new composite places, defined in the root's model, or the
+ * kind of an object that is now another container (`retype`).
  */
 export type LayoutWrite =
   | { kind: 'layout'; layout: string; intent: LayoutIntent; created: boolean }
-  | { kind: 'define'; object: Scene.Object2D };
+  | { kind: 'define'; object: Scene.Object2D }
+  | { kind: 'retype'; object: string; value: string };
+
+/** The intent a write to the model makes on `model`. */
+export const modelIntentOf = (write: Exclude<LayoutWrite, { kind: 'layout' }>, model: string): ModelIntent =>
+  write.kind === 'define'
+    ? { kind: 'define', model, object: write.object }
+    : { kind: 'update', model, id: write.object, path: ['kind'], value: write.value };
 
 type Element = Scene.Element2D;
 
@@ -52,26 +82,56 @@ const overObject = (element: Element, object: Scene.Object2D): Element => {
 };
 
 /**
- * The element a changed node or link writes over the stored one: the canvas's fields from the RenderList2D, the props other
- * writers own and the DSL identity from the stored element, and an object placement kept while the node is still that
- * object's kind.
+ * The element a changed node or link writes over the stored one: the node or link itself, the props other writers own
+ * and the DSL identity from the stored element, and an object placement kept while the node is still that object's
+ * kind. A field those props hold is theirs alone, so the node's copy of it is not stored beside it.
  */
 const mergeElement = (
   current: Element | undefined,
   written: Element,
   objectOf: (id: string) => Scene.Object2D | undefined,
 ): Element => {
-  const { canvas: _canvas, ...kept } = current?.props ?? {};
-  const { type, ...element } = { ...clone(written), props: { ...kept, ...written.props } };
+  const kept = current?.props ?? {};
+  const own = clone(written);
+  for (const key of Object.keys(kept)) {
+    // A prop that shares a name with a field every element has is not that field.
+    !Object.hasOwn(Scene.Element2D.fields, key) && Reflect.deleteProperty(own, key);
+  }
+  const { kind, ...element } = { ...own, ...(Object.keys(kept).length > 0 ? { props: kept } : {}) };
   const dsl = element.dsl ?? current?.dsl;
   const placed = current?.object;
   const object = placed === undefined ? undefined : objectOf(placed);
   const value: Element =
-    placed !== undefined && object && element.object === undefined && type === object.type
+    placed !== undefined && object && element.object === undefined && kind === object.kind
       ? overObject({ ...element, object: placed }, object)
-      : { ...element, ...(type === undefined ? {} : { type }) };
+      : { ...element, ...(kind === undefined ? {} : { kind }) };
   return dsl === undefined ? value : { ...value, dsl };
 };
+
+/** The objects of a document's 2D models, by id. */
+const objects2D = (document: Scene.SceneDocument): Record<string, Scene.Object2D> =>
+  Object.assign({}, ...document.models.map((model) => (model.dim === '2d' ? model.objects : {})));
+
+/**
+ * What a list is written against: the objects the document holds, so an element keeps the object it places and one
+ * layout has one object, and the lists beside it, which say whether a composite is a group's.
+ */
+const writeContext = (
+  document: Scene.SceneDocument,
+  layout: Scene.LayoutRecord2D | undefined,
+  lists: RenderLists2D,
+): WriteContext => {
+  const objects = objects2D(document);
+  return {
+    objectFor: (parts, element) =>
+      objectPlacing(objects, (object) => object.parts, parts, layout?.elements[element]?.object),
+    anonymous: (parts) => (lists[parts] ?? findLayout(document, parts))?.anonymous === true,
+  };
+};
+
+/** Whether a stored object's kind has to follow what its node now is: a container's kind is what readers go by. */
+const kindChanged = (stored: Scene.Object2D, written: Scene.Object2D): boolean =>
+  stored.kind !== written.kind && [stored.kind, written.kind].some((kind) => isContainerKind(kind));
 
 const isEmpty = (intent: LayoutIntent): boolean => intent.kind === 'batch' && intent.intents.every(isEmpty);
 
@@ -87,7 +147,7 @@ export const layoutWrites = (
   next: RenderLists2D,
 ): LayoutWrite[] => {
   const models = new Map(document.models.flatMap((model) => (model.dim === '2d' ? [[model.id, model] as const] : [])));
-  const known = new Set(document.models.flatMap((model) => (model.dim === '2d' ? Object.keys(model.objects) : [])));
+  const known = objects2D(document);
   const created: LayoutWrite[] = [];
   const defines = new Map<string, LayoutWrite>();
   const updated: LayoutWrite[] = [];
@@ -98,8 +158,9 @@ export const layoutWrites = (
     }
     const stored = findLayout(document, view.id);
     const layout = stored?.dim === '2d' ? stored : undefined;
-    const { layout: record, objects } = fromRenderList2D(view);
-    const shown = before ? fromRenderList2D(before).layout.elements : undefined;
+    const context = writeContext(document, layout, next);
+    const { layout: record, objects } = fromRenderList2D(view, context);
+    const shown = before ? fromRenderList2D(before, context).layout.elements : undefined;
     const current: Record<string, Element> = { ...layout?.elements };
     const model = layout?.model === undefined ? undefined : models.get(layout.model);
     const objectOf = (id: string) => model?.objects[id];
@@ -113,7 +174,17 @@ export const layoutWrites = (
       record.elements[id] === undefined && delete after[id];
     }
     for (const object of objects) {
-      !known.has(object.id) && !defines.has(object.id) && defines.set(object.id, { kind: 'define', object });
+      const stored = known[object.id];
+      if (defines.has(object.id)) {
+        continue;
+      }
+      if (stored === undefined) {
+        defines.set(object.id, { kind: 'define', object });
+      } else if (kindChanged(stored, object)) {
+        // A group that was named is an Object from then on, and an object stored before its kind said what it is
+        // says so once its node is written.
+        defines.set(object.id, { kind: 'retype', object: object.id, value: object.kind });
+      }
     }
     const intent = layoutChanges(current, after);
     if (!layout) {
@@ -231,7 +302,9 @@ export const drawnDocument = (
         ...document,
         layouts: document.layouts.map((layout) => {
           const list = layout.dim === '2d' && opened.has(layout.id) ? lists[layout.id] : undefined;
-          return list && layout.dim === '2d' ? { ...layout, elements: fromRenderList2D(list).layout.elements } : layout;
+          return list && layout.dim === '2d'
+            ? { ...layout, elements: fromRenderList2D(list, writeContext(document, layout, lists)).layout.elements }
+            : layout;
         }),
       };
 
@@ -288,9 +361,112 @@ export const applyLayoutWrites = (
       if (next.kind === 'layout') {
         onIntent(next.layout, next.intent);
       } else if (model !== undefined) {
-        onModelIntent?.({ kind: 'define', model, object: next.object });
+        onModelIntent?.(modelIntentOf(next, model));
       }
     }
   };
   writes.length > 1 && onTransaction ? onTransaction(apply) : apply();
+};
+
+//
+// Group and Ungroup: the model's intents, placed as the 2D editor places a group.
+//
+
+/** What a new group is called: its element, the object and parts layout it places, and the layer it goes on. */
+export type GroupNames = { id: string; parts: string; name?: string; layer?: LayerId };
+
+const byId = <T extends { id: string }>(items: readonly T[]): Record<string, T> =>
+  Object.fromEntries(items.map((item) => [item.id, item]));
+
+/**
+ * The model's `group` intent for a selection of `list`: the reducer makes the group, and the 2D editor says where it
+ * stands (over the selection's bounds) and how its members follow its frame. None where the selection is not one to
+ * group (no node, a locked node, a View).
+ */
+export const groupIntent2D = (
+  list: RenderList2D,
+  selection: Iterable<string>,
+  model: string,
+  { id, parts, name, layer }: GroupNames,
+): ModelIntent | undefined => {
+  const members = [...selection];
+  const placement = groupPlacement(list, members, { layer });
+  if (!placement) {
+    return undefined;
+  }
+  const instance: Node = { ...placement.instance, id, composite: parts };
+  const { elements } = fromRenderList2D({
+    id: list.id,
+    nodes: { [id]: instance, ...byId(placement.nodes) },
+    links: byId(placement.links),
+  }).layout;
+  // The reducer names the object the element places, so the one the list would write for it is left out.
+  const { [id]: placing, ...placed } = elements;
+  const { id: _id, object: _object, ...fields } = placing;
+  return {
+    kind: 'group',
+    model,
+    layout: list.id,
+    id,
+    members,
+    parts,
+    ...(name !== undefined ? { name } : {}),
+    ...(Object.keys(placement.layers).length > 0 ? { layers: placement.layers } : {}),
+    placing: fields,
+    placed,
+  };
+};
+
+/**
+ * The model's `ungroup` intent for the instance `id` of `layout`, its members as the instance draws them: its part
+ * overrides applied, placed by its frame and its parts' constraints, on its layer. `ids` names each member put back.
+ */
+export const ungroupIntent2D = (
+  lists: RenderLists2D,
+  layout: string,
+  id: string,
+  model: string,
+  ids?: Readonly<Record<string, string>>,
+): ModelIntent | undefined => {
+  const list = lists[layout];
+  const instance = list?.nodes[id];
+  const composite = instance && isInstanceNode(instance) ? lists[instance.composite] : undefined;
+  if (!list || !instance || !isInstanceNode(instance) || !composite) {
+    return undefined;
+  }
+  const { nodes, links } = ungroupPlacement(list, instance, composite);
+  const placed = fromRenderList2D({ id: layout, nodes: byId(nodes), links: byId(links) }).layout.elements;
+  return { kind: 'ungroup', model, layout, id, placed, ...(ids ? { ids } : {}) };
+};
+
+/**
+ * Lists after a model intent on the document they are, for an editor that holds lists and no document: `intent` is
+ * given the model's id. A node, a link and a list the intent left as it was is the one passed in, so nothing else is
+ * redrawn. Nothing where there is no intent or the model refuses it.
+ */
+export const listsAfterIntent = (
+  lists: RenderLists2D,
+  root: ViewId,
+  intent: (model: string) => ModelIntent | undefined,
+): RenderLists2D | undefined => {
+  const doc = fromRenderLists2D(Object.values(lists), { root });
+  const built = intent(doc.models[0].id);
+  const result = built && applyModelIntent(doc, built);
+  if (!result || result.problems.length > 0) {
+    return undefined;
+  }
+  const kept = <T>(before: Readonly<Record<string, T>>, after: Readonly<Record<string, T>>): Record<string, T> =>
+    Object.fromEntries(
+      Object.entries(after).map(([key, value]) => [key, same(before[key], value) ? before[key] : value]),
+    );
+  return Object.fromEntries(
+    toRenderLists2D(result.doc).lists.map((next): [string, RenderList2D] => {
+      const before = lists[next.id];
+      if (!before) {
+        return [next.id, next];
+      }
+      const merged = { ...next, nodes: kept(before.nodes, next.nodes), links: kept(before.links, next.links) };
+      return [next.id, same(before, merged) ? before : merged];
+    }),
+  );
 };

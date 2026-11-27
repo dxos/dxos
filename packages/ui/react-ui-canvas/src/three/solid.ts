@@ -13,6 +13,7 @@ import type { Manifold, ManifoldToplevel, Vec3 as ManifoldVec3 } from 'manifold-
 import { type Resolved3D, type Scene } from '@dxos/scene';
 
 import { type MeshData } from './renderer.ts';
+import { isRounded } from './style.ts';
 
 /** A layout's elements by id, resolved against its model, which a solid's operands are named among. */
 export type Elements3D = Readonly<Record<string, Resolved3D>>;
@@ -132,10 +133,10 @@ const build = (elements: Elements3D, id: string, wasm: ManifoldToplevel, path: r
     throw new SolidError(`Solid "${id}" uses itself.`);
   }
   const position = element.center ?? ZERO;
-  if (element.type !== 'solid') {
+  if (element.kind !== 'solid') {
     const rotation = element.rotation ?? ZERO;
     return then(
-      then(primitiveSolid(wasm, element.type, element.scale ?? UNIT, element.overrides?.rounded ?? false), (solid) =>
+      then(primitiveSolid(wasm, element.kind, element.scale ?? UNIT, isRounded(element.overrides)), (solid) =>
         solid.rotate([rotation.x, rotation.y, rotation.z]),
       ),
       (solid) => solid.translate([position.x, position.y, position.z]),

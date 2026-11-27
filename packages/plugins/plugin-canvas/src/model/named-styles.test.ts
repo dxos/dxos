@@ -18,23 +18,31 @@ const styledCanvas = () => {
   }
   Obj.update(model, (model) => {
     model.styles = {
-      accent: { name: 'Accent', hue: 'red', fill: true, lineStyle: 'dashed' },
-      quiet: { name: 'Quiet', hue: 'neutral' },
+      accent: { name: 'Accent', color: 'red', fill: 'solid', stroke: 'dashed' },
+      quiet: { name: 'Quiet', color: 'neutral' },
     };
   });
   Obj.update(layout, (layout) => {
     layout.elements = {
-      a: { id: 'a', type: 'rect', z: 'a0', center: { x: 0, y: 0 }, size: { width: 64, height: 64 }, style: 'accent' },
+      a: { id: 'a', kind: 'rect', z: 'a0', center: { x: 0, y: 0 }, size: { width: 64, height: 64 }, style: 'accent' },
       b: {
         id: 'b',
-        type: 'rect',
+        kind: 'rect',
         z: 'a1',
         center: { x: 128, y: 0 },
         size: { width: 64, height: 64 },
         style: 'accent',
-        overrides: { hue: 'blue' },
+        overrides: { color: 'blue' },
       },
-      ab: { id: 'ab', type: 'line', z: 'a2', source: { node: 'a' }, target: { node: 'b' }, style: 'accent' },
+      ab: {
+        id: 'ab',
+        kind: 'link',
+        path: 'line',
+        z: 'a2',
+        source: { node: 'a' },
+        target: { node: 'b' },
+        style: 'accent',
+      },
     };
   });
   return { canvas, model, layout };
@@ -51,11 +59,11 @@ describe('named styles over Layout2D', () => {
     deleteNamedStyle(canvas, 'accent');
     expect(Object.keys(model.styles ?? {})).toEqual(['quiet']);
     expect(layout.elements.a.style).toBeUndefined();
-    expect(layout.elements.a.overrides).toEqual({ hue: 'red', fill: true, lineStyle: 'dashed' });
-    expect(layout.elements.b.overrides).toEqual({ hue: 'blue', fill: true, lineStyle: 'dashed' });
+    expect(layout.elements.a.overrides).toEqual({ color: 'red', fill: 'solid', stroke: 'dashed' });
+    expect(layout.elements.b.overrides).toEqual({ color: 'blue', fill: 'solid', stroke: 'dashed' });
     // A link keeps the common base of the style, all it ever drew.
     expect(layout.elements.ab.style).toBeUndefined();
-    expect(layout.elements.ab.overrides).toEqual({ hue: 'red', lineStyle: 'dashed' });
+    expect(layout.elements.ab.overrides).toEqual({ color: 'red', stroke: 'dashed' });
     expect(namedStyleUses(canvas)).toEqual({});
   });
 });

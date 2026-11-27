@@ -71,7 +71,7 @@ export const nestDrills = (
       ...(header?.layers ? { layers: clone(header.layers) } : {}),
     } satisfies SceneRecord;
     // The box becomes a frame in place, so its links stay attached.
-    content[key] = { ...record, node: { ...record.node, type: 'view', scene: nested } };
+    content[key] = { ...record, node: { ...record.node, kind: 'view', scene: nested } };
     const rename = (id: string) => `${nested}.${id}`;
     // An end attached to a node follows the node's new id; a free end (a point) stays where it is.
     const renameEnd = (end: LinkRecord['link']['source']): LinkRecord['link']['source'] =>
@@ -99,9 +99,9 @@ export const nestDrills = (
 };
 
 export type DiagramSetDocumentOptions = {
-  /** Rewrites a node of a diagram (a box drawn as the host's own type, say) before the diagrams are nested. */
+  /** Rewrites a node of a diagram (a box drawn as the host's own kind, say) before the diagrams are nested. */
   node?: (diagram: string, node: Node) => Node;
-  /** Rewrites a link of a diagram (its text, say) before the diagrams are nested. */
+  /** Rewrites a link of a diagram (its label, say) before the diagrams are nested. */
   link?: (diagram: string, link: Link) => Link;
 };
 

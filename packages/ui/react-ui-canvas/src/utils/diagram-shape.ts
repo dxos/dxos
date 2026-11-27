@@ -150,7 +150,7 @@ const placeCaption = (points: readonly Point[], text: string, weight: Shape.Weig
 export const diagramLinkElements = (link: Link, connector: DiagramConnector, route: DiagramRoute): Shape.Element[] => {
   const caption = connector.caption;
   const weight = caption?.weight ?? 's';
-  const text = link.text || undefined;
+  const text = link.label || undefined;
   // A two-point connector with no placed caption carries its text itself, at its middle, as an unrouted arrow does.
   const inline = text !== undefined && !caption && route.points.length === 2;
   const at =
@@ -197,7 +197,7 @@ export const isDiagramBackdrop = (node: Node): boolean => isDiagramNode(node) &&
  * cross.
  */
 export const isRouteObstacle = (node: Node): boolean =>
-  node.style?.guide !== true &&
+  node.overrides?.guide !== true &&
   !isHullNode(node) &&
   !isDiagramBackdrop(node) &&
   !(isDiagramNode(node) && node.element.kind === 'text');

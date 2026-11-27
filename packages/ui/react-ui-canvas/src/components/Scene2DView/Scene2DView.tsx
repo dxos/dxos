@@ -11,7 +11,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { createCanvasAtoms } from '../../engine/index.ts';
 import { rootLayoutOf } from '../../hooks/index.ts';
-import { type Camera, type NodeRegistry } from '../../model/index.ts';
+import { type Camera, type NodeRegistry, type ThemeRegistry } from '../../model/index.ts';
 import { Canvas } from '../Canvas/index.ts';
 
 export type Scene2DViewProps = Util.ThemedClassName<{
@@ -20,6 +20,8 @@ export type Scene2DViewProps = Util.ThemedClassName<{
   scene?: string;
   /** A react-ui-canvas theme name (flat, outline, glass, classic); the scene's own when unset. */
   theme?: string;
+  /** The themes `theme` is one of, with the colours and typefaces each defines; the built-in ones when unset. */
+  themes?: ThemeRegistry;
   /** Where to look: the camera given, or `fit` to frame the whole scene. */
   camera?: Scene.Camera2D | 'fit';
   /** The node types the view draws (a host's object frames among them); the default set when unset. */
@@ -49,6 +51,7 @@ const CanvasView = ({
   document,
   scene: sceneId,
   theme,
+  themes,
   camera = 'fit',
   nodes,
   margin,
@@ -96,6 +99,7 @@ const CanvasView = ({
         readonly
         transparent={transparent}
         theme={theme ?? scene?.theme}
+        themes={themes}
         initialDisplay={{ snap: grid, guides: false, fit }}
         backgroundGrid={grid ? undefined : 'none'}
       >

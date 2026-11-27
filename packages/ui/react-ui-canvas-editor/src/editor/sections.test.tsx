@@ -39,7 +39,7 @@ const CONFIG: DimensionConfig = {
   geometry: { pasteOffset: (pasted) => ({ x: pasted, y: 0, z: pasted }), snap: { move: 1 } },
   display: { themes: [{ id: 'cad', label: 'CAD' }], grids: ['lines'], guides: false },
   propertyForm: ({ element }) => (
-    <p data-testid='property-form' data-type={element.type ?? ''}>
+    <p data-testid='property-form' data-type={element.kind ?? ''}>
       {element.id}
     </p>
   ),
@@ -61,22 +61,22 @@ const document = (hidden = false): Scene.SceneDocument => ({
       model: 'm',
       layers: { back: { id: 'back', name: 'Back', z: 'a0', hidden } },
       elements: {
-        a: { id: 'a', type: 'cube', center: { x: 0, y: 0, z: 0 }, overrides: { hue: 'red' } },
-        b: { id: 'b', type: 'cube', center: { x: 2, y: 0, z: 0 }, layer: 'back' },
+        a: { id: 'a', kind: 'cube', center: { x: 0, y: 0, z: 0 }, overrides: { color: 'red' } },
+        b: { id: 'b', kind: 'cube', center: { x: 2, y: 0, z: 0 }, layer: 'back' },
         c: { id: 'c', object: 'gear', center: { x: 4, y: 0, z: 0 } },
         p: { id: 'p', object: 'room', center: { x: 6, y: 0, z: 0 } },
       },
     },
-    { id: 'gear-parts', dim: '3d', model: 'm', kind: 'composite', elements: { g: { id: 'g', type: 'sphere' } } },
-    { id: 'room-view', dim: '3d', model: 'm', elements: { r: { id: 'r', type: 'cube' } } },
+    { id: 'gear-parts', dim: '3d', model: 'm', kind: 'composite', elements: { g: { id: 'g', kind: 'sphere' } } },
+    { id: 'room-view', dim: '3d', model: 'm', elements: { r: { id: 'r', kind: 'cube' } } },
   ],
   models: [
     {
       id: 'm',
       dim: '3d',
       objects: {
-        gear: { id: 'gear', type: 'composite', parts: 'gear-parts' },
-        room: { id: 'room', type: 'portal', parts: 'room-view' },
+        gear: { id: 'gear', kind: 'composite', parts: 'gear-parts' },
+        room: { id: 'room', kind: 'portal', parts: 'room-view' },
       },
     },
   ],
@@ -156,7 +156,7 @@ describe('SceneEditor sections', () => {
         layout.id === 'root' && layout.dim === '3d'
           ? {
               ...layout,
-              elements: { ...layout.elements, c: { ...layout.elements.c, props: { canvas: { hull: 'perimeter' } } } },
+              elements: { ...layout.elements, c: { ...layout.elements.c, hull: 'perimeter' } },
             }
           : layout,
       ),
@@ -208,7 +208,7 @@ describe('SceneEditor sections', () => {
       kind: 'style',
       model: 'm',
       id: 'style-1',
-      style: { name: 'Style 1', hue: 'red' },
+      style: { name: 'Style 1', color: 'red' },
     });
     expect(onIntent).toHaveBeenCalledWith('root', {
       kind: 'batch',
@@ -251,7 +251,7 @@ describe('SceneEditor sections', () => {
 
   test('the library tool defines a picked object in the model once and arms the place tool for it', async () => {
     const onModelIntent = vi.fn((_intent: ModelIntent): readonly string[] => []);
-    const make = vi.fn(() => ({ id: 'mesh', type: 'mesh', props: { url: 'taxi.glb' } }));
+    const make = vi.fn(() => ({ id: 'mesh', kind: 'mesh', props: { url: 'taxi.glb' } }));
     const Library = ({ doc }: { doc: Scene.SceneDocument }) => (
       <SceneEditor.Root
         config={{
@@ -279,7 +279,7 @@ describe('SceneEditor sections', () => {
     expect(onModelIntent).toHaveBeenCalledWith({
       kind: 'define',
       model: 'm',
-      object: { id: 'taxi', type: 'mesh', props: { url: 'taxi.glb' } },
+      object: { id: 'taxi', kind: 'mesh', props: { url: 'taxi.glb' } },
     });
     expect(screen.getByTestId('viewport').dataset.tool).toBe('place:taxi');
 
@@ -288,7 +288,7 @@ describe('SceneEditor sections', () => {
     const withTaxi: Scene.SceneDocument = {
       ...defined,
       models: defined.models.map((model) =>
-        model.dim === '3d' ? { ...model, objects: { ...model.objects, taxi: { id: 'taxi', type: 'mesh' } } } : model,
+        model.dim === '3d' ? { ...model, objects: { ...model.objects, taxi: { id: 'taxi', kind: 'mesh' } } } : model,
       ),
     };
     rerender(<Library doc={withTaxi} />);

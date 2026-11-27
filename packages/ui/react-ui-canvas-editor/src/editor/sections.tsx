@@ -7,7 +7,7 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type ThemeMode, between, gridPitch, moveWrites } from '@dxos/react-ui-canvas';
+import { type ThemeMode, between, gridPitch, modelIntentOf, moveWrites } from '@dxos/react-ui-canvas';
 import { Form, type FormFieldMap } from '@dxos/react-ui-form';
 import {
   DEFAULT_GRID,
@@ -191,7 +191,7 @@ export const ViewsSection = () => {
                       if (write.kind === 'layout') {
                         commands.intent(write.layout, write.intent);
                       } else if (model !== undefined) {
-                        commands.modelIntent({ kind: 'define', model, object: write.object });
+                        commands.modelIntent(modelIntentOf(write, model));
                       }
                     }
                   });
@@ -376,21 +376,21 @@ export const StylesSection = ({ catalogs = [] }: { catalogs?: readonly EditorCat
   const selection = useAtomValue(useSceneSelection('SceneEditor.Styles').atoms.selection);
   const record = useOpenLayout('SceneEditor.Styles');
   const model = document.models[0];
-  const modelStyles: Readonly<Record<string, NamedStyle<{ hue?: string }>>> = model?.styles ?? {};
+  const modelStyles: Readonly<Record<string, NamedStyle<{ color?: string }>>> = model?.styles ?? {};
   const entries = useMemo<StyleEntry[]>(
     () => [
       ...Object.entries(modelStyles).map(([id, style]) => ({
         id,
         name: style.name ?? id,
         source: 'model',
-        hue: style.hue,
+        color: style.color,
       })),
       ...catalogs.flatMap((catalog) =>
         Object.entries(catalog.styles).map(([key, style]) => ({
           id: `${catalog.id}:${key}`,
           name: style.name ?? key,
           source: catalog.name,
-          hue: style.hue,
+          color: style.color,
         })),
       ),
     ],

@@ -27,8 +27,8 @@ import { SvgFile } from '@dxos/diagram';
 import * as Button from '@dxos/react-ui/Button';
 import {
   type Bounds,
+  type Dash,
   type ElementId,
-  type LineStyle,
   LINK_FONT_SIZE,
   type LinkEnds,
   type LinkId,
@@ -46,6 +46,7 @@ import {
   linkMarkers,
   nodePadding,
   showsContents,
+  strokeDash,
 } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
@@ -64,8 +65,8 @@ import {
   type NodeViewProps,
   RADIUS_PX,
   type RenderList2D,
+  type SceneLook,
   nodeDef,
-  styleVariant,
 } from '../../model/index.ts';
 import {
   BORDER_CLASSES,
@@ -74,6 +75,7 @@ import {
   GROOVE_FILLS,
   type GrooveHeads,
   type LatticeSpec,
+  type LineClasses,
   MANY_SPREAD,
   type MarkerFrame,
   NEU_CANVAS_FILL,
@@ -89,24 +91,30 @@ import {
   cornerRadius,
   diagramLinkMarkup,
   diagramNodeMarkup,
+  drawnColor,
   elementLayer,
   fitHulls,
+  fontFamily,
   frameClasses,
+  frameStyle,
   grooveBounds,
   grooveHeads,
   grooveTrim,
   instancePlacement,
   isMultiline,
   lineClasses,
+  lineColor,
   markerFrame,
   markerTrim,
   nodeBounds,
   nodeParts,
   nodeRelief,
+  nodeVariant,
   portalFrame,
   portalScale,
   portalTransform,
   sortByZ,
+  textStyleColor,
   trimPath,
   viewLayers,
   viewLinkGeometry,
@@ -169,7 +177,7 @@ export type SceneLayerProps = {
   active?: NodeId;
   /** A node drawn as a preview of what a gesture will create: translucent, dashed, and not pressable. */
   ghost?: NodeId;
-  /** Frames show their id, type and geometry. */
+  /** Frames show their id, kind and geometry. */
   debug?: boolean;
   /** Absent on nested (read-only) layers. */
   handlers?: ElementHandlers;
@@ -238,14 +246,23 @@ export const SceneLayer = memo(
         ),
       }));
     }, [scene, links, selected]);
-    // Each element is drawn with its class's look under its own; the handlers still get the element as stored.
+    // Each element is drawn with its named style's look under its own; the handlers still get the element as stored.
     const styles = useAtomValue(lists.styles ?? NO_STYLES);
     const lines = useMemo(
-      () => new Map(links.map(({ link }) => [link.id, classedLink(link, styles).style])),
+      () => new Map(links.map(({ link }) => [link.id, classedLink(link, styles).overrides])),
       [links, styles],
     );
     const unit = 1 / Math.max(zoom, 0.05);
     const look = useSceneLook();
+    const inks = useMemo(
+      () =>
+        lineInks(
+          [...lines.values()].map((line) => line?.color),
+          look,
+        ),
+      [lines, look],
+    );
+    const inkOf = (id: LinkId): LineInk => inks.get(lines.get(id)?.color) ?? defaultInk(look);
     const weight = lineWeight(depth, zoom);
     const linkWidth = look.styleSet.link.width * weight;
     // End markers keep the line's own weight whatever the set draws the link as, so an arrowhead stays crisp.
@@ -255,9 +272,9 @@ export const SceneLayer = memo(
     const fadeStyle: CSSProperties | undefined = focus && focus.opacity < 1 ? { opacity: focus.opacity } : undefined;
     // One set of end markers per line colour in use, sized in scene units so they scale with the nodes they join.
     const markerId = useId();
-    const lineHues = useMemo(() => [...new Set([...lines.values()].map((line) => line?.hue))], [lines]);
-    const markerUrl = (marker: Marker | undefined, end: 'start' | 'end', hue: string | undefined) =>
-      marker ? `url(#${markerId}-${hue ?? 'default'}-${marker}-${end})` : undefined;
+    const markerInks = useMemo(() => [...new Map([...inks.values()].map((ink) => [ink.key, ink])).values()], [inks]);
+    const markerUrl = (marker: Marker | undefined, end: 'start' | 'end', ink: LineInk) =>
+      marker ? `url(#${markerId}-${ink.key}-${marker}-${end})` : undefined;
     // Diagram connectors draw the diagram renderer's own markers, defined once per layer.
     const diagramMarkers = useMemo(() => SvgFile.markerIds(`${markerId}-dx`), [markerId]);
     const hasDiagram = links.some(({ diagram }) => diagram !== undefined);
@@ -268,12 +285,12 @@ export const SceneLayer = memo(
           <LatticeContext.Provider value={lattice}>
             <svg className='absolute overflow-visible pointer-events-none' style={fadeStyle} width={1} height={1}>
               <defs>
-                {lineHues.map((hue) => (
+                {markerInks.map((ink) => (
                   <Markers
-                    key={hue ?? 'default'}
-                    id={`${markerId}-${hue ?? 'default'}`}
+                    key={ink.key}
+                    id={`${markerId}-${ink.key}`}
                     cell={cell}
-                    hue={hue}
+                    ink={ink}
                     width={markerWidth}
                     canvasFill={canvasFill}
                   />
@@ -331,26 +348,32 @@ export const SceneLayer = memo(
                               path={path}
                               stroke={
                                 plain
-                                  ? lineClasses(lines.get(link.id)?.hue).stroke
+                                  ? inkOf(link.id).classes.stroke
                                   : selected?.has(link.id)
                                     ? 'stroke-focus'
                                     : hoveredLink === link.id
                                       ? 'stroke-focus/50'
-                                      : lineClasses(lines.get(link.id)?.hue).stroke
+                                      : inkOf(link.id).classes.stroke
+                              }
+                              // A literal colour is no class, and the focus colour wins over it.
+                              strokeColor={
+                                plain || !(selected?.has(link.id) || hoveredLink === link.id)
+                                  ? inkOf(link.id).css
+                                  : undefined
                               }
                               emphasis={!plain && (selected?.has(link.id) || hoveredLink === link.id)}
                               width={linkWidth}
-                              lineStyle={lines.get(link.id)?.lineStyle}
+                              dash={strokeDash(lines.get(link.id)?.stroke)}
                               linkId={link.id}
                               ends={linkMarkers(link)}
                               endSize={END_BOX * cell}
                               markerWidth={markerWidth}
                             />
                           )}
-                          {link.text && !diagram && (
+                          {link.label && !diagram && (
                             <LinkText
                               path={path}
-                              text={link.text}
+                              text={link.label}
                               backdrop={canvasFillClass(look, look.styleSet.link.caption)}
                               textClass={CAPTION_TEXT[look.tone]}
                               fontSize={lines.get(link.id)?.fontSize ?? LINK_FONT_SIZE}
@@ -367,8 +390,8 @@ export const SceneLayer = memo(
                             d={path}
                             className='fill-none stroke-none'
                             data-link-ends={link.id}
-                            markerStart={markerUrl(linkMarkers(link).start, 'start', lines.get(link.id)?.hue)}
-                            markerEnd={markerUrl(linkMarkers(link).end, 'end', lines.get(link.id)?.hue)}
+                            markerStart={markerUrl(linkMarkers(link).tail, 'start', inkOf(link.id))}
+                            markerEnd={markerUrl(linkMarkers(link).head, 'end', inkOf(link.id))}
                           />
                         ),
                       )}
@@ -608,7 +631,7 @@ const LatticeContext = createContext<LatticeSpec | undefined>(undefined);
 const MINOR_GRID = '--dx-minor-grid';
 
 /**
- * The space a text box leaves between the frame's edge and its text, set per node by the `padding` field of the types
+ * The space a text box leaves between the frame's edge and its text, set per node by the `padding` field of the kinds
  * that carry it, in scene px. Unset, a text box pads itself by a minor grid cell, which is what puts its lines on
  * the grid.
  */
@@ -639,8 +662,30 @@ const LABEL_LINES = '[&>*]:py-[var(--dx-text-pad-y,calc(var(--dx-minor-grid)/2))
 const TEXT_LINES = mx(PARAGRAPH_ON_GRID, '[&>*]:py-[max(0px,calc(var(--dx-text-pad-y,var(--dx-minor-grid))-0.25em))]');
 
 /** A line pattern's dashes in scene units, relative to the stroke; a dot is a zero-length dash with a round cap. */
-const dashArray = (dash: LineStyle['lineStyle'], width = LINK_WIDTH): string | undefined =>
+const dashArray = (dash: Dash | undefined, width = LINK_WIDTH): string | undefined =>
   dash === 'dashed' ? `${4 * width} ${3 * width}` : dash === 'dotted' ? `0 ${2.5 * width}` : undefined;
+
+/**
+ * What a link's line and end markers are drawn in: the classes of a theme colour, or a literal set inline (`css`).
+ * `key` names the colour in an element id, so links of one colour share one set of markers.
+ */
+type LineInk = { key: string; classes: LineClasses; css?: string };
+
+/** The line a link that states no colour draws in. */
+const defaultInk = (look: SceneLook): LineInk => ({ key: 'default', ...lineColor(undefined, look) });
+
+/** An ink per colour the links state, as `look` draws each; a literal has no name, so it is numbered. */
+const lineInks = (colors: readonly (string | undefined)[], look: SceneLook): Map<string | undefined, LineInk> => {
+  const inks = new Map<string | undefined, LineInk>();
+  let literals = 0;
+  for (const color of colors) {
+    if (!inks.has(color)) {
+      const { hue, css } = drawnColor(color, look);
+      inks.set(color, { key: css !== undefined ? `css${literals++}` : (hue ?? 'default'), ...lineColor(color, look) });
+    }
+  }
+  return inks;
+};
 
 /** Bounding box of every end, in nominal units: a quarter of a major grid cell. */
 const END_BOX = 0.25;
@@ -649,21 +694,24 @@ const END_BOX = 0.25;
 type MarkersProps = {
   id: string;
   cell: number;
-  hue: string | undefined;
+  ink: LineInk;
   width: number;
   /** The canvas colour a hollow end is filled with, so the line stops at its rim. */
   canvasFill: string;
 };
 
-const Markers = ({ id, cell, hue, width, canvasFill }: MarkersProps) => {
-  const line = lineClasses(hue);
+const Markers = ({ id, cell, ink, width, canvasFill }: MarkersProps) => {
+  const line = ink.classes;
+  // A literal colour is set inline, over the default line's classes.
+  const stroked: CSSProperties | undefined = ink.css !== undefined ? { stroke: ink.css } : undefined;
+  const solid: CSSProperties | undefined = ink.css !== undefined ? { stroke: ink.css, fill: ink.css } : undefined;
   // Each end fills a box of `END_BOX` nominal units, so it scales with the grid and the shapes it joins.
   const box = END_BOX * cell;
   const arrow = markerFrame('arrow', box, width);
   const triangle = markerFrame('triangle', box, width);
   const circle = markerFrame('circle', box, width);
   const diamond = markerFrame('diamond', box, width);
-  const many = markerFrame('many', box, width);
+  const crowsfoot = markerFrame('crowsfoot', box, width);
   // An outline matches the line's width, in its marker's view units.
   const outline = ({ size, view }: MarkerFrame) => (width * view) / size;
   const ends = ['start', 'end'] as const;
@@ -685,6 +733,7 @@ const Markers = ({ id, cell, hue, width, canvasFill }: MarkersProps) => {
           <path
             d='M 0 0 L 10 5 L 0 10'
             className={mx('fill-none', line.stroke)}
+            style={stroked}
             strokeWidth={outline(arrow)}
             strokeLinecap='round'
             strokeLinejoin='miter'
@@ -697,6 +746,7 @@ const Markers = ({ id, cell, hue, width, canvasFill }: MarkersProps) => {
           <path
             d='M 0 0 L 10 5 L 0 10 z'
             className={mx(canvasFill, line.stroke)}
+            style={stroked}
             strokeWidth={outline(triangle)}
             strokeLinejoin='miter'
           />
@@ -709,6 +759,7 @@ const Markers = ({ id, cell, hue, width, canvasFill }: MarkersProps) => {
             <path
               d='M 0 5 L 8 0 L 16 5 L 8 10 z'
               className={mx(kind === 'diamond' ? canvasFill : line.fill, line.stroke)}
+              style={kind === 'diamond' ? stroked : solid}
               strokeWidth={outline(diamond)}
               strokeLinejoin='miter'
             />
@@ -718,16 +769,24 @@ const Markers = ({ id, cell, hue, width, canvasFill }: MarkersProps) => {
       {/* A circle filled with the canvas, its far side on the connection point, so the line stops under it. */}
       {ends.map((end) => (
         <marker key={`circle-${end}`} id={`${id}-circle-${end}`} viewBox='0 0 10 10' {...frame(circle, end)}>
-          <circle cx={5} cy={5} r={4} className={mx(canvasFill, line.stroke)} strokeWidth={outline(circle)} />
+          <circle
+            cx={5}
+            cy={5}
+            r={4}
+            className={mx(canvasFill, line.stroke)}
+            style={stroked}
+            strokeWidth={outline(circle)}
+          />
         </marker>
       ))}
       {/* Many (a crow's foot): two toes spread from the line onto the connection point, the line running between them. */}
       {ends.map((end) => (
-        <marker key={`many-${end}`} id={`${id}-many-${end}`} viewBox='-1 -1 12 12' {...frame(many, end)}>
+        <marker key={`crowsfoot-${end}`} id={`${id}-crowsfoot-${end}`} viewBox='-1 -1 12 12' {...frame(crowsfoot, end)}>
           <path
             d={`M 10 ${5 - 10 * MANY_SPREAD} L 0 5 L 10 ${5 + 10 * MANY_SPREAD}`}
             className={mx('fill-none', line.stroke)}
-            strokeWidth={outline(many)}
+            style={stroked}
+            strokeWidth={outline(crowsfoot)}
             strokeLinecap='round'
             strokeLinejoin='round'
           />
@@ -759,10 +818,12 @@ type LinkStrokeProps = {
   kind: LinkKind;
   path: string;
   stroke: string;
-  /** Selected or hovered: a groove, which draws no hue, then floors its channel in `stroke`. */
+  /** A literal colour the line is drawn in, over `stroke`. */
+  strokeColor?: string;
+  /** Selected or hovered: a groove, which draws no colour, then floors its channel in `stroke`. */
   emphasis?: boolean;
   width: number;
-  lineStyle: LineStyle['lineStyle'];
+  dash: Dash | undefined;
   linkId: string;
   /** The link's end markers: the line stops under them, and a groove draws them as more channel. */
   ends: LinkEnds;
@@ -773,7 +834,7 @@ type LinkStrokeProps = {
 };
 
 /**
- * A link's visible stroke as its style set draws it: a line; a tube, its hue lit along the middle; rails, two edges over
+ * A link's visible stroke as its style set draws it: a line; a tube, its colour lit along the middle; rails, two edges over
  * a faint strip; glass, a translucent strip with fine edges; or a groove, a channel pressed into the Neu ground. The
  * line stops under each end, so it never shows past or through an end's point.
  */
@@ -782,18 +843,20 @@ const LinkStroke = ({
   kind,
   path: route,
   stroke,
+  strokeColor,
   emphasis,
   width,
-  lineStyle,
+  dash: pattern,
   linkId,
   ends,
   endSize,
   markerWidth,
 }: LinkStrokeProps) => {
-  const dash = dashArray(lineStyle, width);
+  const dash = dashArray(pattern, width);
   const groove = kind === 'groove';
-  const round = groove || (kind === 'line' && lineStyle === 'dotted');
-  const { start, end } = ends;
+  const round = groove || (kind === 'line' && pattern === 'dotted');
+  const { tail, head } = ends;
+  const inked: CSSProperties | undefined = strokeColor !== undefined ? { stroke: strokeColor } : undefined;
   const path = useMemo(() => {
     const trim = (marker: Marker | undefined) =>
       marker === undefined
@@ -801,11 +864,11 @@ const LinkStroke = ({
         : groove
           ? grooveTrim(marker, width, endSize)
           : markerTrim(marker, endSize, markerWidth, { width, round });
-    return trimPath(route, trim(start), trim(end));
-  }, [route, start, end, groove, round, width, endSize, markerWidth]);
+    return trimPath(route, trim(tail), trim(head));
+  }, [route, tail, head, groove, round, width, endSize, markerWidth]);
   const heads = useMemo(
-    () => (groove && (start || end) ? grooveHeads(route, { start, end }, width, endSize) : NO_HEADS),
-    [groove, route, start, end, width, endSize],
+    () => (groove && (tail || head) ? grooveHeads(route, { tail, head }, width, endSize) : NO_HEADS),
+    [groove, route, tail, head, width, endSize],
   );
   const bounds = useMemo(
     () => (groove ? grooveBounds(route, width, endSize) : undefined),
@@ -831,6 +894,7 @@ const LinkStroke = ({
       <path
         d={path}
         className={mx('fill-none', stroke)}
+        style={inked}
         strokeWidth={width}
         strokeDasharray={dash}
         strokeLinecap={round ? 'round' : undefined}
@@ -841,7 +905,7 @@ const LinkStroke = ({
   if (kind === 'tube') {
     return (
       <g strokeLinejoin='round' strokeDasharray={dash} data-link-id={linkId}>
-        <path d={path} className={mx('fill-none', stroke)} strokeWidth={width} />
+        <path d={path} className={mx('fill-none', stroke)} style={inked} strokeWidth={width} />
         <path d={path} className='fill-none stroke-white' strokeWidth={width * 0.45} opacity={0.4} />
       </g>
     );
@@ -855,10 +919,17 @@ const LinkStroke = ({
         <path d={path} fill='none' stroke='white' strokeWidth={width} />
         <path d={path} fill='none' stroke='black' strokeWidth={width - rail * 2} />
       </mask>
-      <path d={path} className={mx('fill-none', stroke)} strokeWidth={width} opacity={kind === 'rails' ? 0.12 : 0.3} />
       <path
         d={path}
         className={mx('fill-none', stroke)}
+        style={inked}
+        strokeWidth={width}
+        opacity={kind === 'rails' ? 0.12 : 0.3}
+      />
+      <path
+        d={path}
+        className={mx('fill-none', stroke)}
+        style={inked}
         strokeWidth={width}
         mask={`url(#${maskId})`}
         opacity={kind === 'rails' ? 1 : 0.7}
@@ -933,7 +1004,7 @@ const GrooveStroke = ({ id, path, heads, bounds, stroke, emphasis, width, dash, 
         </mask>
       </defs>
       {emphasis ? (
-        // The hue is a stroke class, so the emphasised floor is the channel stroked, merged under one opacity.
+        // The colour is a stroke class, so the emphasised floor is the channel stroked, merged under one opacity.
         <g mask={`url(#${masks.channel})`} opacity={0.6}>
           {path && (
             <path
@@ -1097,7 +1168,7 @@ type NodeFrameProps = Omit<NodeViewProps, 'editing'> & {
   fade?: CSSProperties;
   /** The fade of this node's own frame (fill and border) while it is zoomed into; its contents stay. */
   chromeFade?: CSSProperties;
-  /** The drawing's style classes, under the node's own style. */
+  /** The drawing's named styles, under the node's own look. */
   styles?: StyleMap;
   /** Outlines the node's frame lightly, for a shape being moved or drawn, whose own outline may not be its frame. */
   framed?: boolean;
@@ -1108,7 +1179,7 @@ const NodeFrame = memo(
   ({ handlers, hovered, editingPart, ghost, debug, fade, chromeFade, styles, framed, ...props }: NodeFrameProps) => {
     const { node, registry, selected } = props;
     const cell = useContext(CellContext);
-    // A type the registry does not know is drawn as the core base: a box with its label.
+    // A kind the registry does not know is drawn as the core base: a box with its label.
     const def = nodeDef(registry, node);
     const drawn = useMemo(() => bareNode(classedNode(node, styles), def), [node, styles, def]);
     const bounds = nodeBounds(node);
@@ -1138,24 +1209,50 @@ const NodeFrame = memo(
     // the class compartments and the editor alike; unset, the parts keep their own theme sizes.
     // The frame's border is 2px, thickened with the layer's lines (`lineWeight`); fading, it is padding instead.
     const look = useSceneLook();
-    const nominal = styleVariant(look.styleSet, drawn.style?.tone).borderWidth;
+    const variant = nodeVariant(drawn, look);
+    const nominal = variant.borderWidth;
     const border = nominal * lineWeight(props.depth, props.zoom);
     const thick = border !== nominal;
-    // A bare type drawing no fill or border has no frame at all: the frame clips its contents, so a transparent border
+    // A bare kind drawing no fill or border has no frame at all: the frame clips its contents, so a transparent border
     // would shave the drawing (a 4px rule drew 2px) and a rounded corner would cut a glyph's sharp corners.
     const silhouette = chromeFade ? undefined : def?.silhouette;
     const borderless =
-      (def?.bare === true && drawn.style?.border === false && drawn.style?.fill === false && !chromeFade) ||
+      (def?.bare === true && drawn.overrides?.stroke === 'none' && drawn.overrides?.fill === 'none' && !chromeFade) ||
       silhouette !== undefined;
     const circled = def?.bounds?.(drawn) === 'circle';
     // A screen pixel at any zoom.
     const hairline = 1 / Math.max(props.zoom, 0.05);
-    const frameStyle: CSSProperties & Record<`--${string}`, string> = {
+    // An outline's border is part of what the kind draws, so selecting or hovering it leaves its colour alone: the
+    // selection frame marks it, and a ring turned off stays off.
+    const marked = def?.outline !== true;
+    // A line is nothing but its stroke, so one recoloured while it is selected or its vertices are edited could not
+    // be seen in its own look as it is worked on: the selection frame and the vertex handles mark it.
+    const line = def?.editor === 'vertices';
+    const focused = !props.opening && marked && selected && !line;
+    const hinted = !props.opening && marked && hovered && !(line && selected);
+    const frameLook = props.opening
+      ? frameClasses(drawn, false, false, def?.ellipse, look).slice(1)
+      : frameClasses(drawn, focused, hinted, def?.ellipse, look);
+    // A literal colour is no class: stated inline wherever the look's classes go, less the fill a frame being entered
+    // drops and the border the focus colour takes.
+    const literal = frameStyle(drawn, look);
+    const literalLook: CSSProperties | undefined = literal && {
+      ...literal,
+      ...(props.opening ? { backgroundColor: undefined } : {}),
+      ...(focused || hinted ? { borderColor: undefined } : {}),
+    };
+    // A guide's title reads in the default text colour, whatever its own is; a fading frame's contents keep theirs.
+    const textLiteral = drawn.overrides?.guide || chromeFade ? undefined : textStyleColor(drawn.overrides, look).css;
+    const boxStyle: CSSProperties & Record<`--${string}`, string> = {
       left: bounds.x,
       top: bounds.y,
       width: bounds.width,
       height: bounds.height,
-      fontSize: drawn.style?.fontSize,
+      // Every text part inherits the size and the face.
+      fontSize: drawn.overrides?.fontSize,
+      fontFamily: fontFamily(drawn.overrides, look),
+      ...(textLiteral !== undefined ? { color: textLiteral } : {}),
+      ...(chromeFade || silhouette ? {} : literalLook),
       ...(drawn.rotation ? { transform: `rotate(${drawn.rotation}deg)` } : {}),
       [FRAME_BORDER]: chromeFade || borderless ? '0px' : `${border}px`,
       [MINOR_GRID]: `${cell / MAJOR_GRID_RATIO}px`,
@@ -1168,17 +1265,8 @@ const NodeFrame = memo(
       ...fade,
       ...nodeOpacity(drawn, fade),
     };
-    // An outline's border is part of what the type draws, so selecting or hovering it leaves its colour alone: the
-    // selection frame marks it, and a ring turned off stays off.
-    const marked = def?.outline !== true;
-    // A line is nothing but its stroke, so one recoloured while it is selected or its vertices are edited could not
-    // be seen in its own style as it is worked on: the selection frame and the vertex handles mark it.
-    const line = def?.editor === 'vertices';
-    const frameLook = props.opening
-      ? frameClasses(drawn, false, false, def?.ellipse, look).slice(1)
-      : frameClasses(drawn, marked && selected && !line, marked && hovered && !(line && selected), def?.ellipse, look);
     const silhouetteFilled = def?.filled?.(drawn) ?? true;
-    const silhouetteRadius = RADIUS_PX[cornerRadius(drawn.style, styleVariant(look.styleSet, drawn.style?.tone))];
+    const silhouetteRadius = RADIUS_PX[cornerRadius(drawn.overrides, variant)];
     const relief = silhouette && silhouetteFilled ? nodeRelief(drawn, look) : undefined;
     return (
       <>
@@ -1210,13 +1298,11 @@ const NodeFrame = memo(
               : silhouette
                 ? []
                 : [BORDER_CLASSES[nominal].border, ...frameLook]),
-            // Every text part inherits the face, as it does `fontSize`.
-            drawn.style?.fontFamily === 'monospace' && 'font-mono',
             interactive && !node.locked && 'cursor-grab',
             ghost && 'opacity-50 border-dashed pointer-events-none',
             framed && !circled && 'outline-focus/40',
           )}
-          style={frameStyle}
+          style={boxStyle}
           data-node-id={node.id}
           data-ghost={ghost || undefined}
           onPointerDown={
@@ -1236,12 +1322,12 @@ const NodeFrame = memo(
             <div
               aria-hidden
               className={mx('dx-cover -z-10', BORDER_CLASSES[nominal].border, 'pointer-events-none', ...frameLook)}
-              style={thick ? { ...chromeFade, borderWidth: border } : chromeFade}
+              style={{ ...literalLook, ...chromeFade, ...(thick ? { borderWidth: border } : {}) }}
             />
           )}
           {silhouette ? (
             // The look's classes on a box-less wrapper, so the silhouette's layers inherit its colours.
-            <div className={mx('contents', ...frameLook)}>
+            <div className={mx('contents', ...frameLook)} style={literalLook}>
               <Silhouette
                 outline={silhouette}
                 filled={silhouetteFilled}
@@ -1250,12 +1336,8 @@ const NodeFrame = memo(
                 node={drawn}
                 border={border}
                 radius={silhouetteRadius}
-                // A guide is dashed whatever its line style, as a box's border is.
-                lineStyle={
-                  drawn.style?.guide
-                    ? 'dashed'
-                    : (drawn.style?.lineStyle ?? styleVariant(look.styleSet, drawn.style?.tone).borderStyle)
-                }
+                // A guide is dashed whatever its stroke, as a box's border is.
+                dash={drawn.overrides?.guide ? 'dashed' : (strokeDash(drawn.overrides?.stroke) ?? variant.borderStyle)}
               />
               <Component {...props} node={drawn} editing={editing} onOpen={onOpen} />
             </div>
@@ -1275,7 +1357,7 @@ const NodeFrame = memo(
               className='absolute top-0 left-0 px-1 text-[10px] leading-4 font-mono whitespace-nowrap bg-modal-surface text-fg-muted pointer-events-none'
               data-testid='node-debug'
             >
-              {node.id} · {node.type} · {bounds.x},{bounds.y} {bounds.width}×{bounds.height} · z {node.z}
+              {node.id} · {node.kind} · {bounds.x},{bounds.y} {bounds.width}×{bounds.height} · z {node.z}
             </div>
           )}
         </div>
@@ -1320,16 +1402,16 @@ type SilhouetteProps = {
   border: number;
   radius: number;
   /** Solid, dashed or dotted, as a box's border would draw. */
-  lineStyle?: LineStyle['lineStyle'];
+  dash?: Dash;
 };
 
 /**
  * A frame's fill and border cut to an outline: a layer inheriting the fill and one the border colour, each masked by
  * the path (filled, then stroked), so the shape draws with every look a box has.
  */
-const Silhouette = ({ outline, filled, fill = true, node, border, radius, lineStyle }: SilhouetteProps) => {
+const Silhouette = ({ outline, filled, fill = true, node, border, radius, dash: pattern }: SilhouetteProps) => {
   const { width, height } = node.size;
-  const dash = dashArray(lineStyle, border);
+  const dash = dashArray(pattern, border);
   const masks = useMemo(() => {
     const path = outline(node, border / 2, radius);
     const image = (body: string) =>
@@ -1456,14 +1538,14 @@ const SilhouetteRelief = ({ outline, node, border, radius, relief, className, st
   );
 };
 
-/** The node's own opacity (its style's, over its class's) under any fade the layer applies; nothing when opaque. */
+/** The node's own opacity (its look's, over its named style's) under any fade the layer applies; nothing when opaque. */
 const DIMMED: CSSProperties = { opacity: 0.5 };
 
 /** How far back the drawing around an Object goes while the Object is edited in place. */
 const OUTSIDE: CSSProperties = { opacity: 0.25 };
 
 const nodeOpacity = (node: Node, fade: CSSProperties | undefined): CSSProperties | undefined => {
-  const opacity = node.style?.opacity;
+  const opacity = node.overrides?.opacity;
   if (opacity === undefined || opacity >= 1) {
     return undefined;
   }
@@ -1475,7 +1557,7 @@ const nodeOpacity = (node: Node, fade: CSSProperties | undefined): CSSProperties
  * A part's own size class, or nothing when the node overrides `fontSize`: a Tailwind size wins over the
  * inherited value, so the override only reaches the text if the class is left off.
  */
-const sizeClass = (node: Node, className: string) => (node.style?.fontSize === undefined ? className : undefined);
+const sizeClass = (node: Node, className: string) => (node.overrides?.fontSize === undefined ? className : undefined);
 
 type LabelPartProps = Pick<NodeViewProps, 'node' | 'editing'> & { label: string };
 
@@ -1490,7 +1572,7 @@ const LabelPart = ({ node, editing, label }: LabelPartProps) => (
       'whitespace-pre-wrap',
       LINE_ON_GRID,
       LABEL_LINES,
-      alignClasses(node.style, { horizontal: 'center', vertical: 'middle' }),
+      alignClasses(node.overrides, { horizontal: 'center', vertical: 'middle' }),
       // `DEFAULT_FONT_SIZE`, as a static class so Tailwind generates it.
       sizeClass(node, 'text-[24px]'),
     )}
@@ -1499,7 +1581,7 @@ const LabelPart = ({ node, editing, label }: LabelPartProps) => (
   </TextPart>
 );
 
-/** A node's core-base `label`, read from any type: a type the registry does not know still carries it. */
+/** A node's core-base `label`, read from any kind: a kind the registry does not know still carries it. */
 const baseLabel = (node: Node): string => {
   const label: unknown = Reflect.get(node, 'label');
   return typeof label === 'string' ? label : '';
@@ -1533,7 +1615,7 @@ export const HullNodeView = ({ node, editing }: NodeViewProps) => {
         'whitespace-pre-wrap',
         LINE_ON_GRID,
         LABEL_LINES,
-        alignClasses(node.style, { horizontal: 'left', vertical: 'top' }),
+        alignClasses(node.overrides, { horizontal: 'left', vertical: 'top' }),
         // `HULL_FONT_SIZE`, as a static class so Tailwind generates it.
         sizeClass(node, 'text-sm'),
       )}
@@ -1543,23 +1625,23 @@ export const HullNodeView = ({ node, editing }: NodeViewProps) => {
   );
 };
 
-/** A node whose type the registry does not know: its frame and type name, so the scene still reads. */
+/** A node whose kind the registry does not know: its frame and kind name, so the scene still reads. */
 export const UnknownNodeView = ({ node }: Pick<NodeViewProps, 'node'>) => (
-  <div className='dx-cover flex items-center justify-center text-xs text-fg-muted'>{node.type}</div>
+  <div className='dx-cover flex items-center justify-center text-xs text-fg-muted'>{node.kind}</div>
 );
 
 export const NoteNodeView = ({ node, editing }: NodeViewProps) => {
-  const text = isNoteNode(node) ? node.text : '';
+  const text = isNoteNode(node) ? node.label : '';
   return (
     <TextPart
-      part='text'
+      part='label'
       text={text}
       editing={editing}
       classNames={mx(
         TEXT_BOX,
         'whitespace-pre-wrap',
         TEXT_LINES,
-        alignClasses(node.style, { horizontal: 'left', vertical: 'top' }),
+        alignClasses(node.overrides, { horizontal: 'left', vertical: 'top' }),
       )}
     >
       {text}
@@ -1634,7 +1716,7 @@ export const ViewNodeView = (props: NodeViewProps) => {
 };
 
 /**
- * A composite object's instance: the composite scene, with the instance's overrides, scaled into the frame
+ * A composite object's instance: the composite scene, with the instance's part overrides, scaled into the frame
  * (ANIMATION.md §4.1). The nested layer is read-only; the instance is selected and moved as one node.
  */
 export const InstanceNodeView = ({ node, lists, registry, zoom, depth, liveDepth }: NodeViewProps) => {
@@ -1711,8 +1793,12 @@ export const DiagramNodeView = ({ node, editing }: NodeViewProps) => {
   );
 };
 
-/** Vector art: the node's path, scaled from its `viewBox` to the frame and filled with its text colour. */
+/**
+ * Vector art: the node's path, scaled from its `viewBox` to the frame and filled with its colour: a literal as
+ * written, a theme colour as the text colour the frame gives it.
+ */
 export const PathNodeView = ({ node }: NodeViewProps) => {
+  const look = useSceneLook();
   if (!isPathNode(node)) {
     return null;
   }
@@ -1729,7 +1815,7 @@ export const PathNodeView = ({ node }: NodeViewProps) => {
       viewBox={`${x} ${y} ${width} ${height}`}
       preserveAspectRatio='none'
     >
-      <path d={node.d} fill={node.fill ?? 'currentColor'} fillRule='evenodd' />
+      <path d={node.d} fill={drawnColor(node.overrides?.color, look).css ?? 'currentColor'} fillRule='evenodd' />
     </svg>
   );
 };

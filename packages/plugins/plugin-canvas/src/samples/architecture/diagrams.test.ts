@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { DEFAULT_LATTICE, type RenderList2D, elementId, nodeBounds, onLattice, quantize } from '@dxos/react-ui-canvas';
 import { isNodeRecord, readViews, rootOf } from '@dxos/react-ui-canvas/headless';
-import { isViewNode } from '@dxos/scene';
+import { colorLiteral, isViewNode, resolveHue } from '@dxos/scene';
 
 import { objectUri } from '#model';
 
@@ -23,6 +23,10 @@ import {
 import { architectureDiagrams, composerDiagrams, diagramFiles, edgeDiagrams } from './sets.ts';
 
 let builder: EchoTestBuilder;
+
+/** The hue a node's colour draws in and the tone it states; a literal is a hue of its own. */
+const hueOf = (color: string | undefined): { hue?: string; tone?: number } =>
+  resolveHue(color) ?? (colorLiteral(color) !== undefined ? { hue: colorLiteral(color) } : {});
 
 beforeEach(async () => {
   builder = await new EchoTestBuilder().open();
@@ -123,22 +127,23 @@ describe('loadDiagramSet', () => {
       const nodes = Object.values(readDrawingContent(drawing))
         .filter(isNodeRecord)
         .map((record) => record.node);
-      expect(nodes.some((node) => node.style?.guide && node.style.lineStyle === 'dashed')).toBe(true);
+      expect(nodes.some((node) => node.overrides?.guide && node.overrides.stroke === 'dashed')).toBe(true);
       for (const node of nodes) {
-        const style = node.style ?? {};
-        const plain = (style.hue ?? 'neutral') === 'neutral';
-        if (style.guide && style.lineStyle === 'dashed' && style.tone !== DIAGRAM_GROUP_TONE) {
-          violations.push(`${id} ${node.id}: dashed group at tone ${style.tone}`);
+        const style = node.overrides ?? {};
+        const { hue, tone } = hueOf(style.color);
+        const plain = (hue ?? 'neutral') === 'neutral';
+        if (style.guide && style.stroke === 'dashed' && tone !== DIAGRAM_GROUP_TONE) {
+          violations.push(`${id} ${node.id}: dashed group at tone ${tone}`);
         }
-        if (!style.guide && plain && style.tone !== DIAGRAM_BOX_TONE) {
-          violations.push(`${id} ${node.id}: plain box at tone ${style.tone}`);
+        if (!style.guide && plain && tone !== DIAGRAM_BOX_TONE) {
+          violations.push(`${id} ${node.id}: plain box at tone ${tone}`);
         }
         // An unset tone draws at the style set's default variant, which is tone 2 in the default sets.
-        if (plain && (style.tone ?? 2) === 2) {
+        if (plain && (tone ?? 2) === 2) {
           violations.push(`${id} ${node.id}: grey at tone 2`);
         }
-        if (style.hue === 'yellow' || style.hue === 'amber') {
-          violations.push(`${id} ${node.id}: ${style.hue}`);
+        if (hue === 'yellow' || hue === 'amber') {
+          violations.push(`${id} ${node.id}: ${hue}`);
         }
       }
     }
@@ -156,8 +161,8 @@ describe('loadDiagramSet', () => {
       const boxes = Object.values(readDrawingContent(drawing))
         .filter(isNodeRecord)
         .map((record) => record.node)
-        .filter((node) => !node.style?.guide && (node.type === 'rect' || node.type === 'view'));
-      const coloured = boxes.filter((node) => (node.style?.hue ?? 'neutral') !== 'neutral').length;
+        .filter((node) => !node.overrides?.guide && (node.kind === 'rect' || node.kind === 'view'));
+      const coloured = boxes.filter((node) => (hueOf(node.overrides?.color).hue ?? 'neutral') !== 'neutral').length;
       return { id, coloured: coloured > 0 && coloured < boxes.length };
     });
     expect(counts).toEqual([...drawings.keys()].map((id) => ({ id, coloured: true })));

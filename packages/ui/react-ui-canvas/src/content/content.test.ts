@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { type ContentMap } from '@dxos/diagram';
-import { type InstanceNode, type NodeBase, type ViewNode, isViewNode } from '@dxos/scene';
+import { type InstanceNode, type ViewNode, isViewNode } from '@dxos/scene';
 
 import { DEFAULT_LAYER } from '../utils/index.ts';
 import {
@@ -20,13 +20,15 @@ import {
   nodeKey,
   orphanedViews,
   pruneOrphanedViews,
+  readNode,
+  readStyles,
   readViews,
   resolveDrawingLook,
   rootOf,
   seedContent,
   styleClassUses,
   updateCanvasRecord,
-  upgradeNode,
+  upgradeSceneContent,
   writeStyles,
   writeViews,
 } from './content.ts';
@@ -35,24 +37,20 @@ const box = { z: 'a0', center: { x: 0, y: 0 }, size: { width: 256, height: 128 }
 
 describe('content', () => {
   test('a node stored with the legacy `frame` type reads as a `view` node', ({ expect }) => {
-    const stored: NodeBase & { scene: string } = {
-      id: 'f',
-      type: 'frame',
-      z: 'a0',
-      scene: 'child',
-      center: { x: 0, y: 0 },
-      size: { width: 64, height: 64 },
-    };
-    const node = upgradeNode(stored);
-    expect(node).toEqual({ ...stored, type: 'view' });
-    expect(isViewNode(node)).toBe(true);
+    const frame = { id: 'f', z: 'a0', scene: 'child', center: { x: 0, y: 0 }, size: { width: 64, height: 64 } };
+    const node = readNode({ ...frame, type: 'frame' });
+    expect(node).toEqual({ ...frame, kind: 'view' });
+    expect(node && isViewNode(node)).toBe(true);
+    // A node the current revision wrote under the earlier name reads the same.
+    expect(readNode({ ...frame, kind: 'frame' })).toEqual({ ...frame, kind: 'view' });
+    expect(readNode('not a node')).toBeUndefined();
   });
 
   test('a composite scene survives a write and a read; a scene stores no timeline', ({ expect }) => {
     const content: ContentMap = {};
     seedContent(content);
     writeViews(content, {
-      root: { id: 'root', nodes: { a: { id: 'a', type: 'rect', ...box } }, links: {} },
+      root: { id: 'root', nodes: { a: { id: 'a', kind: 'rect', ...box } }, links: {} },
       object: { id: 'object', kind: 'composite', name: 'Object', nodes: {}, links: {} },
     });
     const scenes = readViews(content);
@@ -96,13 +94,13 @@ describe('content', () => {
       },
     };
     const scenes = readViews(content);
-    expect(scenes.root.nodes.a).toEqual({ id: 'a', type: 'rect', ...box, style: { hue: 'red', opacity: 0.5 } });
+    expect(scenes.root.nodes.a).toEqual({ id: 'a', kind: 'rect', ...box, overrides: { color: 'red', opacity: 0.5 } });
     expect(scenes.root.nodes.f).toEqual({
       id: 'f',
-      type: 'view',
+      kind: 'view',
       scene: 'f',
       ...box,
-      style: { opacity: 0.25 },
+      overrides: { opacity: 0.25 },
       link: { object, contents: true },
     });
     expect(Reflect.get(scenes.root, 'timeline')).toBeUndefined();
@@ -124,10 +122,11 @@ describe('content', () => {
       'node:f': { kind: 'node', scene: 'root', node: { id: 'f', type: 'frame', scene: 'f', ...box } },
     };
     const views = readViews(content);
-    expect(views.root.nodes.f).toEqual({ id: 'f', type: 'view', scene: 'f', ...box });
+    expect(views.root.nodes.f).toEqual({ id: 'f', kind: 'view', scene: 'f', ...box });
     expect(writeViews(content, views)).toBe(true);
     const record = content['node:f'];
-    expect(isNodeRecord(record) && record.node.type).toBe('view');
+    expect(isNodeRecord(record) && record.node.kind).toBe('view');
+    expect(Reflect.has(Reflect.get(record, 'node'), 'type')).toBe(false);
   });
 
   test('a canvas saved with the legacy root id is renamed in place', ({ expect }) => {
@@ -223,7 +222,7 @@ describe('content', () => {
     expect(canvasRecordOf(content)).toEqual({ kind: 'canvas', root: ROOT_VIEW_ID });
   });
 
-  test('a link saved with a line reads it as its style', ({ expect }) => {
+  test('a link saved with a line reads it as its own look', ({ expect }) => {
     const content: ContentMap = {};
     seedContent(content);
     content['link:l'] = {
@@ -239,11 +238,12 @@ describe('content', () => {
       },
     };
     const link = readViews(content)[ROOT_VIEW_ID].links.l;
-    expect(link.style).toEqual({ hue: 'red', lineStyle: 'dotted' });
+    expect(link.overrides).toEqual({ color: 'red', stroke: 'dotted' });
+    expect(link.path).toBe('line');
     expect('line' in link).toBe(false);
   });
 
-  test('a link saved as directed reads as an arrow at its end', ({ expect }) => {
+  test('a link saved as directed reads as an arrow at its head', ({ expect }) => {
     const content: ContentMap = {};
     seedContent(content);
     content['link:l'] = {
@@ -259,7 +259,8 @@ describe('content', () => {
       },
     };
     const link = readViews(content)[ROOT_VIEW_ID].links.l;
-    expect(link.ends).toEqual({ end: 'arrow' });
+    expect(link.head).toBe('arrow');
+    expect(link.tail).toBeUndefined();
     expect('directed' in link).toBe(false);
   });
 
@@ -289,11 +290,96 @@ describe('content', () => {
     expect(styles).toEqual({});
     expect(styleClassUses(content)).toEqual({});
     const { nodes, links } = readViews(content)[ROOT_VIEW_ID];
-    expect(nodes.a.style).toEqual({ hue: 'red', lineStyle: 'dashed', rounded: true });
-    expect(nodes.b.style).toEqual({ hue: 'red', lineStyle: 'dashed', rounded: true });
-    expect(nodes.c.style).toBeUndefined();
+    expect(nodes.a.overrides).toEqual({ color: 'red', stroke: 'dashed', corners: 'all' });
+    expect(nodes.b.overrides).toEqual({ color: 'red', stroke: 'dashed', corners: 'all' });
+    expect(nodes.c.overrides).toBeUndefined();
+    expect([nodes.a.style, nodes.b.style, links.l.style]).toEqual([undefined, undefined, undefined]);
     // A link keeps only the common base of the class's style.
-    expect(links.l.style).toEqual({ hue: 'red', lineStyle: 'dashed' });
+    expect(links.l.overrides).toEqual({ color: 'red', stroke: 'dashed' });
+  });
+
+  test('records and classes stored in the earlier words read in the current ones', ({ expect }) => {
+    const content: ContentMap = {
+      'canvas': { kind: 'canvas', root: ROOT_VIEW_ID },
+      'scene:root': { kind: 'scene', id: ROOT_VIEW_ID },
+      'node:a': {
+        kind: 'node',
+        scene: ROOT_VIEW_ID,
+        dsl: { object: 'deck', element: 'a' },
+        node: {
+          id: 'a',
+          type: 'rect',
+          ...box,
+          class: 'warn',
+          style: { hue: 'blue', tone: 1, fill: false, border: false, fontFamily: 'monospace', alignHorizontal: 'left' },
+          ports: [{ id: 'out', side: 'e', offset: 0.5 }],
+        },
+      },
+      'node:n': { kind: 'node', scene: ROOT_VIEW_ID, node: { id: 'n', type: 'note', ...box, text: 'Hello' } },
+      'link:l': {
+        kind: 'link',
+        scene: ROOT_VIEW_ID,
+        link: {
+          id: 'l',
+          type: 'ortho',
+          z: 'a1',
+          source: { node: 'a', port: 'out' },
+          target: { node: 'n' },
+          ends: { start: 'many', end: 'arrow' },
+          text: 'calls',
+          class: 'warn',
+          style: { hue: 'red', lineStyle: 'dashed' },
+        },
+      },
+    };
+    const { nodes, links } = readViews(content)[ROOT_VIEW_ID];
+    expect(nodes.a).toEqual({
+      id: 'a',
+      kind: 'rect',
+      ...box,
+      style: 'warn',
+      overrides: { color: 'blue/1', fill: 'none', stroke: 'none', font: 'mono', align: 'left' },
+      ports: [{ id: 'out', x: 1, y: 0.5, side: 'right' }],
+    });
+    expect(nodes.n).toEqual({ id: 'n', kind: 'note', ...box, label: 'Hello' });
+    expect(links.l).toEqual({
+      id: 'l',
+      kind: 'link',
+      path: 'ortho',
+      z: 'a1',
+      source: { node: 'a', port: 'out' },
+      target: { node: 'n' },
+      tail: 'crowsfoot',
+      head: 'arrow',
+      label: 'calls',
+      style: 'warn',
+      overrides: { color: 'red', stroke: 'dashed' },
+    });
+    expect(styleClassUses(content)).toEqual({ warn: 2 });
+
+    // The upgrade writes every record in the current words and keeps what else it holds; a second pass changes nothing.
+    const upgraded = upgradeSceneContent(content);
+    expect(upgraded['node:a']).toEqual({
+      kind: 'node',
+      scene: ROOT_VIEW_ID,
+      dsl: { object: 'deck', element: 'a' },
+      node: nodes.a,
+    });
+    expect(isNodeRecord(upgraded['node:a'])).toBe(true);
+    expect(isNodeRecord(content['node:a'])).toBe(false);
+    expect(upgradeSceneContent(upgraded)).toEqual(upgraded);
+
+    // A write keeps the identity of a record it rewrites in the current words.
+    expect(writeViews(content, readViews(content))).toBe(true);
+    expect(content['node:a']).toEqual(upgraded['node:a']);
+    expect(writeViews(content, readViews(content))).toBe(false);
+
+    const stored = {
+      warn: { id: 'warn', name: 'Warning', style: { hue: 'red', tone: 2, rounded: false, fill: true } },
+    };
+    expect(readStyles(stored)).toEqual({
+      warn: { id: 'warn', name: 'Warning', style: { color: 'red/2', corners: 'none', fill: 'solid' } },
+    });
   });
 
   test('writing classes keeps a record this host cannot read', ({ expect }) => {
@@ -328,9 +414,9 @@ describe('content', () => {
   }) => {
     const content: ContentMap = {};
     seedContent(content);
-    const rect = (id: string) => ({ id, type: 'rect', ...box });
-    const portal: ViewNode = { id: 'v', type: 'view', scene: 'kept', ...box };
-    const instance: InstanceNode = { id: 'i', type: 'instance', composite: 'group', ...box };
+    const rect = (id: string) => ({ id, kind: 'rect', ...box });
+    const portal: ViewNode = { id: 'v', kind: 'view', scene: 'kept', ...box };
+    const instance: InstanceNode = { id: 'i', kind: 'instance', composite: 'group', ...box };
     writeViews(content, {
       ...readViews(content),
       [ROOT_VIEW_ID]: {

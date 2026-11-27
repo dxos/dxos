@@ -1,7 +1,7 @@
 diagram kind=grid size=1968x880 cols="616 284 908" gap=64 padding=16 autoRows=744 alignContent=center
 
 group client-cell rows="496 1fr" {
-  group client-section cols=2 gap=32 padding=8 border=true {
+  group client-section cols=2 gap=32 padding=8 stroke=solid {
     group client-col rows=2 gap=16 {
       node client "Client" kind=card icon=browser iconTone=teal {
         item "Composer app tab"
@@ -38,7 +38,7 @@ group router-section rows="8 1fr 8" {
   group router-below { }
 }
 
-group edge-section cols="284 1fr" gap=32 padding=8 border=true {
+group edge-section cols="284 1fr" gap=32 padding=8 stroke=solid {
   group registry-col rows=3 gap=16 {
     node registry "ServiceRegistry" kind=card icon=plugs-connected iconTone=sheet {
       item "Resolves services by tag"

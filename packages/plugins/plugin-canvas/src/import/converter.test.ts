@@ -50,7 +50,7 @@ const legacy: IllustratorCapabilities.DrawingVariant = {
 /** The ids of the shapes in the canvas's open layout. */
 const shapeIds = (target: Canvas.Canvas): string[] =>
   Object.values(canvasDocument(target).layouts[0]?.elements ?? {})
-    .flatMap((element) => (element.type === 'link' ? [] : [element.id]))
+    .flatMap((element) => (element.kind === 'link' ? [] : [element.id]))
     .sort();
 
 describe('tldrawConverter', () => {

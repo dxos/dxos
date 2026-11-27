@@ -39,7 +39,7 @@ const NODES = createNodeRegistry(
 
 /** A space graph as the engine draws one: the node base, and the kind's own fields under `data`. */
 const graph = (id: string, x: number, data: Record<string, unknown>): Node & { data: Record<string, unknown> } => ({
-  type: 'graph',
+  kind: 'graph',
   id,
   z: `a${id}`,
   center: { x, y: 0 },
@@ -115,7 +115,7 @@ export const Test: Story = {
     const custom = await within(dock).findByTestId('group.data');
     await expect(custom.textContent).toMatch(/^Custom/);
     await expect(within(custom).getByText('Seed')).toBeTruthy();
-    const style = within(dock).getByTestId('group.style');
+    const style = within(dock).getByTestId('group.overrides');
     await expect(style.compareDocumentPosition(custom) & globalThis.Node.DOCUMENT_POSITION_FOLLOWING).toBeGreaterThan(
       0,
     );

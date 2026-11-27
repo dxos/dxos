@@ -5,9 +5,18 @@
 import React from 'react';
 
 import { DEFAULT_TEXT_TONE, TEXT_COLORS } from '@dxos/react-ui-canvas';
-import { Form, type FormFieldRenderer, useFormFieldState } from '@dxos/react-ui-form';
+import { Form, type FormFieldRenderer } from '@dxos/react-ui-form';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
-import { NodeStyle, STYLE_HUES, type StyleHue, TEXT_TONES, type TextTone } from '@dxos/scene';
+import {
+  Color,
+  STYLE_HUES,
+  type StyleHue,
+  TEXT_TONES,
+  type TextTone,
+  colorName,
+  colorTone,
+  formatColor,
+} from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
 export type TextColorChoice = { hue: StyleHue; tone: TextTone };
@@ -86,34 +95,42 @@ export const TextColorGrid = ({ hue, tone, indeterminate, readonly, onValueChang
   );
 };
 
-/** A style with a text colour picked, or with none: no pick drops both the hue and its tone. */
-export const applyTextColor = <S extends { textHue?: StyleHue; textTone?: TextTone }>(
-  style: S,
-  choice: TextColorChoice | undefined,
-): S => {
-  return choice
-    ? { ...style, textHue: choice.hue, textTone: choice.tone }
-    : { ...style, textHue: undefined, textTone: undefined };
+/** The colour a pick states, the hue at its tone; no pick is no colour, so the text takes its shape's own. */
+export const pickedTextColor = (choice: TextColorChoice | undefined): Color | undefined =>
+  choice ? formatColor(choice.hue, choice.tone) : undefined;
+
+/** The swatch a text colour selects: one of the grid's hues at its tone; none for a literal or a name outside them. */
+const shownChoice = (color: string | undefined): { hue?: StyleHue; tone?: TextTone } => {
+  const name = colorName(color);
+  const tone = colorTone(color);
+  return {
+    hue: STYLE_HUES.find((candidate) => candidate === name),
+    tone: TEXT_TONES.find((candidate) => candidate === tone),
+  };
 };
 
-/**
- * The properties panel's text colour picker, rendered at `style.textHue`. The hue and its tone change together, so a
- * pick writes their parent once; two field writes would race.
- */
-export const TextColorField: FormFieldRenderer = ({ label, jsonPath, readonly, indeterminate, onBlur }) => {
-  const stylePath = (jsonPath ?? 'style.textHue').split('.').slice(0, -1);
-  const styleField = useFormFieldState('TextColorField', stylePath);
-  const style: NodeStyle = styleField.getValue() ?? {};
+/** The properties panel's text colour picker, rendered at `overrides.textColor`: one pick sets the hue and its tone. */
+export const TextColorField: FormFieldRenderer = ({
+  label,
+  jsonPath,
+  readonly,
+  indeterminate,
+  getValue,
+  onValueChange,
+  onBlur,
+}) => {
+  const value: unknown = getValue();
+  const { hue, tone } = shownChoice(typeof value === 'string' ? value : undefined);
   return (
     <Form.Field path={jsonPath} label={label} readonly={readonly}>
       <TextColorGrid
-        hue={style.textHue}
-        tone={style.textTone}
+        hue={hue}
+        tone={tone}
         indeterminate={indeterminate}
         readonly={!!readonly}
         onValueChange={(choice) => {
           // A pick is a commit: the grid never blurs, so it commits itself.
-          styleField.onValueChange(NodeStyle.ast, applyTextColor(style, choice));
+          onValueChange(Color.ast, pickedTextColor(choice));
           onBlur();
         }}
       />

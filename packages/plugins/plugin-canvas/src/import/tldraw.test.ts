@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { sortByZ } from '@dxos/react-ui-canvas/headless';
-import { MAJOR_GRID, Scene } from '@dxos/scene';
+import { MAJOR_GRID, Scene, colorTone } from '@dxos/scene';
 
 import { frameWithChildren, groupAndRotation, shapesAndArrow, textNoteAndFreeArrow, twoPages } from './testing.ts';
 import { nearestHue, tldrawToLayout } from './tldraw.ts';
@@ -20,26 +20,27 @@ describe('tldrawToLayout shapes', () => {
     const { elements } = layout;
 
     expect(elements.box).toMatchObject({
-      type: 'rect',
+      kind: 'rect',
       center: { x: 100, y: 50 },
       size: { width: 200, height: 100 },
       label: 'Box',
-      overrides: { hue: 'blue', tone: 1, lineStyle: 'dashed' },
+      overrides: { color: 'blue/1', stroke: 'dashed' },
     });
     expect(elements.oval).toMatchObject({
-      type: 'ellipse',
+      kind: 'ellipse',
       center: { x: 460, y: 40 },
       size: { width: 120, height: 80 },
       label: 'Oval',
-      overrides: { hue: 'red', tone: 3, fontSize: 26 },
+      overrides: { color: 'red/3', fontSize: 26 },
     });
     expect(elements.arrow).toMatchObject({
-      type: 'link',
+      kind: 'link',
       source: { node: 'box' },
       target: { node: 'oval' },
       label: 'calls',
-      overrides: { hue: 'teal' },
-      props: { canvas: { type: 'line', ends: { end: 'arrow' } } },
+      overrides: { color: 'teal' },
+      path: 'line',
+      head: 'arrow',
     });
     // Paint order follows the tldraw index.
     expect(sortByZ(Object.values(elements).map(({ id, z }) => ({ id, z: z ?? '' }))).map(({ id }) => id)).toEqual([
@@ -56,27 +57,29 @@ describe('tldrawToLayout shapes', () => {
     expect(approximated).toEqual({ 'geo:star': 1, 'geo:hexagon': 1 });
 
     expect(elements.text).toMatchObject({
-      type: 'note',
+      kind: 'note',
       size: { width: 240, height: 97 },
-      overrides: { hue: 'violet', fontSize: 36, fontFamily: 'monospace', alignHorizontal: 'center' },
-      props: { canvas: { text: 'Title\nSubtitle' } },
+      overrides: { color: 'violet', fontSize: 36, font: 'mono', align: 'center' },
+      label: 'Title\nSubtitle',
     });
     expect(elements.sticky).toMatchObject({
-      type: 'rect',
+      kind: 'rect',
       label: 'Remember',
       center: { x: 400, y: 100 },
       size: { width: 200, height: 200 },
-      overrides: { hue: 'amber' },
+      overrides: { color: 'amber' },
     });
-    expect(elements.sticky.overrides).not.toHaveProperty('tone');
-    expect(elements.star).toMatchObject({ type: 'rect' });
-    expect(elements.cloud).toMatchObject({ type: 'cloud', label: 'Sky' });
-    expect(elements.hexagon).toMatchObject({ type: 'polygon', props: { canvas: { params: { sides: 6 } } } });
+    expect(colorTone(elements.sticky.overrides?.color)).toBeUndefined();
+    expect(elements.star).toMatchObject({ kind: 'rect' });
+    expect(elements.cloud).toMatchObject({ kind: 'cloud', label: 'Sky' });
+    expect(elements.hexagon).toMatchObject({ kind: 'polygon', params: { sides: 6 } });
     expect(elements.free).toMatchObject({
-      type: 'link',
+      kind: 'link',
       source: { point: { x: 10, y: 300 } },
       target: { point: { x: 160, y: 350 } },
-      props: { canvas: { type: 'curve', ends: { start: 'circle', end: 'triangle' } } },
+      path: 'curve',
+      tail: 'circle',
+      head: 'triangle',
     });
   });
 
@@ -89,12 +92,12 @@ describe('tldrawToLayout shapes', () => {
     const { elements, layers } = layout;
 
     expect(elements.frame).toMatchObject({
-      type: 'rect',
+      kind: 'rect',
       label: 'Stage',
       layer: 'frames',
       center: { x: 300, y: 250 },
       size: { width: 400, height: 300 },
-      overrides: { tone: 0, alignHorizontal: 'left', alignVertical: 'top' },
+      overrides: { color: 'default/0', align: 'left', valign: 'top' },
     });
     // The frames layer is under the content layer, which every other element names.
     expect(layers?.frames?.z.localeCompare(layers?.layer?.z ?? '')).toBe(-1);
@@ -125,11 +128,12 @@ describe('tldrawToLayout shapes', () => {
     // The group is replaced by an element placing the composite over the members' bounds: turned a quarter about
     // (1000, 0), the members' centres land at (975, 50) and (975, 250).
     expect(elements.group).toMatchObject({
-      object: 'instance:group-object',
+      object: 'group-object',
       center: { x: 975, y: 150 },
-      props: { canvas: { type: 'instance', composite: 'group-object' } },
+      kind: 'instance',
+      composite: 'group-object',
     });
-    expect(objects).toEqual([{ id: 'instance:group-object', type: 'rect', parts: 'group-object' }]);
+    expect(objects).toEqual([{ id: 'group-object', kind: 'group', parts: 'group-object' }]);
     expect(elements).not.toHaveProperty('member');
     expect(elements).not.toHaveProperty('partner');
     // The link wholly inside the group moved with it.
@@ -141,24 +145,24 @@ describe('tldrawToLayout shapes', () => {
     expect(object.elements.member).toMatchObject({
       center: { x: 0, y: -100 },
       rotation: 90,
-      props: { canvas: { exposed: true } },
+      exposed: true,
     });
     expect(object.elements.partner).toMatchObject({ center: { x: 0, y: 100 }, rotation: 90 });
     expect(object.elements.pair).toMatchObject({ source: { node: 'member' }, target: { node: 'partner' } });
 
     // The arrow from outside stays in the page, attached to the placing element's port for the member it was bound to.
     expect(elements.tie).toMatchObject({ source: { node: 'neighbour' }, target: { node: 'group', port: 'member' } });
-    expect(elements.group.props?.canvas).toMatchObject({ ports: [expect.objectContaining({ id: 'member' })] });
+    expect(elements.group).toMatchObject({ ports: [expect.objectContaining({ id: 'member' })] });
     // The placing element paints where its lowest member did, below the shapes drawn after the group.
     expect((elements.group.z ?? '') < (elements.tilted.z ?? '')).toBe(true);
 
     // A polyline in the group joins no shape, so it stays in the page: a chain of line links with free ends.
     expect(elements.polyline).toMatchObject({
-      type: 'link',
+      kind: 'link',
       source: { point: { x: 900, y: 0 } },
       target: { point: { x: 900, y: 100 } },
-      overrides: { hue: 'orange', lineStyle: 'dotted' },
-      props: { canvas: { type: 'line' } },
+      overrides: { color: 'orange', stroke: 'dotted' },
+      path: 'line',
     });
     expect(elements['polyline-1']).toMatchObject({
       source: { point: { x: 900, y: 100 } },
@@ -255,10 +259,10 @@ describe('tldrawToLayout', () => {
   }) => {
     const { layout, intents } = tldrawToLayout(frameWithChildren(), { root: 'page' });
     expect(layout.id).toBe('page');
-    const shapes = Object.values(layout.elements).filter((element) => element.type !== 'link');
+    const shapes = Object.values(layout.elements).filter((element) => element.kind !== 'link');
     expect(shapes.map((element) => element.id).sort()).toEqual(['frame', 'inner-a', 'inner-b', 'outside']);
     expect(Object.values(layout.elements).every(Schema.is(Scene.Element2D))).toBe(true);
-    expect(layout.elements.frame).toMatchObject({ type: 'rect', layer: 'frames' });
+    expect(layout.elements.frame).toMatchObject({ kind: 'rect', layer: 'frames' });
     expect(Object.keys(layout.layers ?? {})).toContain('frames');
     // One create per element, shapes before the links bound to them.
     expect(intents.map((intent) => intent.kind === 'create' && intent.element.id).sort()).toEqual(

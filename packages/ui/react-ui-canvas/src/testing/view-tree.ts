@@ -9,7 +9,7 @@ import { DEFAULT_SIZES, portId } from '../utils/index.ts';
 
 //
 // A three-level model diagram, one box per class: the fixture for anything that needs a scene tree to look
-// like a real model rather than one of every element type. The domain is invented — a document editor —
+// like a real model rather than one of every element kind. The domain is invented — a document editor —
 // so it stays readable without tracking any package's actual classes. (The UML class shape itself is
 // plugin-uml's; the engine fixture draws each class as a labelled rectangle.)
 //
@@ -90,9 +90,13 @@ const classLevel = (level: LevelDef, path: string): ViewElement => {
     }),
   );
   const associations = level.classes.slice(1).map((current, index) =>
-    ViewBuilder.link('smart', `${id}/${level.classes[index].key}#${portId('e')}`, `${id}/${current.key}#${portId('w')}`)
+    ViewBuilder.link(
+      'smart',
+      `${id}/${level.classes[index].key}#${portId('right')}`,
+      `${id}/${current.key}#${portId('left')}`,
+    )
       .id(`${id}/assoc${index + 1}`)
-      .properties({ ends: { end: 'arrow' } }),
+      .properties({ head: 'arrow' }),
   );
   const children = (level.children ?? []).map((child, index) =>
     classLevel(child, `${path}/${child.key}`).at({ x: cell(2) + index * cell(10), y: cell(7), ...PORTAL_SIZE }),
@@ -103,7 +107,7 @@ const classLevel = (level: LevelDef, path: string): ViewElement => {
 /**
  * A tree of scenes `depth` levels deep, written with the scene builder; depth 0 is one empty scene,
  * the blank canvas a new diagram starts from. The root holds a
- * rectangle, an ellipse, a class, a text and one link of each type; above the leaves it also holds
+ * rectangle, an ellipse, a class, a text and one link of each path; above the leaves it also holds
  * two portals whose child scenes alternate between a few simple diagrams (a flow, a class model, a
  * cycle, a note). Ids are deterministic so tests can name elements (`scene:root/a`; a portal shares its child scene's id, `scene:root/L`);
  * every coordinate is a whole number of `scale` steps and each scene is laid out symmetrically about
@@ -138,7 +142,7 @@ const treeScene = (depth: number, name: string, variant: number, frame?: Box): V
       : variant === 0
         ? rootElements(name, elementId)
         : childElements(name, elementId, VARIANTS[variant % VARIANTS.length]);
-  // Portals take the scene type's default frame, so every child gets the same frame shape.
+  // Portals take the view kind's default frame, so every child gets the same frame shape.
   const portals =
     depth > 1
       ? [
@@ -159,15 +163,13 @@ const rootElements = (name: string, elementId: (suffix: string) => string): Buil
   labelled(ViewBuilder.rect, elementId('a'), units(-22, -12, 8, 4), `${name} · A`),
   labelled(ViewBuilder.ellipse, elementId('b'), units(-10, -12, 8, 4), `${name} · B`),
   ViewBuilder.note(elementId('t'), units(-10, 8, 12, 4)).properties({
-    text: `View "${name}". Pinch to zoom, drag to pan, double-click a portal.`,
+    label: `View "${name}". Pinch to zoom, drag to pan, double-click a portal.`,
   }),
   labelled(ViewBuilder.rect, elementId('c'), units(-22, 6, 8, 6), `${name} · C`),
   ViewBuilder.link('curve', elementId('a'), elementId('b')).id(elementId('ab')),
-  ViewBuilder.link('line', elementId('a'), elementId('c'))
-    .id(elementId('ac'))
-    .properties({ ends: { end: 'arrow' } }),
+  ViewBuilder.link('line', elementId('a'), elementId('c')).id(elementId('ac')).properties({ head: 'arrow' }),
   // Pinned ports rather than automatic ones, so the spline leaves and arrives where its corners turn.
-  ViewBuilder.link('spline', `${elementId('b')}#${portId('s')}`, `${elementId('c')}#${portId('n', 3)}`)
+  ViewBuilder.link('spline', `${elementId('b')}#${portId('bottom')}`, `${elementId('c')}#${portId('top', 3)}`)
     .id(elementId('bc'))
     .properties({
       points: [
@@ -179,9 +181,7 @@ const rootElements = (name: string, elementId: (suffix: string) => string): Buil
 
 const childElements = (name: string, elementId: (suffix: string) => string, variant: Variant): BuilderElement[] => {
   const directed = (id: string, from: string, to: string) =>
-    ViewBuilder.link('smart', from, to)
-      .id(elementId(id))
-      .properties({ ends: { end: 'arrow' } });
+    ViewBuilder.link('smart', from, to).id(elementId(id)).properties({ head: 'arrow' });
   switch (variant) {
     case 'flow':
       return [
@@ -211,7 +211,7 @@ const childElements = (name: string, elementId: (suffix: string) => string, vari
     case 'note':
       return [
         ViewBuilder.note(elementId('note'), units(-14, -4, 16, 8)).properties({
-          text: `A note in "${name}". Portals below.`,
+          label: `A note in "${name}". Portals below.`,
         }),
         labelled(ViewBuilder.rect, elementId('box'), units(6, -4, 8, 8), 'Box'),
         ViewBuilder.link('smart', elementId('note'), elementId('box')).id(elementId('nb')),

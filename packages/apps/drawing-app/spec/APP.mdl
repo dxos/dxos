@@ -143,6 +143,7 @@ feat F-11: Files
   req F-11.4: Loading the app with `?src=<url>` imports the `.dx.svg` at that URL, whose host must allow the app's origin by CORS. Loading it with `?d=<id>` compiles a shared drawing's source from the share API ([F-12]) into a new diagram, named as it was shared. The app removes the parameter from the URL first, so a reload does not import again.
   req F-11.5: A link import lands in the space the app opens anyway ([F-2.2], [F-8]). On a first run, "My diagrams" gets the imported diagram in place of the empty one.
   req F-11.6: An import that fails shows a toast with the reason and adds nothing to the space.
+  req F-11.7: A file exported before the scene model's stored types reached version 0.2.0 embeds its layouts and models at the version before. An import upgrades them to the current version as it adds them, so the drawing opens as any other.
 ```
 
 ```mdl
@@ -2214,4 +2215,13 @@ decision D-181: While preview serves app.drawing.sh it binds the `drawing-sh-sha
   why: [D-146] gives the bucket to whichever environment serves app.drawing.sh, so `?d=` links made on production and by `drawing open` keep opening.
   rejected:
     - Keeping preview's own bucket: every share link made before the switch would answer 404.
+```
+
+```mdl
+decision D-182: Importing a `.dx.svg` upgrades the scene objects the file embeds at an earlier version: the app makes the earlier types known to the space, adds the drawing, then runs the scene model's migrations on the space. A migration that fails is an import that fails ([F-11.6]).
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-11.7]
+  why: A file embeds its objects at the version they were stored at, and a space migrates only what it holds when it loads. An object whose type the client does not know is added with no type, which no migration finds afterwards.
 ```

@@ -80,7 +80,7 @@ export const Columns = story(
   'columns',
   trim`
     object demo @ 0,0 {
-      grid root 0,0 900x300 cols=3 gap=24 padding=24 border=true stroke=dashed {
+      grid root 0,0 900x300 cols=3 gap=24 padding=24 stroke=dashed {
         rect a "One"
         rect b "Two"
         rect c "Three"
@@ -94,7 +94,7 @@ export const Rows = story(
   'rows',
   trim`
     object demo @ 0,0 {
-      grid root 0,0 400x480 rows=3 gap=16 padding=16 border=true stroke=dashed {
+      grid root 0,0 400x480 rows=3 gap=16 padding=16 stroke=dashed {
         rect a "One"
         rect b "Two"
         rect c "Three"
@@ -108,7 +108,7 @@ export const Cells = story(
   'cells',
   trim`
     object demo @ 0,0 {
-      grid root 0,0 720x480 cols=3 rows=2 gap=16 padding=16 border=true stroke=dashed {
+      grid root 0,0 720x480 cols=3 rows=2 gap=16 padding=16 stroke=dashed {
         rect a "1"
         rect b "2"
         rect c "3"
@@ -128,7 +128,7 @@ export const Tracks = story(
   'tracks',
   trim`
     object demo @ 0,0 {
-      grid root 0,0 900x240 cols="160 auto 1fr 2fr" gap=16 padding=16 border=true stroke=dashed {
+      grid root 0,0 900x240 cols="160 auto 1fr 2fr" gap=16 padding=16 stroke=dashed {
         rect fixed "160"
         rect content 200x0 "auto"
         rect one "1fr"
@@ -147,12 +147,12 @@ export const Uniform = story(
   'uniform',
   trim`
     object demo @ 0,0 {
-      grid root 0,0 720x600 cols=2 gap=32 padding=32 border=true stroke=dashed {
-        grid left gap=16 autoRows=120 alignContent=center border=true stroke=dashed {
+      grid root 0,0 720x600 cols=2 gap=32 padding=32 stroke=dashed {
+        grid left gap=16 autoRows=120 alignContent=center stroke=dashed {
           rect a "One"
           rect b "Two"
         }
-        grid right gap=16 autoRows=120 alignContent=center border=true stroke=dashed {
+        grid right gap=16 autoRows=120 alignContent=center stroke=dashed {
           rect c "One"
           rect d "Two"
           rect e "Three"
@@ -170,9 +170,9 @@ export const Nested = story(
   'nested',
   trim`
     object demo @ 0,0 {
-      grid root 0,0 1200x600 cols=3 gap=32 padding=32 border=true stroke=dashed {
+      grid root 0,0 1200x600 cols=3 gap=32 padding=32 stroke=dashed {
         grid col-0 rows="40 1fr" gap=12 {
-          rect label-0 "Composer" fill=none border=false align=center valign=middle fontSize=28
+          rect label-0 "Composer" fill=none stroke=none align=center valign=middle fontSize=28
           grid body-0 gap=12 {
             rect plank-0 "Roadmap"
             rect plank-1 "Budget"
@@ -180,13 +180,13 @@ export const Nested = story(
           }
         }
         grid col-1 rows="40 1fr" gap=12 {
-          rect label-1 "ECHO Hyperspace" fill=none border=false align=center valign=middle fontSize=28
+          rect label-1 "ECHO Hyperspace" fill=none stroke=none align=center valign=middle fontSize=28
           grid body-1 gap=12 {
             ellipse field "Spaces"
           }
         }
         grid col-2 rows="40 1fr" gap=12 {
-          rect label-2 "EDGE Services" fill=none border=false align=center valign=middle fontSize=28
+          rect label-2 "EDGE Services" fill=none stroke=none align=center valign=middle fontSize=28
           grid body-2 gap=8 {
             rect svc-0 "Calendar"
             rect svc-1 "Email"

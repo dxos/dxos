@@ -5,7 +5,7 @@
 import type * as Atom from 'effect/reactivity/Atom';
 import { useCallback, useMemo, useRef } from 'react';
 
-import { type NodeType, type Size } from '@dxos/scene';
+import { type NodeKind, type Size } from '@dxos/scene';
 
 import { type CanvasAtoms, type CanvasHistory, type DrawScene, type HistoryState } from '../../engine/index.ts';
 import { type Capabilities, type NodeRegistry } from '../../model/index.ts';
@@ -19,8 +19,8 @@ export type DocumentCommands = {
   redo: () => void;
   /** Whether there is anything to undo or redo, for the toolbar. */
   history: Atom.Atom<HistoryState>;
-  /** A default-sized node of `type` centred in the view, its top-left on the grid. */
-  create: (type: NodeType) => void;
+  /** A default-sized node of `kind` centred in the view, its top-left on the grid. */
+  create: (kind: NodeKind) => void;
   /** Lays out the selection of two or more, else the board. */
   layout: () => void;
 };
@@ -58,16 +58,16 @@ export const useDocumentCommands = ({
   const onUndo = useCallback(() => void (!readonly && history.undo()), [readonly, history]);
   const onRedo = useCallback(() => void (!readonly && history.redo()), [readonly, history]);
 
-  const createAtCentre = (type: NodeType) => {
-    const def = nodeRegistry[type];
+  const createAtCentre = (kind: NodeKind) => {
+    const def = nodeRegistry[kind];
     if (!def || !capabilities.create) {
       return;
     }
     const size = nominalSize(def.defaultSize, cell);
     const centre = screenToScene(registry.get(atoms.camera), { x: viewport.width / 2, y: viewport.height / 2 });
     const from = { x: snap(centre.x - size.width / 2), y: snap(centre.y - size.height / 2) };
-    // `dropped`: there is no drawn box, so the type's default size applies, as for a palette drop.
-    const node = createdNode({ kind: 'create', type, from, to: from, dropped: true }, createId(type));
+    // `dropped`: there is no drawn box, so the kind's default size applies, as for a palette drop.
+    const node = createdNode({ kind: 'create', node: kind, from, to: from, dropped: true }, createId(kind));
     if (node) {
       commitCreated(node);
     }
@@ -81,7 +81,7 @@ export const useDocumentCommands = ({
       undo: () => latestRef.current.onUndo(),
       redo: () => latestRef.current.onRedo(),
       history: history.state,
-      create: (type) => latestRef.current.createAtCentre(type),
+      create: (kind) => latestRef.current.createAtCentre(kind),
       // A selection of two or more is what the user asked to tidy; one node alone means the board.
       layout: () => {
         const selection = registry.get(atoms.selection);

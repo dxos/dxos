@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type Style2D } from './element.ts';
 import {
   type Element2D,
   type Element3D,
@@ -14,15 +15,15 @@ import {
   type SceneDocument,
   type SceneRecord,
 } from './Scene.ts';
-import { type Style2D, type Style3D, resolveStyle } from './style.ts';
+import { type Style3D, resolveStyle } from './style.ts';
 
 /**
  * An element with its model object applied, which is what renderers draw and the animator keys: its `type` is known,
  * and `overrides` hold its whole resolved look (the named style through the layout and model, then the object's and
  * its own overrides).
  */
-export type Resolved2D = Element2D & { type: string; parts?: string };
-export type Resolved3D = Element3D & { type: string; parts?: string };
+export type Resolved2D = Element2D & { kind: string; parts?: string };
+export type Resolved3D = Element3D & { kind: string; parts?: string };
 export type Resolved = Resolved2D | Resolved3D;
 
 /** A document with no scenes, layouts or models. */
@@ -88,6 +89,51 @@ const objects3D = (doc: SceneDocument, layout: LayoutRecord3D): Readonly<Record<
   return model?.dim === '3d' ? model.objects : {};
 };
 
+/** The kinds a model object takes to say which container it is; any other object with parts is an Object. */
+export const CONTAINER_KINDS = ['group', 'hull', 'view'] as const;
+export type ContainerKind = (typeof CONTAINER_KINDS)[number];
+
+/** What an element placing an object with parts is: a group, a hull, a View, or a reusable Object. */
+export type Container = ContainerKind | 'object';
+
+/** Whether an object's kind names a container, and so is not a kind it draws as. */
+export const isContainerKind = (kind: string): kind is ContainerKind => CONTAINER_KINDS.some((known) => known === kind);
+
+/**
+ * Which container the element `id` of a layout is, by the object `model` holds for it; nothing where it places no
+ * object with parts. The object's kind says it. A drawing stored before it did says it on the element (a `view`, a
+ * `hull`) and on the parts layout (`anonymous`, as Group made it), which is read here and nowhere else.
+ */
+export const containerIn = (
+  doc: SceneDocument,
+  model: ModelRecord | undefined,
+  layout: LayoutRecord,
+  id: string,
+): Container | undefined => {
+  const element = layout.elements[id];
+  const object = element?.object === undefined ? undefined : model?.objects[element.object];
+  if (!element || object?.parts === undefined) {
+    return undefined;
+  }
+  if (isContainerKind(object.kind)) {
+    return object.kind;
+  }
+  if (element.kind === 'view') {
+    return 'view';
+  }
+  if (Reflect.get(element, 'hull') !== undefined) {
+    return 'hull';
+  }
+  return findLayout(doc, object.parts)?.anonymous ? 'group' : 'object';
+};
+
+/** {@link containerIn} the layout's own model. */
+export const containerOf = (doc: SceneDocument, layout: LayoutRecord, id: string): Container | undefined =>
+  containerIn(doc, modelOf(doc, layout), layout, id);
+
+/** Whether the container keeps its members in the parent's coordinates, which Ungroup puts back. */
+export const isGrouping = (container: Container | undefined): boolean => container === 'group' || container === 'hull';
+
 /** A 2D element with the object it places applied: the element's own fields win, style and props merge. */
 export const resolve2D = (
   element: Element2D,
@@ -97,7 +143,7 @@ export const resolve2D = (
   const size = element.size ?? object?.size;
   return {
     ...element,
-    type: element.type ?? object?.type ?? '',
+    kind: element.kind ?? object?.kind ?? '',
     ...(size ? { size } : {}),
     ...look(element, object, styles),
     ...mergeProps(object?.props, element.props),
@@ -114,7 +160,7 @@ export const resolve3D = (
   const scale = element.scale ?? object?.scale;
   return {
     ...element,
-    type: element.type ?? object?.type ?? '',
+    kind: element.kind ?? object?.kind ?? '',
     ...(scale ? { scale } : {}),
     ...look(element, object, styles),
     ...mergeProps(object?.props, element.props),

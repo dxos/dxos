@@ -3,5 +3,5 @@ scene cube dim=3d layout=cube name="Cube" theme=presentation {
 }
 
 layout cube dim=3d {
-  element box cube "Cube" @ 0,0,0 scale=2 hue=blue surface=glass border=true rounded=true
+  element box cube "Cube" @ 0,0,0 scale=2 color=blue fill=glass stroke=solid corners=all
 }

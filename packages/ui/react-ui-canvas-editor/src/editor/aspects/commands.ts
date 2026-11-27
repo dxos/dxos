@@ -5,7 +5,7 @@
 import * as Atom from 'effect/reactivity/Atom';
 
 import { initialKeys, orderToEnd } from '@dxos/react-ui-canvas';
-import { type Scene, findLayout, resolveLayout } from '@dxos/scene';
+import { type ModelIntent, type Scene, containerOf, findLayout, isGrouping } from '@dxos/scene';
 
 import { copyFragment, getSessionClipboard, pasteInto, setSessionClipboard } from '../clipboard.ts';
 import { type Command, type EngineCommand, buildCommands } from '../commands.ts';
@@ -13,14 +13,14 @@ import { type Dimension } from '../config.ts';
 import { type EditorCommands, type EditorDocument, type EditorSelection, type EditorTools } from './context.ts';
 import { type AspectOptions, keep } from './host.ts';
 
-/** The open layout's model, and the one selected element with its resolved type. */
+/** The open layout's model, and the one selected element with the container it is. */
 const selected = (document: Scene.SceneDocument, open: string | undefined, selection: readonly string[]) => {
   const record = open === undefined ? undefined : findLayout(document, open);
   const element = selection.length === 1 ? record?.elements[selection[0]] : undefined;
   return {
     model: document.models[0]?.id,
     element,
-    type: element && record ? resolveLayout(document, record)[element.id]?.type : undefined,
+    container: element !== undefined && record !== undefined ? containerOf(document, record, element.id) : undefined,
   };
 };
 
@@ -39,7 +39,7 @@ export const createCommandsAspect = <C>(
     document: EditorDocument;
     selection: EditorSelection;
     tools: EditorTools;
-    dimension: Pick<Dimension, 'commands' | 'edits'>;
+    dimension: Pick<Dimension, 'commands' | 'edits' | 'grouping'>;
   },
 ) => {
   const { atoms } = document;
@@ -156,8 +156,12 @@ export const createCommandsAspect = <C>(
       const { model } = selected(registry.get(atoms.document), open, selection);
       if (open && model !== undefined) {
         const id = `group-${Date.now().toString(36)}`;
-        modelIntent({ kind: 'group', model, layout: open, id, members: selection }).length === 0 &&
-          editorSelection.commands.select([id]);
+        const document = registry.get(atoms.document);
+        // The dimension says where its editor draws a group; the model makes it either way.
+        const intent: ModelIntent | undefined = dimension.grouping
+          ? dimension.grouping.group({ document, model, layout: open, selection, id })
+          : { kind: 'group', model, layout: open, id, members: selection };
+        intent && modelIntent(intent).length === 0 && editorSelection.commands.select([id]);
       }
     },
     'ungroup': () => {
@@ -168,8 +172,11 @@ export const createCommandsAspect = <C>(
         registry.get(editorSelection.atoms.selection),
       );
       if (open && model !== undefined && element) {
-        modelIntent({ kind: 'ungroup', model, layout: open, id: element.id }).length === 0 &&
-          editorSelection.commands.select([]);
+        const document = registry.get(atoms.document);
+        const intent: ModelIntent | undefined = dimension.grouping
+          ? dimension.grouping.ungroup({ document, model, layout: open, id: element.id })
+          : { kind: 'ungroup', model, layout: open, id: element.id };
+        intent && modelIntent(intent).length === 0 && editorSelection.commands.select([]);
       }
     },
     'make-object': () => {
@@ -187,7 +194,7 @@ export const createCommandsAspect = <C>(
           model,
           layout: open,
           ids: registry.get(editorSelection.atoms.selection),
-          object: { id: `object-${index}`, type: config.dim === '3d' ? 'sphere' : 'rect' },
+          object: { id: `object-${index}`, kind: config.dim === '3d' ? 'sphere' : 'rect' },
         }).length === 0 && editorSelection.commands.select([]);
       }
     },
@@ -221,7 +228,7 @@ export const createCommandsAspect = <C>(
       get(historyVersion);
       const document = get(atoms.document);
       const selection = get(editorSelection.atoms.selection);
-      const { model, type } = selected(document, get(atoms.layout), selection);
+      const { model, container } = selected(document, get(atoms.layout), selection);
       const { history } = latest.current.props;
       const edits: Partial<Record<string, EngineCommand>> = Object.fromEntries(
         Object.entries(dimension.edits ?? {}).flatMap(([id, edit]) =>
@@ -239,7 +246,8 @@ export const createCommandsAspect = <C>(
           selection,
           canUndo: history?.canUndo ?? false,
           canRedo: history?.canRedo ?? false,
-          canUngroup: type === 'group',
+          // An Object's instance is taken apart where the dimension says how it draws its parts.
+          canUngroup: isGrouping(container) || (container === 'object' && dimension.grouping !== undefined),
           canMakeObject: model !== undefined && get(atoms.host).model,
           canOrder: config.dim === '2d',
           clipboard: get(atoms.host).clipboard,

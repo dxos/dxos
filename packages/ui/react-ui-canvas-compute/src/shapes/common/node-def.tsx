@@ -32,7 +32,7 @@ export type ComputeNodeSpec<S extends ComputeShape> = Pick<
   NodeDef,
   'name' | 'icon' | 'group' | 'resizable' | 'openable' | 'ellipse'
 > & {
-  type: S['type'];
+  type: S['kind'];
   /** The shape's schema with `z` (`withZ`), so the node is checked as the shape before its view or ports read it. */
   schema: Schema.Codec<S & { z: string }, unknown, never, never>;
   component: FC<ComputeNodeViewProps<S>>;
@@ -98,7 +98,7 @@ const computeNodeView = <S extends ComputeShape>(
       return (
         <div className='dx-cover flex flex-col items-center justify-center gap-1 text-fg-muted'>
           {def?.icon && <Icon.Icon icon={def.icon} size='lg' />}
-          <span className='text-sm truncate'>{def?.name ?? node.type}</span>
+          <span className='text-sm truncate'>{def?.name ?? node.kind}</span>
         </div>
       );
     }

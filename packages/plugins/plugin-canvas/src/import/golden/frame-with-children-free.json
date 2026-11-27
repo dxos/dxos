@@ -16,8 +16,8 @@
     },
     "elements": {
       "frame": {
+        "kind": "rect",
         "id": "frame",
-        "type": "rect",
         "z": "V",
         "center": {
           "x": 300,
@@ -28,19 +28,15 @@
           "height": 300
         },
         "label": "Stage",
-        "layer": "frames",
         "overrides": {
-          "tone": 0,
-          "alignHorizontal": "left",
-          "alignVertical": "top"
+          "color": "default/0",
+          "align": "left",
+          "valign": "top"
         },
-        "props": {
-          "canvas": {}
-        }
+        "layer": "frames"
       },
       "inner-a": {
         "id": "inner-a",
-        "type": "rect",
         "z": "l",
         "center": {
           "x": 170,
@@ -50,18 +46,15 @@
           "width": 100,
           "height": 100
         },
-        "label": "A",
-        "layer": "layer",
         "overrides": {
-          "tone": 0
+          "color": "default/0"
         },
-        "props": {
-          "canvas": {}
-        }
+        "label": "A",
+        "kind": "rect",
+        "layer": "layer"
       },
       "inner-b": {
         "id": "inner-b",
-        "type": "rect",
         "z": "t",
         "center": {
           "x": 400,
@@ -71,18 +64,15 @@
           "width": 100,
           "height": 100
         },
-        "label": "B",
-        "layer": "layer",
         "overrides": {
-          "tone": 0
+          "color": "default/0"
         },
-        "props": {
-          "canvas": {}
-        }
+        "label": "B",
+        "kind": "rect",
+        "layer": "layer"
       },
       "outside": {
         "id": "outside",
-        "type": "rect",
         "z": "z",
         "center": {
           "x": 750,
@@ -92,53 +82,39 @@
           "width": 100,
           "height": 100
         },
-        "label": "Out",
-        "layer": "layer",
         "overrides": {
-          "tone": 0
+          "color": "default/0"
         },
-        "props": {
-          "canvas": {}
-        }
+        "label": "Out",
+        "kind": "rect",
+        "layer": "layer"
       },
       "inner-arrow": {
+        "kind": "link",
+        "path": "line",
         "id": "inner-arrow",
-        "type": "link",
         "z": "x",
+        "head": "arrow",
+        "layer": "layer",
         "source": {
           "node": "inner-a"
         },
         "target": {
           "node": "inner-b"
-        },
-        "layer": "layer",
-        "props": {
-          "canvas": {
-            "type": "line",
-            "ends": {
-              "end": "arrow"
-            }
-          }
         }
       },
       "cross": {
+        "kind": "link",
+        "path": "line",
         "id": "cross",
-        "type": "link",
         "z": "zV",
+        "head": "arrow",
+        "layer": "layer",
         "source": {
           "node": "outside"
         },
         "target": {
           "node": "inner-a"
-        },
-        "layer": "layer",
-        "props": {
-          "canvas": {
-            "type": "line",
-            "ends": {
-              "end": "arrow"
-            }
-          }
         }
       }
     }
@@ -149,8 +125,8 @@
     {
       "kind": "create",
       "element": {
+        "kind": "rect",
         "id": "frame",
-        "type": "rect",
         "z": "V",
         "center": {
           "x": 300,
@@ -161,22 +137,18 @@
           "height": 300
         },
         "label": "Stage",
-        "layer": "frames",
         "overrides": {
-          "tone": 0,
-          "alignHorizontal": "left",
-          "alignVertical": "top"
+          "color": "default/0",
+          "align": "left",
+          "valign": "top"
         },
-        "props": {
-          "canvas": {}
-        }
+        "layer": "frames"
       }
     },
     {
       "kind": "create",
       "element": {
         "id": "inner-a",
-        "type": "rect",
         "z": "l",
         "center": {
           "x": 170,
@@ -186,21 +158,18 @@
           "width": 100,
           "height": 100
         },
-        "label": "A",
-        "layer": "layer",
         "overrides": {
-          "tone": 0
+          "color": "default/0"
         },
-        "props": {
-          "canvas": {}
-        }
+        "label": "A",
+        "kind": "rect",
+        "layer": "layer"
       }
     },
     {
       "kind": "create",
       "element": {
         "id": "inner-b",
-        "type": "rect",
         "z": "t",
         "center": {
           "x": 400,
@@ -210,21 +179,18 @@
           "width": 100,
           "height": 100
         },
-        "label": "B",
-        "layer": "layer",
         "overrides": {
-          "tone": 0
+          "color": "default/0"
         },
-        "props": {
-          "canvas": {}
-        }
+        "label": "B",
+        "kind": "rect",
+        "layer": "layer"
       }
     },
     {
       "kind": "create",
       "element": {
         "id": "outside",
-        "type": "rect",
         "z": "z",
         "center": {
           "x": 750,
@@ -234,59 +200,45 @@
           "width": 100,
           "height": 100
         },
-        "label": "Out",
-        "layer": "layer",
         "overrides": {
-          "tone": 0
+          "color": "default/0"
         },
-        "props": {
-          "canvas": {}
-        }
+        "label": "Out",
+        "kind": "rect",
+        "layer": "layer"
       }
     },
     {
       "kind": "create",
       "element": {
+        "kind": "link",
+        "path": "line",
         "id": "inner-arrow",
-        "type": "link",
         "z": "x",
+        "head": "arrow",
+        "layer": "layer",
         "source": {
           "node": "inner-a"
         },
         "target": {
           "node": "inner-b"
-        },
-        "layer": "layer",
-        "props": {
-          "canvas": {
-            "type": "line",
-            "ends": {
-              "end": "arrow"
-            }
-          }
         }
       }
     },
     {
       "kind": "create",
       "element": {
+        "kind": "link",
+        "path": "line",
         "id": "cross",
-        "type": "link",
         "z": "zV",
+        "head": "arrow",
+        "layer": "layer",
         "source": {
           "node": "outside"
         },
         "target": {
           "node": "inner-a"
-        },
-        "layer": "layer",
-        "props": {
-          "canvas": {
-            "type": "line",
-            "ends": {
-              "end": "arrow"
-            }
-          }
         }
       }
     }

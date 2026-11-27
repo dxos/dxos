@@ -42,15 +42,15 @@ describe('toolGroups', () => {
       update: true,
       delete: true,
     });
-    const types = (name: string) =>
+    const kinds = (name: string) =>
       groups
         .find((group) => group.name === name)
-        ?.entries.flatMap((entry) => (entry.tool.kind === 'node' ? [entry.tool.type] : []));
+        ?.entries.flatMap((entry) => (entry.tool.kind === 'node' ? [entry.tool.node] : []));
     expect(groups.map((group) => group.name)).toEqual([TOOLS_GROUP, CREATE_GROUP, CONTAINERS_GROUP, EXTENSIONS_GROUP]);
-    expect(types(CONTAINERS_GROUP)).toEqual(['hull', 'view']);
-    expect(types(EXTENSIONS_GROUP)).toEqual(['card']);
+    expect(kinds(CONTAINERS_GROUP)).toEqual(['hull', 'view']);
+    expect(kinds(EXTENSIONS_GROUP)).toEqual(['card']);
     // The recipes' shapes follow the closed shapes; Spline and Draw are tools beside the polyline they make.
-    expect(types(CREATE_GROUP)).toEqual([
+    expect(kinds(CREATE_GROUP)).toEqual([
       'rect',
       'ellipse',
       'polygon',
@@ -73,7 +73,7 @@ describe('toolGroups', () => {
     const runs = foldRuns(create?.entries ?? []);
     const folds = runs.flatMap((run) =>
       'fold' in run
-        ? [[run.fold.name, run.fold.entries.map((entry) => (entry.tool.kind === 'node' ? entry.tool.type : 'link'))]]
+        ? [[run.fold.name, run.fold.entries.map((entry) => (entry.tool.kind === 'node' ? entry.tool.node : 'link'))]]
         : [],
     );
     expect(folds.map(([name]) => name)).toEqual([SHAPE_FOLD, LINK_FOLD, PATH_FOLD, DRAW_FOLD]);
@@ -84,7 +84,7 @@ describe('toolGroups', () => {
     ]);
   });
 
-  test('the link types share one flyout above the polyline, after the closed shapes', () => {
+  test('the link paths share one flyout above the polyline, after the closed shapes', () => {
     const capabilities = { create: true, link: true, update: true, delete: true };
     const create = toolGroups(defaultNodeRegistry, defaultLinkRegistry, capabilities).find(
       (group) => group.name === CREATE_GROUP,
@@ -96,15 +96,15 @@ describe('toolGroups', () => {
       Object.values(defaultLinkRegistry).map(() => 'link'),
     );
     // The fold leads with the default variant.
-    expect(links && 'fold' in links && links.fold.entries[0].tool).toEqual({ kind: 'link', type: 'ortho' });
+    expect(links && 'fold' in links && links.fold.entries[0].tool).toEqual({ kind: 'link', path: 'ortho' });
     // The lines are together: the links, then the tools that draw a line of their own.
-    const typeAt = (at: number) => {
+    const kindAt = (at: number) => {
       const run = runs[at];
-      return run && 'entry' in run && run.entry.tool.kind === 'node' ? run.entry.tool.type : undefined;
+      return run && 'entry' in run && run.entry.tool.kind === 'node' ? run.entry.tool.node : undefined;
     };
     const shapes = runs[index - 1];
     expect(shapes && 'fold' in shapes && shapes.fold.name).toBe(SHAPE_FOLD);
-    expect(typeAt(index - 2)).toBe('cloud');
+    expect(kindAt(index - 2)).toBe('cloud');
     const paths = runs[index + 1];
     expect(paths && 'fold' in paths && paths.fold.name).toBe(PATH_FOLD);
     // Every other run is a node tool: alone, or folded with its variants.
@@ -116,7 +116,7 @@ describe('toolGroups', () => {
     ).toBe(true);
   });
 
-  test('with no tool that draws a line, the link types end the create group', () => {
+  test('with no tool that draws a line, the link paths end the create group', () => {
     const { rect, ellipse } = defaultNodeRegistry;
     const create = toolGroups({ rect, ellipse }, defaultLinkRegistry, {
       create: true,
@@ -133,7 +133,7 @@ describe('toolGroups', () => {
 
   test('a press on an element selects it with Select and with a create tool; the hand only moves the view', () => {
     expect(pressSelects({ kind: 'select' })).toBe(true);
-    expect(pressSelects({ kind: 'node', type: 'rect' })).toBe(true);
+    expect(pressSelects({ kind: 'node', node: 'rect' })).toBe(true);
     expect(pressSelects({ kind: 'hand' })).toBe(false);
   });
 });

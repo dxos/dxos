@@ -21,7 +21,7 @@ import { ComputeShape, type CreateShapeProps, createAnchorId, createShape, withZ
 
 export const ChatShape = ComputeShape.mapFields(
   Struct.assign({
-    type: Schema.Literal('chat'),
+    kind: Schema.Literal('chat'),
   }),
 );
 
@@ -34,7 +34,7 @@ export type ChatShape = Schema.Schema.Type<typeof ChatShape>;
 export type CreateChatProps = CreateShapeProps<ChatShape>;
 
 export const createChat = (props: CreateChatProps) =>
-  createShape<ChatShape>({ type: 'chat', size: { width: 4 * MAJOR_GRID, height: 2 * MAJOR_GRID }, ...props });
+  createShape<ChatShape>({ kind: 'chat', size: { width: 4 * MAJOR_GRID, height: 2 * MAJOR_GRID }, ...props });
 
 export const chatNodeDef = defineComputeNode<ChatShape>({
   type: 'chat',

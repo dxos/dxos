@@ -5,8 +5,8 @@
 //
 // Scene engine types (docs/DESIGN.md §4). Plain Effect schemas: no ECHO yet, so the same shapes wrap
 // into an ECHO type later without change. A diagram is one scene of typed nodes and typed links; every
-// node is a `NodeBase` (centre, size, ports, style) plus the properties its type adds, so the engine
-// works on the base and a host composes the scene schema from its own node types (decision 1).
+// node is a `NodeBase` (centre, size, ports, style) plus the properties its kind adds, so the engine
+// works on the base and a host composes the scene schema from its own node kinds (decision 1).
 //
 
 import * as Schema from 'effect/Schema';
@@ -18,11 +18,11 @@ import {
   type LayerId,
   Link,
   type LinkId,
-  type LinkType,
+  type LinkPath,
   type Node,
   NodeBase,
   type NodeId,
-  type NodeType,
+  type NodeKind,
   type Scene,
   type ViewId,
 } from '@dxos/scene';
@@ -58,11 +58,10 @@ export type RenderLists2D = Readonly<Record<ViewId, RenderList2D>>;
 export const getElement = (scene: RenderList2D, id: ElementId): Element | undefined =>
   scene.nodes[id] ?? scene.links[id];
 
-/** Property edits: the shared fields typed, a type's own fields by name. */
-export type NodeValues = Partial<Omit<NodeBase, 'id' | 'type'>> & { readonly [key: string]: unknown };
-/** Per link type, so a spline's `points` are among the values an `update` may set. */
-type ValuesOf<T> = T extends unknown ? Partial<Omit<T, 'id' | 'type'>> : never;
-export type LinkValues = ValuesOf<Link>;
+/** Property edits: the shared fields typed, a kind's own fields by name. */
+export type NodeValues = Partial<Omit<NodeBase, 'id' | 'kind'>> & { readonly [key: string]: unknown };
+/** The values an `update` may set on a link: any field but its id and its kind, which every link shares. */
+export type LinkValues = Partial<Omit<Link, 'id' | 'kind'>>;
 
 export type Capabilities = {
   move?: boolean;
@@ -74,9 +73,9 @@ export type Capabilities = {
   layout?: boolean;
 };
 
-/** The active tool: a node type draws that node, a link type is what port drags create. */
+/** The active tool: a node tool draws nodes of its kind, a link tool sets the path port drags create. */
 export type Tool =
   | { kind: 'select' }
   | { kind: 'hand' }
-  | { kind: 'node'; type: NodeType }
-  | { kind: 'link'; type: LinkType };
+  | { kind: 'node'; node: NodeKind }
+  | { kind: 'link'; path: LinkPath };

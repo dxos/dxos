@@ -188,7 +188,7 @@ export const ChipData = Schema.Struct({
 
 export const ChipNode = Schema.Struct({
   ...Scene.Element2D.fields,
-  type: Schema.Literal('chip'),
+  kind: Schema.Literal('chip'),
   label: Schema.String,
   icon: Schema.optional(IconSpec),
   data: Schema.optional(ChipData),
@@ -196,7 +196,7 @@ export const ChipNode = Schema.Struct({
 
 const ChipNodeView = ({ node, editing }: NodeViewProps) => {
   const data = kindData(ChipData, node);
-  if (node.type !== 'chip' || !data) {
+  if (node.kind !== 'chip' || !data) {
     return null;
   }
   const label = 'label' in node && typeof node.label === 'string' ? node.label : '';
@@ -220,7 +220,7 @@ export const chipSpec: ElementKindSpec = {
   key: 'H',
   schema: ChipNode,
   component: ChipNodeView,
-  create: ({ id, z, center, size }) => ({ type: 'chip', id, z, center, size, label: 'Chip' }),
+  create: ({ id, z, center, size }) => ({ kind: 'chip', id, z, center, size, label: 'Chip' }),
   // The core card's title and glyph are what a chip shows; its tone, note and ghost state are its own.
   extends: 'card',
   // Nominal units (one unit is the major grid cell, 48px): the deck's 262 x 47 chip, give or take.

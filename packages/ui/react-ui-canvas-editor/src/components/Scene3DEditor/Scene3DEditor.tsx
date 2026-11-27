@@ -4,7 +4,7 @@
 
 import React, { type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { DETENT_PX, isHandDrag, useCommandHeld } from '@dxos/react-ui-canvas';
+import { DETENT_PX, isHandDrag, keyAction, useCommandHeld } from '@dxos/react-ui-canvas';
 import {
   type Box,
   DEFAULT_CAMERA,
@@ -345,8 +345,9 @@ export const Scene3DEditor = ({
     [selection, draft],
   );
   useLayoutEffect(() => {
-    renderer?.select(drawnSelection.flatMap((id) => keys.get(id)?.key ?? []));
-  }, [renderer, drawnSelection, keys, shown]);
+    // A group draws no item of its own: its key is the one its members are drawn under, which the renderer boxes.
+    renderer?.select(drawnSelection.map((id) => keys.get(id)?.key ?? (prefix ? `${prefix}/${id}` : id)));
+  }, [renderer, drawnSelection, keys, prefix, shown]);
 
   useLayoutEffect(() => {
     const key = face === undefined ? undefined : keys.get(face.element)?.key;
@@ -469,7 +470,7 @@ export const Scene3DEditor = ({
           'create' in tool
             ? {
                 kind: 'create',
-                element: { id: freeId(layout, tool.create), type: tool.create, center: restingCenter(center) },
+                element: { id: freeId(layout, tool.create), kind: tool.create, center: restingCenter(center) },
               }
             : {
                 kind: 'create',
@@ -494,7 +495,7 @@ export const Scene3DEditor = ({
           const id = freeId(layout, 'link');
           onIntent(editing, {
             kind: 'bind',
-            link: { id, type: 'link', source: { node: linkFrom }, target: { node: element } },
+            link: { id, kind: 'link', source: { node: linkFrom }, target: { node: element } },
           });
           setLinkFrom(undefined);
           onSelect([id]);
@@ -680,7 +681,7 @@ export const Scene3DEditor = ({
   const oneStep = (shape: Shape) =>
     shape.kind === 'create'
       ? sizesInOneStep(shape.type)
-      : sizesInOneStep(shape.definition?.type ?? '', shape.definition);
+      : sizesInOneStep(shape.definition?.kind ?? '', shape.definition);
   const committed = useRef(false);
   const cancelSizing = () => {
     sizing.current = undefined;
@@ -1080,6 +1081,10 @@ export const Scene3DEditor = ({
         } else if ((event.key === 'Delete' || event.key === 'Backspace') && selection.length > 0) {
           onIntent(editing, { kind: 'delete', ids: selection });
           onSelect([]);
+        } else if (keyAction(event) === 'selectAll') {
+          // Left to the browser, the chord selects the page's text, the panels' labels included.
+          event.preventDefault();
+          onSelect([...keys.keys()]);
         }
       }}
     >

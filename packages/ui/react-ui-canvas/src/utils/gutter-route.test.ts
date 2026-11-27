@@ -19,7 +19,7 @@ const spec: LatticeSpec = { width: 256, height: 128, gutterX: 128, gutterY: 64 }
 const cellNode = (id: string, col: number, row: number, spanX = 1, spanY = 1): Node => {
   const { x, y, width, height } = cellBounds({ col, row, spanX, spanY }, spec);
   return createNode({
-    type: 'rect',
+    kind: 'rect',
     id,
     z: id,
     center: { x: x + width / 2, y: y + height / 2 },
@@ -39,19 +39,19 @@ const nodes = [
 ];
 
 describe('gutter route', () => {
-  test('A south to E north runs through the gutters at right angles', ({ expect }) => {
+  test('A bottom to E top runs through the gutters at right angles', ({ expect }) => {
     const route = gutterRoute(
       nodes,
       spec,
-      { point: { x: -384, y: -128 }, side: 's' },
-      { point: { x: 0, y: 128 }, side: 'n' },
+      { point: { x: -384, y: -128 }, side: 'bottom' },
+      { point: { x: 0, y: 128 }, side: 'top' },
     );
     expect(route).toEqual([
-      // Out of A's south port to the gutter below A, then along it to the column gutter.
+      // Out of A's bottom port to the gutter below A, then along it to the column gutter.
       { x: -384, y: -128 },
       { x: -384, y: -96 },
       { x: -192, y: -96 },
-      // Down the column gutter between B and D, to the gutter above E, then into E's north port.
+      // Down the column gutter between B and D, to the gutter above E, then into E's top port.
       { x: -192, y: 96 },
       { x: 0, y: 96 },
       { x: 0, y: 128 },
@@ -62,8 +62,8 @@ describe('gutter route', () => {
     const route = gutterRoute(
       nodes,
       spec,
-      { point: { x: -256, y: 0 }, side: 'e' },
-      { point: { x: -128, y: 0 }, side: 'w' },
+      { point: { x: -256, y: 0 }, side: 'right' },
+      { point: { x: -128, y: 0 }, side: 'left' },
     );
     expect(route).toEqual([
       { x: -256, y: 0 },
@@ -72,13 +72,13 @@ describe('gutter route', () => {
   });
 
   test('a gutter a shape spans is not a track', ({ expect }) => {
-    // E's east port to F's west port: F covers the row gutters inside its span, so the route stays in the
+    // E's right port to F's left port: F covers the row gutters inside its span, so the route stays in the
     // column gutter between them rather than crossing F.
     const route = gutterRoute(
       nodes,
       spec,
-      { point: { x: 128, y: 192 }, side: 'e' },
-      { point: { x: 256, y: 192 }, side: 'w' },
+      { point: { x: 128, y: 192 }, side: 'right' },
+      { point: { x: 256, y: 192 }, side: 'left' },
     );
     expect(route).toEqual([
       { x: 128, y: 192 },
@@ -91,12 +91,12 @@ describe('gutter route', () => {
   });
 
   test('a route runs straight through free cells', ({ expect }) => {
-    // A's east port to F's west side level with it: the cell between them (column 0, row -1) is free.
+    // A's right port to F's left side level with it: the cell between them (column 0, row -1) is free.
     const route = gutterRoute(
       nodes,
       spec,
-      { point: { x: -256, y: -192 }, side: 'e' },
-      { point: { x: 256, y: -192 }, side: 'w' },
+      { point: { x: -256, y: -192 }, side: 'right' },
+      { point: { x: 256, y: -192 }, side: 'left' },
     );
     expect(route).toEqual([
       { x: -256, y: -192 },
@@ -105,12 +105,12 @@ describe('gutter route', () => {
   });
 
   test('a route still detours round an occupied cell', ({ expect }) => {
-    // B's east port to F's west side level with it: D sits in between, so the run leaves for a gutter.
+    // B's right port to F's left side level with it: D sits in between, so the run leaves for a gutter.
     const route = gutterRoute(
       nodes,
       spec,
-      { point: { x: -256, y: 0 }, side: 'e' },
-      { point: { x: 256, y: 0 }, side: 'w' },
+      { point: { x: -256, y: 0 }, side: 'right' },
+      { point: { x: 256, y: 0 }, side: 'left' },
     );
     expect(route?.length).toBeGreaterThan(2);
     for (const point of route ?? []) {
@@ -125,8 +125,8 @@ describe('gutter route', () => {
     const route = gutterRoute(
       [wall],
       spec,
-      { point: { x: 0, y: -128 }, side: 's' },
-      { point: { x: 0, y: 128 }, side: 'n' },
+      { point: { x: 0, y: -128 }, side: 'bottom' },
+      { point: { x: 0, y: 128 }, side: 'top' },
     );
     expect(route).toBeDefined();
     const { x, y, width, height } = cellBounds({ col: -5, row: 0, spanX: 11, spanY: 1 }, spec);
@@ -145,8 +145,8 @@ describe('gutter route', () => {
     // A shape a million pitches away is no obstacle; the route between B and D is found as without it.
     const far = cellNode('far', 1_000_000, 1_000_000);
     const ends = [
-      { point: { x: -256, y: 0 }, side: 'e' },
-      { point: { x: -128, y: 0 }, side: 'w' },
+      { point: { x: -256, y: 0 }, side: 'right' },
+      { point: { x: -128, y: 0 }, side: 'left' },
     ] as const;
     const started = performance.now();
     const route = gutterRoute([...nodes, far], spec, ...ends);
@@ -159,8 +159,8 @@ describe('gutter route', () => {
     // may follow the chain, and B to D routes without it.
     const chain = Array.from({ length: 400 }, (_, index) => cellNode(`chain-${index}`, index, 3));
     const ends = [
-      { point: { x: -256, y: 0 }, side: 'e' },
-      { point: { x: -128, y: 0 }, side: 'w' },
+      { point: { x: -256, y: 0 }, side: 'right' },
+      { point: { x: -128, y: 0 }, side: 'left' },
     ] as const;
     const started = performance.now();
     const route = gutterRoute([...nodes, ...chain], spec, ...ends);
@@ -172,13 +172,13 @@ describe('gutter route', () => {
     const scene: RenderList2D = { id: 's', nodes: Object.fromEntries(nodes.map((node) => [node.id, node])), links: {} };
     const link = (id: string, source: string, sourcePort: string, target: string, targetPort: string): Link =>
       createLink({
-        type: 'smart',
+        path: 'smart',
         id,
         z: id,
         source: { node: source, port: sourcePort },
         target: { node: target, port: targetPort },
       });
-    // Both run down the column gutter at x = -192 and along the row gutter at y = 96 into E's north side.
+    // Both run down the column gutter at x = -192 and along the row gutter at y = 96 into E's top side.
     const links = [link('ae', 'a', 's2', 'e', 'n2'), link('be', 'b', 'e2', 'e', 'n2')];
     const [first, second] = viewLinkGeometry(scene, defaultNodeRegistry, links, spec).map(({ path }) => path);
     // The vertical runs near the column gutter: each link has its own, a lane apart.

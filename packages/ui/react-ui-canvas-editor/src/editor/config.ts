@@ -193,6 +193,23 @@ export type DimensionInspector = {
  * A dimension's aspects for one editor (COMMON-CORE Expectation 0): the shared hooks read them, so each dimension
  * supplies its own navigation, selection and tools behind the same parts.
  */
+/** The intents a dimension makes for Group and Ungroup, each nothing where the selection is not one for it. */
+export type DimensionGrouping = {
+  group: (context: {
+    document: Scene.SceneDocument;
+    model: string;
+    layout: string;
+    selection: readonly string[];
+    id: string;
+  }) => ModelIntent | undefined;
+  ungroup: (context: {
+    document: Scene.SceneDocument;
+    model: string;
+    layout: string;
+    id: string;
+  }) => ModelIntent | undefined;
+};
+
 export type Dimension = {
   navigation: EditorNavigation;
   selection: EditorSelection;
@@ -213,6 +230,11 @@ export type Dimension = {
    * clipboard and grouping), so every surface of the command table shows the engine's state.
    */
   edits?: Partial<Record<SceneMenuCommand, EngineEdit>>;
+  /**
+   * How the dimension places a group: the model's `group` and `ungroup` intents with where its editor draws the group
+   * and its members. Without it the model places them itself, as 3D has it.
+   */
+  grouping?: DimensionGrouping;
   /** The aids as the engine draws them; without them the display panel shows the host's display. */
   aids?: DimensionAids;
   /**

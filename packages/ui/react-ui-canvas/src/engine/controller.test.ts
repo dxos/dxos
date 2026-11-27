@@ -5,7 +5,7 @@
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { isInstanceNode, isViewNode } from '@dxos/scene';
+import { isInstanceNode, isViewNode, linkMarkers } from '@dxos/scene';
 
 import { ViewBuilder, type ViewTree } from '../builder/index.ts';
 import { defaultNodeRegistry } from '../components/index.ts';
@@ -490,7 +490,7 @@ describe('CanvasController', () => {
       const id = controller.selection.classFrom();
       expect(id).toBe('class-0');
       expect(id && store.styles && registry.get(store.styles)[id]?.name).toBe('Class 1');
-      expect(scene().nodes.a).toMatchObject({ class: id });
+      expect(scene().nodes.a).toMatchObject({ style: id });
     });
   });
 
@@ -586,17 +586,17 @@ describe('CanvasController', () => {
       const { registry, atoms, controller, scene, linkId } = setup();
       expect(registry.get(atoms.linkEnds)).toBeUndefined();
       expect(controller.document.setEndMarker(linkId, 'target', 'arrow')).toBe(true);
-      expect(scene().links[linkId].ends).toEqual({ end: 'arrow' });
+      expect(linkMarkers(scene().links[linkId])).toEqual({ head: 'arrow' });
       expect(controller.document.setEndMarker(linkId, 'source', 'circle')).toBe(true);
-      expect(scene().links[linkId].ends).toEqual({ start: 'circle', end: 'arrow' });
-      expect(registry.get(atoms.linkEnds)).toEqual({ start: 'circle', end: 'arrow' });
+      expect(linkMarkers(scene().links[linkId])).toEqual({ tail: 'circle', head: 'arrow' });
+      expect(registry.get(atoms.linkEnds)).toEqual({ tail: 'circle', head: 'arrow' });
     });
 
     test('clearing the last marker stores none, and the next link drawn takes none', ({ expect }) => {
       const { registry, atoms, controller, scene, linkId } = setup();
       controller.document.setEndMarker(linkId, 'target', 'arrow');
       expect(controller.document.setEndMarker(linkId, 'target', undefined)).toBe(true);
-      expect(scene().links[linkId].ends).toBeUndefined();
+      expect(linkMarkers(scene().links[linkId])).toEqual({});
       expect(registry.get(atoms.linkEnds)).toEqual({});
     });
 
@@ -605,21 +605,21 @@ describe('CanvasController', () => {
       expect(controller.document.setEndMarker('missing', 'target', 'arrow')).toBe(false);
       const locked = setup({ readonly: true });
       expect(locked.controller.document.setEndMarker(locked.linkId, 'target', 'arrow')).toBe(false);
-      expect(locked.scene().links[locked.linkId].ends).toBeUndefined();
+      expect(linkMarkers(locked.scene().links[locked.linkId])).toEqual({});
     });
   });
 
   describe('tools', () => {
-    test('a creation tool clears the selection and a link tool sets the link type', ({ expect }) => {
+    test('a creation tool clears the selection and a link tool sets the link path', ({ expect }) => {
       const { registry, atoms, controller } = setup();
       controller.selection.select(['a']);
       controller.tools.setTool({ kind: 'select' });
       expect(registry.get(atoms.selection).size).toBe(1);
       // Until a link tool is picked, a link drawn from a port is orthogonal.
-      expect(registry.get(atoms.linkType)).toBe('ortho');
-      controller.tools.setTool({ kind: 'link', type: 'curve' });
+      expect(registry.get(atoms.linkPath)).toBe('ortho');
+      controller.tools.setTool({ kind: 'link', path: 'curve' });
       expect(registry.get(atoms.selection).size).toBe(0);
-      expect(registry.get(atoms.linkType)).toBe('curve');
+      expect(registry.get(atoms.linkPath)).toBe('curve');
     });
 
     test('the toggles flip their atoms', ({ expect }) => {

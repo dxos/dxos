@@ -8,22 +8,18 @@
 //
 
 import { Layout } from '@dxos/diagram';
-import { type BuiltinNodeType, type Node, type NodeStyle, type Point, type Size } from '@dxos/scene';
+import { type BuiltinNodeKind, type Node, type Point, type Scene, type Size, type Style2D } from '@dxos/scene';
 
 import { type NodeRegistry, type RenderList2D } from '../model/index.ts';
 import { centeredOrigin, createNode, initialKeys, nominalSize, withTitle } from '../utils/index.ts';
 
-/** `subject <relation> object`: "A east of B", "A aligned with B" (same row). */
-export type Relation = 'east' | 'west' | 'north' | 'south' | 'aligned';
+/** `kind` is the node's shape; the solver places every kind on the same grid. */
+export type ConstrainedNode = { id: string; label?: string; kind?: BuiltinNodeKind; overrides?: Style2D };
 
-export type Constraint = { subject: string; relation: Relation; object: string };
-
-/** `type` is the node's shape; the solver places every type on the same grid. */
-export type ConstrainedNode = { id: string; label?: string; type?: BuiltinNodeType; style?: NodeStyle };
-
+/** `subject <relation> object`: "A right-of B", "A aligned with B" (same row). */
 export type ConstrainedModel = {
   nodes: ConstrainedNode[];
-  constraints: Constraint[];
+  constraints: Scene.Constraint[];
 };
 
 export type ConstrainedOptions = {
@@ -90,7 +86,7 @@ export type Solution = {
   columns: Map<string, number>;
 };
 
-/** Longest-path ranks per axis: `south`/`north` order rows, `east`/`west` order columns within a row. */
+/** Longest-path ranks per axis: `below`/`above` order rows, `right-of`/`left-of` order columns within a row. */
 export const solveRanks = (model: ConstrainedModel): Solution => {
   const ids = model.nodes.map(({ id }) => id);
   const groups = rowGroups(model);
@@ -100,16 +96,16 @@ export const solveRanks = (model: ConstrainedModel): Solution => {
   const columnEdges: Edge[] = [];
   for (const { subject, relation, object } of model.constraints) {
     switch (relation) {
-      case 'south':
+      case 'below':
         rowEdges.push({ from: groups.get(object) ?? object, to: groups.get(subject) ?? subject });
         break;
-      case 'north':
+      case 'above':
         rowEdges.push({ from: groups.get(subject) ?? subject, to: groups.get(object) ?? object });
         break;
-      case 'east':
+      case 'right-of':
         columnEdges.push({ from: object, to: subject });
         break;
-      case 'west':
+      case 'left-of':
         columnEdges.push({ from: subject, to: object });
         break;
       default:
@@ -180,10 +176,10 @@ export const solve = (model: ConstrainedModel, options: ConstrainedOptions): Ren
     };
     const solved = withTitle(
       options.nodes,
-      createNode({ type: node.type ?? 'rect', id: node.id, z: keys[index], center, size }),
+      createNode({ kind: node.kind ?? 'rect', id: node.id, z: keys[index], center, size }),
       node.label ?? node.id,
     );
-    nodes[node.id] = node.style ? { ...solved, style: node.style } : solved;
+    nodes[node.id] = node.overrides ? { ...solved, overrides: node.overrides } : solved;
   });
   return { id: CONSTRAINED_VIEW_ID, name: 'Constrained', nodes, links: {} };
 };

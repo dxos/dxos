@@ -73,7 +73,7 @@ describe('the UML class as a composite object', () => {
       center: { x: 0, y: 0 },
       size: { width: 192, height: 144 },
     });
-    expect(node.type).toEqual(ClassNode.TYPE);
+    expect(node.kind).toEqual(ClassNode.TYPE);
     expect(isInstanceNode(node)).toBe(true);
     expect(Reflect.get(node, 'composite')).toEqual(COMPOSITE);
     expect(Reflect.get(node, 'data')).toEqual({ attributes: ['id: string'], methods: ['save(): void'] });

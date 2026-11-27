@@ -16,6 +16,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
+import { expect, fireEvent, waitFor, within } from 'storybook/test';
 
 import {
   CARD_TEMPLATE,
@@ -52,7 +53,7 @@ if (!isCompiled(compiled)) {
 const CARD: RenderList2D = compiled.composite;
 
 /** A card as the tool makes one: its own typed fields, and the Instance fields that place the Object. */
-type Card = CardNode & Pick<PlacedComposite, 'composite' | 'overrides'>;
+type Card = CardNode & Pick<PlacedComposite, 'composite' | 'partOverrides'>;
 
 type CardFields = {
   icon?: string;
@@ -70,9 +71,9 @@ const cardOf = (
   { icon, label, body, footer, without = [] }: CardFields,
   size = CARD_SIZE,
 ): Card => {
-  const overrides = Object.fromEntries(without.map((part) => [part, { hidden: true }]));
+  const partOverrides = Object.fromEntries(without.map((part) => [part, { hidden: true }]));
   return {
-    type: 'card',
+    kind: 'card',
     id,
     z,
     center: { x, y },
@@ -83,13 +84,13 @@ const cardOf = (
     ...(label ? { label } : {}),
     ...(body ? { body } : {}),
     ...(footer ? { footer } : {}),
-    ...(Object.keys(overrides).length > 0 ? { overrides } : {}),
+    ...(Object.keys(partOverrides).length > 0 ? { partOverrides } : {}),
   };
 };
 
 const iconOf = (id: string, z: string, [x, y]: [number, number], weight: IconWeight): IconNode => ({
   id,
-  type: 'icon',
+  kind: 'icon',
   z,
   center: { x, y },
   size: ICON_SIZE,
@@ -166,3 +167,50 @@ export default meta;
 
 /** Every card is an Instance of the tool's one Object: expand one in the Views tree to see its parts. */
 export const Default: StoryObj = {};
+
+/** Where an element's text is drawn in its node: its glyphs' own box, from the node's corner, so a pan does not count. */
+const glyphOffset = (element: Element): { left: number; top: number } => {
+  const node = element.closest('[data-node-id]');
+  if (!node) {
+    throw new Error('The text is not in a node.');
+  }
+  const range = document.createRange();
+  range.selectNodeContents(element);
+  const glyphs = range.getBoundingClientRect();
+  const frame = node.getBoundingClientRect();
+  return { left: glyphs.left - frame.left, top: glyphs.top - frame.top };
+};
+
+/** A card's title is edited where it is drawn: opening its editor does not move the text. */
+export const TitleEdit: StoryObj = {
+  play: async ({ canvasElement }) => {
+    const view = await within(canvasElement).findByTestId('scene-view');
+    const scene = within(view);
+    const title = () => scene.findByText('Every region');
+    const doubleClick = async (element: Element) => {
+      const { left, top, width, height } = element.getBoundingClientRect();
+      const point = { clientX: left + width / 2, clientY: top + height / 2, button: 0, pointerId: 1 };
+      await fireEvent.pointerDown(element, point);
+      await fireEvent.pointerUp(view, point);
+      await fireEvent.dblClick(element, point);
+    };
+
+    // 1. A double-click opens the first card, whose parts then stand in the scene themselves.
+    await doubleClick(await title());
+    await waitFor(() => expect(view.querySelector('[data-node-id="full"]')).toBeNull());
+    const drawn = glyphOffset(await title());
+
+    // 2. A second one opens its title's editor.
+    await doubleClick(await title());
+    const editor = await scene.findByTestId('part-editor');
+    const line = editor.querySelector('.cm-line');
+    if (!line) {
+      throw new Error('The editor has no line.');
+    }
+
+    // 3. The text has not moved in its part.
+    const edited = glyphOffset(line);
+    await expect(Math.abs(edited.top - drawn.top)).toBeLessThan(0.5);
+    await expect(Math.abs(edited.left - drawn.left)).toBeLessThan(0.5);
+  },
+};

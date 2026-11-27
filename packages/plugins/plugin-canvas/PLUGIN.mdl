@@ -18,7 +18,7 @@ plugin CanvasPlugin: An infinite, zoomable canvas of typed nodes and links at mu
     - LegacyMigration: moves a space's legacy scene drawings onto `Canvas`es when the space loads
     - Library: the library objects the editor's library tool offers
     - MarkdownExtension: a `diagram` fence in a markdown document, drawn as the canvas would draw it
-    - Migrations: the Scene type migrations
+    - Migrations: a legacy drawing's content migrations, and the scene model's migrations of its stored types
     - OperationHandler: the canvas operations
     - PluginAsset: this document, served as the plugin's own spec
     - ReactSurface: the canvas properties panel of a drawing
@@ -34,7 +34,8 @@ plugin as two drawing variants, Canvas and 3D Canvas (`dxos.org/scene/2`). A dra
 model's ECHO objects (a model, layouts and scenes); its article and card render the shared scene editor with the
 dimension config its scene asks for, as one set of surfaces (`CanvasArticle`, `CanvasCard`, `CanvasStage`). A drawing
 saved before `Canvas` is moved onto one when its space loads; no surface or operation reads the legacy format, and only
-the migration does.
+the migration does. A layout, model or style catalog stored before the scene model's normalized vocabulary is rewritten
+in that vocabulary when its space loads, by the scene model's own migrations.
 
 This plugin is the ECHO host between the illustrator plugin, a runtime dependency that provides the
 `Drawing` type, the variant contract and the converters this plugin registers with, and the scene editor
@@ -688,4 +689,29 @@ decision D-49: Hiding cursors only stops drawing the other members' pointers; th
   why: The toggle is this viewer's view of the drawing, so it should not change what collaborators see.
   rejected:
     - Unpublishing this viewer's pointer too, which would hide them from others as a side effect of a view choice.
+```
+
+```mdl
+decision D-50: The stored format takes one revision for the scene model's normalized vocabulary, with a migration from the one before.
+  date: 2026-11-24
+  by: user:richburdon
+  affects: [CanvasPlugin]
+```
+
+```mdl
+decision D-51: The `Migrations` module contributes the scene model's migrations after a legacy drawing's content steps: one each for `Layout2D`, `Layout3D`, `Model2D`, `Model3D` and `StyleCatalog`, from version 0.1.0 to 0.2.0. A layout, model or style catalog stored in the earlier words is rewritten in the current ones when its space loads. Fills in [D-50] and [org.dxos.scene#D-120].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  why: The plugin registers the scene model's types and already contributes its own migrations to the client, which runs them when a space loads.
+```
+
+```mdl
+decision D-52: A contributed kind's element schema names its kind in `kind` (`Schema.Struct({ ...Scene.Element2D.fields, kind, data: Schema.Struct({ … }) })`), where [D-25] wrote `type`; its own fields stay under `data`, as [D-25] says. The `NodeType` capability and a contribution's `type` keep their names: they are the registry's key, not a field of a stored element. Follows [org.dxos.scene#D-112].
+  date: 2026-11-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  why: A stored element is told apart by `kind` in the scene model, and a kind's schema is the schema of its stored element.
 ```

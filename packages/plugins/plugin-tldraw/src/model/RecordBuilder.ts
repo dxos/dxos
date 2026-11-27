@@ -11,20 +11,22 @@
 
 import { invariant } from '@dxos/invariant';
 
-export type Color =
-  | 'black'
-  | 'grey'
-  | 'light-violet'
-  | 'violet'
-  | 'blue'
-  | 'light-blue'
-  | 'yellow'
-  | 'orange'
-  | 'green'
-  | 'light-green'
-  | 'light-red'
-  | 'red'
-  | 'white';
+export const COLORS = [
+  'black',
+  'grey',
+  'light-violet',
+  'violet',
+  'blue',
+  'light-blue',
+  'yellow',
+  'orange',
+  'green',
+  'light-green',
+  'light-red',
+  'red',
+  'white',
+] as const;
+export type Color = (typeof COLORS)[number];
 
 export type Fill = 'none' | 'semi' | 'solid' | 'pattern' | 'fill';
 export type Dash = 'draw' | 'solid' | 'dashed' | 'dotted';

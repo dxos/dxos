@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { resolveLayout3D } from './document.ts';
+import { containerOf, resolveLayout3D } from './document.ts';
 import { applyModelIntent } from './model-intent.ts';
 import type * as Scene from './Scene.ts';
 import { layout3D, model3D, scene3D } from './testing.ts';
@@ -16,16 +16,16 @@ const doc = (): Scene.SceneDocument => ({
     layout3D(
       'root',
       [
-        { id: 'a', type: 'cube', center: { x: 0, y: 0, z: 0 } },
-        { id: 'b', type: 'cube', center: { x: 2, y: 0, z: 0 } },
+        { id: 'a', kind: 'cube', center: { x: 0, y: 0, z: 0 } },
+        { id: 'b', kind: 'cube', center: { x: 2, y: 0, z: 0 } },
         { id: 'c', object: 'chair', center: { x: 4, y: 0, z: 0 } },
-        { id: 'ab', type: 'link', source: { node: 'a' }, target: { node: 'b' } },
-        { id: 'bc', type: 'link', source: { node: 'b' }, target: { node: 'c' } },
+        { id: 'ab', kind: 'link', source: { node: 'a' }, target: { node: 'b' } },
+        { id: 'bc', kind: 'link', source: { node: 'b' }, target: { node: 'c' } },
       ],
       'm',
     ),
   ],
-  models: [model3D('m', [{ id: 'chair', type: 'cube' }])],
+  models: [model3D('m', [{ id: 'chair', kind: 'cube' }])],
 });
 
 describe('applyModelIntent', () => {
@@ -34,31 +34,31 @@ describe('applyModelIntent', () => {
       kind: 'style',
       model: 'm',
       id: 'steel',
-      style: { name: 'Steel', hue: 'neutral', metalness: 0.8 },
+      style: { name: 'Steel', color: 'neutral', metalness: 0.8 },
     });
     expect(styled.problems).toEqual([]);
-    expect(styled.doc.models[0].styles?.steel).toEqual({ name: 'Steel', hue: 'neutral', metalness: 0.8 });
+    expect(styled.doc.models[0].styles?.steel).toEqual({ name: 'Steel', color: 'neutral', metalness: 0.8 });
     expect(validateDocument(styled.doc)).toEqual([]);
     const removed = applyModelIntent(styled.doc, { kind: 'style', model: 'm', id: 'steel' });
     expect(removed.doc.models[0].styles?.steel).toBeUndefined();
     // A value of the wrong type is no style.
-    expect(applyModelIntent(doc(), { kind: 'style', model: 'm', id: 'bad', style: { tone: 9 } }).problems).toHaveLength(
-      1,
-    );
+    expect(
+      applyModelIntent(doc(), { kind: 'style', model: 'm', id: 'bad', style: { fill: 'plaid' } }).problems,
+    ).toHaveLength(1);
   });
 
   test('define adds an object, and update changes it, both as valid documents', () => {
-    const defined = applyModelIntent(doc(), { kind: 'define', model: 'm', object: { id: 'lamp', type: 'cylinder' } });
+    const defined = applyModelIntent(doc(), { kind: 'define', model: 'm', object: { id: 'lamp', kind: 'cylinder' } });
     expect(defined.problems).toEqual([]);
-    expect(defined.doc.models[0].objects.lamp).toEqual({ id: 'lamp', type: 'cylinder' });
+    expect(defined.doc.models[0].objects.lamp).toEqual({ id: 'lamp', kind: 'cylinder' });
     const updated = applyModelIntent(defined.doc, {
       kind: 'update',
       model: 'm',
       id: 'lamp',
-      path: ['overrides', 'hue'],
+      path: ['overrides', 'color'],
       value: 'amber',
     });
-    expect(updated.doc.models[0].objects.lamp.overrides).toEqual({ hue: 'amber' });
+    expect(updated.doc.models[0].objects.lamp.overrides).toEqual({ color: 'amber' });
     expect(validateDocument(updated.doc)).toEqual([]);
   });
 
@@ -68,7 +68,7 @@ describe('applyModelIntent', () => {
     expect(removed.problems).toHaveLength(1);
     expect(removed.doc).toBe(before);
     const unplaced = applyModelIntent(
-      applyModelIntent(before, { kind: 'define', model: 'm', object: { id: 'lamp', type: 'cylinder' } }).doc,
+      applyModelIntent(before, { kind: 'define', model: 'm', object: { id: 'lamp', kind: 'cylinder' } }).doc,
       { kind: 'remove', model: 'm', id: 'lamp' },
     );
     expect(unplaced.problems).toEqual([]);
@@ -81,7 +81,7 @@ describe('applyModelIntent', () => {
       model: 'm',
       layout: 'root',
       ids: ['a', 'b'],
-      object: { id: 'pair', type: 'sphere' },
+      object: { id: 'pair', kind: 'sphere' },
     });
     expect(problems).toEqual([]);
     const parts = after.layouts.find((layout) => layout.id === 'pair-parts');
@@ -96,7 +96,7 @@ describe('applyModelIntent', () => {
     // A link that crossed out of the extracted elements now ends at the element placing them.
     expect(root.elements.bc.source).toEqual({ node: placing[0].id });
     expect(resolveLayout3D(after, root)[placing[0].id].parts).toBe('pair-parts');
-    expect(after.models[0].objects.pair).toEqual({ id: 'pair', type: 'sphere', parts: 'pair-parts' });
+    expect(after.models[0].objects.pair).toEqual({ id: 'pair', kind: 'sphere', parts: 'pair-parts' });
     expect(validateDocument(after)).toEqual([]);
   });
 
@@ -105,7 +105,7 @@ describe('applyModelIntent', () => {
       applyModelIntent(doc(), { kind: 'update', model: 'm', id: 'missing', path: ['kind'], value: 'x' }).problems,
     ).toHaveLength(1);
     expect(
-      applyModelIntent(doc(), { kind: 'define', model: 'missing', object: { id: 'x', type: 'cube' } }).problems,
+      applyModelIntent(doc(), { kind: 'define', model: 'missing', object: { id: 'x', kind: 'cube' } }).problems,
     ).toHaveLength(1);
   });
 
@@ -115,7 +115,7 @@ describe('applyModelIntent', () => {
       model: 'm',
       layout: 'root',
       ids: ['a', 'b', 'bc'],
-      object: { id: 'pair', type: 'sphere' },
+      object: { id: 'pair', kind: 'sphere' },
     });
     expect(problems).toEqual([]);
     const parts = after.layouts.find((layout) => layout.id === 'pair-parts');
@@ -137,10 +137,19 @@ describe('applyModelIntent', () => {
     const parts = grouped.doc.layouts.find((layout) => layout.id === 'root/g');
     expect(parts).toMatchObject({ kind: 'composite', anonymous: true, arrange: { kind: 'ring' }, model: 'm' });
     expect(Object.keys(parts?.elements ?? {}).sort()).toEqual(['a', 'ab', 'b']);
-    expect(grouped.doc.models[0].objects['root/g']).toEqual({ id: 'root/g', type: 'group', parts: 'root/g' });
+    expect(grouped.doc.models[0].objects['root/g']).toEqual({ id: 'root/g', kind: 'group', parts: 'root/g' });
     const host = grouped.doc.layouts.find((layout) => layout.id === 'root');
     expect(host?.elements.g).toEqual({ id: 'g', object: 'root/g', fit: 'none' });
     expect(host?.elements.bc?.source).toEqual({ node: 'g', port: 'b' });
+
+    // A group is what its element places: one a canvas stored as the kind it draws (`instance`) is still the group.
+    expect(host && containerOf(grouped.doc, host, 'g')).toBe('group');
+    expect(host && containerOf(grouped.doc, host, 'c')).toBeUndefined();
+    const drawn =
+      host?.dim === '3d'
+        ? { ...host, elements: { ...host.elements, g: { ...host.elements.g, kind: 'instance' } } }
+        : undefined;
+    expect(drawn && containerOf(grouped.doc, drawn, 'g')).toBe('group');
 
     const ungrouped = applyModelIntent(grouped.doc, { kind: 'ungroup', model: 'm', layout: 'root', id: 'g' });
     expect(ungrouped.problems).toEqual([]);
@@ -148,5 +157,303 @@ describe('applyModelIntent', () => {
     expect(ungrouped.doc.models[0].objects['root/g']).toBeUndefined();
     expect(ungrouped.doc.layouts[0].elements.bc?.source).toEqual({ node: 'b' });
     expect(Object.keys(ungrouped.doc.layouts[0].elements).sort()).toEqual(['a', 'ab', 'b', 'bc', 'c']);
+  });
+
+  test('ungrouping a moved group takes a group inside it along, though that one has no centre of its own', () => {
+    const group = (from: Scene.SceneDocument, id: string, members: string[]) =>
+      applyModelIntent(from, { kind: 'group', model: 'm', layout: 'root', id, members }).doc;
+    const nested = group(group(doc(), 'inner', ['a', 'b']), 'outer', ['inner', 'c']);
+    // The outer group moved up by one: its centre is the origin its members are placed from.
+    const moved: Scene.SceneDocument = {
+      ...nested,
+      layouts: nested.layouts.map((layout) =>
+        layout.id === 'root' && layout.dim === '3d'
+          ? {
+              ...layout,
+              elements: { ...layout.elements, outer: { ...layout.elements.outer, center: { x: 0, y: 1, z: 0 } } },
+            }
+          : layout,
+      ),
+    };
+    const ungrouped = applyModelIntent(moved, { kind: 'ungroup', model: 'm', layout: 'root', id: 'outer' });
+    expect(ungrouped.problems).toEqual([]);
+    const root = ungrouped.doc.layouts.find((layout) => layout.id === 'root');
+    expect(root?.elements.c?.center).toEqual({ x: 4, y: 1, z: 0 });
+    expect(root?.elements.inner?.center).toEqual({ x: 0, y: 1, z: 0 });
+  });
+
+  test('an element is the container its object names: an extract an Object, and what older drawings said still reads', () => {
+    const extracted = applyModelIntent(doc(), {
+      kind: 'extract',
+      model: 'm',
+      layout: 'root',
+      ids: ['a', 'b'],
+      object: { id: 'pair', kind: 'cube' },
+    });
+    expect(extracted.problems).toEqual([]);
+    const host = extracted.doc.layouts.find((layout) => layout.id === 'root');
+    expect(host && containerOf(extracted.doc, host, 'pair')).toBe('object');
+    expect(extracted.doc.layouts.find((layout) => layout.id === 'pair-parts')?.kind).toBe('composite');
+
+    // Before the object's kind said so, the 2D engine said a View on the element and a group on the parts layout.
+    const legacy: Scene.SceneDocument = {
+      scenes: [],
+      layouts: [
+        {
+          id: 'root',
+          dim: '2d',
+          model: 'm2',
+          elements: {
+            v: { id: 'v', kind: 'view', object: 'view:inner', center: { x: 0, y: 0 } },
+            g: { id: 'g', kind: 'instance', object: 'instance:parts', center: { x: 0, y: 0 } },
+            h: { id: 'h', kind: 'instance', object: 'instance:border', hull: 'box', center: { x: 0, y: 0 } },
+            o: { id: 'o', kind: 'instance', object: 'instance:card', center: { x: 0, y: 0 } },
+            r: { id: 'r', kind: 'rect', center: { x: 0, y: 0 } },
+          },
+        },
+        { id: 'inner', dim: '2d', elements: {} },
+        { id: 'parts', dim: '2d', kind: 'composite', anonymous: true, elements: {} },
+        { id: 'border', dim: '2d', kind: 'composite', anonymous: true, elements: {} },
+        { id: 'card', dim: '2d', kind: 'composite', elements: {} },
+      ],
+      models: [
+        {
+          id: 'm2',
+          dim: '2d',
+          objects: {
+            'view:inner': { id: 'view:inner', kind: 'rect', parts: 'inner' },
+            'instance:parts': { id: 'instance:parts', kind: 'rect', parts: 'parts' },
+            'instance:border': { id: 'instance:border', kind: 'rect', parts: 'border' },
+            'instance:card': { id: 'instance:card', kind: 'rect', parts: 'card' },
+          },
+        },
+      ],
+    };
+    const root = legacy.layouts[0];
+    expect(['v', 'g', 'h', 'o', 'r'].map((id) => containerOf(legacy, root, id))).toEqual([
+      'view',
+      'group',
+      'hull',
+      'object',
+      undefined,
+    ]);
+  });
+
+  test("a 2D extract frames its members by the size each draws at, its object's where it states none", () => {
+    const sized: Scene.SceneDocument = {
+      scenes: [],
+      layouts: [
+        {
+          id: 'root',
+          dim: '2d',
+          model: 'm2',
+          elements: {
+            a: { id: 'a', object: 'box', center: { x: 0, y: 0 } },
+            b: { id: 'b', object: 'box', center: { x: 192, y: 0 } },
+          },
+        },
+      ],
+      models: [{ id: 'm2', dim: '2d', objects: { box: { id: 'box', kind: 'rect', size: { width: 96, height: 96 } } } }],
+    };
+    const extracted = applyModelIntent(sized, {
+      kind: 'extract',
+      model: 'm2',
+      layout: 'root',
+      ids: ['a', 'b'],
+      object: { id: 'pair', kind: 'rect' },
+    });
+    expect(extracted.problems).toEqual([]);
+    expect(extracted.doc.layouts[0].elements.pair).toMatchObject({
+      center: { x: 96, y: 0 },
+      size: { width: 288, height: 96 },
+    });
+  });
+
+  test('ungrouping a resized group leaves its members where and as large as the group drew them', () => {
+    const size = { width: 100, height: 50 };
+    const flat: Scene.SceneDocument = {
+      scenes: [],
+      layouts: [
+        {
+          id: 'root',
+          dim: '2d',
+          model: 'm2',
+          elements: {
+            a: { id: 'a', kind: 'rect', center: { x: 0, y: 0 }, size },
+            b: { id: 'b', object: 'box', center: { x: 200, y: 0 } },
+          },
+        },
+      ],
+      models: [{ id: 'm2', dim: '2d', objects: { box: { id: 'box', kind: 'rect', size } } }],
+    };
+    const grouped = applyModelIntent(flat, {
+      kind: 'group',
+      model: 'm2',
+      layout: 'root',
+      id: 'g',
+      members: ['a', 'b'],
+    });
+    // Resized on the canvas, the group is stored as the origin and scale its members are placed by.
+    const resized: Scene.SceneDocument = {
+      ...grouped.doc,
+      layouts: grouped.doc.layouts.map((layout) =>
+        layout.id === 'root' && layout.dim === '2d'
+          ? {
+              ...layout,
+              elements: {
+                ...layout.elements,
+                g: { ...layout.elements.g, center: { x: 10, y: 20 }, scale: { x: 2, y: 3 } },
+              },
+            }
+          : layout,
+      ),
+    };
+    const ungrouped = applyModelIntent(resized, { kind: 'ungroup', model: 'm2', layout: 'root', id: 'g' });
+    expect(ungrouped.problems).toEqual([]);
+    const root = ungrouped.doc.layouts.find((layout) => layout.id === 'root');
+    expect(root?.elements.a).toMatchObject({ center: { x: 10, y: 20 }, size: { width: 200, height: 150 } });
+    // B stated no size of its own: it takes the one its object gave it, at the group's scale.
+    expect(root?.elements.b).toMatchObject({ center: { x: 410, y: 20 }, size: { width: 200, height: 150 } });
+  });
+
+  describe('a group placed by its editor', () => {
+    const size = { width: 100, height: 50 };
+    const flat = (): Scene.SceneDocument => ({
+      scenes: [],
+      layouts: [
+        {
+          id: 'root',
+          dim: '2d',
+          model: 'm2',
+          elements: {
+            a: { id: 'a', kind: 'rect', center: { x: 0, y: 0 }, size },
+            b: { id: 'b', kind: 'rect', center: { x: 200, y: 0 }, size },
+            c: { id: 'c', kind: 'rect', center: { x: 500, y: 0 }, size },
+            ab: { id: 'ab', kind: 'link', source: { node: 'a' }, target: { node: 'b' } },
+            bc: { id: 'bc', kind: 'link', source: { node: 'b' }, target: { node: 'c' } },
+          },
+        },
+      ],
+      models: [{ id: 'm2', dim: '2d', objects: {} }],
+    });
+    const layoutOf = (doc: Scene.SceneDocument, id: string) => doc.layouts.find((layout) => layout.id === id);
+
+    // The 2D editor frames a group over its members, which it stores about the frame's centre.
+    const framed = () =>
+      applyModelIntent(flat(), {
+        kind: 'group',
+        model: 'm2',
+        layout: 'root',
+        id: 'g',
+        members: ['a', 'b'],
+        parts: 'obj',
+        name: 'Group 1',
+        placing: { kind: 'instance', center: { x: 100, y: 0 }, size: { width: 300, height: 50 } },
+        placed: {
+          a: { id: 'a', kind: 'rect', center: { x: -100, y: 0 }, size, exposed: true },
+          b: { id: 'b', kind: 'rect', center: { x: 100, y: 0 }, size, exposed: true },
+        },
+      });
+
+    test('group takes the frame and the members its editor gives it, and names the parts layout as asked', () => {
+      const grouped = framed();
+      expect(grouped.problems).toEqual([]);
+      expect(layoutOf(grouped.doc, 'root')?.elements.g).toEqual({
+        id: 'g',
+        object: 'obj',
+        fit: 'none',
+        kind: 'instance',
+        center: { x: 100, y: 0 },
+        size: { width: 300, height: 50 },
+      });
+      expect(layoutOf(grouped.doc, 'obj')).toMatchObject({ kind: 'composite', anonymous: true, name: 'Group 1' });
+      expect(layoutOf(grouped.doc, 'obj')?.elements).toMatchObject({
+        a: { center: { x: -100, y: 0 }, exposed: true },
+        b: { center: { x: 100, y: 0 } },
+        ab: { source: { node: 'a' }, target: { node: 'b' } },
+      });
+      expect(grouped.doc.models[0].objects.obj).toEqual({ id: 'obj', kind: 'group', parts: 'obj' });
+      expect(layoutOf(grouped.doc, 'root')?.elements.bc?.source).toEqual({ node: 'g', port: 'b' });
+    });
+
+    test('group refuses a locked member and a View, since a group cannot hold a place to drill into', () => {
+      const locked = flat();
+      const withLocked: Scene.SceneDocument = {
+        ...locked,
+        layouts: locked.layouts.map((layout) =>
+          layout.dim === '2d'
+            ? { ...layout, elements: { ...layout.elements, a: { ...layout.elements.a, locked: true } } }
+            : layout,
+        ),
+      };
+      const intent = { kind: 'group', model: 'm2', layout: 'root', id: 'g', members: ['a', 'b'] } as const;
+      expect(applyModelIntent(withLocked, intent).problems).toHaveLength(1);
+
+      const withView: Scene.SceneDocument = {
+        ...locked,
+        layouts: [
+          ...locked.layouts.map((layout) =>
+            layout.dim === '2d'
+              ? { ...layout, elements: { ...layout.elements, a: { id: 'a', object: 'inner', center: { x: 0, y: 0 } } } }
+              : layout,
+          ),
+          { id: 'inner', dim: '2d', elements: {} },
+        ],
+        models: [{ id: 'm2', dim: '2d', objects: { inner: { id: 'inner', kind: 'view', parts: 'inner' } } }],
+      };
+      expect(applyModelIntent(withView, intent).problems).toHaveLength(1);
+    });
+
+    test('ungroup puts back the members as its editor drew them, under the ids it gives', () => {
+      const grouped = framed().doc;
+      const ungrouped = applyModelIntent(grouped, {
+        kind: 'ungroup',
+        model: 'm2',
+        layout: 'root',
+        id: 'g',
+        placed: {
+          a: { id: 'a', kind: 'rect', center: { x: 0, y: 10 }, size },
+          b: { id: 'b', kind: 'rect', center: { x: 200, y: 10 }, size },
+        },
+        ids: { a: 'node-1', b: 'node-2', ab: 'link-1' },
+      });
+      expect(ungrouped.problems).toEqual([]);
+      const root = layoutOf(ungrouped.doc, 'root');
+      expect(Object.keys(root?.elements ?? {}).sort()).toEqual(['bc', 'c', 'link-1', 'node-1', 'node-2']);
+      expect(root?.elements['node-1']).toMatchObject({ id: 'node-1', center: { x: 0, y: 10 } });
+      // Links follow the members to their new ids: the one inside, and the one that ended on the group's port.
+      expect(root?.elements['link-1']).toMatchObject({
+        id: 'link-1',
+        source: { node: 'node-1' },
+        target: { node: 'node-2' },
+      });
+      expect(root?.elements.bc?.source).toEqual({ node: 'node-2' });
+      expect(layoutOf(ungrouped.doc, 'obj')).toBeUndefined();
+      expect(ungrouped.doc.models[0].objects.obj).toBeUndefined();
+    });
+
+    test("ungroup on an Object's instance puts its members in the layout and keeps the definition", () => {
+      const grouped = framed().doc;
+      // Named, the group is an Object: its parts layout is no longer anonymous and its object no longer a group.
+      const named: Scene.SceneDocument = {
+        ...grouped,
+        layouts: grouped.layouts.map((layout) =>
+          layout.id === 'obj' && layout.dim === '2d' ? { ...layout, anonymous: undefined, name: 'Pair' } : layout,
+        ),
+        models: grouped.models.map((model) =>
+          model.dim === '2d' ? { ...model, objects: { obj: { id: 'obj', kind: 'rect', parts: 'obj' } } } : model,
+        ),
+      };
+      const ungrouped = applyModelIntent(named, { kind: 'ungroup', model: 'm2', layout: 'root', id: 'g' });
+      expect(ungrouped.problems).toEqual([]);
+      const root = layoutOf(ungrouped.doc, 'root');
+      expect(root?.elements.g).toBeUndefined();
+      // The definition stays for the library, so its members are copied out under ids of their own.
+      expect(layoutOf(ungrouped.doc, 'obj')?.elements.a).toBeDefined();
+      expect(ungrouped.doc.models[0].objects.obj).toBeDefined();
+      const copied = Object.keys(root?.elements ?? {}).filter((id) => !['c', 'bc'].includes(id));
+      expect(copied).toHaveLength(3);
+      expect(copied).not.toContain('a');
+    });
   });
 });

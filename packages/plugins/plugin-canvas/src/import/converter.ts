@@ -9,7 +9,7 @@ import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import type * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import * as IllustratorError from '@dxos/plugin-illustrator/IllustratorError';
 import * as IllustratorModel from '@dxos/plugin-illustrator/IllustratorModel';
-import { Scene } from '@dxos/scene';
+import { LINK_KIND, Scene } from '@dxos/scene';
 
 import { Canvas } from '#types';
 
@@ -54,7 +54,7 @@ export const importTldraw = (
     });
   applyLayoutIntent(layout, { kind: 'batch', intents: imported.intents });
   return [imported.layout, ...imported.parts].flatMap((record) =>
-    Object.values(record.elements).flatMap((element) => (element.type === 'link' ? [] : [element.id])),
+    Object.values(record.elements).flatMap((element) => (element.kind === LINK_KIND ? [] : [element.id])),
   );
 };
 

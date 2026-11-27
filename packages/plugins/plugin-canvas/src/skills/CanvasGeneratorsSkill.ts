@@ -43,7 +43,7 @@ export const INSTRUCTIONS = trim`
   3. canvas.addGenerator to put it in a drawing's scene, binding node or link ids in its parameters.
   4. To animate, make an Animation over the drawing's canvas (animator.createAnimation) and key its shot with
      animator.setKey: numeric parameters (path "<node>:params.<name>"), node properties (center, size,
-     style.opacity) or the camera ("camera:x", "camera:y": the scene point at the view centre; "camera:zoom").
+     overrides.opacity) or the camera ("camera:x", "camera:y": the scene point at the view centre; "camera:zoom").
 
   ## The module
 

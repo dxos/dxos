@@ -15,8 +15,8 @@ import {
   partValues,
   toViewportLayout,
 } from '@dxos/react-ui-canvas';
-import { fromRenderList2D, toRenderList2D } from '@dxos/react-ui-canvas/headless';
-import { Scene } from '@dxos/scene';
+import { DEFAULT_LAYER, fromRenderList2D, toRenderList2D } from '@dxos/react-ui-canvas/headless';
+import { Scene, upgradeElement2D } from '@dxos/scene';
 
 import * as ClassNode from './ClassNode.ts';
 
@@ -102,18 +102,22 @@ describe('ClassNode', () => {
 
   test('a class written before, with its members at its top or under the canvas fields, still draws', ({ expect }) => {
     const { data, ...base } = ClassNode.make(frame);
+    // As it was stored before an element named its `kind`.
+    const { kind, ...fields } = base;
+    const legacy = { ...fields, type: kind };
     for (const stored of [
-      { ...base, ...data },
-      { ...base, props: { canvas: { ...data } } },
+      { ...legacy, ...data },
+      { ...legacy, props: { canvas: { ...data } } },
     ]) {
-      const { layout, document } = documentOf(stored);
+      // The scene migration brings a stored element into the current words before the canvas reads it.
+      const { layout, document } = documentOf(upgradeElement2D(stored));
       const drawn = toViewportLayout(layout, ClassNode.kinds);
       const node = toRenderList2D({ ...document, layouts: [drawn] }, drawn).nodes.c;
       expect(ClassNode.isClassNode(node) && node.data).toEqual(data);
-      // Its next write stores the members under `data` alone.
+      // Its next write stores the members under `data` alone, on the layer a layout that declares none draws it on.
       const written = fromRenderList2D({ id: 'main', nodes: { c: node }, links: {} }).layout.elements.c;
       const intent = fromViewportIntent({ kind: 'update', id: 'c', path: [], value: written }, layout, ClassNode.kinds);
-      expect(intent.kind === 'update' && intent.value).toEqual({ ...base, data });
+      expect(intent.kind === 'update' && intent.value).toEqual({ ...base, data, layer: DEFAULT_LAYER.id });
     }
   });
 });

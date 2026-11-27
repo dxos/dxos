@@ -10,14 +10,14 @@ import { validateDocument } from './validate.ts';
 
 const rect = (id: string, x = 0): Scene.Element2D => ({
   id,
-  type: 'rect',
+  kind: 'rect',
   center: { x, y: 0 },
   size: { width: 128, height: 64 },
 });
 
 const link = (id: string, from: string, to: string): Scene.Element2D => ({
   id,
-  type: 'link',
+  kind: 'link',
   source: { node: from },
   target: { node: to },
 });
@@ -49,7 +49,7 @@ describe('validateDocument', () => {
   });
 
   test('reports a kind from the other dimension', () => {
-    const problems = validateDocument(doc([layout2D('l', [{ id: 's', type: 'sphere' }])]));
+    const problems = validateDocument(doc([layout2D('l', [{ id: 's', kind: 'sphere' }])]));
     expect(problems.map((problem) => problem.element)).toEqual(['s']);
   });
 
@@ -64,8 +64,8 @@ describe('validateDocument', () => {
 
   test('reports an object whose parts layout is missing, and an object id that is also a kind', () => {
     const model = model2D('m', [
-      { id: 'detail', type: 'rect', parts: 'gone' },
-      { id: 'rect', type: 'rect' },
+      { id: 'detail', kind: 'rect', parts: 'gone' },
+      { id: 'rect', kind: 'rect' },
     ]);
     expect(messages(doc([layout2D('l', [], 'm')], [model]))).toEqual([
       'Layout "gone" is not in the document.',
@@ -78,7 +78,7 @@ describe('validateDocument', () => {
   });
 
   test('accepts the A→B→C layout placing objects of its model', () => {
-    const model = model2D('m', [{ id: 'box', type: 'rect', size: { width: 128, height: 128 } }]);
+    const model = model2D('m', [{ id: 'box', kind: 'rect', size: { width: 128, height: 128 } }]);
     const layout = layout2D(
       'l',
       [

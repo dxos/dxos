@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Style3D } from '@dxos/scene';
+import { type Fill, type Style3D } from '@dxos/scene';
 
 import { type ThemeMode } from '../model/index.ts';
 import { resolveHex } from './colors.ts';
@@ -23,25 +23,34 @@ export const themeMode3D = (theme: Theme3D, appMode: ThemeMode): ThemeMode =>
  */
 export type MaterialSpec = { color: string; kind: 'standard' | 'pbr' | 'rim' | 'neu'; alpha: number; edges: boolean };
 
-/** How see-through each surface is, before the element's own opacity. */
-const SURFACE_ALPHA: Readonly<Record<NonNullable<Style3D['surface']>, number>> = {
+/** How see-through each fill is, before the element's own opacity; a pattern has no material, so it draws solid. */
+const FILL_ALPHA: Readonly<Record<Fill, number>> = {
   solid: 1,
+  pattern: 1,
   tint: 0.6,
   glass: 0.4,
   none: 0.12,
 };
 
+/** Whether a style rounds its solid's corners: any corners but `none`, and unset is square. */
+export const isRounded = (style: Pick<Style3D, 'corners'> | undefined): boolean =>
+  style?.corners !== undefined && style.corners !== 'none';
+
+/** Whether a style draws its solid's edges: any stroke but `none`, and unset draws none. */
+export const hasEdges = (style: Pick<Style3D, 'stroke'> | undefined): boolean =>
+  style?.stroke !== undefined && style.stroke !== 'none';
+
 /** Resolves an element's style tokens for a 3D theme (design call 19): the theme decides the material. */
 export const materialSpec = (style: Style3D | undefined, theme: Theme3D): MaterialSpec => {
-  const surface = style?.surface ?? 'solid';
-  const alpha = SURFACE_ALPHA[surface] * (style?.opacity ?? 1);
-  const color = resolveHex(style?.hue);
+  const fill = style?.fill ?? 'solid';
+  const alpha = FILL_ALPHA[fill] * (style?.opacity ?? 1);
+  const color = resolveHex(style?.color);
   if (isNeuTheme(theme)) {
     // The body is the ground's tone, so the hue shows only as edges: every Neu element is edged.
     return { color, kind: 'neu', alpha, edges: true };
   }
-  const kind = theme === 'presentation' ? (surface === 'glass' ? 'rim' : 'pbr') : 'standard';
-  return { color, kind, alpha, edges: style?.border ?? false };
+  const kind = theme === 'presentation' ? (fill === 'glass' ? 'rim' : 'pbr') : 'standard';
+  return { color, kind, alpha, edges: hasEdges(style) };
 };
 
 /** 3D looks since renamed, by their old id: a saved view or scene may still name them. */

@@ -77,7 +77,7 @@ const DefaultStory = ({ collapse, flyout, many, height, lockable }: StoryArgs) =
         />
       </div>
       <div className='absolute bottom-2 right-2 text-xs text-fg-muted' data-testid='palette-tool'>
-        {'type' in tool ? tool.type : tool.kind}
+        {tool.kind === 'node' ? tool.node : tool.kind === 'link' ? tool.path : tool.kind}
       </div>
     </div>
   );

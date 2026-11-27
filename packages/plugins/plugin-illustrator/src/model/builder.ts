@@ -20,6 +20,7 @@ import {
 } from '@dxos/diagram';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { upgradeShape } from '@dxos/scene';
 
 import * as Drawing from '../types/Drawing.ts';
 
@@ -56,5 +57,31 @@ export const makeBuilder = ({ schema, handler }: { schema: string; handler: Cont
   },
 });
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+/** Whether a stored diagram element states an outline as a `border` flag, or its component as `type`. */
+const isLegacyShape = (shape: unknown): shape is Record<string, unknown> =>
+  isRecord(shape) && (shape.border !== undefined || shape.type !== undefined);
+
+/** A stored record with its element in the current words. */
+const upgradeSvgRecord = (record: unknown): unknown =>
+  isRecord(record) && isLegacyShape(record.data) ? { ...record, data: upgradeShape(record.data) } : record;
+
+/**
+ * An SVG canvas's content with every element in the current words, so one stored in the earlier words (in ECHO, or
+ * in a `.dx.svg`) draws as it did. Content already in them is returned as it is.
+ */
+export const upgradeSvgContent = (content: ContentMap): ContentMap =>
+  Object.values(content).some((record) => isRecord(record) && isLegacyShape(record.data))
+    ? Object.fromEntries(Object.entries(content).map(([id, record]) => [id, upgradeSvgRecord(record)]))
+    : content;
+
+/** `SvgHandler` over stored content of any revision. */
+export const SvgContentHandler: ContentHandler = {
+  ...SvgHandler,
+  read: (content) => SvgHandler.read(upgradeSvgContent(content)),
+};
+
 /** Scene builder for the SVG variant — a peer of `TldrawBuilder`. */
-export const SvgBuilder = makeBuilder({ schema: SVG_SCHEMA, handler: SvgHandler });
+export const SvgBuilder = makeBuilder({ schema: SVG_SCHEMA, handler: SvgContentHandler });

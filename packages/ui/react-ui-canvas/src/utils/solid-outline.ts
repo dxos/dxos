@@ -36,12 +36,12 @@ export type SolidOp = (typeof SOLID_OPS)[number];
 export type Ring = readonly Point[];
 
 /**
- * The `solid` type's schema. `op` and `operands` are the model's own (the ids of the elements it is made of, in
+ * The `solid` kind's schema. `op` and `operands` are the model's own (the ids of the elements it is made of, in
  * order); `rings` is the outline they make, in the unit space of the frame, which the viewport sets as it reads the
  * layout and never writes.
  */
 export const SolidNode = Schema.Struct({
-  type: Schema.Literal('solid'),
+  kind: Schema.Literal('solid'),
   ...nodeBase,
   label: Schema.optional(Schema.String),
   ...paddingFields,
@@ -51,7 +51,7 @@ export const SolidNode = Schema.Struct({
 });
 export type SolidNode = Schema.Schema.Type<typeof SolidNode>;
 
-export const isSolidNode = (node: NodeBase): node is SolidNode => node.type === 'solid';
+export const isSolidNode = (node: NodeBase): node is SolidNode => node.kind === 'solid';
 
 /** The fields of a drawn node the viewport works out as it reads a layout, which a write leaves out. */
 export const DERIVED_NODE_FIELDS: readonly string[] = ['rings'];
@@ -122,7 +122,7 @@ const frameRings = (node: NodeBase, lookup: NodeLookup, path: readonly string[])
       ring.map(({ x, y }) => ({ x: x * width, y: y * height })),
     );
   }
-  if (node.type === 'ellipse') {
+  if (node.kind === 'ellipse') {
     return [
       Array.from({ length: ELLIPSE_SIDES }, (_, index) => {
         const angle = (index * 2 * Math.PI) / ELLIPSE_SIDES;

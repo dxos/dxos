@@ -40,7 +40,7 @@ if (!isCompiled(compiled)) {
 type Card = CardNode & Pick<PlacedComposite, 'composite'>;
 
 const card = (id: string, x: number, size: { width: number; height: number }, body: string): Card => ({
-  type: 'card',
+  kind: 'card',
   id,
   z: `a${id}`,
   // The top edges line up, on a major grid line.

@@ -10,7 +10,7 @@ import { type LinkGeometry } from '../../utils/index.ts';
 import { paintRuns } from './paint-order.ts';
 
 const node = (id: string, z: string): Node => ({
-  type: 'rect',
+  kind: 'rect',
   id,
   z,
   center: { x: 0, y: 0 },
@@ -18,10 +18,10 @@ const node = (id: string, z: string): Node => ({
 });
 
 const link = (id: string, z: string): LinkGeometry => ({
-  link: { type: 'line', id, z, source: { node: 'a' }, target: { node: 'b' } },
+  link: { kind: 'link', path: 'line', id, z, source: { node: 'a' }, target: { node: 'b' } },
   path: 'M 0 0 L 1 1',
-  source: { point: { x: 0, y: 0 }, side: 'e' },
-  target: { point: { x: 1, y: 1 }, side: 'w' },
+  source: { point: { x: 0, y: 0 }, side: 'right' },
+  target: { point: { x: 1, y: 1 }, side: 'left' },
 });
 
 const shape = (runs: ReturnType<typeof paintRuns>) =>

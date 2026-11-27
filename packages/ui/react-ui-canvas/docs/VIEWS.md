@@ -2,7 +2,8 @@
 
 Status: designed 2026-10-18; Phases 1, 2, 3b, 5 and 6 built, Phases 3 (tags) and 4 (order) not built. Ledger:
 [TASKS.md](./TASKS.md). The model itself is specified in `SPEC.mdl` (Ontology, `type:View`, `type:Tag`, [F-4], [F-9]);
-this document keeps the reasoning, the migration from the old terms and the undo design.
+this document keeps the reasoning, the migration from the old terms and the undo design. How groups, Objects, Views
+and hulls are stored today, across the scene model and both dimensions, is in [CONTAINERS.md](./CONTAINERS.md).
 
 ## 1. Goal
 

@@ -69,6 +69,8 @@ export const semanticDiagrams = trim`
 
   - \`node <id> ["label"] [placement…] [ref="…"] [shape=rect|ellipse|diamond|triangle] [color=…]
     [fill=…] [stroke=…]\` — one box; the label defaults to the id. Every box is the same size.
+  - Colours: a name (\`color=blue\`), a name at a tone from 0, an outline, to 3, the lightest
+    (\`color=blue/2\`), or a CSS colour in quotes (\`color="#1e90ff"\`). \`stroke=none\` draws no outline.
   - Placement relations: \`right-of X\` / \`left-of X\` (same row), \`below X\` / \`above X\` (same
     column), \`same-row X\`, \`same-col X\`. They are rules; prefix \`~\` (\`~below X\`) to make one
     a preference. The engine keeps related boxes adjacent when it can. X may be in another group.
@@ -218,7 +220,7 @@ export const semanticDiagrams = trim`
     node web "Web app"
     node cli "CLI"
   }
-  group core "Core" cols=2 gap=16 border=true padding=16 {
+  group core "Core" cols=2 gap=16 stroke=solid padding=16 {
     node graph "Graph"
     node feeds "Feeds"
     node sync "Sync"
@@ -240,7 +242,7 @@ export const semanticDiagrams = trim`
     comes out the same height. \`alignContent\` and \`justifyContent\` (\`start\`, \`center\`, \`end\`) say
     where the tracks sit when they leave space over.
   - A group with a label draws it as a heading over its members; a group without one is only their
-    grid. \`border=true\` (with \`fill\`, \`stroke\`, \`color\`) frames the members; for a frame round the
+    grid. \`stroke=solid\` (or a \`fill\`, with \`color\`) frames the members; for a frame round the
     heading too, put the labelled group inside a framed one.
   - An empty group (\`group spacer { }\`) draws nothing and holds its cell.
   - A node fills its cell. \`width=240\` and \`height=48\` make it keep that size in the middle of the
@@ -293,8 +295,9 @@ export const make = () =>
         - Circle is sugar for ellipse (reads back as ellipse); arc is sugar for curve.
         - Arrows can bind to elements: from/to is an element id in the same object, or
           "objectId/elementId" across objects. Bound arrows track their targets.
-        - Styles: color (named palette), fill (none | solid | pattern),
-          stroke (sketchy | solid | dashed | dotted), weight (s | m | l | xl).
+        - Styles: color (a palette name, a name at a tone such as blue/2, or a CSS colour such as #1e90ff),
+          fill (none | solid | pattern), stroke (none | sketchy | solid | dashed | dotted),
+          weight (s | m | l | xl).
 
         ## Workflow
 

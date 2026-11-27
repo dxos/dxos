@@ -21,7 +21,7 @@ const handler: Operation.WithHandler<typeof CanvasOperation.AddGenerator> = Canv
     Effect.fn(function* ({ drawing: drawingRef, generator: ref, scene, bounds, params, seed, layer }) {
       const generator = yield* Database.load(ref);
       const node = (z: string): GeneratorNode => ({
-        type: 'generator',
+        kind: 'generator',
         id: `generator-${crypto.randomUUID().slice(0, 8)}`,
         z,
         center: { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 },

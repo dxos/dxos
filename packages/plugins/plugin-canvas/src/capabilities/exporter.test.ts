@@ -98,7 +98,7 @@ describe('canvas exporter', () => {
     const shape = (id: string, x: number, scene: string, label: string) => ({
       kind: 'node' as const,
       scene,
-      node: { ...createNode({ type: 'rect', id, z: 'a0', center: { x, y: 0 }, scene }), label },
+      node: { ...createNode({ kind: 'rect', id, z: 'a0', center: { x, y: 0 }, scene }), label },
     });
     editCanvasContent(canvas, (content) => {
       content[nodeKey('left')] = shape('left', 0, root, 'Drawn by hand');
@@ -113,12 +113,12 @@ describe('canvas exporter', () => {
   test('a titled box draws its label at its top-left corner, and a plain box in its centre', async () => {
     const canvas = await run(addCanvas());
     const root = canvasRecordOf(readCanvasContent(canvas))?.root ?? '';
-    const box = (id: string, label: string, style?: NodeStyle) => ({
+    const box = (id: string, label: string, overrides?: NodeStyle) => ({
       kind: 'node' as const,
       scene: root,
       node: {
         ...createNode({
-          type: 'rect',
+          kind: 'rect',
           id,
           z: 'a0',
           center: { x: 0, y: 0 },
@@ -126,11 +126,11 @@ describe('canvas exporter', () => {
           scene: root,
         }),
         label,
-        style,
+        overrides,
       },
     });
     editCanvasContent(canvas, (content) => {
-      content[nodeKey('group')] = box('group', 'Container', { alignHorizontal: 'left', alignVertical: 'top' });
+      content[nodeKey('group')] = box('group', 'Container', { align: 'left', valign: 'top' });
       content[nodeKey('plain')] = box('plain', 'Plain');
     });
 
@@ -148,7 +148,7 @@ describe('canvas exporter', () => {
       const node = (id: string, center: Point) => ({
         kind: 'node' as const,
         scene: root,
-        node: createNode({ type: 'rect', id, z: 'a0', center, scene: root, ...(size ? { size } : {}) }),
+        node: createNode({ kind: 'rect', id, z: 'a0', center, scene: root, ...(size ? { size } : {}) }),
       });
       content[nodeKey('from')] = node('from', centers.from);
       content[nodeKey('to')] = node('to', centers.to);
@@ -156,12 +156,12 @@ describe('canvas exporter', () => {
         kind: 'link',
         scene: root,
         link: createLink({
-          type: 'smart',
+          path: 'smart',
           id: 'link',
           z: 'a1',
           source: { node: 'from' },
           target: { node: 'to' },
-          ends: { end: 'arrow' },
+          ends: { head: 'arrow' },
         }),
       };
     };

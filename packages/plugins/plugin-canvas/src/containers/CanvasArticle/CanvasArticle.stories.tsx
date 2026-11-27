@@ -28,7 +28,7 @@ import { translations } from '#translations';
 import { Canvas } from '#types';
 
 import types from '../../capabilities/schema.ts';
-import { addTestCanvas } from '../../testing/canvas.ts';
+import { addTestCanvas, addUnloadedCanvas } from '../../testing/canvas.ts';
 
 random.seed(1234);
 
@@ -108,7 +108,7 @@ const seedBasic: Seed = (_db, content, scene) => {
     scene,
     node: {
       id,
-      type: 'rect',
+      kind: 'rect',
       z,
       label: id.toUpperCase(),
       center: { x, y: 0 },
@@ -120,11 +120,12 @@ const seedBasic: Seed = (_db, content, scene) => {
     scene,
     link: {
       id: `${source}-${target}`,
-      type: 'smart',
+      kind: 'link',
+      path: 'smart',
       z,
       source: { node: source },
       target: { node: target },
-      ends: { end: 'arrow' },
+      head: 'arrow',
     },
   });
   // Six cells apart, so the gap between two boxes is half a box: close enough to read as a chain.
@@ -206,7 +207,7 @@ export const ObjectView: Story = {
       scene: root,
       node: {
         id,
-        type: 'view',
+        kind: 'view',
         z: id === 'card' ? 'a1' : 'a2',
         center: { x, y: 0 },
         size: { width: cells.width * DEFAULT_CELL, height: cells.height * DEFAULT_CELL },
@@ -255,7 +256,7 @@ export const DrawingView: Story = {
       scene: root,
       node: {
         id: 'detail',
-        type: 'view',
+        kind: 'view',
         z: 'a1',
         center: { x: 0, y: 0 },
         size: { width: 8 * DEFAULT_CELL, height: 3 * DEFAULT_CELL },
@@ -301,7 +302,7 @@ export const Image: Story = {
       scene: root,
       node: {
         id,
-        type: 'image',
+        kind: 'image',
         z: `a${x}`,
         center: { x, y: 0 },
         size: { width: 4 * DEFAULT_CELL, height: 3 * DEFAULT_CELL },
@@ -395,6 +396,45 @@ export const MarkdownEmbed: Story = {
   },
 };
 
+// Set by the story's setup, run by its play: the scene's objects reach the database after the article is on screen.
+const unloaded: { arrive?: () => void } = {};
+
+/**
+ * A canvas opened before its scene has loaded, as a drawing opened straight after the app starts.
+ *
+ * Test:
+ * 1. The article is on screen with nothing to draw.
+ * 2. The scene's objects load: the article draws A, B and C with no other change to the canvas.
+ */
+export const Unloaded2D: Story = {
+  decorators: StoryHarness.decorators({
+    types: [Drawing.Drawing, Drawing.Canvas, ...types],
+    plugins: [IllustratorPlugin.make(), CanvasPlugin.make()],
+    onInit: async ({ space }) => {
+      const { canvas, arrive } = addUnloadedCanvas(space.db, DSL.readScenes(EXEMPLARS.links).document);
+      const drawing = space.db.add(Drawing.make({ name: 'Canvas', canvas }));
+      await space.db.flush();
+      unloaded.arrive = arrive;
+      return [[Cell.article(drawing)]];
+    },
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // 1. The article draws nothing it can be waited on, so it is given time to render over the unloaded scene.
+    await waitFor(() => expect(canvasElement.querySelector('[data-component="DrawingArticle"]')).not.toBeNull(), {
+      timeout: 30_000,
+    });
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
+    await expect(canvas.queryByTestId('scene-view')).toBeNull();
+
+    // 2. Only the references resolve.
+    unloaded.arrive?.();
+    const view = await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 });
+    await waitFor(() => expect(view.querySelector('[data-node-id="a"]')).not.toBeNull());
+  },
+};
+
 /** A 2D canvas (A → B → C) written in `.dx`: the canvas's palette, actions, inspectors and display panel. */
 export const Canvas2D: Story = { decorators: withScenes(EXEMPLARS.links) };
 
@@ -436,6 +476,26 @@ export const NestedDeep2D: Story = {
 export const Nested3D: Story = { decorators: withScenes(EXEMPLARS.encapsulated) };
 
 /**
+ * A blank 3D canvas: one scene over a layout and a model that hold nothing, which deleting from another canvas cannot
+ * reach, as a canvas keeps its last scene and its model's objects.
+ * 1. Cube or Sphere places the first element where the pointer meets the ground.
+ * 2. The Views inspector shows the root view alone, and the Objects inspector nothing.
+ */
+export const Blank3D: Story = {
+  decorators: withScenes(trim`
+    scene blank dim=3d layout=blank name="Blank" {
+      camera target=0,0,0 yaw=-45 pitch=30 distance=8 fov=0.8 projection=perspective
+    }
+
+    layout blank dim=3d model=library {
+    }
+
+    model library dim=3d {
+    }
+  `),
+};
+
+/**
  * A 3D canvas, a single plain cube written in `.dx`, under the same floating panels as 2D.
  * 1. Click selects; Move, Rotate or Scale puts a gizmo on it; Undo and Redo step back and forth.
  * 2. Orbit (or the middle button) orbits; shift or the right button pans; the wheel zooms.
@@ -454,7 +514,7 @@ export const Canvas3D: Story = {
     }
 
     layout cube dim=3d model=library {
-      element box cube @ 0,1,0 scale=2 hue=blue surface=solid
+      element box cube @ 0,1,0 scale=2 color=blue fill=solid
     }
 
     model library dim=3d {
@@ -487,5 +547,140 @@ export const Canvas3D: Story = {
       },
       { timeout: 10_000, interval: 500 },
     );
+  },
+};
+
+/**
+ * Grouping in 2D (A → B → C): the selection becomes one group that draws its members where they were.
+ *
+ * Test:
+ * 1. Select all and Group: one group replaces A, B and C, and draws all three inside its box.
+ * 2. Ungroup is enabled on the group, and puts A, B and C back in the scene.
+ * 3. Undo makes the group again.
+ */
+export const Group2D: Story = {
+  decorators: withScenes(EXEMPLARS.links),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const view = await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 });
+    // Queried inside the scene view: an inspector draws a thumbnail of the same nodes, which is not the scene.
+    await waitFor(() => expect(view.querySelector('[data-node-id="a"]')).not.toBeNull());
+    const group = () => view.querySelector<HTMLElement>('[data-node-id^="group-"]');
+
+    // 1. The group is drawn with a box, and its members are drawn inside it at their own size.
+    view.focus();
+    await userEvent.keyboard('{Meta>}a{/Meta}');
+    await userEvent.click(await canvas.findByTestId('scene-action-group'));
+    await waitFor(() => expect(group()).not.toBeNull());
+    await expect(group()?.getBoundingClientRect().width).toBeGreaterThan(0);
+    for (const id of ['a', 'b', 'c']) {
+      const member = group()?.querySelector<HTMLElement>(`[data-node-id="${id}"]`);
+      await expect(member?.getBoundingClientRect().width).toBeGreaterThan(0);
+    }
+
+    // 2. The group is selected, so Ungroup is offered; it puts the members back.
+    const ungroup = await canvas.findByTestId<HTMLButtonElement>('scene-action-ungroup');
+    await waitFor(() => expect(ungroup.disabled).toBe(false));
+    await userEvent.click(ungroup);
+    await waitFor(() => expect(group()).toBeNull());
+    await expect(view.querySelector('[data-node-id="a"]')).not.toBeNull();
+
+    // 3. One undo step brings the group back.
+    await userEvent.click(await canvas.findByTestId('scene-action-undo'));
+    await waitFor(() => expect(group()).not.toBeNull());
+  },
+};
+
+/**
+ * A group inside a group in 2D (A → B → C): A and B are grouped, then that group and C.
+ *
+ * Test:
+ * 1. Click A, shift-click B and Group: one group draws A and B.
+ * 2. Select all and Group: the outer group's box is round A, B and C, and the inner group draws inside it.
+ * 3. Ungroup puts the inner group and C back in the scene, the inner group still a group.
+ */
+export const GroupNested2D: Story = {
+  decorators: withScenes(EXEMPLARS.links),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const view = await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 });
+    const node = (id: string) => view.querySelector<HTMLElement>(`[data-node-id="${id}"]`);
+    const groups = () => [...view.querySelectorAll<HTMLElement>('[data-node-id^="group-"]')];
+    const width = (element: Element | null | undefined) => element?.getBoundingClientRect().width ?? 0;
+    await waitFor(() => expect(node('a')).not.toBeNull());
+    const group = await canvas.findByTestId('scene-action-group');
+
+    // 1. The first group holds A and B, and leaves C in the scene.
+    const user = userEvent.setup();
+    await user.click(node('a') ?? view);
+    await user.keyboard('{Shift>}');
+    await user.click(node('b') ?? view);
+    await user.keyboard('{/Shift}');
+    await user.click(group);
+    await waitFor(() => expect(groups()).toHaveLength(1));
+    const inner = groups()[0].dataset.nodeId;
+    await expect(groups()[0].querySelector('[data-node-id="c"]')).toBeNull();
+
+    // 2. The outer group spans all three: it is wider than the inner group, which is drawn inside it.
+    view.focus();
+    await user.keyboard('{Meta>}a{/Meta}');
+    await user.click(group);
+    await waitFor(() => expect(groups()).toHaveLength(2));
+    const outer = groups().find((candidate) => candidate.dataset.nodeId !== inner);
+    const nested = outer?.querySelector<HTMLElement>(`[data-node-id="${inner}"]`);
+    await expect(width(nested)).toBeGreaterThan(0);
+    await expect(width(outer)).toBeGreaterThan(width(nested));
+    for (const id of ['a', 'b', 'c']) {
+      await expect(width(outer?.querySelector(`[data-node-id="${id}"]`))).toBeGreaterThan(0);
+    }
+
+    // 3. Ungrouping the outer group leaves the inner one, with A and B still inside it.
+    const ungroup = await canvas.findByTestId<HTMLButtonElement>('scene-action-ungroup');
+    await waitFor(() => expect(ungroup.disabled).toBe(false));
+    await user.click(ungroup);
+    await waitFor(() => expect(groups().map((candidate) => candidate.dataset.nodeId)).toEqual([inner]));
+    await expect(width(groups()[0].querySelector('[data-node-id="a"]'))).toBeGreaterThan(0);
+    await expect(node('c')).not.toBeNull();
+  },
+};
+
+/**
+ * Grouping in 3D (two cubes and a sphere): the selection becomes one group whose members stay where they were.
+ *
+ * Test:
+ * 1. Select all and Group: the group is the selection, and the Objects inspector lists it.
+ * 2. Ungroup is enabled on the group, and takes it out of the model again.
+ */
+export const Group3D: Story = {
+  decorators: withScenes(trim`
+    scene shapes dim=3d layout=shapes name="Shapes" {
+      camera target=0,1,0 yaw=-45 pitch=30 distance=12 fov=0.8 projection=perspective
+    }
+
+    layout shapes dim=3d model=library {
+      element left cube @ -3,1,0 scale=2 color=blue fill=solid
+      element middle sphere @ 0,1,0 scale=2 color=green fill=solid
+      element right cube @ 3,1,0 scale=2 color=red fill=solid
+    }
+
+    model library dim=3d {
+    }
+  `),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const editor = await canvas.findByTestId('scene.3d.editor', undefined, { timeout: 30_000 });
+
+    // 1. The group replaces the three elements as the selection.
+    editor.focus();
+    await userEvent.keyboard('{Meta>}a{/Meta}');
+    await waitFor(() => expect(editor.dataset.selection?.split(' ').sort()).toEqual(['left', 'middle', 'right']));
+    await userEvent.click(await canvas.findByTestId('scene-action-group'));
+    await waitFor(() => expect(editor.dataset.selection).toMatch(/^group-/));
+
+    // 2. Ungroup takes the group apart, leaving nothing selected.
+    const ungroup = await canvas.findByTestId<HTMLButtonElement>('scene-action-ungroup');
+    await waitFor(() => expect(ungroup.disabled).toBe(false));
+    await userEvent.click(ungroup);
+    await waitFor(() => expect(editor.dataset.selection).toBe(''));
   },
 };

@@ -9,5 +9,5 @@ import { type Node } from '@dxos/scene';
 
 import { type NodeDef, type NodeRegistry } from './registry.ts';
 
-/** The definition of a node's type, when the registry has it. */
-export const nodeDef = (registry: NodeRegistry, node: Node): NodeDef | undefined => registry[node.type];
+/** The definition of a node's kind, when the registry has it. */
+export const nodeDef = (registry: NodeRegistry, node: Node): NodeDef | undefined => registry[node.kind];

@@ -39,6 +39,8 @@ export const diagramLanguage = LRLanguage.define({
         // inherit its parent's, so tagging the wrapper colours nothing. A numeric or quoted value
         // keeps its own number/string tag; this is the bare enum word (`grey`, `dashed`).
         'Word': tags.attributeValue,
+        // A colour at a tone (`blue/2`) is a value like any other bare word.
+        'Toned': tags.attributeValue,
         // `head=triangle`, `head=arrow`, `tail=circle`: schema literals that are also element-kind
         // keywords, so without the path they would colour as keywords while every other enum value
         // colours as a value. Listed in full, like the grammar's own `Word` alternation, so a

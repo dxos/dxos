@@ -16,12 +16,10 @@ describe('ViewBuilder', () => {
     const { root, views } = ViewBuilder.view('s', [
       ViewBuilder.rect('a', box(0, 0)).properties({ label: 'A' }),
       ViewBuilder.ellipse('b', box(400, 0)).properties({ label: 'B' }),
-      ViewBuilder.note('c', { x: 0, y: 300, width: 200, height: 150 }).properties({ style: { hue: 'teal' } }),
+      ViewBuilder.note('c', { x: 0, y: 300, width: 200, height: 150 }).properties({ overrides: { color: 'teal' } }),
       ViewBuilder.link('line', 'a#e2', 'b#w2'),
       ViewBuilder.link('spline', 'b', 'c').properties({ points: [{ x: 300, y: 250 }] }),
-      ViewBuilder.link('line', '@10,20', 'a')
-        .id('free')
-        .properties({ ends: { start: 'circle', end: 'arrow' } }),
+      ViewBuilder.link('line', '@10,20', 'a').id('free').properties({ tail: 'circle', head: 'arrow' }),
     ])
       .name('Sample')
       .build();
@@ -32,28 +30,30 @@ describe('ViewBuilder', () => {
     expect(Object.keys(scene.nodes)).toEqual(['a', 'b', 'c']);
     expect(scene.nodes.a.center).toEqual({ x: 100, y: 50 });
     expect(isEllipseNode(scene.nodes.b) && scene.nodes.b.size).toEqual({ width: 200, height: 100 });
-    expect(scene.nodes.c.style).toEqual({ hue: 'teal' });
-    // A note keeps its type's default text where the fixture does not set it.
-    expect(isNoteNode(scene.nodes.c) && scene.nodes.c.text).toEqual('Note');
+    expect(scene.nodes.c.overrides).toEqual({ color: 'teal' });
+    // A note keeps its kind's default text where the fixture does not set it.
+    expect(isNoteNode(scene.nodes.c) && scene.nodes.c.label).toEqual('Note');
     expect(scene.links['a-b'].source).toEqual({ node: 'a', port: 'e2' });
     expect(scene.links['a-b'].target).toEqual({ node: 'b', port: 'w2' });
-    expect(scene.links['b-c'].type === 'spline' && scene.links['b-c'].points).toEqual([{ x: 300, y: 250 }]);
+    expect([scene.links['a-b'].kind, scene.links['a-b'].path]).toEqual(['link', 'line']);
+    expect(scene.links['b-c'].path === 'spline' && scene.links['b-c'].points).toEqual([{ x: 300, y: 250 }]);
     expect(scene.links.free.source).toEqual({ point: { x: 10, y: 20 } });
-    expect(scene.links.free.ends).toEqual({ start: 'circle', end: 'arrow' });
+    expect([scene.links.free.tail, scene.links.free.head]).toEqual(['circle', 'arrow']);
     const zs = [scene.nodes.a.z, scene.nodes.b.z, scene.nodes.c.z, scene.links['a-b'].z, scene.links['b-c'].z];
     expect([...zs].sort()).toEqual(zs);
   });
 
-  test('properties merge, style key by key, and an element is reused unchanged', ({ expect }) => {
-    const orange = ViewBuilder.rect('a', box(0, 0)).properties({ style: { hue: 'orange' } });
+  test('properties merge, overrides key by key, and an element is reused unchanged', ({ expect }) => {
+    const orange = ViewBuilder.rect('a', box(0, 0)).properties({ overrides: { color: 'orange' } });
     const { views } = ViewBuilder.view('s', [
-      orange.properties({ label: 'A', style: { rounded: true } }),
+      orange.properties({ label: 'A', style: 'warning', overrides: { corners: 'all' } }),
       ViewBuilder.link('smart', 'a', 'a'),
       ViewBuilder.link('smart', 'a', 'a'),
     ]).build();
     const [scene] = views;
     expect(isRectNode(scene.nodes.a) && scene.nodes.a.label).toBe('A');
-    expect(scene.nodes.a.style).toEqual({ hue: 'orange', rounded: true });
+    expect(scene.nodes.a.overrides).toEqual({ color: 'orange', corners: 'all' });
+    expect(scene.nodes.a.style).toBe('warning');
     expect(orange.node.label).toBeUndefined();
     // Links with the same ends take distinct ids.
     expect(Object.keys(scene.links)).toEqual(['a-a', 'a-a-2']);
@@ -118,13 +118,13 @@ describe('ViewBuilder', () => {
     expect(Object.keys(scene.links)).toEqual(['toString']);
   });
 
-  test('a node its type does not describe fails the build', ({ expect }) => {
+  test('a node its kind does not describe fails the build', ({ expect }) => {
     const host = ViewBuilder.node('rect', 'a', box(0, 0)).properties({ portsPerSide: 2 });
     expect(() => ViewBuilder.view('s', [host]).build()).not.toThrow();
     const typo = ViewBuilder.node('custom', 'x', box(0, 0)).properties({ lable: 'X' });
     // Unknown to the registry: nothing to check it against.
     expect(() => ViewBuilder.view('s', [typo]).build()).not.toThrow();
-    // Typed as any string, the way a host's own type name arrives, so the misspelling reaches the schema.
+    // Typed as any string, the way a host's own kind name arrives, so the misspelling reaches the schema.
     const rect: string = 'rect';
     const wrong = ViewBuilder.node(rect, 'b', box(0, 0)).properties({ lable: 'B' });
     expect(() => ViewBuilder.view('s', [wrong]).build()).toThrow(/not a valid rect/);

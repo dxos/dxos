@@ -41,6 +41,7 @@
     "out",
     "packages/common/esbuild-plugins/polyfills/**",
     "packages/common/node-std/**",
+    "packages/common/scene/ontology.schema.json",
     "packages/common/typings/src/streamx.d.ts",
     "packages/ui/react-ui-html/src/HtmlViewer/fixtures/**",
     "packages/ui/react-ui-geo/data/**",

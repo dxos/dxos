@@ -61,20 +61,20 @@ layout board dim=2d model=shapes {
   element a box "A" @ 0,0 layer=diagram
   element b box "B" @ 256,0 layer=diagram
   element c box "C" @ 512,0 layer=diagram
-  element note rect "Note" @ 256,192 size=384x64 hue=neutral surface=tint layer=background
+  element note rect "Note" @ 256,192 size=384x64 color=neutral fill=tint layer=background
   element ab link from=a to=b end=arrow
   element bc link from=b to=c end=arrow
 }
 
 model shapes dim=2d {
-  object box rect size=128x128 surface=solid border=true rounded=true
+  object box rect size=128x128 fill=solid stroke=solid corners=all
 }
 `).document,
   {
     layout: { a: 'primary', b: 'accent', c: 'primary' },
     model: {
-      primary: { name: 'Primary', hue: 'blue', surface: 'solid' },
-      accent: { name: 'Accent', hue: 'amber', surface: 'solid' },
+      primary: { name: 'Primary', color: 'blue', fill: 'solid' },
+      accent: { name: 'Accent', color: 'amber', fill: 'solid' },
     },
   },
 );
@@ -97,31 +97,31 @@ layout cluster dim=3d model=nodes {
 }
 
 model nodes dim=3d {
-  object hub sphere scale=1 surface=solid
-  object spoke sphere scale=0.5 surface=solid
+  object hub sphere scale=1 fill=solid
+  object spoke sphere scale=0.5 fill=solid
 }
 `).document,
   {
     layout: { hub: 'brass', s1: 'steel', s2: 'steel', s3: 'steel' },
     model: {
-      brass: { name: 'Brass', hue: 'amber', surface: 'solid', metalness: 0.8, roughness: 0.3 },
-      steel: { name: 'Steel', hue: 'blue', surface: 'solid', metalness: 0.6, roughness: 0.4 },
+      brass: { name: 'Brass', color: 'amber', fill: 'solid', metalness: 0.8, roughness: 0.3 },
+      steel: { name: 'Steel', color: 'blue', fill: 'solid', metalness: 0.6, roughness: 0.4 },
     },
   },
 );
 
 const modeShape = (id: string, label: string, center: { x: number; y: number }): Scene.Element2D => ({
   id,
-  type: 'rect',
+  kind: 'rect',
   label,
   center,
   size: { width: 256, height: 128 },
 });
 
-/** A link between two shapes, which names no type and so draws smart (along the lattice's gutters on a lattice). */
+/** A link between two shapes, which names no path and so draws smart (along the lattice's gutters on a lattice). */
 const modeLink = (id: string, from: string, to: string): Scene.Element2D => ({
   id,
-  type: 'link',
+  kind: 'link',
   source: { node: from },
   target: { node: to },
 });
@@ -179,15 +179,15 @@ const CONSTRAINED_LAYOUT: Scene.LayoutRecord2D = {
     bd: modeLink('bd', 'b', 'd'),
   },
   constraints: [
-    { subject: 'b', relation: 'east', object: 'a' },
+    { subject: 'b', relation: 'right-of', object: 'a' },
     { subject: 'b', relation: 'aligned', object: 'a' },
-    { subject: 'c', relation: 'south', object: 'a' },
-    { subject: 'd', relation: 'south', object: 'b' },
-    { subject: 'd', relation: 'east', object: 'c' },
+    { subject: 'c', relation: 'below', object: 'a' },
+    { subject: 'd', relation: 'below', object: 'b' },
+    { subject: 'd', relation: 'right-of', object: 'c' },
   ],
 };
 
-/** Constrained mode: four shapes related east/west, north/south and aligned, where the solver places them. */
+/** Constrained mode: four shapes related right-of, below and aligned, where the solver places them. */
 export const CONSTRAINED_2D: Scene.SceneDocument = modeDocument(
   applyIntent(CONSTRAINED_LAYOUT, constrainedPlacement(CONSTRAINED_LAYOUT)),
 );

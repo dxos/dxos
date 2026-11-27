@@ -8,45 +8,11 @@
 
 import * as Schema from 'effect/Schema';
 
-export const Color = Schema.Literals([
-  'black',
-  'grey',
-  'light-violet',
-  'violet',
-  'blue',
-  'light-blue',
-  'yellow',
-  'orange',
-  'green',
-  'light-green',
-  'light-red',
-  'red',
-  'white',
-]);
-export type Color = Schema.Schema.Type<typeof Color>;
+import { Color } from './color.ts';
+import { Align, Corners, Fill, Point, Stroke, VerticalAlign, Weight } from './vocabulary.ts';
 
-/** `tint` is a light wash of the element's color, for backdrops such as group frames that text sits on. */
-export const Fill = Schema.Literals(['none', 'solid', 'pattern', 'tint']);
-export type Fill = Schema.Schema.Type<typeof Fill>;
-
-export const Stroke = Schema.Literals(['sketchy', 'solid', 'dashed', 'dotted']);
-export type Stroke = Schema.Schema.Type<typeof Stroke>;
-
-export const Weight = Schema.Literals(['s', 'm', 'l', 'xl']);
-export type Weight = Schema.Schema.Type<typeof Weight>;
-
-export const Point = Schema.Struct({
-  x: Schema.Number,
-  y: Schema.Number,
-});
-export type Point = Schema.Schema.Type<typeof Point>;
-
-/** Style props shared by all elements; every field is optional with sensible defaults. */
-/** Where a shape's text sits across it, and down it. */
-export const Align = Schema.Literals(['left', 'center', 'right']);
-export type Align = Schema.Schema.Type<typeof Align>;
-export const VerticalAlign = Schema.Literals(['top', 'middle', 'bottom']);
-export type VerticalAlign = Schema.Schema.Type<typeof VerticalAlign>;
+export { Color } from './color.ts';
+export { Align, Corners, Fill, Point, Stroke, VerticalAlign, Weight } from './vocabulary.ts';
 
 /** How a box places what names it: on tracks, as CSS grid does, or by packing circles into its frame. */
 export const Layout = Schema.Literals(['tracks', 'pack']);
@@ -59,14 +25,14 @@ export type Place = Schema.Schema.Type<typeof Place>;
 const styleFields = {
   color: Schema.optional(Color).annotate({ description: 'Stroke/text color.' }),
   fill: Schema.optional(Fill).annotate({ description: 'Interior fill of closed shapes.' }),
-  stroke: Schema.optional(Stroke).annotate({ description: 'Stroke rendering; sketchy is hand-drawn.' }),
-  weight: Schema.optional(Weight).annotate({ description: 'Stroke weight / text size.' }),
   /**
-   * Whether a closed shape draws its outline. Unset is the host's own default, which is to draw one, so a shape
-   * that draws none has to say so: without it a borderless label reads back as a bordered box — which is what a
-   * slide's column headings turned into on every trip through the text.
+   * Unset is the host's own default, which is to draw an outline, so a shape that draws none has to say `none`:
+   * without it a borderless label reads back as a bordered box.
    */
-  border: Schema.optional(Schema.Boolean).annotate({ description: 'Whether a closed shape draws its outline.' }),
+  stroke: Schema.optional(Stroke).annotate({
+    description: 'Line or outline: none draws no outline; sketchy is hand-drawn.',
+  }),
+  weight: Schema.optional(Weight).annotate({ description: 'Stroke weight / text size.' }),
   align: Schema.optional(Align).annotate({ description: "Where the shape's text sits across it." }),
   valign: Schema.optional(VerticalAlign).annotate({ description: "Where the shape's text sits down it." }),
   /** Text size in scene units. `weight` names a size by role; this one states it. */
@@ -138,10 +104,6 @@ const id = Schema.String.annotate({
 export const BoxKind = Schema.Literals(['rect', 'ellipse', 'diamond', 'triangle', 'grid']);
 export type BoxKind = Schema.Schema.Type<typeof BoxKind>;
 
-/** Which corners a rect rounds. */
-export const Corners = Schema.Literals(['top', 'bottom', 'none']);
-export type Corners = Schema.Schema.Type<typeof Corners>;
-
 /** Closed shape drawn inside a local bounding box. */
 export const Box = Schema.Struct({
   kind: BoxKind,
@@ -153,15 +115,16 @@ export const Box = Schema.Struct({
   rotation: Schema.optional(Schema.Number).annotate({ description: 'Clockwise rotation in degrees.' }),
   text: Schema.optional(Schema.String).annotate({ description: 'Centered label.' }),
   corners: Schema.optional(Corners).annotate({
-    description: 'Rects only: round just these corners (default all); backends without corner control ignore it.',
+    description: 'Rects only: round these corners (default all); backends without corner control ignore it.',
   }),
   /**
-   * The contributed element kind this box really is (`card`, `plank`, a composite's type). The geometry stays on the
-   * box, so a host that does not know the kind still draws a box; a host that does draws the kind. Without it a
-   * drawing that uses a kind cannot be written down: every one flattens to a rect on the way through the DSL.
+   * The contributed element kind this box really is (`card`, `plank`, a composite's kind), which the text writes as
+   * `kind=`. The geometry stays on the box, so a host that does not know the component still draws a box; a host that
+   * does draws the component. Without it a drawing that uses one cannot be written down: every one flattens to a rect
+   * on the way through the DSL.
    */
-  type: Schema.optional(Schema.String).annotate({ description: "A contributed element kind's name." }),
-  /** The kind's own fields, as its schema declares them. */
+  component: Schema.optional(Schema.String).annotate({ description: "A contributed element kind's name." }),
+  /** The component's own fields, as its schema declares them. */
   data: Schema.optional(Schema.Record(Schema.String, Schema.Any)).annotate({
     description: "A contributed kind's own fields.",
   }),
@@ -268,17 +231,18 @@ export type Relation = Schema.Schema.Type<typeof Relation>;
 /** A marker a renderer draws at a connector end. */
 export type Marker = 'arrow' | 'open' | 'triangle' | 'crowsfoot' | 'one' | 'diamond' | 'diamond-filled' | 'circle';
 
-export type RelationMarkers = { start?: Marker; end?: Marker; dashed: boolean };
+/** The markers at a connector's source (`tail`) and target (`head`), and whether its line is dashed. */
+export type RelationMarkers = { tail?: Marker; head?: Marker; dashed: boolean };
 
 const RELATION_MARKERS: Record<Relation, RelationMarkers> = {
-  'association': { end: 'arrow', dashed: false },
-  'dependency': { end: 'open', dashed: true },
-  'inheritance': { end: 'triangle', dashed: false },
-  'implementation': { end: 'triangle', dashed: true },
-  'composition': { start: 'diamond-filled', dashed: false },
-  'aggregation': { start: 'diamond', dashed: false },
-  'one-to-many': { start: 'one', end: 'crowsfoot', dashed: false },
-  'many-to-many': { start: 'crowsfoot', end: 'crowsfoot', dashed: false },
+  'association': { head: 'arrow', dashed: false },
+  'dependency': { head: 'open', dashed: true },
+  'inheritance': { head: 'triangle', dashed: false },
+  'implementation': { head: 'triangle', dashed: true },
+  'composition': { tail: 'diamond-filled', dashed: false },
+  'aggregation': { tail: 'diamond', dashed: false },
+  'one-to-many': { tail: 'one', head: 'crowsfoot', dashed: false },
+  'many-to-many': { tail: 'crowsfoot', head: 'crowsfoot', dashed: false },
 };
 
 /**
@@ -286,12 +250,12 @@ const RELATION_MARKERS: Record<Relation, RelationMarkers> = {
  * documents written before relations existed drawing as they did.
  */
 export const markersOf = (arrow: Pick<Arrow, 'relation' | 'head' | 'tail' | 'stroke'>): RelationMarkers => {
-  const derived = arrow.relation ? RELATION_MARKERS[arrow.relation] : { end: 'arrow' as const, dashed: false };
-  const end = arrow.head === undefined ? derived.end : arrow.head === 'none' ? undefined : arrow.head;
-  const start = arrow.tail === undefined ? derived.start : arrow.tail === 'none' ? undefined : arrow.tail;
+  const derived = arrow.relation ? RELATION_MARKERS[arrow.relation] : { head: 'arrow' as const, dashed: false };
+  const head = arrow.head === undefined ? derived.head : arrow.head === 'none' ? undefined : arrow.head;
+  const tail = arrow.tail === undefined ? derived.tail : arrow.tail === 'none' ? undefined : arrow.tail;
   return {
-    ...(start ? { start } : {}),
-    ...(end ? { end } : {}),
+    ...(tail ? { tail } : {}),
+    ...(head ? { head } : {}),
     dashed: arrow.stroke === undefined ? derived.dashed : arrow.stroke === 'dashed',
   };
 };

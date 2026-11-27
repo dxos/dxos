@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import * as EffectEx from '@dxos/effect/EffectEx';
 
 import * as DSL from './dsl/index.ts';
-import { toSvgFile } from './svg-file.ts';
+import { PALETTE, colorClass, drawnColor, toSvgFile } from './svg-file.ts';
 
 /** The marker ids an SVG element references, by attribute, with the per-instance prefix dropped. */
 const markerRefs = (svg: string, element: string, attribute: 'marker-start' | 'marker-end') =>
@@ -95,5 +95,100 @@ describe('renderer fallbacks', () => {
     const svg = toSvgFile(DSL.parseScene('object e @ 0,0 { arrow a 0,0 -> 100,0 }').scene.objects);
     expect(svg).toContain('fill="var(--surface-bg, #ffffff)"');
     expect(svg).not.toMatch(/var\(--[\w-]+\)/);
+  });
+});
+
+describe('colours', () => {
+  /** The opening tag of the group each box of `text` is drawn in, in order. */
+  const groups = (text: string): string[] => {
+    const { scene, problems } = DSL.parseScene(`object e @ 0,0 {\n${text}\n}`);
+    if (problems.length > 0) {
+      throw new Error(problems.map(({ message }) => message).join(' · '));
+    }
+    return [...toSvgFile(scene.objects).matchAll(/<g class="stroke[^>]*>/g)].map((match) => match[0]);
+  };
+
+  test('every palette name draws as it always has: seven in a colour of their own, the rest in the ink', ({
+    expect,
+  }) => {
+    expect(Object.fromEntries(PALETTE.map((name) => [name, colorClass(name)]))).toEqual({
+      'black': undefined,
+      'grey': 'text-neutral-400 dark:text-neutral-500',
+      'light-violet': 'text-violet-500',
+      'violet': undefined,
+      'blue': undefined,
+      'light-blue': 'text-sky-500',
+      'yellow': 'text-amber-500',
+      'orange': 'text-orange-500',
+      'green': undefined,
+      'light-green': 'text-emerald-500',
+      'light-red': 'text-rose-500',
+      'red': undefined,
+      'white': undefined,
+    });
+    expect(groups('rect a 0,0 10x10 color=light-blue\nrect b 20,0 10x10 color=blue\nrect c 40,0 10x10')).toEqual([
+      '<g class="stroke-current text-sky-500" stroke-width="1.5">',
+      '<g class="stroke-current" stroke-width="1.5">',
+      '<g class="stroke-current" stroke-width="1.5">',
+    ]);
+  });
+
+  test('a tone picks the light name the palette has at tone 3, and the name itself otherwise', ({ expect }) => {
+    expect(drawnColor('blue/3')).toEqual({ name: 'light-blue' });
+    expect(drawnColor('red/3')).toEqual({ name: 'light-red' });
+    expect(drawnColor('blue/1')).toEqual({ name: 'blue' });
+    // No `light-yellow`, and no lighter `light-blue`.
+    expect(drawnColor('yellow/3')).toEqual({ name: 'yellow' });
+    expect(drawnColor('light-blue/3')).toEqual({ name: 'light-blue' });
+    expect(groups('rect a 0,0 10x10 color=blue/3')).toEqual([
+      '<g class="stroke-current text-sky-500" stroke-width="1.5">',
+    ]);
+  });
+
+  test('a CSS literal is drawn as written, and a hue the palette lacks in the ink', ({ expect }) => {
+    expect(drawnColor('#1e90ff')).toEqual({ css: '#1e90ff' });
+    expect(drawnColor('teal')).toEqual({});
+    expect(drawnColor('teal/2')).toEqual({});
+    expect(drawnColor(undefined)).toEqual({});
+    expect(
+      groups(
+        'rect a 0,0 10x10 color="#1e90ff"\nrect b 20,0 10x10 color="rgb(30 144 255)"\nrect c 40,0 10x10 color=teal',
+      ),
+    ).toEqual([
+      '<g class="stroke-current" color="#1e90ff" stroke-width="1.5">',
+      '<g class="stroke-current" color="rgb(30 144 255)" stroke-width="1.5">',
+      '<g class="stroke-current" stroke-width="1.5">',
+    ]);
+  });
+
+  test('a tint of a literal carries the mix of that colour for renderers without color-mix', ({ expect }) => {
+    const svg = toSvgFile(
+      DSL.parseScene(
+        'object e @ 0,0 {\n  rect a 0,0 10x10 fill=tint color="#1e90ff"\n  rect b 20,0 10x10 fill=tint color="#08f"\n}',
+      ).scene.objects,
+    );
+    const tinted = [...svg.matchAll(/<rect[^>]*style="fill:color-mix[^"]*"[^>]*>/g)].map((match) => match[0]);
+    // 10% of #1e90ff, and of #0088ff, over the white surface.
+    expect(tinted[0]).toContain('fill="#e9f4ff"');
+    expect(tinted[1]).toContain('fill="#e6f3ff"');
+  });
+});
+
+describe('strokes and fills', () => {
+  test('a shape with no stroke draws no outline, and glass draws as a solid surface', ({ expect }) => {
+    const svg = toSvgFile(
+      DSL.parseScene(
+        'object e @ 0,0 {\n  rect label 0,0 10x10 "L" stroke=none\n  rect pane 20,0 10x10 fill=glass\n  rect plain 40,0 10x10\n}',
+      ).scene.objects,
+    );
+    const drawn = [...svg.matchAll(/<g class="(stroke-[a-z]+)[^>]*><rect[^>]*class="([^"]*)"/g)].map((match) => [
+      match[1],
+      match[2],
+    ]);
+    expect(drawn).toEqual([
+      ['stroke-none', 'fill-transparent'],
+      ['stroke-current', 'fill-neutral-100 dark:fill-neutral-800'],
+      ['stroke-current', 'fill-transparent'],
+    ]);
   });
 });

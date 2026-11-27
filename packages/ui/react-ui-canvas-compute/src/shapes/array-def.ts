@@ -21,7 +21,7 @@ import { ComputeShape, type CreateShapeProps, createShape, withZ } from './defs.
 
 export const ReducerShape = ComputeShape.mapFields(
   Struct.assign({
-    type: Schema.Literal('reducer'),
+    kind: Schema.Literal('reducer'),
   }),
 );
 
@@ -38,7 +38,7 @@ export const createReducer = ({
   ...rest
 }: CreateReduceProps): ReducerShape =>
   createShape<ReducerShape>({
-    type: 'reducer',
+    kind: 'reducer',
     size,
     ...rest,
   });

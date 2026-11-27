@@ -2,27 +2,31 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
+
 import {
   type Bounds,
-  type BuiltinNodeType,
+  BuiltinNode,
+  Color,
+  DEFAULT_HULL_SHAPE,
   type ElementEndpoint,
   type Endpoint,
   type Link,
-  LINK_TYPES,
-  type LinkType,
+  LINK_KIND,
+  LINK_PATHS,
+  MARKERS,
   type NamedStyle2D,
   type Node,
-  NODE_TYPES,
-  type NodeStyle,
+  NODE_KINDS,
   type Resolved2D,
   Scene,
   type Size,
   type Style2D,
-  STYLE_HUES,
-  type StyleHue,
   type StyleMap,
   type ViewId,
+  containerOf,
   findLayout,
+  findModel,
   isInstanceNode,
   nodeFrame,
   resolveLayout2D,
@@ -39,40 +43,23 @@ import {
   createNode,
   fitHulls,
   gridPitch,
+  groupHull,
   initialKeys,
   isSolidNode,
   solidRings,
 } from '../utils/index.ts';
 
-/** The scene kinds the 2D renderer draws as react-ui-canvas nodes of the same name. */
-/**
- * The kinds a layout may hold that the 2D engine draws, by name: its own built-ins and the editor's own types (a
- * card, a glyph). A kind outside this set — a 3D one, or one a newer editor wrote — is left undrawn rather than
- * guessed at.
- */
-const DRAWN_KINDS: Readonly<Record<string, string>> = Object.fromEntries(
-  Scene.kindsOf('2d')
-    .filter((kind) => kind !== 'link' && kind !== 'group')
-    .map((kind) => [kind, kind]),
-);
+const isColor = Schema.is(Color);
 
-const MARKERS = ['arrow', 'circle', 'diamond', 'diamond-filled', 'many', 'triangle'] as const;
-
-/** A 2D style as react-ui-canvas's node style: the diagram-only values (sketchy, pattern, weight) have no node field. */
-const nodeStyle = (style: Style2D | undefined): NodeStyle | undefined => {
-  if (!style) {
-    return undefined;
-  }
-  const { pattern: _pattern, weight: _weight, lineStyle, ...rest } = style;
-  const result: NodeStyle = { ...rest, ...(lineStyle !== undefined && lineStyle !== 'sketchy' ? { lineStyle } : {}) };
-  return Object.keys(result).length > 0 ? result : undefined;
-};
+/** A look that states something; one with no field is no look at all, so a node carries none. */
+const stated = (style: Style2D | undefined): Style2D | undefined =>
+  style && Object.keys(style).length > 0 ? style : undefined;
 
 /** A model's named styles as the canvas's style classes. */
 export const styleClasses = (styles: Readonly<Record<string, NamedStyle2D>> | undefined): StyleMap =>
   Object.fromEntries(
     Object.entries(styles ?? {}).map(([id, { name, ...look }]) => {
-      const style = nodeStyle(look);
+      const style = stated(look);
       return [id, { id, name: name ?? id, ...(style ? { style } : {}) }];
     }),
   );
@@ -81,18 +68,33 @@ export const styleClasses = (styles: Readonly<Record<string, NamedStyle2D>> | un
 export const namedStyles = (classes: StyleMap): Record<string, NamedStyle2D> =>
   Object.fromEntries(Object.values(classes).map(({ id, name, style }) => [id, { name, ...style }]));
 
+const ORIGIN = { x: 0, y: 0 };
+const UNIT_SCALE = { x: 1, y: 1 };
+
 /** A placed composite's box and fixed region: its parts' bounds at its `scale` about its origin (decision 18). */
 type ScaledFrame = { center: { x: number; y: number }; size: { width: number; height: number }; frame: Bounds };
 
-/** Undefined for an element with no scale, or whose parts have nothing with a frame. */
-const scaledFrame = (doc: Scene.SceneDocument, element: Resolved2D): ScaledFrame | undefined => {
+/**
+ * Undefined for an element with a frame of its own (a centre, and no scale), or whose parts have nothing with a
+ * frame. One with no centre places its parts where they are, at their own size, as a group does and as 3D places such
+ * an element; a group with a centre and no size is placed from that centre, which is where ungrouping its own group
+ * leaves it. A part that is such an element itself (a group inside the group) spans its own parts, so `path` holds
+ * the layouts already entered and one is not entered again.
+ */
+const scaledFrame = (
+  doc: Scene.SceneDocument,
+  element: Resolved2D,
+  path: readonly string[] = [],
+): ScaledFrame | undefined => {
   const parts = element.parts === undefined ? undefined : findLayout(doc, element.parts);
-  if (!element.scale || !element.center || parts?.dim !== '2d') {
+  const framed = element.center && !element.scale && !(element.fit === 'none' && !element.size);
+  if (framed || parts?.dim !== '2d' || path.includes(parts.id)) {
     return undefined;
   }
-  const boxes = Object.values(resolveLayout2D(doc, parts)).flatMap(({ center, size }) =>
-    center && size ? [{ x: center.x - size.width / 2, y: center.y - size.height / 2, ...size }] : [],
-  );
+  const boxes = Object.values(resolveLayout2D(doc, parts)).flatMap((part) => {
+    const { center, size } = scaledFrame(doc, part, [...path, parts.id]) ?? part;
+    return center && size ? [{ x: center.x - size.width / 2, y: center.y - size.height / 2, ...size }] : [];
+  });
   if (boxes.length === 0) {
     return undefined;
   }
@@ -100,7 +102,7 @@ const scaledFrame = (doc: Scene.SceneDocument, element: Resolved2D): ScaledFrame
   const y = Math.min(...boxes.map((box) => box.y));
   const width = Math.max(...boxes.map((box) => box.x + box.width)) - x;
   const height = Math.max(...boxes.map((box) => box.y + box.height)) - y;
-  const { center, scale } = element;
+  const { center = ORIGIN, scale = UNIT_SCALE } = element;
   return {
     center: { x: center.x + scale.x * (x + width / 2), y: center.y + scale.y * (y + height / 2) },
     size: { width: width * scale.x, height: height * scale.y },
@@ -111,52 +113,36 @@ const scaledFrame = (doc: Scene.SceneDocument, element: Resolved2D): ScaledFrame
 /** The size a kind the engine has no factory for falls back to, when the element gives none. */
 const FALLBACK_SIZE: Size = { width: 96, height: 48 };
 
-/** An element's text, where its node keeps it: a text node's `text`, every other kind's `label`. */
-const elementText = (type: string, label: string | undefined, stored: Fields): Fields =>
-  label === undefined
-    ? {}
-    : type === 'note' && stored.text === undefined
-      ? { text: label }
-      : type === 'note'
-        ? {}
-        : { label };
+/** The fields each of the engine's own kinds cannot be drawn without, by kind. */
+const REQUIRED_FIELDS: ReadonlyMap<string, readonly string[]> = new Map(
+  BuiltinNode.members.map((member) => [
+    member.fields.kind.literal,
+    Object.entries(member.fields).flatMap(([name, field]) => (field.ast.context?.isOptional === true ? [] : [name])),
+  ]),
+);
 
 /**
- * A composite element (its object has parts) is a `view` node over its parts layout's render list, or an `instance`
- * where its object says it is an Object. Every other kind of this dimension is drawn as itself: the engine has a
- * factory for its own built-ins, and a kind the editor adds (a card, a glyph) is the element's own fields.
+ * A new node of one of the engine's own kinds, cut down to the fields the kind requires: what an element that states
+ * none of them (a polyline with no points, in a layout written as text) still needs to draw. A setting the kind only
+ * offers a default for is left unset, so a node reads back as it was written.
  */
-const toNode = (doc: Scene.SceneDocument, element: Resolved2D, z: string, layer: string): Node | undefined => {
-  const type =
-    element.parts !== undefined ? (element.type === 'instance' ? 'instance' : 'view') : DRAWN_KINDS[element.type];
-  if (!type || !element.center) {
-    return undefined;
-  }
-  const style = nodeStyle(element.overrides);
-  const scaled = scaledFrame(doc, element);
-  const center = scaled?.center ?? element.center;
-  const size = scaled?.size ?? element.size;
-  const builtin = (NODE_TYPES as readonly string[]).includes(type);
-  const { canvas: _canvas, ...props } = element.props ?? {};
+const requiredDefaults = (node: BuiltinNode): Node => {
+  const required = REQUIRED_FIELDS.get(node.kind) ?? [];
+  const { kind, id, z, center, size } = node;
   return {
-    // The type's own defaults first, then what the element actually wrote: a template that gives a note its text or a
-    // polyline its points keeps them, rather than having `createNode`'s placeholder put back over the top.
-    ...(builtin
-      ? createNode({ type: type as BuiltinNodeType, id: element.id, z, center, size, scene: element.parts })
-      : { type, id: element.id, z, center, size: size ?? FALLBACK_SIZE }),
-    ...props,
-    ...(scaled ? { frame: scaled.frame } : {}),
-    layer,
-    ...(element.style !== undefined ? { class: element.style } : {}),
-    ...elementText(type, element.label, props),
-    ...(element.rotation !== undefined ? { rotation: element.rotation } : {}),
-    ...(element.constrain !== undefined ? { constrain: element.constrain } : {}),
-    ...(style ? { style } : {}),
+    ...Object.fromEntries(Object.entries(node).filter(([name]) => required.includes(name))),
+    kind,
+    id,
+    z,
+    center,
+    size,
   };
 };
 
-/** A link naming no type routes at right angles around the shapes, which is what a generated diagram wants. */
-const DEFAULT_LINK_TYPE = 'smart';
+type Fields = Record<string, unknown>;
+
+const omit = <T extends object>(fields: T, keys: readonly string[]): Fields =>
+  Object.fromEntries(Object.entries(fields).filter(([key]) => !keys.includes(key)));
 
 /** A scene endpoint as react-ui-canvas's: a node and port, or a free point. */
 const endpoint = ({ node, port, point }: ElementEndpoint): Endpoint | undefined =>
@@ -170,66 +156,13 @@ const elementEndpoint = (end: Endpoint): ElementEndpoint =>
       : { node: end.node, port: end.port }
     : { point: end.point };
 
-/** A link both of whose ends are in the scene; a link to a missing element is not drawn (Review Focus 1). */
-const toLink = (
-  element: Resolved2D,
-  z: string,
-  layer: string,
-  nodes: Readonly<Record<string, Node>>,
-): Link | undefined => {
-  const source = element.source && endpoint(element.source);
-  const target = element.target && endpoint(element.target);
-  const present = (end: Endpoint) => !('node' in end) || nodes[end.node] !== undefined;
-  if (element.type !== 'link' || !source || !target || !present(source) || !present(target)) {
-    return undefined;
-  }
-  const end = MARKERS.find((marker) => marker === element.props?.end);
-  return {
-    type: DEFAULT_LINK_TYPE,
-    id: element.id,
-    z,
-    layer,
-    ...(element.style !== undefined ? { class: element.style } : {}),
-    source,
-    target,
-    ...(end ? { ends: { end } } : {}),
-    ...(element.label !== undefined ? { text: element.label } : {}),
-    ...(element.overrides?.hue !== undefined ? { style: { hue: element.overrides.hue } } : {}),
-  };
-};
-
 //
-// Render lists written as layouts: every field the scene model has no slot for is kept under `props.canvas`, so a
-// render list read back from its layout is the one that was written.
+// A render list written as a layout: an element is the node or the link itself, so a render list read back from its
+// layout is the one that was written. Only a placed composite differs, which the scene model says as an object.
 //
 
-type Fields = Record<string, unknown>;
-
-const isRecord = (value: unknown): value is Fields => typeof value === 'object' && value !== null;
-
-const omit = (fields: Fields, keys: readonly string[]): Fields =>
-  Object.fromEntries(Object.entries(fields).filter(([key]) => !keys.includes(key)));
-
-const nonEmpty = (fields: Fields): Fields | undefined => (Object.keys(fields).length > 0 ? fields : undefined);
-
-const VIEW_PREFIX = 'view:';
-const INSTANCE_PREFIX = 'instance:';
-
-/** The fields a node keeps in its element's own slots. */
-const NODE_SLOTS = [
-  'type',
-  'id',
-  'z',
-  'center',
-  'size',
-  'rotation',
-  'label',
-  'layer',
-  'locked',
-  'style',
-  'class',
-  'frame',
-];
+/** What a node works out as it is read: its box when it places a composite at a scale, and a solid's outline. */
+const READ_FIELDS: readonly string[] = ['frame', ...DERIVED_NODE_FIELDS];
 
 /** A placed composite's origin and scale back from its box and the region of its parts it shows. */
 const unscaled = (node: Node): Pick<Scene.Element2D, 'center' | 'size' | 'scale'> => {
@@ -246,74 +179,101 @@ const unscaled = (node: Node): Pick<Scene.Element2D, 'center' | 'size' | 'scale'
     scale,
   };
 };
-const LINK_SLOTS = ['id', 'z', 'source', 'target', 'text', 'layer', 'locked', 'style', 'class'];
 
-const canvasExtra = (fields: Fields, slots: readonly string[]): Fields => omit(fields, slots);
+/** The kind of an Object, a reusable definition: any that is not a container's own (`CONTAINER_KINDS`). */
+const OBJECT_KIND = 'rect';
 
-const nodeElement = (node: Node, objects: Map<string, Scene.Object2D>): Scene.Element2D => {
-  const fields: Fields = { ...node };
-  // What the list worked out as it was read (a solid's outline) is worked out again from what is stored.
-  const extra = canvasExtra(fields, [...NODE_SLOTS, ...DERIVED_NODE_FIELDS]);
-  let placed: { object: string } | { type: string };
-  // The node type and its scene or composite are kept too: a portal to a layout outside the drawing places an object
-  // whose parts resolve to no layout, and must still read back as that portal.
-  if (node.type === 'view' && typeof fields.scene === 'string') {
-    const object = { id: `${VIEW_PREFIX}${fields.scene}`, type: 'rect', parts: fields.scene };
-    objects.set(object.id, object);
-    placed = { object: object.id };
-    extra.type = 'view';
-  } else if (isInstanceNode(node)) {
-    const object = { id: `${INSTANCE_PREFIX}${node.composite}`, type: 'rect', parts: node.composite };
-    objects.set(object.id, object);
-    placed = { object: object.id };
-    // Its own name, not `instance`: a type that draws a composite (a card, a UML class) reads back as that type,
-    // with its typed fields, and is an Object because it names one — not because it is called `instance`.
-    extra.type = node.type;
-  } else {
-    placed = { type: node.type };
-  }
-  return {
-    id: node.id,
-    ...placed,
-    z: node.z,
-    ...unscaled(node),
-    ...(node.rotation !== undefined ? { rotation: node.rotation } : {}),
-    ...(typeof fields.label === 'string' ? { label: fields.label } : {}),
-    ...(node.layer !== undefined ? { layer: node.layer } : {}),
-    ...(node.locked !== undefined ? { locked: node.locked } : {}),
-    ...(node.class !== undefined ? { style: node.class } : {}),
-    ...(node.style ? { overrides: node.style } : {}),
-    props: { canvas: extra },
-  };
-};
-
-const linkElement = (link: Link): Scene.Element2D => {
-  const extra = canvasExtra({ ...link }, LINK_SLOTS);
-  return {
-    id: link.id,
-    type: 'link',
-    z: link.z,
-    source: elementEndpoint(link.source),
-    target: elementEndpoint(link.target),
-    ...(link.text !== undefined ? { label: link.text } : {}),
-    ...(link.layer !== undefined ? { layer: link.layer } : {}),
-    ...(link.locked !== undefined ? { locked: link.locked } : {}),
-    ...(link.class !== undefined ? { style: link.class } : {}),
-    ...(link.style ? { overrides: link.style } : {}),
-    props: { canvas: extra },
-  };
+/** What a render list is written against: the objects that exist already, and the lists beside it. */
+export type WriteContext = {
+  /**
+   * The object the element `element` places for the layout `parts`, where the model has one already (the element's
+   * own, or another that places the same layout); unset, a new object named for the layout.
+   */
+  readonly objectFor?: (parts: string, element: string) => string | undefined;
+  /** Whether the composite `parts` is anonymous, which makes an instance of it a group. */
+  readonly anonymous?: (parts: string) => boolean;
 };
 
 /**
- * A render list as a 2D layout and the objects its portals and instances place: a `view` node places the composite
- * object `view:<scene>`, an `instance` node the object `instance:<composite>`, each with the inner layout as its parts.
- * {@link toRenderList2D} reads the list back unchanged.
+ * The id of the object that places the layout `parts`: the element's `own` when it does, else any that does, else a
+ * free id named for the layout. One object per layout, so a definition is in the model once however a node came by it.
  */
-export const fromRenderList2D = (view: RenderList2D): { layout: Scene.LayoutRecord2D; objects: Scene.Object2D[] } => {
+export const objectPlacing = <O>(
+  objects: Readonly<Record<string, O>>,
+  partsOf: (object: O) => string | undefined,
+  parts: string,
+  own?: string,
+): string => {
+  if (own !== undefined && objects[own] !== undefined && partsOf(objects[own]) === parts) {
+    return own;
+  }
+  const existing = Object.keys(objects).find((id) => partsOf(objects[id]) === parts);
+  if (existing !== undefined) {
+    return existing;
+  }
+  let id = parts;
+  for (let index = 2; objects[id] !== undefined; index++) {
+    id = `${parts}-${index}`;
+  }
+  return id;
+};
+
+/** The object a node places, when it places one: a `view` node its scene, an instance its composite. */
+const placedObject = (node: Node, { objectFor, anonymous }: WriteContext): Scene.Object2D | undefined => {
+  const scene: unknown = Reflect.get(node, 'scene');
+  // The node keeps its scene or composite beside the object it places: a portal to a layout outside the drawing
+  // places an object whose parts resolve to no layout, and must still read back as that portal.
+  const parts =
+    node.kind === 'view' && typeof scene === 'string' ? scene : isInstanceNode(node) ? node.composite : undefined;
+  if (parts === undefined) {
+    return undefined;
+  }
+  // The object's kind says which container the node is, so no reader has to work it out from the node again.
+  const kind =
+    node.kind === 'view' ? 'view' : groupHull(node) !== undefined ? 'hull' : anonymous?.(parts) ? 'group' : OBJECT_KIND;
+  return { id: objectFor?.(parts, node.id) ?? parts, kind, parts };
+};
+
+const nodeElement = (
+  node: Node,
+  objects: Map<string, Scene.Object2D>,
+  context: WriteContext,
+): Scene.ElementRecord2D => {
+  // The frame is the composite's scale as the element stores it, so the size it gave the node is not stored beside it.
+  const { center: _center, size: _size, ...fields } = node;
+  const placed = placedObject(node, context);
+  placed && objects.set(placed.id, placed);
+  return {
+    ...omit(fields, READ_FIELDS),
+    id: node.id,
+    // Its own kind beside the object: a kind that draws a composite (a card, a UML class) reads back as that kind,
+    // and is an Object because it names one, not because it is called `instance`.
+    kind: node.kind,
+    ...(placed ? { object: placed.id } : {}),
+    ...unscaled(node),
+  };
+};
+
+const linkElement = ({ source, target, ...link }: Link): Scene.ElementRecord2D => ({
+  ...link,
+  source: elementEndpoint(source),
+  target: elementEndpoint(target),
+});
+
+/**
+ * A render list as a 2D layout and the objects its portals and instances place: each places one object whose parts
+ * are the inner layout and whose kind says what it is (a `view`, a `hull`, a `group`, else an Object). The object is
+ * the one `context` finds for that layout, else a new one named for it. {@link toRenderList2D} reads the list back
+ * unchanged.
+ */
+export const fromRenderList2D = (
+  view: RenderList2D,
+  context: WriteContext = {},
+): { layout: Scene.LayoutRecord2D; objects: Scene.Object2D[] } => {
   const objects = new Map<string, Scene.Object2D>();
-  const elements: Record<string, Scene.Element2D> = {};
+  const elements: Record<string, Scene.ElementRecord2D> = {};
   for (const node of Object.values(view.nodes)) {
-    elements[node.id] = nodeElement(node, objects);
+    elements[node.id] = nodeElement(node, objects, context);
   }
   for (const link of Object.values(view.links)) {
     elements[link.id] = linkElement(link);
@@ -332,144 +292,195 @@ export const fromRenderList2D = (view: RenderList2D): { layout: Scene.LayoutReco
   };
 };
 
-/** The element's style back onto the canvas node style (with any style an older layout kept under `props.canvas`). */
-const canvasStyle = (style: Style2D | undefined, extra: unknown): Fields | undefined => {
-  const merged: Fields = { ...(isRecord(extra) ? extra : {}), ...nodeStyle(style) };
-  return nonEmpty(merged);
+//
+// A layout read as a render list.
+//
+
+/** What an element has that its node has not: where the scene model places it, and what other writers keep on it. */
+const ELEMENT_FIELDS: readonly string[] = [
+  'object',
+  'parts',
+  'scale',
+  'props',
+  'source',
+  'target',
+  'pinned',
+  'dsl',
+  'center',
+  'size',
+  'overrides',
+];
+
+/** What a layout's elements are read against: its own records, its model, and every other 2D layout's element ids. */
+type Reading = {
+  readonly doc: Scene.SceneDocument;
+  readonly layout: Scene.LayoutRecord2D;
+  readonly model: Scene.ModelRecord2D | undefined;
+  /** Whether another 2D layout of the document holds an element of this id. */
+  readonly elsewhere: (id: string) => boolean;
 };
 
-/** An element written by {@link fromRenderList2D} as the node it was. */
-const canvasNode = (doc: Scene.SceneDocument, element: Resolved2D, canvas: Fields): Node | undefined => {
-  const scaled = scaledFrame(doc, element);
-  const center = scaled?.center ?? element.center;
-  const size = scaled?.size ?? element.size;
-  if (!center || !size || element.z === undefined) {
-    return undefined;
-  }
-  const { style: extraStyle, type: storedType, ...extra } = canvas;
-  // A placed composite is a portal unless its object says it is an Object: a `view` node is a place to drill into and
-  // an Instance is a symbol repeated, and only the object knows which of the two its parts are meant to be.
-  const placed = element.parts === undefined ? element.type : element.type === 'instance' ? 'instance' : 'view';
-  // A type of its own that draws a composite kept its own name, so anything stored wins over what the object says.
-  const type = typeof storedType === 'string' && storedType.length > 0 ? storedType : placed;
-  // An Object is a symbol repeated and a `view` is a place to drill into: a node naming a composite is the first,
-  // however it is spelled, and only a portal takes the parts as a scene.
-  const isObject = type === 'instance' || typeof extra.composite === 'string';
-  const style = canvasStyle(element.overrides, extraStyle);
+const reading = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D): Reading => {
+  const model = layout.model === undefined ? undefined : findModel(doc, layout.model);
+  let others: Set<string> | undefined;
   return {
-    ...extra,
-    type,
-    id: element.id,
-    z: element.z,
-    center,
-    size,
-    ...(scaled ? { frame: scaled.frame } : {}),
-    ...(element.rotation !== undefined ? { rotation: element.rotation } : {}),
-    // A text node keeps its text in `text`, and an element writes its text in one place whatever its kind, so the
-    // element's label is the note's text unless the node already carries one.
-    ...(type === 'note' && element.label !== undefined && extra.text === undefined
-      ? { text: element.label }
-      : element.label !== undefined
-        ? { label: element.label }
-        : {}),
-    ...(element.layer !== undefined ? { layer: element.layer } : {}),
-    ...(element.locked !== undefined ? { locked: element.locked } : {}),
-    ...(element.style !== undefined ? { class: element.style } : {}),
-    ...(style ? { style } : {}),
-    ...(element.parts === undefined ? {} : isObject ? { composite: element.parts } : { scene: element.parts }),
+    doc,
+    layout,
+    model: model?.dim === '2d' ? model : undefined,
+    elsewhere: (id) => {
+      others ??= new Set(
+        doc.layouts.flatMap((other) => (other.dim === '2d' && other !== layout ? Object.keys(other.elements) : [])),
+      );
+      return others.has(id);
+    },
   };
-};
-
-const toEndpoint = (end: ElementEndpoint | undefined, stored: unknown): Endpoint | undefined =>
-  (end && endpoint(end)) ??
-  (isRecord(stored) &&
-  isRecord(stored.point) &&
-  typeof stored.point.x === 'number' &&
-  typeof stored.point.y === 'number'
-    ? { point: { x: stored.point.x, y: stored.point.y } }
-    : undefined);
-
-/** Every link type by name, so one a newer editor wrote reads back as itself rather than as the default. */
-const LINK_TYPES_BY_NAME: Readonly<Record<string, LinkType>> = Object.fromEntries(
-  LINK_TYPES.map((type) => [type, type]),
-);
-
-const isStyleHue = (hue: string | undefined): hue is StyleHue => STYLE_HUES.some((candidate) => candidate === hue);
-
-/** A link element written by {@link fromRenderList2D} as the link it was. */
-const canvasLink = (element: Resolved2D, canvas: Fields): Link | undefined => {
-  const { style: extraStyle, type: storedType, source, target, points, ...extra } = canvas;
-  const sourceEnd = toEndpoint(element.source, source);
-  const targetEnd = toEndpoint(element.target, target);
-  if (!sourceEnd || !targetEnd || element.z === undefined) {
-    return undefined;
-  }
-  const hue = element.overrides?.hue;
-  const lineStyle = element.overrides?.lineStyle;
-  const fontSize = element.overrides?.fontSize;
-  const style = {
-    ...(isRecord(extraStyle) ? extraStyle : {}),
-    ...(isStyleHue(hue) ? { hue } : {}),
-    ...(lineStyle !== undefined && lineStyle !== 'sketchy' ? { lineStyle } : {}),
-    ...(fontSize !== undefined ? { fontSize } : {}),
-  };
-  const base = {
-    ...extra,
-    id: element.id,
-    z: element.z,
-    source: sourceEnd,
-    target: targetEnd,
-    ...(element.label !== undefined ? { text: element.label } : {}),
-    ...(element.layer !== undefined ? { layer: element.layer } : {}),
-    ...(element.locked !== undefined ? { locked: element.locked } : {}),
-    ...(element.style !== undefined ? { class: element.style } : {}),
-    ...(Object.keys(style).length > 0 ? { style } : {}),
-  };
-  const type =
-    typeof storedType === 'string' ? (LINK_TYPES_BY_NAME[storedType] ?? DEFAULT_LINK_TYPE) : DEFAULT_LINK_TYPE;
-  return type === 'spline' ? { ...base, type, points: Array.isArray(points) ? points : [] } : { ...base, type };
 };
 
 /**
- * A 2D layout as the engine's render list. A layout {@link fromRenderList2D} wrote reads back as the list it was; any
- * other (a `.dx` document's) is drawn with the default layer and the scene kinds react-ui-canvas has nodes for.
+ * The look a node or link carries. The canvas folds a named style in itself, from the model's styles, so an element
+ * whose style is one of those reads back its own overrides and the list round-trips. Any other look the canvas
+ * cannot derive (the object's, a layout's override of a style) is carried resolved.
  */
-export const toRenderList2D = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D): RenderList2D =>
-  // A hull's frame is wherever the nodes inside it are, so it is set as the list is read rather than trusted as stored.
-  fitHulls(
-    layout.layers !== undefined ||
-      layout.kind !== undefined ||
-      Object.values(layout.elements).some((element) => isRecord(element.props?.canvas))
-      ? storedView(doc, layout)
-      : toView(doc, layout),
-    layout.lattice,
-    gridPitch(layout),
-  );
+const ownLook = ({ layout, model }: Reading, element: Resolved2D): Style2D | undefined => {
+  const own = layout.elements[element.id];
+  const object = own?.object === undefined ? undefined : model?.objects[own.object];
+  const style = element.style;
+  const derivable =
+    object?.overrides === undefined &&
+    object?.style === undefined &&
+    (style === undefined || (model?.styles?.[style] !== undefined && layout.styles?.[style] === undefined));
+  return stated(derivable ? own?.overrides : element.overrides);
+};
+
+/**
+ * An element as the node it draws as. One that places an object with parts is what its container is (`containerOf`):
+ * a View is a `view` node over its parts, and a group, a hull or an Object is an `instance` of them, unless the
+ * element names a kind of its own that draws a composite (a card, a UML class). Any other kind is drawn as itself:
+ * the engine's own start from the kind's defaults, so a template that gives a polyline no points still draws, and a
+ * kind the engine does not know is a box.
+ */
+const toNode = (context: Reading, element: Resolved2D, z: string): Node | undefined => {
+  const layer = layerOf(context.layout, element);
+  const stated = context.layout.elements[element.id]?.kind;
+  const container = containerOf(context.doc, context.layout, element.id);
+  const kind =
+    container === undefined
+      ? element.kind
+      : stated !== undefined && stated.length > 0 && stated !== 'view' && stated !== 'instance'
+        ? stated
+        : container === 'view'
+          ? 'view'
+          : 'instance';
+  const scaled = scaledFrame(context.doc, element);
+  const center = scaled?.center ?? element.center;
+  if (kind.length === 0 || kind === LINK_KIND || (kind === 'group' && element.parts === undefined) || !center) {
+    return undefined;
+  }
+  const size = scaled?.size ?? element.size;
+  const builtin = NODE_KINDS.find((candidate) => candidate === kind);
+  const overrides = ownLook(context, element);
+  // An Object is a symbol repeated and a `view` is a place to drill into: a node naming a composite is the first,
+  // however it is spelled, and only a portal takes the parts as a scene.
+  const isObject = kind === 'instance' || typeof element.composite === 'string';
+  return {
+    ...(builtin
+      ? requiredDefaults(createNode({ kind: builtin, id: element.id, z, center, size, scene: element.parts }))
+      : { kind, id: element.id, z, center, size: size ?? FALLBACK_SIZE }),
+    ...omit(element, ELEMENT_FIELDS),
+    // What other writers keep in `props` is theirs to change, so it wins over a copy the node once wrote.
+    ...element.props,
+    kind,
+    z,
+    ...(layer !== undefined ? { layer } : {}),
+    ...(scaled ? { frame: scaled.frame } : {}),
+    ...(overrides ? { overrides } : {}),
+    ...(element.parts === undefined ? {} : isObject ? { composite: element.parts } : { scene: element.parts }),
+    // A hull whose element does not say its border takes the default one, so the editor opens it out as a hull.
+    ...(container === 'hull' && Reflect.get(element, 'hull') === undefined ? { hull: DEFAULT_HULL_SHAPE } : {}),
+  };
+};
+
+/**
+ * An element as the link it draws as: one whose ends are both free or on nodes of the list. An end on a node of
+ * another layout is kept (a hull's nodes stand in the scene that places it, once it is opened out); an end on
+ * nothing, or on an element this list leaves out, is not a link to draw (Review Focus 1).
+ */
+const toLink = (
+  context: Reading,
+  element: Resolved2D,
+  z: string,
+  nodes: Readonly<Record<string, Node>>,
+): Link | undefined => {
+  const source = element.source && endpoint(element.source);
+  const target = element.target && endpoint(element.target);
+  const drawn = (end: Endpoint) =>
+    !('node' in end) ||
+    nodes[end.node] !== undefined ||
+    (context.layout.elements[end.node] === undefined && context.elsewhere(end.node));
+  if (element.kind !== LINK_KIND || !source || !target || !drawn(source) || !drawn(target)) {
+    return undefined;
+  }
+  // A path a newer editor wrote is one this one cannot run, so the link takes the default.
+  const path = LINK_PATHS.find((candidate) => candidate === element.path);
+  const tail = MARKERS.find((marker) => marker === element.tail);
+  // A layout written as text states its arrowhead among its `props`.
+  const head = MARKERS.find((marker) => marker === (element.head ?? element.props?.end));
+  const { color, stroke, fontSize } = ownLook(context, element) ?? {};
+  const overrides = {
+    // A layout written by hand may state anything, and a link draws only what is a colour.
+    ...(isColor(color) ? { color } : {}),
+    ...(stroke !== undefined ? { stroke } : {}),
+    ...(fontSize !== undefined ? { fontSize } : {}),
+  };
+  const points = element.points ?? (path === 'spline' ? [] : undefined);
+  const layer = layerOf(context.layout, element);
+  return {
+    kind: LINK_KIND,
+    id: element.id,
+    z,
+    source,
+    target,
+    ...(path ? { path } : {}),
+    ...(points ? { points } : {}),
+    ...(tail ? { tail } : {}),
+    ...(head ? { head } : {}),
+    ...(element.label !== undefined ? { label: element.label } : {}),
+    ...(layer !== undefined ? { layer } : {}),
+    ...(element.locked !== undefined ? { locked: element.locked } : {}),
+    ...(element.style !== undefined ? { style: element.style } : {}),
+    ...(Object.keys(overrides).length > 0 ? { overrides } : {}),
+    ...(element.connector !== undefined ? { connector: element.connector } : {}),
+    ...(element.constrain !== undefined ? { constrain: element.constrain } : {}),
+  };
+};
+
+/**
+ * The layer an element is on. A layout that declares layers is read as written: an element keeps the layer it names,
+ * or none. A layout that declares none has one, the default, which its list declares and every element is on, so the
+ * editor has a layer to add another beside and the pin that keeps each element on its layer changes nothing.
+ */
+const layerOf = (layout: Scene.LayoutRecord2D, element: Resolved2D): string | undefined =>
+  layout.layers === undefined ? DEFAULT_LAYER.id : element.layer;
 
 /** A node of a layout by its element's id, hidden or not, as it would draw. */
 type OperandLookup = (id: string) => Node | undefined;
 
 /**
- * The nodes a layout's elements draw as, each read once and only when asked for. A solid's operands are hidden while
- * it stands for them, so they are in no list: they are read here, to frame the solid and to work out its outline.
+ * The nodes a layout's elements draw as, each read once and only when asked for. A solid's operands are in no list
+ * while it stands for them: they are read here, to frame the solid and to work out its outline.
  */
-const operandNodes = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D): OperandLookup => {
-  let resolved: Record<string, Resolved2D> | undefined;
+const operandNodes = (context: Reading, resolved: Readonly<Record<string, Resolved2D>>): OperandLookup => {
   const read = new Map<string, Node | undefined>();
   const lookup: OperandLookup = (id) => {
     if (!read.has(id)) {
       // Set before it is read, so a solid named among its own operands finds nothing rather than itself.
       read.set(id, undefined);
-      resolved ??= resolveLayout2D(doc, layout);
       const element = resolved[id];
-      const stored = element?.props?.canvas;
       read.set(
         id,
         element === undefined
           ? undefined
-          : isRecord(stored)
-            ? canvasNode(doc, { ...element, overrides: layout.elements[id]?.overrides }, stored)
-            : toNode(doc, framedSolid(element, lookup), element.z ?? initialKeys(1)[0], DEFAULT_LAYER.id),
+          : toNode(context, framedSolid(element, lookup), element.z ?? initialKeys(1)[0]),
       );
     }
     return read.get(id);
@@ -483,7 +494,7 @@ const operandNodes = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D): O
  * (`solidBounds2D`) over the operands as they resolve. Any other element as it is.
  */
 const framedSolid = (element: Resolved2D, lookup: OperandLookup): Resolved2D => {
-  if (element.type !== 'solid' || (element.center && element.size)) {
+  if (element.kind !== 'solid' || (element.center && element.size)) {
     return element;
   }
   const bounds = solidBounds2D(element.props?.op, solidOperands(element.props?.operands).map(lookup));
@@ -513,81 +524,58 @@ const withSolidOutlines = (nodes: Record<string, Node>, lookup: OperandLookup): 
   };
 };
 
-/** An element's layer when its layout declares it; otherwise the default layer, which the list then declares. */
-const layerOf = (layout: Scene.LayoutRecord2D, element: Resolved2D): string =>
-  element.layer !== undefined && layout.layers?.[element.layer] !== undefined ? element.layer : DEFAULT_LAYER.id;
-
-const storedView = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D): RenderList2D => {
-  // A canvas node resolves its class itself, so it reads back its own overrides rather than the resolved look.
-  const own = (element: Resolved2D): Resolved2D => ({ ...element, overrides: layout.elements[element.id]?.overrides });
-  const elements = Object.values(resolveLayout2D(doc, layout)).filter((element) => !element.hidden);
-  // Elements a `.dx` document wrote have no canvas fields: they draw as `toView` draws them, among the rest.
-  const native = elements.filter((element) => !isRecord(element.props?.canvas));
-  const keys = initialKeys(native.length);
-  const keyOf = (element: Resolved2D) => element.z ?? keys[native.indexOf(element)];
-  const nodes: Record<string, Node> = {};
-  const links: Record<string, Link> = {};
-  for (const element of elements) {
-    const stored = element.props?.canvas;
-    if (!isRecord(stored) || element.type === 'link') {
-      continue;
-    }
-    const node = canvasNode(doc, own(element), stored);
-    node && (nodes[node.id] = node);
-  }
-  const lookup = operandNodes(doc, layout);
-  for (const element of native) {
-    const node = toNode(doc, framedSolid(element, lookup), keyOf(element), layerOf(layout, element));
-    node && (nodes[node.id] = node);
-  }
-  for (const element of elements) {
-    const stored = element.props?.canvas;
-    if (element.type !== 'link') {
-      continue;
-    }
-    const link = isRecord(stored)
-      ? canvasLink(own(element), stored)
-      : toLink(element, keyOf(element), layerOf(layout, element), nodes);
-    link && (links[link.id] = link);
-  }
-  // The default layer is declared only when an element falls back to it; the layout's own layers are kept as they are.
-  const fallback = native.some((element) => layerOf(layout, element) === DEFAULT_LAYER.id);
-  const layers = {
-    ...(fallback ? { [DEFAULT_LAYER.id]: DEFAULT_LAYER } : {}),
-    ...layout.layers,
-  };
-  return {
-    ...(Object.keys(layers).length > 0 ? { layers } : {}),
-    ...(layout.kind !== undefined ? { kind: layout.kind } : {}),
-    ...(layout.anonymous !== undefined ? { anonymous: layout.anonymous } : {}),
-    id: layout.id,
-    ...(layout.name !== undefined ? { name: layout.name } : {}),
-    nodes: withSolidOutlines(nodes, lookup),
-    links,
-  };
+/**
+ * The elements a list holds. A hidden element is left out, except in a composite's definition, where a hidden part
+ * is one an instance may show again and so must stay in the list; a solid's operand is left out wherever it is.
+ */
+const listed = (layout: Scene.LayoutRecord2D, resolved: Readonly<Record<string, Resolved2D>>): Resolved2D[] => {
+  const operands = new Set(
+    Object.values(resolved).flatMap((element) =>
+      element.kind === 'solid' ? solidOperands(element.props?.operands) : [],
+    ),
+  );
+  return Object.values(resolved).filter(
+    (element) => !operands.has(element.id) && (layout.kind === 'composite' || !element.hidden),
+  );
 };
 
-const toView = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D): RenderList2D => {
-  const elements = Object.values(resolveLayout2D(doc, layout)).filter((element) => !element.hidden);
-  const keys = initialKeys(elements.length);
+/**
+ * A 2D layout as the engine's render list. An element is read as the node or link it is, whoever wrote it: one the
+ * editor wrote reads back as it was written, and one a `.dx` document wrote takes a paint order and its kind's defaults.
+ */
+export const toRenderList2D = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D): RenderList2D => {
+  const context = reading(doc, layout);
+  const resolved = resolveLayout2D(doc, layout);
+  const elements = listed(layout, resolved);
+  // An element with no paint order takes one after the others of its kind in the layout's own order.
+  const unordered = elements.filter((element) => element.z === undefined);
+  const keys = initialKeys(unordered.length);
+  const keyOf = (element: Resolved2D) => element.z ?? keys[unordered.indexOf(element)];
+  const lookup = operandNodes(context, resolved);
   const nodes: Record<string, Node> = {};
-  const lookup = operandNodes(doc, layout);
-  elements.forEach((element, index) => {
-    const node = toNode(doc, framedSolid(element, lookup), element.z ?? keys[index], DEFAULT_LAYER.id);
+  for (const element of elements) {
+    const node = toNode(context, framedSolid(element, lookup), keyOf(element));
     node && (nodes[node.id] = node);
-  });
+  }
   const links: Record<string, Link> = {};
-  elements.forEach((element, index) => {
-    const link = toLink(element, element.z ?? keys[index], DEFAULT_LAYER.id, nodes);
+  for (const element of elements) {
+    const link = toLink(context, element, keyOf(element), nodes);
     link && (links[link.id] = link);
-  });
-  return {
-    id: layout.id,
-    name: layout.name,
-    nodes: withSolidOutlines(nodes, lookup),
-    links,
-    layers: { [DEFAULT_LAYER.id]: DEFAULT_LAYER },
-  };
+  }
+  // A hull's frame is wherever the nodes inside it are, so it is set as the list is read rather than trusted as stored.
+  return fitHulls(
+    {
+      layers: layout.layers ?? { [DEFAULT_LAYER.id]: DEFAULT_LAYER },
+      ...(layout.kind !== undefined ? { kind: layout.kind } : {}),
+      ...(layout.anonymous !== undefined ? { anonymous: layout.anonymous } : {}),
+      id: layout.id,
+      ...(layout.name !== undefined ? { name: layout.name } : {}),
+      nodes: withSolidOutlines(nodes, lookup),
+      links,
+    },
+    layout.lattice,
+    gridPitch(layout),
+  );
 };
 
 /**
@@ -623,8 +611,9 @@ export const fromRenderLists2D = (
   { root = lists[0]?.id ?? '', styles, theme }: FromRenderLists2DOptions = {},
 ): Scene.SceneDocument => {
   const objects: Record<string, Scene.Object2D> = {};
+  const anonymous = (parts: string) => lists.some((list) => list.id === parts && list.anonymous === true);
   const layouts = lists.map((list) => {
-    const { layout, objects: placed } = fromRenderList2D(list);
+    const { layout, objects: placed } = fromRenderList2D(list, { anonymous });
     placed.forEach((object) => (objects[object.id] = object));
     return { ...layout, model: 'model' };
   });

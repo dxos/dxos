@@ -7,11 +7,15 @@
 // Kept bidirectional so `read.ts` can report only non-default styles back to the agent.
 //
 
-import { Shape } from '@dxos/scene';
+import { SvgFile } from '@dxos/diagram';
+import { Shape, colorLiteral } from '@dxos/scene';
+
+/** The stroke color of an element that states none. */
+const INK = '#1e1e1e';
 
 /** Scene palette → excalidraw stroke colors (tldraw-compatible hues). */
-const COLOR_TO_HEX: Record<Shape.Color, string> = {
-  'black': '#1e1e1e',
+const COLOR_TO_HEX: Readonly<Partial<Record<string, string>>> = {
+  'black': INK,
   'grey': '#9fa8b2',
   'light-violet': '#e085f4',
   'violet': '#ae3ec9',
@@ -26,10 +30,26 @@ const COLOR_TO_HEX: Record<Shape.Color, string> = {
   'white': '#ffffff',
 };
 
-const HEX_TO_COLOR = Object.fromEntries(Object.entries(COLOR_TO_HEX).map(([color, hex]) => [hex, color])) as Record<
-  string,
-  Shape.Color
->;
+const HEX_TO_COLOR: Readonly<Partial<Record<string, Shape.Color>>> = Object.fromEntries(
+  Object.entries(COLOR_TO_HEX).map(([color, hex]) => [hex, color]),
+);
+
+/**
+ * The stroke color a scene color draws in: a palette name's own (at tone 3 its `light-` twin's), a CSS literal as
+ * written, and the ink for a hue the palette lacks.
+ */
+const toHex = (color: Shape.Color | undefined): string => {
+  const { name, css } = SvgFile.drawnColor(color);
+  return css ?? (name !== undefined ? COLOR_TO_HEX[name] : undefined) ?? INK;
+};
+
+/** The scene color a stroke color reads as: its palette name, else the color itself; none for the ink. */
+const readColor = (stroke: unknown): Shape.Color | undefined => {
+  if (typeof stroke !== 'string' || stroke === INK) {
+    return undefined;
+  }
+  return HEX_TO_COLOR[stroke] ?? colorLiteral(stroke);
+};
 
 const WEIGHT_TO_STROKE_WIDTH: Record<Shape.Weight, number> = { s: 1, m: 2, l: 4, xl: 8 };
 const WEIGHT_TO_FONT_SIZE: Record<Shape.Weight, number> = { s: 16, m: 20, l: 28, xl: 36 };
@@ -46,26 +66,22 @@ export type StyleProps = {
 type SceneStyle = Partial<Pick<Shape.Box, 'color' | 'fill' | 'stroke' | 'weight'>>;
 
 /** Compile scene style fields into excalidraw element props (defaults resolved). */
-export const toStyle = ({
-  color = 'black',
-  fill = 'none',
-  stroke = 'sketchy',
-  weight = 'm',
-}: SceneStyle): StyleProps => ({
-  strokeColor: COLOR_TO_HEX[color],
+export const toStyle = ({ color, fill = 'none', stroke = 'sketchy', weight = 'm' }: SceneStyle): StyleProps => ({
+  strokeColor: toHex(color),
   // Excalidraw fills only at full strength, so a tint is left unfilled rather than drawn saturated.
-  backgroundColor: fill === 'none' || fill === 'tint' ? 'transparent' : COLOR_TO_HEX[color],
+  backgroundColor: fill === 'none' || fill === 'tint' ? 'transparent' : toHex(color),
   fillStyle: fill === 'pattern' ? 'hachure' : 'solid',
   strokeWidth: WEIGHT_TO_STROKE_WIDTH[weight],
   strokeStyle: stroke === 'dashed' || stroke === 'dotted' ? stroke : 'solid',
-  roughness: stroke === 'sketchy' ? 1 : 0,
+  // Excalidraw draws an outline on every shape, so `none` takes its default, the hand-drawn one.
+  roughness: stroke === 'sketchy' || stroke === 'none' ? 1 : 0,
 });
 
 export const toFontSize = (weight: Shape.Weight = 'm'): number => WEIGHT_TO_FONT_SIZE[weight];
 
 /** Report only non-default styles to keep the read output compact. */
 export const readStyle = (record: Record<string, any>): SceneStyle => {
-  const color = HEX_TO_COLOR[record.strokeColor];
+  const color = readColor(record.strokeColor);
   const fill: Shape.Fill =
     !record.backgroundColor || record.backgroundColor === 'transparent'
       ? 'none'
@@ -81,7 +97,7 @@ export const readStyle = (record: Record<string, any>): SceneStyle => {
   const weight = (Object.entries(WEIGHT_TO_STROKE_WIDTH).find(([, width]) => width === record.strokeWidth)?.[0] ??
     'm') as Shape.Weight;
   return {
-    ...(color && color !== 'black' ? { color } : {}),
+    ...(color ? { color } : {}),
     ...(fill !== 'none' ? { fill } : {}),
     ...(stroke !== 'sketchy' ? { stroke } : {}),
     ...(weight !== 'm' ? { weight } : {}),
@@ -90,12 +106,12 @@ export const readStyle = (record: Record<string, any>): SceneStyle => {
 
 /** @param scale Object scale the font size was multiplied by on render. */
 export const readTextStyle = (record: Record<string, any>, scale = 1): SceneStyle => {
-  const color = HEX_TO_COLOR[record.strokeColor];
+  const color = readColor(record.strokeColor);
   const fontSize = record.fontSize / scale;
   const weight = (Object.entries(WEIGHT_TO_FONT_SIZE).find(([, size]) => size === fontSize)?.[0] ??
     'm') as Shape.Weight;
   return {
-    ...(color && color !== 'black' ? { color } : {}),
+    ...(color ? { color } : {}),
     ...(weight !== 'm' ? { weight } : {}),
   };
 };

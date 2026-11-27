@@ -12,22 +12,22 @@ import { relationStyle } from './uml.ts';
 
 describe('relations', () => {
   test('each relation derives its markers, and head/tail still override', ({ expect }) => {
-    expect(Shape.markersOf({ relation: 'inheritance' })).toEqual({ end: 'triangle', dashed: false });
-    expect(Shape.markersOf({ relation: 'implementation' })).toEqual({ end: 'triangle', dashed: true });
-    expect(Shape.markersOf({ relation: 'composition' })).toEqual({ start: 'diamond-filled', dashed: false });
-    expect(Shape.markersOf({ relation: 'aggregation' })).toEqual({ start: 'diamond', dashed: false });
-    expect(Shape.markersOf({ relation: 'one-to-many' })).toEqual({ start: 'one', end: 'crowsfoot', dashed: false });
+    expect(Shape.markersOf({ relation: 'inheritance' })).toEqual({ head: 'triangle', dashed: false });
+    expect(Shape.markersOf({ relation: 'implementation' })).toEqual({ head: 'triangle', dashed: true });
+    expect(Shape.markersOf({ relation: 'composition' })).toEqual({ tail: 'diamond-filled', dashed: false });
+    expect(Shape.markersOf({ relation: 'aggregation' })).toEqual({ tail: 'diamond', dashed: false });
+    expect(Shape.markersOf({ relation: 'one-to-many' })).toEqual({ tail: 'one', head: 'crowsfoot', dashed: false });
     expect(Shape.markersOf({ relation: 'many-to-many' })).toEqual({
-      start: 'crowsfoot',
-      end: 'crowsfoot',
+      tail: 'crowsfoot',
+      head: 'crowsfoot',
       dashed: false,
     });
-    expect(Shape.markersOf({ relation: 'dependency' })).toEqual({ end: 'open', dashed: true });
+    expect(Shape.markersOf({ relation: 'dependency' })).toEqual({ head: 'open', dashed: true });
     // Documents from before relations keep drawing as they did.
-    expect(Shape.markersOf({})).toEqual({ end: 'arrow', dashed: false });
+    expect(Shape.markersOf({})).toEqual({ head: 'arrow', dashed: false });
     expect(Shape.markersOf({ head: 'triangle', tail: 'circle' })).toEqual({
-      start: 'circle',
-      end: 'triangle',
+      tail: 'circle',
+      head: 'triangle',
       dashed: false,
     });
     expect(Shape.markersOf({ relation: 'inheritance', head: 'none' })).toEqual({ dashed: false });

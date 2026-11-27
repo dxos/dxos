@@ -22,8 +22,8 @@ const DOCUMENT: Scene.SceneDocument = {
       id: 'root',
       dim: '2d',
       elements: {
-        a: { id: 'a', type: 'rect', center: { x: 0, y: 0 }, size: { width: 100, height: 100 } },
-        b: { id: 'b', type: 'rect', center: { x: 300, y: 0 }, size: { width: 100, height: 100 } },
+        a: { id: 'a', kind: 'rect', center: { x: 0, y: 0 }, size: { width: 100, height: 100 } },
+        b: { id: 'b', kind: 'rect', center: { x: 300, y: 0 }, size: { width: 100, height: 100 } },
       },
     },
   ],

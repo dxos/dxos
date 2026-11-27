@@ -17,7 +17,7 @@ import { FunctionShapeComponent } from './Function.tsx';
 
 export const FunctionShape = ComputeShape.mapFields(
   Struct.assign({
-    type: Schema.Literal('function'),
+    kind: Schema.Literal('function'),
   }),
 );
 
@@ -27,7 +27,7 @@ export type CreateFunctionProps = CreateShapeProps<FunctionShape>;
 
 export const createFunction = (props: CreateFunctionProps) =>
   createShape<FunctionShape>({
-    type: 'function',
+    kind: 'function',
     size: { width: 4 * MAJOR_GRID, height: 3 * MAJOR_GRID },
     ...props,
   });

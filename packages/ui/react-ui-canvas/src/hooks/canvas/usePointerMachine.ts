@@ -18,17 +18,18 @@ import {
   type Link,
   type Node,
   type NodeId,
-  type NodeType,
+  type NodeKind,
   type Point,
   type Port,
   type Size,
-  type SplineLink,
   endpointNode,
   isInstanceNode,
   isPointEndpoint,
   isPolylineNode,
   isShapeNode,
   isViewNode,
+  linkPath,
+  portSide,
 } from '@dxos/scene';
 
 import {
@@ -236,9 +237,9 @@ export type PointerMachine = {
   onHandlePointerDown: (node: Node, handle: Handle, event: PointerEvent) => void;
   onPortPointerDown: (node: Node, port: Port, event: PointerEvent) => void;
   onEndPointerDown: (link: Link, end: LinkEnd, event: PointerEvent) => void;
-  onPointPointerDown: (link: SplineLink, index: number, event: PointerEvent) => void;
-  onMidpointPointerDown: (link: SplineLink, index: number, point: Point, event: PointerEvent) => void;
-  onPointContextMenu: (link: SplineLink, index: number, event: MouseEvent) => void;
+  onPointPointerDown: (link: Link, index: number, event: PointerEvent) => void;
+  onMidpointPointerDown: (link: Link, index: number, point: Point, event: PointerEvent) => void;
+  onPointContextMenu: (link: Link, index: number, event: MouseEvent) => void;
   /** The menu of a link pressed on one of its ends, which would else be the menu of the node the end is on. */
   onEndContextMenu: (link: Link, end: LinkEnd, event: MouseEvent) => void;
   /** A vertex of the node in vertex edit mode: press marks it, drag moves it, alt-click removes it. */
@@ -329,13 +330,13 @@ export const usePointerMachine = ({
   );
 
   /**
-   * Lands a line drawn through `points` as a node of the tool `type`, framed by them; fewer than two make nothing.
+   * Lands a line drawn through `points` as a node of the tool's `kind`, framed by them; fewer than two make nothing.
    * A line placed vertex by vertex is selected and the tool put down. A `stroke` drawn freehand is one of several, so
    * the tool stays in hand and nothing is selected, whose handles would sit over the next stroke.
    */
   const landPoints = useCallback(
-    (type: NodeType, points: readonly Point[], closed: boolean, stroke = false) => {
-      const def = nodeRegistry[type];
+    (kind: NodeKind, points: readonly Point[], closed: boolean, stroke = false) => {
+      const def = nodeRegistry[kind];
       // The frame needs some extent on each axis to scale the line by, so a straight run gets a minor cell.
       const shut = closed && points.length >= 3;
       // A tool that draws a curve bends every segment, so the line runs through its points as one.
@@ -347,7 +348,7 @@ export const usePointerMachine = ({
       const { bounds } = frame;
       const node = def.createFromPoints(
         {
-          id: createId(type),
+          id: createId(kind),
           z: topOfView(scene),
           center: boundsCenter(bounds),
           size: { width: bounds.width, height: bounds.height },
@@ -370,18 +371,18 @@ export const usePointerMachine = ({
     [nodeRegistry, minor, scene, draw, registry, atoms.layer, select, setTool],
   );
 
-  /** The size of the last shape of each type a gesture made, which a shape drawn nearly that size takes. */
-  const lastSizeRef = useRef<Readonly<Record<NodeType, Size>>>({});
+  /** The size of the last shape of each kind a gesture made, which a shape drawn nearly that size takes. */
+  const lastSizeRef = useRef<Readonly<Record<NodeKind, Size>>>({});
 
   /**
    * Lands a shape read from a stroke as the node that draws it, on the grid whatever the snap setting: a shape drawn
    * by hand is rough, and squaring it up is the point of reading it. Its sides and its edges take a major line of the
-   * grid where one is near, and a minor one otherwise. False where the registry has no such type.
+   * grid where one is near, and a minor one otherwise. False where the registry has no such kind.
    */
   const landShape = useCallback(
     ({ shape, bounds, rotation }: RecognizedShape): boolean => {
-      const type = shape === 'rect' || shape === 'ellipse' ? shape : 'polygon';
-      const def = nodeRegistry[type];
+      const kind = shape === 'rect' || shape === 'ellipse' ? shape : 'polygon';
+      const def = nodeRegistry[kind];
       if (!def) {
         return false;
       }
@@ -395,7 +396,7 @@ export const usePointerMachine = ({
       };
       // Nearly the size of the last such shape, or of the tool's own, it was meant to match, and takes that size.
       const size = nearestSize(sideways ? turned(drawn) : drawn, [
-        lastSizeRef.current[type],
+        lastSizeRef.current[kind],
         nominalSize(def.defaultSize, cell),
       ]);
       // The box the frame covers, about the middle of the stroke, with its edges on the grid.
@@ -403,16 +404,16 @@ export const usePointerMachine = ({
       const middle = boundsCenter(bounds);
       const [left, top] = [onGrid(middle.x - box.width / 2), onGrid(middle.y - box.height / 2)];
       const node = def.create({
-        id: createId(type),
+        id: createId(kind),
         z: topOfView(scene),
         center: { x: left + box.width / 2, y: top + box.height / 2 },
         size,
       });
-      lastSizeRef.current = { ...lastSizeRef.current, [type]: size };
+      lastSizeRef.current = { ...lastSizeRef.current, [kind]: size };
       draw.apply(
         insertNode({
           ...node,
-          ...(type === 'polygon' ? { params: { sides: shape === 'triangle' ? 3 : 4 } } : {}),
+          ...(kind === 'polygon' ? { params: { sides: shape === 'triangle' ? 3 : 4 } } : {}),
           ...(rotation !== undefined ? { rotation } : {}),
           layer: activeLayer(scene, registry.get(atoms.layer)),
         }),
@@ -456,18 +457,18 @@ export const usePointerMachine = ({
     [nodeRegistry, minor, scene, draw, registry, atoms.layer],
   );
 
-  /** The type the tool in hand draws in one stroke (`NodeDef.freehand`), where it is such a tool and may draw. */
-  const strokeType = useCallback(
-    (tool: Tool): NodeType | undefined =>
-      tool.kind === 'node' && capabilities.create && nodeRegistry[tool.type]?.freehand ? tool.type : undefined,
+  /** The kind the tool in hand draws in one stroke (`NodeDef.freehand`), where it is such a tool and may draw. */
+  const strokeKind = useCallback(
+    (tool: Tool): NodeKind | undefined =>
+      tool.kind === 'node' && capabilities.create && nodeRegistry[tool.node]?.freehand ? tool.node : undefined,
     [capabilities.create, nodeRegistry],
   );
 
   /** A stroke starts where the pointer is, not on the grid: a line drawn freehand follows the hand. */
   const startStroke = useCallback(
-    (type: NodeType, event: PointerEvent) => {
+    (kind: NodeKind, event: PointerEvent) => {
       select([]);
-      startDrag({ kind: 'freehand', type, points: [toScene(event)], times: [event.timeStamp] }, event);
+      startDrag({ kind: 'freehand', node: kind, points: [toScene(event)], times: [event.timeStamp] }, event);
     },
     [select, startDrag, toScene],
   );
@@ -479,7 +480,7 @@ export const usePointerMachine = ({
         return;
       }
       setDrag(undefined);
-      landPoints(drawing.type, drawing.points, closed);
+      landPoints(drawing.node, drawing.points, closed);
     },
     [registry, atoms.drag, setDrag, landPoints],
   );
@@ -524,7 +525,7 @@ export const usePointerMachine = ({
       const drawing = registry.get(atoms.drag);
       if (drawing?.kind === 'vertices') {
         // A drawing in progress takes every press, over a shape as on the canvas, until it ends or its tool is put down.
-        if (currentTool.kind === 'node' && currentTool.type === drawing.type) {
+        if (currentTool.kind === 'node' && currentTool.node === drawing.node) {
           onDrawingPointerDown(drawing, point, event);
           return;
         }
@@ -533,7 +534,7 @@ export const usePointerMachine = ({
       if (event.target !== event.currentTarget) {
         return;
       }
-      const stroke = strokeType(currentTool);
+      const stroke = strokeKind(currentTool);
       if (event.button === 1 || currentTool.kind === 'hand' || isHandDrag(event)) {
         startDrag({ kind: 'pan', last: { x: event.clientX, y: event.clientY } }, event);
       } else if (event.button !== 0) {
@@ -541,13 +542,13 @@ export const usePointerMachine = ({
       } else if (stroke !== undefined) {
         startStroke(stroke, event);
       } else if (currentTool.kind === 'node') {
-        if (capabilities.create && nodeRegistry[currentTool.type]?.createFromPoints) {
+        if (capabilities.create && nodeRegistry[currentTool.node]?.createFromPoints) {
           select([]);
           const vertex = { x: snap(point.x), y: snap(point.y) };
-          startDrag({ kind: 'vertices', type: currentTool.type, points: [vertex], to: vertex }, event);
+          startDrag({ kind: 'vertices', node: currentTool.node, points: [vertex], to: vertex }, event);
         } else if (capabilities.create) {
           const from = { x: snap(point.x), y: snap(point.y) };
-          startDrag({ kind: 'create', type: currentTool.type, from, to: from }, event);
+          startDrag({ kind: 'create', node: currentTool.node, from, to: from }, event);
         }
       } else if (currentTool.kind === 'link') {
         // A link tool on empty canvas draws a free-ended link (decision 3); dropping on a node attaches that end.
@@ -557,10 +558,10 @@ export const usePointerMachine = ({
           startDrag(
             {
               kind: 'link',
-              type: currentTool.type,
+              path: currentTool.path,
               source: { point: from },
               from,
-              fromSide: 'e',
+              fromSide: 'right',
               to: from,
               press: point,
               pointer: point,
@@ -590,7 +591,7 @@ export const usePointerMachine = ({
       nodeRegistry,
       onDrawingPointerDown,
       setDrag,
-      strokeType,
+      strokeKind,
       startStroke,
     ],
   );
@@ -635,7 +636,7 @@ export const usePointerMachine = ({
       }
       event.stopPropagation();
       // A stroke is drawn over whatever is there, as on paper: the shape under the press is not picked up.
-      const stroke = strokeType(currentTool);
+      const stroke = strokeKind(currentTool);
       if (stroke !== undefined) {
         startStroke(stroke, event);
         return;
@@ -655,7 +656,7 @@ export const usePointerMachine = ({
         startDrag(
           {
             kind: 'link',
-            type: currentTool.type,
+            path: currentTool.path,
             source: { node: node.id },
             from,
             fromSide,
@@ -699,7 +700,7 @@ export const usePointerMachine = ({
       scene.nodes,
       toScene,
       startDrag,
-      strokeType,
+      strokeKind,
       startStroke,
     ],
   );
@@ -738,14 +739,14 @@ export const usePointerMachine = ({
       event.stopPropagation();
       const from = portPoint(nodeBounds(node), port);
       const currentTool = registry.get(atoms.tool);
-      const type = currentTool.kind === 'link' ? currentTool.type : registry.get(atoms.linkType);
+      const path = currentTool.kind === 'link' ? currentTool.path : registry.get(atoms.linkPath);
       startDrag(
         {
           kind: 'link',
-          type,
+          path,
           source: { node: node.id, port: port.id },
           from,
-          fromSide: port.side,
+          fromSide: portSide(port),
           to: from,
           // Measured from the port, as the band is drawn from it.
           press: from,
@@ -754,14 +755,14 @@ export const usePointerMachine = ({
         event,
       );
     },
-    [capabilities.link, registry, atoms.tool, atoms.linkType, startDrag],
+    [capabilities.link, registry, atoms.tool, atoms.linkPath, startDrag],
   );
 
   const removePoint = useCallback(
     ({ link: id, index }: ControlPointRef) => {
       const link = scene.links[id];
-      if (link?.type === 'spline' && capabilities.update) {
-        draw.apply(updateElement(id, { points: link.points.filter((_, i) => i !== index) }));
+      if (link && linkPath(link) === 'spline' && capabilities.update) {
+        draw.apply(updateElement(id, { points: (link.points ?? []).filter((_, i) => i !== index) }));
       }
       registry.set(atoms.point, undefined);
     },
@@ -770,7 +771,7 @@ export const usePointerMachine = ({
 
   /** A spline's control point: press selects it, drag moves it, alt-click removes it. */
   const onPointPointerDown = useCallback(
-    (link: SplineLink, index: number, event: PointerEvent) => {
+    (link: Link, index: number, event: PointerEvent) => {
       if (event.button !== 0 || !capabilities.update) {
         return;
       }
@@ -780,20 +781,21 @@ export const usePointerMachine = ({
         return;
       }
       registry.set(atoms.point, { link: link.id, index });
-      startDrag({ kind: 'point', id: link.id, index, points: [...link.points] }, event);
+      startDrag({ kind: 'point', id: link.id, index, points: [...(link.points ?? [])] }, event);
     },
     [capabilities.update, removePoint, registry, atoms.point, startDrag],
   );
 
   /** The midpoint of a span: pressing it adds a control point there and moves it in the same gesture. */
   const onMidpointPointerDown = useCallback(
-    (link: SplineLink, index: number, point: Point, event: PointerEvent) => {
+    (link: Link, index: number, point: Point, event: PointerEvent) => {
       if (event.button !== 0 || !capabilities.update) {
         return;
       }
       event.stopPropagation();
       registry.set(atoms.point, { link: link.id, index });
-      const points = [...link.points.slice(0, index), point, ...link.points.slice(index)];
+      const own = link.points ?? [];
+      const points = [...own.slice(0, index), point, ...own.slice(index)];
       startDrag({ kind: 'point', id: link.id, index, points }, event);
     },
     [capabilities.update, registry, atoms.point, startDrag],
@@ -927,7 +929,7 @@ export const usePointerMachine = ({
   );
 
   const onPointContextMenu = useCallback(
-    (link: SplineLink, index: number, event: MouseEvent) => {
+    (link: Link, index: number, event: MouseEvent) => {
       registry.set(atoms.point, { link: link.id, index });
       openMenu(event, 'point');
     },
@@ -1024,10 +1026,10 @@ export const usePointerMachine = ({
     [capabilities.update, scene, nodeRegistry, startDrag],
   );
 
-  /** Double-click on a spline adds a control point there; other link types have no points to edit. */
+  /** Double-click on a spline adds a control point there; a link on any other path has no points to edit. */
   const onLinkDoubleClick = useCallback(
     (link: Link, event: MouseEvent) => {
-      if (link.type !== 'spline' || !capabilities.update) {
+      if (linkPath(link) !== 'spline' || !capabilities.update) {
         return;
       }
       event.stopPropagation();
@@ -1036,12 +1038,9 @@ export const usePointerMachine = ({
         return;
       }
       const point = toScene(event);
-      const index = insertIndex(geometry.source.point, link.points, geometry.target.point, point);
-      const points = [
-        ...link.points.slice(0, index),
-        { x: snap(point.x), y: snap(point.y) },
-        ...link.points.slice(index),
-      ];
+      const own = link.points ?? [];
+      const index = insertIndex(geometry.source.point, own, geometry.target.point, point);
+      const points = [...own.slice(0, index), { x: snap(point.x), y: snap(point.y) }, ...own.slice(index)];
       draw.apply(updateElement(link.id, { points }));
       select([link.id]);
     },
@@ -1278,20 +1277,20 @@ export const usePointerMachine = ({
 
   // The node the current create gesture made, re-framed by every ghost frame and by the drop, so a
   // definition whose `create` has effects (a trigger mints an object) runs it once, for the node that lands.
-  const pendingRef = useRef<{ type: NodeType; node: Node } | undefined>(undefined);
+  const pendingRef = useRef<{ kind: NodeKind; node: Node } | undefined>(undefined);
 
   /**
-   * The node a create drag would make: what was drawn, or the type's default size at the press when the
+   * The node a create drag would make: what was drawn, or the kind's default size at the press when the
    * drag was a click. Shared by the ghost preview and the drop, so the preview is what lands.
    */
   const createdNode = useCallback(
     (drag: Extract<Drag, { kind: 'create' }>, id: NodeId): Node | undefined => {
-      const def = nodeRegistry[drag.type];
+      const def = nodeRegistry[drag.node];
       if (!def) {
         return undefined;
       }
       const drawn = boundsFromPoints(drag.from, drag.to);
-      // Dropped from the palette there is no drawn box, so the type's default size stands in, in scene
+      // Dropped from the palette there is no drawn box, so the kind's default size stands in, in scene
       // units whatever the zoom. A box drawn on the canvas is exactly what the pointer swept:
       // it follows the cursor as the frame shows it, and a gesture that snapped to nothing creates nothing
       // rather than planting a default-sized node under the click.
@@ -1305,7 +1304,7 @@ export const usePointerMachine = ({
       const props: CreateProps = { id, z: topOfView(scene), center, size };
       const pending = pendingRef.current;
       // No `fontSize`: a new node inherits the view's default, as one created by dropping a link does.
-      const reused = pending?.type === drag.type ? { ...pending.node, ...props } : undefined;
+      const reused = pending?.kind === drag.node ? { ...pending.node, ...props } : undefined;
       // A frame's scene is minted from its id, so it follows the id the node lands with; kept from the ghost, every frame
       // drawn would open onto the ghost's one scene.
       const node: Node = !reused
@@ -1313,7 +1312,7 @@ export const usePointerMachine = ({
         : isViewNode(reused) && pending && isViewNode(pending.node) && pending.node.scene === pending.node.id
           ? { ...reused, scene: id }
           : reused;
-      pendingRef.current = { type: drag.type, node };
+      pendingRef.current = { kind: drag.node, node };
       return node;
     },
     // `topOfView` reads the links too, so a link added since would otherwise leave a stale key behind.
@@ -1357,7 +1356,7 @@ export const usePointerMachine = ({
   const commitCreated = useCallback(
     (node: Node) => {
       pendingRef.current = undefined;
-      lastSizeRef.current = { ...lastSizeRef.current, [node.type]: node.size };
+      lastSizeRef.current = { ...lastSizeRef.current, [node.kind]: node.size };
       addNode(node);
       select([node.id]);
     },
@@ -1444,10 +1443,10 @@ export const usePointerMachine = ({
               // on the minor grid, as a palette drop lands.
               const drop = raw.kind === 'link' ? raw.to : current.to;
               const source = scene.nodes[endpointNode(current.source) ?? ''];
-              const def = source ? nodeRegistry[source.type] : undefined;
+              const def = source ? nodeRegistry[source.kind] : undefined;
               const size = source?.size ?? nominalSize(NOMINAL_SIZES.rect, cell);
               const props = {
-                id: createId(source?.type ?? 'rect'),
+                id: createId(source?.kind ?? 'rect'),
                 z,
                 center: {
                   x: snap(drop.x - size.width / 2) + size.width / 2,
@@ -1458,15 +1457,15 @@ export const usePointerMachine = ({
               const node =
                 source && def
                   ? cloneShape(source, def.create(props), nodeDef(nodeRegistry, source)?.parts)
-                  : createNode({ type: 'rect', ...props });
+                  : createNode({ kind: 'rect', ...props });
               edits.push(nodeEdit(node));
               created = node;
               target = { node: node.id };
             }
             if (target) {
               const link = createLink({
-                type: current.type,
-                id: createId(current.type),
+                path: current.path,
+                id: createId(current.path),
                 z: created ? nextZ() : z,
                 source: current.source,
                 target,
@@ -1487,7 +1486,7 @@ export const usePointerMachine = ({
           break;
         }
         case 'create': {
-          const node = createdNode(current, createId(current.type));
+          const node = createdNode(current, createId(current.node));
           if (!node) {
             break;
           }
@@ -1502,12 +1501,12 @@ export const usePointerMachine = ({
           // Read from every sample, not the thinned ones: how near the stroke runs to a shape is in the samples, and
           // where the hand paused is in their times.
           const read =
-            nodeRegistry[current.type]?.freehand === 'shape'
+            nodeRegistry[current.node]?.freehand === 'shape'
               ? readStroke(current.points, current.times, { minimum: 2 * minor, minor, major })
               : undefined;
           const landed = read?.kind === 'shape' ? landShape(read.shape) : read?.kind === 'path' && landPath(read.path);
           if (!landed) {
-            landPoints(current.type, simplifyPath(current.points, tolerance), strokeCloses(current.points), true);
+            landPoints(current.node, simplifyPath(current.points, tolerance), strokeCloses(current.points), true);
           }
           break;
         }

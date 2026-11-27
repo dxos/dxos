@@ -12,13 +12,13 @@ import { moveNodes, updateElement } from './edits.ts';
 import { insideScene, insideWrites, leavesObject } from './inside.ts';
 import { nodeBounds } from './shapes.ts';
 
-const note = (id: string, x: number, y: number, text: string, constrain?: Node['constrain']): NoteNode => ({
+const note = (id: string, x: number, y: number, label: string, constrain?: Node['constrain']): NoteNode => ({
   id,
-  type: 'note',
+  kind: 'note',
   z: 'a0',
   center: { x, y },
   size: { width: 100, height: 20 },
-  text,
+  label,
   ...(constrain ? { constrain } : {}),
 });
 
@@ -29,7 +29,7 @@ const CARD: RenderList2D = {
   nodes: {
     frame: {
       id: 'frame',
-      type: 'rect',
+      kind: 'rect',
       z: 'a0',
       center: { x: 0, y: 0 },
       size: { width: 200, height: 100 },
@@ -42,7 +42,7 @@ const CARD: RenderList2D = {
 };
 
 const instance = (size = { width: 200, height: 100 }): InstanceNode => ({
-  type: 'instance',
+  kind: 'instance',
   id: 'card-1',
   z: 'b0',
   center: { x: 0, y: 0 },
@@ -55,7 +55,7 @@ const OUTER = (node: InstanceNode): RenderList2D => ({
   id: 'board',
   nodes: {
     [node.id]: node,
-    other: { id: 'other', type: 'rect', z: 'b1', center: { x: 400, y: 0 }, size: { width: 80, height: 40 } },
+    other: { id: 'other', kind: 'rect', z: 'b1', center: { x: 400, y: 0 }, size: { width: 80, height: 40 } },
   },
   links: {},
 });
@@ -106,21 +106,21 @@ describe('leavesObject', () => {
 
 describe('insideWrites', () => {
   test("typing in a part is this Instance's own words, and the definition is untouched", () => {
-    const result = writes(instance(), updateElement('title', { text: 'Mine' }));
-    expect(result.overrides).toEqual({ title: { text: 'Mine' } });
+    const result = writes(instance(), updateElement('title', { label: 'Mine' }));
+    expect(result.partOverrides).toEqual({ title: { label: 'Mine' } });
     expect(result.composite).toBeUndefined();
   });
 
   test('typing a part back to the definition’s text clears the override', () => {
-    const node = { ...instance(), overrides: { title: { text: 'Mine' } } };
-    const result = writes(node, updateElement('title', { text: 'Title' }));
-    expect(result.overrides).toBeUndefined();
+    const node = { ...instance(), partOverrides: { title: { label: 'Mine' } } };
+    const result = writes(node, updateElement('title', { label: 'Title' }));
+    expect('partOverrides' in result && result.partOverrides).toBeUndefined();
   });
 
   test('restyling a part writes the definition, so every Instance of it follows', () => {
-    const result = writes(instance(), updateElement('title', { style: { hue: 'blue' } }));
-    expect(result.composite?.nodes.title?.style).toMatchObject({ hue: 'blue' });
-    expect(result.overrides).toBeUndefined();
+    const result = writes(instance(), updateElement('title', { overrides: { color: 'blue' } }));
+    expect(result.composite?.nodes.title?.overrides).toMatchObject({ color: 'blue' });
+    expect(result.partOverrides).toBeUndefined();
   });
 
   test('moving a part writes the definition, in the composite’s own coordinates', () => {
@@ -136,13 +136,13 @@ describe('insideWrites', () => {
   });
 
   test('deleting a part takes it out of the definition and drops its override', () => {
-    const node = { ...instance(), overrides: { footer: { text: 'Mine' } } };
+    const node = { ...instance(), partOverrides: { footer: { label: 'Mine' } } };
     const result = writes(node, (scene) => {
       const { footer: _, ...nodes } = scene.nodes;
       return { ...scene, nodes };
     });
     expect(result.composite?.nodes.footer).toBeUndefined();
-    expect(result.overrides).toBeUndefined();
+    expect('partOverrides' in result && result.partOverrides).toBeUndefined();
   });
 
   test('an edit that touches nothing of the Object writes nothing', () => {
@@ -162,14 +162,14 @@ describe('insideWrites', () => {
     };
     const node = { ...instance(), data: { name: 'Person', items: ['id', 'age'], kept: 1 } };
     const { scene, parts } = insideScene(OUTER(node), node, bound, defaultNodeRegistry);
-    expect([scene.nodes.title, scene.nodes.footer]).toMatchObject([{ text: 'Person' }, { text: 'id\nage' }]);
+    expect([scene.nodes.title, scene.nodes.footer]).toMatchObject([{ label: 'Person' }, { label: 'id\nage' }]);
 
-    const edit = (id: string, text: string) => updateElement(id, { text });
+    const edit = (id: string, label: string) => updateElement(id, { label });
     const edited = edit('footer', 'id\n\n name ')(edit('title', 'Animal')(scene));
     const result = insideWrites(defaultNodeRegistry, node, bound, edited, parts);
     // Both parts land in the one `data`, beside the field neither of them shows; a list stays a list.
     expect(result.bound).toEqual({ data: { name: 'Animal', items: ['id', 'name'], kept: 1 } });
-    expect(result.overrides).toBeUndefined();
+    expect(result.partOverrides).toBeUndefined();
     expect(result.composite).toBeUndefined();
   });
 });

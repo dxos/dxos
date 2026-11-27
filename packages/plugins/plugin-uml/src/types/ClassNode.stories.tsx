@@ -54,7 +54,7 @@ if (!isCompiled(compiled)) {
 const CLASS: RenderList2D = compiled.composite;
 
 /** A class as the tool makes one: the engine's node, its own typed fields, and the Object it draws. */
-type Class = NodeBase & ClassNode.ClassFields & Pick<PlacedComposite, 'composite' | 'overrides'>;
+type Class = NodeBase & ClassNode.ClassFields & Pick<PlacedComposite, 'composite' | 'partOverrides'>;
 
 const classOf = (
   id: string,
@@ -65,7 +65,7 @@ const classOf = (
   methods: readonly string[],
   size = SIZE,
 ): Class => ({
-  type: ClassNode.TYPE,
+  kind: ClassNode.TYPE,
   id,
   z,
   center: { x, y },

@@ -4,8 +4,8 @@
     "dim": "2d",
     "elements": {
       "text": {
+        "kind": "note",
         "id": "text",
-        "type": "note",
         "z": "V",
         "center": {
           "x": 120,
@@ -15,21 +15,17 @@
           "width": 240,
           "height": 96
         },
+        "label": "Title\nSubtitle",
         "overrides": {
-          "hue": "violet",
+          "color": "violet",
           "fontSize": 36,
-          "fontFamily": "monospace",
-          "alignHorizontal": "center"
-        },
-        "props": {
-          "canvas": {
-            "text": "Title\nSubtitle"
-          }
+          "font": "mono",
+          "align": "center"
         }
       },
       "sticky": {
+        "kind": "rect",
         "id": "sticky",
-        "type": "rect",
         "z": "l",
         "center": {
           "x": 384,
@@ -39,17 +35,13 @@
           "width": 192,
           "height": 192
         },
-        "label": "Remember",
         "overrides": {
-          "hue": "amber"
+          "color": "amber"
         },
-        "props": {
-          "canvas": {}
-        }
+        "label": "Remember"
       },
       "star": {
         "id": "star",
-        "type": "rect",
         "z": "x",
         "center": {
           "x": 672,
@@ -60,15 +52,12 @@
           "height": 96
         },
         "overrides": {
-          "tone": 0
+          "color": "default/0"
         },
-        "props": {
-          "canvas": {}
-        }
+        "kind": "rect"
       },
       "cloud": {
         "id": "cloud",
-        "type": "cloud",
         "z": "z",
         "center": {
           "x": 672,
@@ -78,17 +67,14 @@
           "width": 96,
           "height": 96
         },
-        "label": "Sky",
         "overrides": {
-          "tone": 0
+          "color": "default/0"
         },
-        "props": {
-          "canvas": {}
-        }
+        "label": "Sky",
+        "kind": "cloud"
       },
       "hexagon": {
         "id": "hexagon",
-        "type": "polygon",
         "z": "zV",
         "center": {
           "x": 864,
@@ -99,20 +85,20 @@
           "height": 96
         },
         "overrides": {
-          "tone": 0
+          "color": "default/0"
         },
-        "props": {
-          "canvas": {
-            "params": {
-              "sides": 6
-            }
-          }
+        "kind": "polygon",
+        "params": {
+          "sides": 6
         }
       },
       "free": {
+        "kind": "link",
+        "path": "curve",
         "id": "free",
-        "type": "link",
         "z": "t",
+        "tail": "circle",
+        "head": "triangle",
         "source": {
           "point": {
             "x": 0,
@@ -123,15 +109,6 @@
           "point": {
             "x": 144,
             "y": 336
-          }
-        },
-        "props": {
-          "canvas": {
-            "type": "curve",
-            "ends": {
-              "start": "circle",
-              "end": "triangle"
-            }
           }
         }
       }
@@ -143,8 +120,8 @@
     {
       "kind": "create",
       "element": {
+        "kind": "note",
         "id": "text",
-        "type": "note",
         "z": "V",
         "center": {
           "x": 120,
@@ -154,24 +131,20 @@
           "width": 240,
           "height": 96
         },
+        "label": "Title\nSubtitle",
         "overrides": {
-          "hue": "violet",
+          "color": "violet",
           "fontSize": 36,
-          "fontFamily": "monospace",
-          "alignHorizontal": "center"
-        },
-        "props": {
-          "canvas": {
-            "text": "Title\nSubtitle"
-          }
+          "font": "mono",
+          "align": "center"
         }
       }
     },
     {
       "kind": "create",
       "element": {
+        "kind": "rect",
         "id": "sticky",
-        "type": "rect",
         "z": "l",
         "center": {
           "x": 384,
@@ -181,20 +154,16 @@
           "width": 192,
           "height": 192
         },
-        "label": "Remember",
         "overrides": {
-          "hue": "amber"
+          "color": "amber"
         },
-        "props": {
-          "canvas": {}
-        }
+        "label": "Remember"
       }
     },
     {
       "kind": "create",
       "element": {
         "id": "star",
-        "type": "rect",
         "z": "x",
         "center": {
           "x": 672,
@@ -205,18 +174,15 @@
           "height": 96
         },
         "overrides": {
-          "tone": 0
+          "color": "default/0"
         },
-        "props": {
-          "canvas": {}
-        }
+        "kind": "rect"
       }
     },
     {
       "kind": "create",
       "element": {
         "id": "cloud",
-        "type": "cloud",
         "z": "z",
         "center": {
           "x": 672,
@@ -226,20 +192,17 @@
           "width": 96,
           "height": 96
         },
-        "label": "Sky",
         "overrides": {
-          "tone": 0
+          "color": "default/0"
         },
-        "props": {
-          "canvas": {}
-        }
+        "label": "Sky",
+        "kind": "cloud"
       }
     },
     {
       "kind": "create",
       "element": {
         "id": "hexagon",
-        "type": "polygon",
         "z": "zV",
         "center": {
           "x": 864,
@@ -250,23 +213,23 @@
           "height": 96
         },
         "overrides": {
-          "tone": 0
+          "color": "default/0"
         },
-        "props": {
-          "canvas": {
-            "params": {
-              "sides": 6
-            }
-          }
+        "kind": "polygon",
+        "params": {
+          "sides": 6
         }
       }
     },
     {
       "kind": "create",
       "element": {
+        "kind": "link",
+        "path": "curve",
         "id": "free",
-        "type": "link",
         "z": "t",
+        "tail": "circle",
+        "head": "triangle",
         "source": {
           "point": {
             "x": 0,
@@ -277,15 +240,6 @@
           "point": {
             "x": 144,
             "y": 336
-          }
-        },
-        "props": {
-          "canvas": {
-            "type": "curve",
-            "ends": {
-              "start": "circle",
-              "end": "triangle"
-            }
           }
         }
       }

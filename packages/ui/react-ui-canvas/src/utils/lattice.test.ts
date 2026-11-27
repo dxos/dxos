@@ -96,7 +96,7 @@ describe('lattice', () => {
   test('a shape covers every cell it spans; occupancy collides with them', ({ expect }) => {
     expect(coveredCells({ col: 0, row: 0, spanX: 3, spanY: 1 })).toEqual(['0,0', '1,0', '2,0']);
     const wide = createNode({
-      type: 'rect',
+      kind: 'rect',
       id: 'w',
       z: 'a',
       center: { x: 256, y: 0 },
@@ -110,7 +110,7 @@ describe('lattice', () => {
 
   test('the nearest free cell keeps the span and is the cell itself when free', ({ expect }) => {
     const blocker = createNode({
-      type: 'rect',
+      kind: 'rect',
       id: 'b',
       z: 'a',
       center: { x: 0, y: 0 },
@@ -137,9 +137,9 @@ describe('lattice', () => {
   test('a scene re-seats the shapes on its lattice and leaves a hull and a guide where they are', ({ expect }) => {
     const wider = { width: 192, height: 96, gutterX: 96, gutterY: 96 };
     const frame = { z: 'a0', center: { x: 384, y: 192 }, size: { width: 256, height: 128 } };
-    const shape: RectNode = { type: 'rect', id: 'a', ...frame };
-    const guide: RectNode = { type: 'rect', id: 'g', ...frame, style: { guide: true } };
-    const hull: HullNode = { type: 'hull', id: 'h', ...frame };
+    const shape: RectNode = { kind: 'rect', id: 'a', ...frame };
+    const guide: RectNode = { kind: 'rect', id: 'g', ...frame, overrides: { guide: true } };
+    const hull: HullNode = { kind: 'hull', id: 'h', ...frame };
     const scene: { id: string; nodes: Record<string, Node> } = { id: 's', nodes: { a: shape, g: guide, h: hull } };
     const seated = reseat(scene, spec, wider);
     expect([seated.nodes.a.center, seated.nodes.a.size]).toEqual([

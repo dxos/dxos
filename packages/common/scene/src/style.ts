@@ -10,34 +10,21 @@ import * as Schema from 'effect/Schema';
 import { AnimatableAnnotation } from '@dxos/animation';
 import { Annotation, DXN, Type } from '@dxos/echo';
 
-import { LINE_STYLES, styleFields } from './element.ts';
+import { Color } from './color.ts';
+import { Style2D } from './element.ts';
+import { Corners, Fill, Stroke } from './vocabulary.ts';
 
 /** Hues that read the same in every theme, for drawings that need true black and white. */
 export const FIXED_HUES = ['black', 'white'] as const;
 
-/** How a line is drawn, including the hand-drawn stroke diagrams use. */
-export const STYLE_LINES = [...LINE_STYLES, 'sketchy'] as const;
-
-/** Stroke weight and text size together, as a diagram scales them. */
-export const STYLE_WEIGHTS = ['s', 'm', 'l', 'xl'] as const;
-
-/** A 2D look: the canvas node style, extended with the diagram vocabulary so one set serves both. */
-export const Style2D = Schema.Struct({
-  ...styleFields,
-  lineStyle: Schema.optional(Schema.Literals(STYLE_LINES).annotate({ title: 'Line style' })),
-  /** A patterned fill (hatching) rather than a flat one. */
-  pattern: Schema.optional(Schema.Boolean),
-  weight: Schema.optional(Schema.Literals(STYLE_WEIGHTS).annotate({ title: 'Weight' })),
-});
-export type Style2D = Schema.Schema.Type<typeof Style2D>;
-
-/** A 3D look: a material over the theme's hue and tone. */
+/** A 3D look: a material over the theme's colour, in the words the 2D look uses for what the two share. */
 export const Style3D = Schema.Struct({
-  hue: Schema.optional(Schema.String.pipe(AnimatableAnnotation.set('color'))),
-  tone: Schema.optional(Schema.Literals([0, 1, 2, 3])),
-  surface: Schema.optional(Schema.Literals(['solid', 'tint', 'glass', 'none'])),
-  border: Schema.optional(Schema.Boolean),
-  rounded: Schema.optional(Schema.Boolean),
+  color: Schema.optional(Color.pipe(AnimatableAnnotation.set('color'))),
+  /** The surface: `tint` a light wash of the colour, `glass` a translucent material. */
+  fill: Schema.optional(Fill),
+  /** The edges of the solid; `none` draws none. */
+  stroke: Schema.optional(Stroke),
+  corners: Schema.optional(Corners),
   opacity: Schema.optional(Schema.Number.pipe(AnimatableAnnotation.set('number'))),
   metalness: Schema.optional(Schema.Number),
   roughness: Schema.optional(Schema.Number),
@@ -56,14 +43,20 @@ export type NamedStyle3D = Schema.Schema.Type<typeof NamedStyle3D>;
 /** A named style of either dimension, with a display name. */
 export type NamedStyle<S> = S & { readonly name?: string };
 
+/**
+ * One style of a catalog: one struct over both property sets (ECHO stores only discriminated unions), of which the
+ * catalog's `dim` says which applies.
+ */
+export const CatalogStyle = Schema.Struct({ ...Style3D.fields, ...Style2D.fields });
+export type CatalogStyle = Schema.Schema.Type<typeof CatalogStyle>;
+
 /** A reusable set of styles that drawings reference; the theme's defaults are one too. */
-export class StyleCatalog extends Type.makeObject<StyleCatalog>(DXN.make('org.dxos.type.scene.styleCatalog', '0.1.0'))(
+export class StyleCatalog extends Type.makeObject<StyleCatalog>(DXN.make('org.dxos.type.scene.styleCatalog', '0.2.0'))(
   Schema.Struct({
     key: Schema.String,
     name: Schema.String,
     dim: Schema.Literals(['2d', '3d']),
-    // One struct over both property sets (ECHO stores only discriminated unions); `dim` says which applies.
-    styles: Schema.Record(Schema.String, Schema.Struct({ ...Style3D.fields, ...Style2D.fields })),
+    styles: Schema.Record(Schema.String, CatalogStyle),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--palette--regular', hue: 'sky' }),
@@ -112,33 +105,16 @@ export const resolveStyle = <S extends object>(
   return look;
 };
 
-/** A 2D style as a 3D one: its fill becomes the surface (a light tone a tint); 2D-only fields are dropped. */
-export const liftStyle = (style: Style2D): Style3D => {
-  const { hue, tone, border, rounded, opacity, fill } = style;
-  const tint = fill === true && tone === 3;
-  return Object.fromEntries(
-    Object.entries({
-      hue,
-      tone: tint ? undefined : tone,
-      surface: fill === undefined ? undefined : fill ? (tint ? 'tint' : 'solid') : 'none',
-      border,
-      rounded,
-      opacity,
-    }).filter(([, value]) => value !== undefined),
-  );
-};
+/** The fields a look has in either dimension. */
+const SHARED_STYLE_FIELDS = ['color', 'fill', 'stroke', 'corners', 'opacity'] as const;
 
-/** A 3D style as a 2D one: its surface becomes the fill (a tint the lightest tone); 3D-only fields are dropped. */
-export const flattenStyle = (style: Style3D): Style2D => {
-  const { hue, tone, surface, border, rounded, opacity } = style;
-  return Object.fromEntries(
-    Object.entries({
-      hue,
-      tone: tone ?? (surface === 'tint' ? 3 : undefined),
-      fill: surface === undefined ? undefined : surface !== 'none',
-      border,
-      rounded,
-      opacity,
-    }).filter(([, value]) => value !== undefined),
+const sharedStyle = (style: Style2D | Style3D): Partial<Style2D & Style3D> =>
+  Object.fromEntries(
+    SHARED_STYLE_FIELDS.flatMap((field) => (style[field] === undefined ? [] : [[field, style[field]]])),
   );
-};
+
+/** A 2D style as a 3D one: the fields the two share; 2D-only fields are dropped. */
+export const liftStyle = (style: Style2D): Style3D => sharedStyle(style);
+
+/** A 3D style as a 2D one: the fields the two share; 3D-only fields are dropped. */
+export const flattenStyle = (style: Style3D): Style2D => sharedStyle(style);

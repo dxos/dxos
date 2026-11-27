@@ -8,21 +8,26 @@ import { AnimatableAnnotation, Vec3 as AnimationVec3 } from '@dxos/animation';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { VectorAnnotationId } from '@dxos/ui-types';
 
-import { ElementEndpoint, Layer, PartLayout } from './element.ts';
-import { NamedStyle2D, NamedStyle3D, Style2D, Style3D, StyleCatalog } from './style.ts';
+import {
+  ElementEndpoint,
+  InstanceFit,
+  Layer,
+  PartLayout,
+  Point,
+  Size,
+  Style2D,
+  linkBase,
+  nodeBase,
+} from './element.ts';
+import { NamedStyle2D, NamedStyle3D, Style3D, StyleCatalog } from './style.ts';
 
 /** A 3D vector (a position, scale or rotation); a form stacks one number input per axis. */
 export const Vec3 = AnimationVec3.annotate({ [VectorAnnotationId]: true });
 export type Vec3 = Schema.Schema.Type<typeof Vec3>;
 
-/** A 2D vector; a form stacks one number input per axis. */
-export const Vec2 = Schema.Struct({ x: Schema.Number, y: Schema.Number }).annotate({ [VectorAnnotationId]: true });
-export type Vec2 = Schema.Schema.Type<typeof Vec2>;
-
-export const Size2 = Schema.Struct({ width: Schema.Number, height: Schema.Number }).annotate({
-  [VectorAnnotationId]: true,
-});
-export type Size2 = Schema.Schema.Type<typeof Size2>;
+/** A point and a size as a form edits them: one number input per axis, stacked. */
+const PointField = Point.annotate({ [VectorAnnotationId]: true });
+const SizeField = Size.annotate({ [VectorAnnotationId]: true });
 
 export const Dimension = Schema.Literals(['2d', '3d']);
 export type Dimension = Schema.Schema.Type<typeof Dimension>;
@@ -70,7 +75,7 @@ export type Arrangement = Schema.Schema.Type<typeof Arrangement>;
 
 const objectFields = {
   id: Schema.String,
-  type: Schema.String,
+  kind: Schema.String,
   /** A named style (the model's, a layout's override, or a catalog's); `overrides` win over it. */
   style: Schema.optional(Schema.String),
   /** Kind-specific fields, validated by the kind's registration. */
@@ -83,7 +88,7 @@ const objectFields = {
 const partsById = { parts: Schema.optional(Schema.String) };
 const partsByRef = { parts: Schema.optional(Ref.Ref(Obj.Unknown)) };
 
-const size2D = { size: Schema.optional(Size2), overrides: Schema.optional(Style2D) };
+const size2D = { size: Schema.optional(SizeField), overrides: Schema.optional(Style2D) };
 const scale3D = { scale: Schema.optional(Vec3), overrides: Schema.optional(Style3D) };
 
 export const Object2D = Schema.Struct({ ...objectFields, ...size2D, ...partsById });
@@ -146,10 +151,10 @@ export type DslIdentity = Schema.Schema.Type<typeof DslIdentity>;
  */
 export const BaseElement = Schema.Struct({
   id: Schema.String,
-  /** The model object this element places; its type, size and style are the object's unless the element sets them. */
+  /** The model object this element places; its kind, size and style are the object's unless the element sets them. */
   object: Schema.optional(Schema.String),
-  /** The element's own type, when it places no object. */
-  type: Schema.optional(Schema.String),
+  /** The element's own kind, when it places no object. */
+  kind: Schema.optional(Schema.String),
   /** Paint order (a fractional index). */
   z: Schema.optional(Schema.String),
   layer: Schema.optional(Schema.String),
@@ -165,7 +170,7 @@ export const BaseElement = Schema.Struct({
   pinned: Schema.optional(Schema.Boolean),
   /** How the element follows its frame when it is a part of a composite and an instance is resized. */
   constrain: Schema.optional(PartLayout),
-  /** The composite Object the element draws, where its type declares one (a UML class). */
+  /** The composite Object the element draws, where its kind declares one (a UML class). */
   composite: Schema.optional(Schema.String),
   /** The DSL statement that made the element, so compiling the source again updates it rather than adding a copy. */
   dsl: Schema.optional(DslIdentity),
@@ -174,25 +179,42 @@ export const BaseElement = Schema.Struct({
    * element's own so a kind may name a field as the base names one (`size`), and two kinds never contend for a name.
    */
   data: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
-  /** Renderer-specific fields the base has no slot for (the 2D viewport's under `canvas`). */
+  /** Fields other writers keep on the element, which the base has no slot for (a solid's operands, say). */
   props: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
 });
 export type BaseElement = Schema.Schema.Type<typeof BaseElement>;
 
-/** How a placed composite maps its parts into its frame: as given (`scale`), or fitted to the frame. */
-export const InstanceFit = Schema.Literals(['none', 'frame']);
-export type InstanceFit = Schema.Schema.Type<typeof InstanceFit>;
+/** What a node of the 2D editor has that the base has not, so a stored element is the node itself. */
+const { ports, portsPerSide, exposed, bind, optional, grow, follows, partOverrides, parent, extent } = nodeBase;
+
+/** What a link of the 2D editor has that the base has not, so a stored element is the link itself. */
+const { path, points, tail, head, connector } = linkBase;
 
 // Geometry is optional because a link's comes from its endpoints.
 export const Element2D = Schema.Struct({
   ...BaseElement.fields,
-  center: Schema.optional(Vec2.pipe(AnimatableAnnotation.set('point'))),
-  size: Schema.optional(Size2.pipe(AnimatableAnnotation.set('size'))),
+  center: Schema.optional(PointField.pipe(AnimatableAnnotation.set('point'))),
+  size: Schema.optional(SizeField.pipe(AnimatableAnnotation.set('size'))),
   rotation: Schema.optional(Schema.Number.pipe(AnimatableAnnotation.set('number'))),
   /** A placed composite's scale from its parts' units to the layout's (decision 18). */
-  scale: Schema.optional(Vec2),
+  scale: Schema.optional(PointField),
   fit: Schema.optional(InstanceFit),
   overrides: Schema.optional(Style2D),
+  ports,
+  portsPerSide,
+  exposed,
+  bind,
+  optional,
+  grow,
+  follows,
+  partOverrides,
+  parent,
+  extent,
+  path,
+  points,
+  tail,
+  head,
+  connector,
 });
 export type Element2D = Schema.Schema.Type<typeof Element2D>;
 
@@ -216,6 +238,14 @@ export type Element = Element2D | Element3D;
 const elementRecord = <E extends Schema.Struct<Schema.Struct.Fields>>(element: E) =>
   Schema.StructWithRest(element, [Schema.Record(Schema.String, Schema.Unknown)]);
 
+/** A 2D element as a layout stores it: the base, and its kind's own fields beside it. */
+export const ElementRecord2D = elementRecord(Element2D);
+export type ElementRecord2D = Schema.Schema.Type<typeof ElementRecord2D>;
+
+/** A 3D element as a layout stores it. */
+export const ElementRecord3D = elementRecord(Element3D);
+export type ElementRecord3D = Schema.Schema.Type<typeof ElementRecord3D>;
+
 /** A plain View, or the definition of a composite object that instances place. */
 export const LayoutKind = Schema.Literals(['view', 'composite']);
 export type LayoutKind = Schema.Schema.Type<typeof LayoutKind>;
@@ -236,10 +266,15 @@ export const Lattice = Schema.Struct({
 });
 export type Lattice = Schema.Schema.Type<typeof Lattice>;
 
+/** Where one element sits from another, in the words a diagram places a node with; `aligned` shares its row. */
+export const PLACEMENTS = ['right-of', 'left-of', 'above', 'below', 'aligned'] as const;
+export const Placement = Schema.Literals(PLACEMENTS);
+export type Placement = Schema.Schema.Type<typeof Placement>;
+
 /** Constrained mode's relation of one element to another, by element id. */
 export const Constraint = Schema.Struct({
   subject: Schema.String,
-  relation: Schema.Literals(['east', 'west', 'north', 'south', 'aligned']),
+  relation: Placement,
   object: Schema.String,
 });
 export type Constraint = Schema.Schema.Type<typeof Constraint>;
@@ -291,7 +326,7 @@ export type Layout<E, M = string, S = unknown> = {
 // Scene: a layout seen through a camera.
 //
 
-export const Camera2D = Schema.Struct({ center: Vec2, zoom: Schema.Number });
+export const Camera2D = Schema.Struct({ center: PointField, zoom: Schema.Number });
 export type Camera2D = Schema.Schema.Type<typeof Camera2D>;
 
 /** Angles in degrees: yaw about the vertical axis, pitch above the horizon. */
@@ -345,7 +380,7 @@ export type ModelRecord = ModelRecord2D | ModelRecord3D;
 export const LayoutRecord2D = Schema.Struct({
   id: Schema.String,
   dim: Schema.Literal('2d'),
-  ...makeLayoutSchema(elementRecord(Element2D), Schema.String, Style2D).fields,
+  ...makeLayoutSchema(ElementRecord2D, Schema.String, Style2D).fields,
   ...layout2DFields,
 });
 export type LayoutRecord2D = Schema.Schema.Type<typeof LayoutRecord2D>;
@@ -353,7 +388,7 @@ export type LayoutRecord2D = Schema.Schema.Type<typeof LayoutRecord2D>;
 export const LayoutRecord3D = Schema.Struct({
   id: Schema.String,
   dim: Schema.Literal('3d'),
-  ...makeLayoutSchema(elementRecord(Element3D), Schema.String, Style3D).fields,
+  ...makeLayoutSchema(ElementRecord3D, Schema.String, Style3D).fields,
 });
 export type LayoutRecord3D = Schema.Schema.Type<typeof LayoutRecord3D>;
 
@@ -387,7 +422,7 @@ export type SceneDocument = {
 //
 
 /** A 2D model: its objects are records inside this one object (design D-6). */
-export class Model2D extends Type.makeObject<Model2D>(DXN.make('org.dxos.type.scene.model2d', '0.1.0'))(
+export class Model2D extends Type.makeObject<Model2D>(DXN.make('org.dxos.type.scene.model2d', '0.2.0'))(
   Schema.Struct({
     key: Schema.String,
     ...makeModelSchema(StoredObject2D, NamedStyle2D, Ref.Ref(StyleCatalog)).fields,
@@ -398,7 +433,7 @@ export class Model2D extends Type.makeObject<Model2D>(DXN.make('org.dxos.type.sc
 ) {}
 
 /** A 3D model, stored as Model2D is. */
-export class Model3D extends Type.makeObject<Model3D>(DXN.make('org.dxos.type.scene.model3d', '0.1.0'))(
+export class Model3D extends Type.makeObject<Model3D>(DXN.make('org.dxos.type.scene.model3d', '0.2.0'))(
   Schema.Struct({
     key: Schema.String,
     ...makeModelSchema(StoredObject3D, NamedStyle3D, Ref.Ref(StyleCatalog)).fields,
@@ -409,10 +444,10 @@ export class Model3D extends Type.makeObject<Model3D>(DXN.make('org.dxos.type.sc
 ) {}
 
 /** A 2D layout: its elements are records inside this one object, and its model is a Ref. */
-export class Layout2D extends Type.makeObject<Layout2D>(DXN.make('org.dxos.type.scene.layout2d', '0.1.0'))(
+export class Layout2D extends Type.makeObject<Layout2D>(DXN.make('org.dxos.type.scene.layout2d', '0.2.0'))(
   Schema.Struct({
     key: Schema.String,
-    ...makeLayoutSchema(elementRecord(Element2D), Ref.Ref(Obj.Unknown), Style2D).fields,
+    ...makeLayoutSchema(ElementRecord2D, Ref.Ref(Obj.Unknown), Style2D).fields,
     ...layout2DFields,
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
@@ -421,10 +456,10 @@ export class Layout2D extends Type.makeObject<Layout2D>(DXN.make('org.dxos.type.
 ) {}
 
 /** A 3D layout, stored as Layout2D is. */
-export class Layout3D extends Type.makeObject<Layout3D>(DXN.make('org.dxos.type.scene.layout3d', '0.1.0'))(
+export class Layout3D extends Type.makeObject<Layout3D>(DXN.make('org.dxos.type.scene.layout3d', '0.2.0'))(
   Schema.Struct({
     key: Schema.String,
-    ...makeLayoutSchema(elementRecord(Element3D), Ref.Ref(Obj.Unknown), Style3D).fields,
+    ...makeLayoutSchema(ElementRecord3D, Ref.Ref(Obj.Unknown), Style3D).fields,
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--squares-four--regular', hue: 'sky' }),

@@ -3480,6 +3480,9 @@ importers:
       '@dxos/react-ui-search':
         specifier: workspace:*
         version: link:../../ui/react-ui-search
+      '@dxos/scene':
+        specifier: workspace:*
+        version: link:../../common/scene
       '@dxos/ui-editor':
         specifier: workspace:*
         version: link:../../ui/ui-editor
@@ -4629,6 +4632,9 @@ importers:
       effect:
         specifier: 4.1.5
         version: 4.1.5
+      tsx:
+        specifier: 'catalog:'
+        version: 4.23.15
 
   packages/common/sql-sqlite:
     dependencies:

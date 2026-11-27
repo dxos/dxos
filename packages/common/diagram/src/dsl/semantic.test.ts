@@ -107,8 +107,8 @@ describe('semantic statements', () => {
     expect(diagram?.edges).toHaveLength(1);
     expect(diagram?.edges[0]).toMatchObject({ label: 'syncs', tail: 'arrow' });
     expect(Shape.markersOf({ tail: 'arrow' })).toEqual({
-      start: 'arrow',
-      end: 'arrow',
+      tail: 'arrow',
+      head: 'arrow',
       dashed: false,
     });
   });

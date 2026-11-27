@@ -24,12 +24,11 @@ import {
   canvasRecordOf,
   clone,
   fromRenderList2D,
-  isLinkRecord,
-  isNodeRecord,
   migrateContent,
   migrateLayers,
   namedStyles,
   pruneOrphanedViews,
+  readElementRecord,
   readStyles,
   readViews,
   rootOf,
@@ -49,19 +48,14 @@ import { plain } from './records.ts';
 /** The one model a migrated canvas's portals and instances place their objects from. */
 const MODEL_ID = 'model';
 
-/** The object id an `instance` node of a composite places, which an unplaced composite takes as well. */
-const COMPOSITE_PREFIX = 'instance:';
-
 /** Each record's DSL identity as its element's `dsl` field, which the illustrator's commands find elements by. */
 const withIdentities = (layout: Scene.LayoutRecord2D, content: Drawing.Canvas['content']): Scene.LayoutRecord2D => {
   const identities = new Map(
-    Object.values(content).flatMap((record) =>
-      isNodeRecord(record) && record.dsl
-        ? [[record.node.id, record.dsl] as const]
-        : isLinkRecord(record) && record.dsl
-          ? [[record.link.id, record.dsl] as const]
-          : [],
-    ),
+    Object.values(content).flatMap((value) => {
+      // A record written before the current words still names its element and its identity.
+      const record = readElementRecord(value);
+      return record?.dsl ? [[record.kind === 'node' ? record.node.id : record.link.id, record.dsl] as const] : [];
+    }),
   );
   return {
     ...layout,
@@ -102,8 +96,9 @@ export const legacyDocument = (content: Drawing.Canvas['content'], classes: Styl
   const objects: Record<string, Scene.Object2D> = {};
   // The canvas's mode, named once for every View, becomes each layout's own.
   const settings = canvasRecordOf(copy) ?? {};
+  const anonymous = (parts: string) => views.some((view) => view.id === parts && view.anonymous === true);
   const layouts = views.map((view) => {
-    const { layout, objects: placed } = fromRenderList2D(view);
+    const { layout, objects: placed } = fromRenderList2D(view, { anonymous });
     placed.forEach((object) => (objects[object.id] = object));
     return withSettingsMode(withIdentities(layout, copy), settings);
   });
@@ -112,8 +107,7 @@ export const legacyDocument = (content: Drawing.Canvas['content'], classes: Styl
   const placedParts = new Set(Object.values(objects).flatMap((object) => (object.parts ? [object.parts] : [])));
   for (const layout of layouts.slice(1)) {
     if (!placedParts.has(layout.id)) {
-      const id = `${COMPOSITE_PREFIX}${layout.id}`;
-      objects[id] = { id, type: 'rect', parts: layout.id };
+      objects[layout.id] = { id: layout.id, kind: layout.anonymous ? 'group' : 'rect', parts: layout.id };
     }
   }
   // The style classes become the model's named styles, so a canvas with classes has a model even with no objects.

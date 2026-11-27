@@ -8,7 +8,7 @@ import React from 'react';
 import { Form, type FormFieldRenderer, useFormFieldState } from '@dxos/react-ui-form';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
-import { type HorizontalAlign, NodeStyle, type VerticalAlign } from '@dxos/scene';
+import { type Align, Style2D, type VerticalAlign } from '@dxos/scene';
 
 export type IconToggleOption<T extends string> = { value: T; icon: string; label: string };
 
@@ -55,7 +55,7 @@ export const IconToggle = <T extends string>({
   </ToggleGroup.Root>
 );
 
-const HORIZONTAL: readonly IconToggleOption<HorizontalAlign>[] = [
+const HORIZONTAL: readonly IconToggleOption<Align>[] = [
   { value: 'left', icon: 'ph--align-left-simple--regular', label: 'Align left' },
   { value: 'center', icon: 'ph--align-center-horizontal-simple--regular', label: 'Align centre' },
   { value: 'right', icon: 'ph--align-right-simple--regular', label: 'Align right' },
@@ -68,14 +68,14 @@ const VERTICAL: readonly IconToggleOption<VerticalAlign>[] = [
 ];
 
 /**
- * The text alignment, rendered at `style.alignHorizontal`: the horizontal and vertical toggles side by side in one
- * row (`style.alignVertical` is hidden). Each writes only its own path, so an edit across a selection leaves each
- * element's other style values.
+ * The text alignment, rendered at `overrides.align`: the horizontal and vertical toggles side by side in one row
+ * (`overrides.valign` is hidden). Each writes only its own path, so an edit across a selection leaves each element's
+ * other style values.
  */
 export const AlignField: FormFieldRenderer = ({ jsonPath, readonly }) => {
-  const stylePath = (jsonPath ?? 'style.alignHorizontal').split('.').slice(0, -1);
-  const horizontalField = useFormFieldState('AlignField', [...stylePath, 'alignHorizontal']);
-  const verticalField = useFormFieldState('AlignField', [...stylePath, 'alignVertical']);
+  const stylePath = (jsonPath ?? 'overrides.align').split('.').slice(0, -1);
+  const horizontalField = useFormFieldState('AlignField', [...stylePath, 'align']);
+  const verticalField = useFormFieldState('AlignField', [...stylePath, 'valign']);
   const horizontal = HORIZONTAL.find((option) => option.value === horizontalField.getValue())?.value;
   const vertical = VERTICAL.find((option) => option.value === verticalField.getValue())?.value;
   // A pick is a commit: a toggle never blurs, so it commits itself.
@@ -99,16 +99,16 @@ export const AlignField: FormFieldRenderer = ({ jsonPath, readonly }) => {
           options={HORIZONTAL}
           value={horizontal}
           readonly={!!readonly}
-          onValueChange={(next) => pick(horizontalField, NodeStyle.fields.alignHorizontal.ast, next)}
+          onValueChange={(next) => pick(horizontalField, Style2D.fields.align.ast, next)}
         />
       </Form.Field>
-      <Form.Field path={[...stylePath, 'alignVertical'].join('.')} label='Vertical' readonly={readonly}>
+      <Form.Field path={[...stylePath, 'valign'].join('.')} label='Vertical' readonly={readonly}>
         <IconToggle
           label='Vertical alignment'
           options={VERTICAL}
           value={vertical}
           readonly={!!readonly}
-          onValueChange={(next) => pick(verticalField, NodeStyle.fields.alignVertical.ast, next)}
+          onValueChange={(next) => pick(verticalField, Style2D.fields.valign.ast, next)}
         />
       </Form.Field>
     </Layout.Container>

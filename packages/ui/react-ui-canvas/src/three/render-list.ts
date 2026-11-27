@@ -8,8 +8,10 @@ import {
   Scene,
   type Style3D,
   bounds3D,
+  containerOf,
   findLayout,
   fitChild,
+  isGrouping,
   radiusOf,
   resolveLayout3D,
   rootScene,
@@ -73,7 +75,7 @@ const drawnElements = (
   return Object.fromEntries(
     Object.entries(elements).flatMap(([key, element]): [string, Resolved3D][] => {
       const parts = element.parts === undefined ? undefined : findLayout(doc, element.parts);
-      if (element.type !== 'group' || parts?.dim !== '3d' || path.includes(parts.id)) {
+      if (!isGrouping(containerOf(doc, layout, element.id)) || parts?.dim !== '3d' || path.includes(parts.id)) {
         return [[key, element]];
       }
       const offset = element.center ?? ZERO;
@@ -122,7 +124,7 @@ export const renderList = (
     for (const element of Object.values(elements)) {
       const parts = element.parts === undefined ? undefined : findLayout(doc, element.parts);
       // A group draws only its members, where they are relative to it (fit `none`, decision 18).
-      if (element.type === 'group') {
+      if (isGrouping(containerOf(doc, own, element.id))) {
         if (!element.hidden && parts?.dim === '3d' && !path.includes(parts.id)) {
           const placement = {
             offset: apply(transform, element.center ?? ZERO),
@@ -133,8 +135,8 @@ export const renderList = (
         continue;
       }
       // A solid's geometry is its operands', placed where they are, so it needs no position of its own.
-      const local = element.center ?? (element.type === 'solid' ? ZERO : undefined);
-      if (element.hidden || !local || element.type === 'link') {
+      const local = element.center ?? (element.kind === 'solid' ? ZERO : undefined);
+      if (element.hidden || !local || element.kind === 'link') {
         continue;
       }
       const center = apply(transform, local);
@@ -144,7 +146,7 @@ export const renderList = (
         key: keyOf(element.id),
         id: element.id,
         elements,
-        type: element.type,
+        type: element.kind,
         center,
         scale: scaled(element.scale ?? UNIT, transform.scale),
         rotation: element.rotation ?? ZERO,
@@ -159,7 +161,7 @@ export const renderList = (
       }
     }
     for (const element of Object.values(elements)) {
-      if (element.type !== 'link' || element.hidden || !element.source || !element.target) {
+      if (element.kind !== 'link' || element.hidden || !element.source || !element.target) {
         continue;
       }
       const at = (end: ElementEndpoint) =>

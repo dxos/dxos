@@ -8,7 +8,7 @@
 //
 
 import { type Scene as Diagram } from '@dxos/diagram';
-import { type ElementId, type Link, type Point, isEllipseNode } from '@dxos/scene';
+import { type ElementId, type Link, type Point, isEllipseNode, linkPath } from '@dxos/scene';
 
 import { type NodeRegistry, type RenderList2D } from '../model/index.ts';
 import { nodeTitle } from './parts.ts';
@@ -36,16 +36,16 @@ const linkPoints = (scene: RenderList2D, registry: NodeRegistry, link: Link): Po
   if (!geometry) {
     return undefined;
   }
-  // A diagram connector is drawn along its own route, whatever its type.
+  // A diagram connector is drawn along its own route, whatever its path.
   if (geometry.diagram) {
     return geometry.diagram.points;
   }
   const { source, target } = geometry;
-  switch (link.type) {
+  switch (linkPath(link)) {
     case 'line':
       return [source.point, target.point];
     case 'spline':
-      return [source.point, ...link.points, target.point];
+      return [source.point, ...(link.points ?? []), target.point];
     case 'smart':
       return smartPoints(source, target);
     case 'ortho':
@@ -77,7 +77,7 @@ export const toDiagramObjects = (scene: RenderList2D, registry: NodeRegistry): D
           y,
           w: width,
           h: height,
-          ...(node.style?.guide ? {} : { text: nodeTitle(registry, node) }),
+          ...(node.overrides?.guide ? {} : { text: nodeTitle(registry, node) }),
         },
       ],
     });

@@ -3390,6 +3390,19 @@ page tile-api-reference: API reference
     - Typedoc for `@dxos/react-ui-list`, `@dxos/react-ui-form`, `@dxos/react-ui-menu` and `@dxos/react-ui-editor`, the packages the guides cover [D-249]
 ```
 ```mdl
+page tile-scene-schema: Scene schema
+  Every type a stored drawing is made of, generated from the schemas in `@dxos/scene`.
+  section: TILE
+  route: /docs/tile/resources/scene-schema/
+  group: Resources
+  template: resource
+  status: spike
+  covers:
+    - Every schema of a stored drawing in `@dxos/scene`: the document, scenes, layouts, models, elements, nodes, links, styles, the theme's slots, the shared vocabulary and diagram shapes [D-378] [D-380]
+    - One table per type, where a type that repeats another's fields lists only the fields that differ, and one table of the enums [D-379]
+    - The element kinds that have no schema in `@dxos/scene`, by name and package [D-379]
+```
+```mdl
 page tile-glossary: Glossary
   Every TILE term, defined once.
   section: TILE
@@ -7265,6 +7278,32 @@ decision D-377: The Tournament bracket example has the person pick a game and ch
   why: A control run of the tournament prompt built a bracket of typed-in names, which a game in the space cannot seat. Its type showed as its typename with no create-menu label, because the guide's example, which the skill follows, left the translations out.
   rejected:
     - A skill rule that a plugin's people are space members, which would misfire for plugins where a name is free text.
+```
+
+```mdl
+decision D-378: The docs have a page that shows, very concisely, every type of a stored drawing. It is generated from one schema of the whole ontology in `@dxos/scene`.
+  date: 2026-11-23
+  by: user:richburdon
+  affects: [tile-scene-schema]
+```
+
+```mdl
+decision D-379: The page of [D-378] is `tile-scene-schema`, a `resource` page in TILE's Resources group at `/docs/tile/resources/scene-schema/`, after the API reference. It has one table per type; a type that repeats another's fields lists only the fields that differ, the enums share one table, and the element kinds that have no schema in `@dxos/scene` are listed by name and package. Fills in [D-378].
+  date: 2026-11-23
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [tile-scene-schema]
+  why: TILE already holds the page for the canvas editor that draws these types, `tile-api-canvas-editor-canvas-editor`, and `resource` is the template for a list a reader looks up. A table per type with shared fields shown once keeps a hundred types short enough to scan.
+  rejected:
+    - A section of its own for the scene model: one page does not make a section, and the sidebar lists sections above every page.
+    - PLEX: its pages cover the app framework and plugins, and the scene types belong to no plugin.
+```
+
+```mdl
+decision D-380: The page of [D-378] shows the stored drawing's types in one set of names. A type is told apart by its `kind`. A colour is one string, a theme name or a CSS colour, and a font is a slot of the theme. A port is a point of its node's frame. The words for a stroke, a fill, corners and alignment are the same on a stored element, a node, a link and a diagram shape, and the page lists them once, with the theme's slots, in sections of their own.
+  date: 2026-11-24
+  by: user:richburdon
+  affects: [tile-scene-schema]
 ```
 
 ## Appendix: Extension Definitions

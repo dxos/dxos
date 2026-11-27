@@ -160,7 +160,10 @@ export type Occupancy = ReadonlyMap<string, ElementId>;
  * gutter route.
  */
 export const onLattice = (node: Node): boolean =>
-  !node.style?.guide && node.style?.border !== false && !isHullNode(node) && Reflect.get(node, 'hull') === undefined;
+  !node.overrides?.guide &&
+  node.overrides?.stroke !== 'none' &&
+  !isHullNode(node) &&
+  Reflect.get(node, 'hull') === undefined;
 
 export const occupancy = (
   nodes: Iterable<Node>,

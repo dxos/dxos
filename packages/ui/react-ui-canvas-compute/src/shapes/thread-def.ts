@@ -23,7 +23,7 @@ const OutputSchema = createOutputSchema(Schema.mutable(Schema.Array(Type.getSche
 
 export const ThreadShape = ComputeShape.mapFields(
   Struct.assign({
-    type: Schema.Literal('thread'),
+    kind: Schema.Literal('thread'),
   }),
 );
 
@@ -32,7 +32,7 @@ export type ThreadShape = Schema.Schema.Type<typeof ThreadShape>;
 export type CreateThreadProps = CreateShapeProps<ThreadShape>;
 
 export const createThread = (props: CreateThreadProps) =>
-  createShape<ThreadShape>({ type: 'thread', size: { width: 6 * MAJOR_GRID, height: 6 * MAJOR_GRID }, ...props });
+  createShape<ThreadShape>({ kind: 'thread', size: { width: 6 * MAJOR_GRID, height: 6 * MAJOR_GRID }, ...props });
 
 export const threadNodeDef = defineComputeNode<ThreadShape>({
   type: 'thread',

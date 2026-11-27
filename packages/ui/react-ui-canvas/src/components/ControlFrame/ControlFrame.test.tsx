@@ -13,7 +13,7 @@ import { ControlFrame, handlesFit } from './ControlFrame.tsx';
 
 const SCENE: RenderList2D = {
   id: 'board',
-  nodes: { box: { id: 'box', type: 'rect', z: 'a0', center: { x: 0, y: 0 }, size: { width: 192, height: 96 } } },
+  nodes: { box: { id: 'box', kind: 'rect', z: 'a0', center: { x: 0, y: 0 }, size: { width: 192, height: 96 } } },
   links: {},
 };
 

@@ -66,9 +66,9 @@ const PartEditor = ({ classNames, part, text, editing }: PartEditorProps) => {
         createBasicExtensions({ lineWrapping: true, history: false, search: false }),
         createThemeExtensions({
           themeMode,
-          // Content height, not full height, so the part's own layout places the editor where it puts the
-          // static text (a label centred in its cell).
-          slots: { editor: { className: 'w-full max-h-full [&>.cm-scroller]:scrollbar-none' } },
+          // Content height, neither full height nor capped at the part's, so the part's own layout places the
+          // editor where it puts the static text (a line taller than its part overflows both ways about the middle).
+          slots: { editor: { className: 'w-full [&>.cm-scroller]:scrollbar-none' } },
         }),
         // The part's own font and leading, not the editor theme's, so the text does not change when editing starts.
         Prec.highest(

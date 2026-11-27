@@ -11,10 +11,10 @@ import { type History, type SceneChoice, createHistory, sessionHistory } from '@
 import { type VersionedSource, combinedSource } from '@dxos/react-ui-canvas/headless';
 import { type Bounds, type Layer, type LayoutIntent, type ModelIntent, Scene, reachedObjects } from '@dxos/scene';
 
-import { applyLayoutIntent, canvasDocument, layoutSource, openScene, writeDocument, writeModelIntent } from '#model';
+import { applyLayoutIntent, canvasDocument, layoutSource, writeDocument, writeModelIntent } from '#model';
 import { type Canvas } from '#types';
 
-import { useSceneDocument } from '../CanvasStage/index.ts';
+import { useOpenScene, useSceneDocument } from '../CanvasStage/index.ts';
 import { useInspectorDock } from './use-inspector-dock.ts';
 import { useRefitKey } from './use-refit-key.ts';
 import { useSceneChoice } from './use-scene-choice.ts';
@@ -71,7 +71,7 @@ export type CanvasEditorHost = {
 export const useCanvasEditor = (canvas: Canvas.Canvas, dim: Scene.Dimension): CanvasEditorHost => {
   const [snapshot] = useObject(canvas);
   const { key: sceneKey, choice: sceneChoice } = useSceneChoice(canvas);
-  const scene = openScene(canvas, sceneKey);
+  const scene = useOpenScene(canvas, sceneKey);
   const stored = isSceneOf(dim, scene) ? scene : undefined;
   const document = useSceneDocument(stored);
   const refitKey = useRefitKey(canvas);

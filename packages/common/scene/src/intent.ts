@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type Bounds, endpointNode } from './element.ts';
+import { type Bounds, Point, Size, endpointNode } from './element.ts';
 import {
   Constraint,
   type Dimension,
@@ -16,8 +16,6 @@ import {
   type LayoutRecord,
   type LayoutRecord2D,
   type LayoutRecord3D,
-  Size2,
-  Vec2,
   Vec3,
 } from './Scene.ts';
 
@@ -66,9 +64,9 @@ export type LayoutIntent =
   | { readonly kind: 'update'; readonly id: string; readonly path: readonly string[]; readonly value?: unknown }
   | { readonly kind: 'reorder'; readonly id: string; readonly order: string }
   | { readonly kind: 'bind'; readonly link: Element }
-  | { readonly kind: 'move'; readonly ids: readonly string[]; readonly delta: Vec2 | Vec3 }
+  | { readonly kind: 'move'; readonly ids: readonly string[]; readonly delta: Point | Vec3 }
   | { readonly kind: 'rotate'; readonly ids: readonly string[]; readonly delta: number | Vec3 }
-  | { readonly kind: 'scale'; readonly ids: readonly string[]; readonly factor: Size2 | Vec3 }
+  | { readonly kind: 'scale'; readonly ids: readonly string[]; readonly factor: Size | Vec3 }
   | {
       readonly kind: 'extrude';
       readonly id: string;
@@ -102,9 +100,9 @@ export const LayoutIntent: Schema.Codec<LayoutIntent> = Schema.Union([
   }),
   Schema.Struct({ kind: Schema.Literal('reorder'), id: Schema.String, order: Schema.String }),
   Schema.Struct({ kind: Schema.Literal('bind'), link: ElementSchema }),
-  Schema.Struct({ kind: Schema.Literal('move'), ids, delta: Schema.Union([Vec3, Vec2]) }),
+  Schema.Struct({ kind: Schema.Literal('move'), ids, delta: Schema.Union([Vec3, Point]) }),
   Schema.Struct({ kind: Schema.Literal('rotate'), ids, delta: Schema.Union([Schema.Number, Vec3]) }),
-  Schema.Struct({ kind: Schema.Literal('scale'), ids, factor: Schema.Union([Vec3, Size2]) }),
+  Schema.Struct({ kind: Schema.Literal('scale'), ids, factor: Schema.Union([Vec3, Size]) }),
   Schema.Struct({
     kind: Schema.Literal('extrude'),
     id: Schema.String,
@@ -195,7 +193,7 @@ export const solidOperands = (operands: unknown): string[] =>
 
 /** The elements a stored solid builds from, as the `solid` element's props name them. */
 const solidInputs = (element: Element | undefined): string[] => {
-  if (element?.type !== 'solid') {
+  if (element?.kind !== 'solid') {
     return [];
   }
   const target = element.props?.target;
@@ -203,7 +201,7 @@ const solidInputs = (element: Element | undefined): string[] => {
 };
 
 /** A box as a 2D element places one: what a 2D solid measures its operands by. */
-export type Placed2D = { readonly center?: Vec2; readonly size?: Size2; readonly rotation?: number };
+export type Placed2D = { readonly center?: Point; readonly size?: Size; readonly rotation?: number };
 
 /**
  * The box a 2D solid's outline is drawn from: the bounds of the operands it is built from, each turned as it stands.
@@ -370,17 +368,17 @@ const geometry2D = (element: Element2D, intent: LayoutIntent): Element2D | undef
 const solid3D = (intent: SolidIntent): Element3D => {
   switch (intent.kind) {
     case 'join':
-      return { id: intent.id, type: 'solid', props: { op: 'union', operands: intent.operands.join(' ') } };
+      return { id: intent.id, kind: 'solid', props: { op: 'union', operands: intent.operands.join(' ') } };
     case 'subtract':
       return {
         id: intent.id,
-        type: 'solid',
+        kind: 'solid',
         props: { op: 'difference', operands: solidIntentInputs(intent).join(' ') },
       };
     case 'extrude':
       return {
         id: intent.id,
-        type: 'solid',
+        kind: 'solid',
         props: { op: 'extrude', target: intent.target, face: intent.face, distance: round(intent.distance) },
       };
   }
@@ -409,7 +407,7 @@ const solid2D = (intent: SolidIntent, elements: Elements<Element2D>): Element2D 
   const z = orders[orders.length - 1];
   return {
     id: intent.id,
-    type: 'solid',
+    kind: 'solid',
     ...(z !== undefined ? { z } : {}),
     ...(base?.layer !== undefined ? { layer: base.layer } : {}),
     ...(framed

@@ -39,7 +39,7 @@ const placed = { x: 0, y: 0, w: 0, h: 0 } as const;
 /** How a heading is drawn; a box drawn this way over a grid is what a labelled group lowers to. */
 const HEADING_STYLE = {
   fill: 'none',
-  border: false,
+  stroke: 'none',
   align: 'center',
   valign: 'middle',
   fontSize: HEADING.fontSize,
@@ -51,18 +51,21 @@ const isBox = (element: Shape.Element): element is Shape.Box => BOX_KINDS.includ
 const isHeading = (box: Shape.Box): boolean =>
   box.kind === 'rect' &&
   box.text !== undefined &&
-  box.type === undefined &&
+  box.component === undefined &&
   box.fill === HEADING_STYLE.fill &&
-  box.border === HEADING_STYLE.border &&
+  box.stroke === HEADING_STYLE.stroke &&
   box.align === HEADING_STYLE.align &&
   box.valign === HEADING_STYLE.valign &&
   box.fontSize === HEADING_STYLE.fontSize;
 
-/** Whether a box shows anything. A grid shows only a frame; a plain box with no text, fill or border holds a cell. */
+/**
+ * Whether a box shows anything. A grid shows only a frame, and only one it states; a plain box with no text, fill or
+ * stroke holds a cell.
+ */
 const draws = (box: Shape.Box): boolean =>
   box.kind === 'grid'
-    ? box.border === true || (box.fill !== undefined && box.fill !== 'none')
-    : box.text !== undefined || box.type !== undefined || box.border !== false || box.fill !== 'none';
+    ? (box.stroke !== undefined && box.stroke !== 'none') || (box.fill !== undefined && box.fill !== 'none')
+    : box.text !== undefined || box.component !== undefined || box.stroke !== 'none' || box.fill !== 'none';
 
 /** The fields of `fields` that are set, so an absent option never becomes an explicit `undefined`. */
 const present = <T extends Record<string, unknown>>(fields: T): { [K in keyof T]?: Exclude<T[K], undefined> } => {
@@ -127,16 +130,15 @@ export const solve = (diagram: Semantic.Diagram): Solution => {
         id,
         ...placed,
         // A component draws itself, so it shows no text it was not given; a plain box falls back to its id.
-        ...present({ text: node.labelled || node.type === undefined ? node.label : undefined }),
+        ...present({ text: node.labelled || node.component === undefined ? node.label : undefined }),
         parent,
         ...present({
-          type: node.type,
+          component: node.component,
           // The rows ride in the component's own bag, as the list its fields cannot say.
           data: node.items?.length ? { ...node.data, [ITEMS_FIELD]: node.items.map(itemRecord) } : node.data,
           color: node.color,
           fill: node.fill,
           stroke: node.stroke,
-          border: node.border,
           width: node.width,
           height: node.height,
         }),
@@ -165,7 +167,6 @@ export const solve = (diagram: Semantic.Diagram): Solution => {
       color: group.color,
       fill: group.fill,
       stroke: group.stroke,
-      border: group.border,
     });
     const inner = group.heading === undefined ? id : bodyId(id);
     if (group.heading === undefined) {
@@ -239,13 +240,12 @@ export const drawn = (object: Scene.WorldObject) => {
     .sort((left, right) => (left.key < right.key ? -1 : left.key > right.key ? 1 : 0));
   const frames = boxes
     .filter((box) => box.kind === 'grid' && draws(box))
-    .map(({ id, color, fill, stroke, weight, border }) => ({
+    .map(({ id, color, fill, stroke, weight }) => ({
       frame: frameOf(id),
       color,
       fill,
       stroke,
       weight,
-      border,
     }));
   const arrows = object.elements
     .flatMap((element) => (element.kind === 'arrow' ? [element] : []))
@@ -276,7 +276,6 @@ const groupFields = (grid: Shape.Box) =>
     color: grid.color,
     fill: grid.fill,
     stroke: grid.stroke,
-    border: grid.border,
   });
 
 /** A component's fields the text form spells; a list or a nested object has no spelling. */
@@ -319,7 +318,7 @@ export const infer = (object: Scene.WorldObject): Semantic.Diagram | undefined =
   diagram.members = members;
   diagram.size = { w: root.w, h: root.h };
   diagram.origin = { x: (object.origin?.x ?? 0) + root.x, y: (object.origin?.y ?? 0) + root.y };
-  const { color: _color, fill: _fill, stroke: _stroke, border: _border, ...rule } = groupFields(root);
+  const { color: _color, fill: _fill, stroke: _stroke, ...rule } = groupFields(root);
   if (Object.keys(rule).length > 0) {
     diagram.rule = rule;
   }
@@ -340,17 +339,16 @@ export const infer = (object: Scene.WorldObject): Semantic.Diagram | undefined =
         label: box.text ?? box.id,
         relations: [],
         range: nowhere,
-        ...(box.text !== undefined && (box.type !== undefined || box.text !== box.id) ? { labelled: true } : {}),
+        ...(box.text !== undefined && (box.component !== undefined || box.text !== box.id) ? { labelled: true } : {}),
         ...(owner === Semantic.ROOT ? {} : { group: owner }),
         ...present({
           shape: box.kind === 'rect' ? undefined : box.kind,
-          type: box.type,
+          component: box.component,
           data: scalarsOf(box.data),
           items: itemsOf(box.data),
           color: box.color,
           fill: box.fill,
           stroke: box.stroke,
-          border: box.border,
           width: box.width,
           height: box.height,
         }),

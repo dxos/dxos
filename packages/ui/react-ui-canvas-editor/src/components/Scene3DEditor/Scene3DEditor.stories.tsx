@@ -43,10 +43,10 @@ const OVERLAP: Scene.SceneDocument = {
       id: 'overlap',
       dim: '3d',
       elements: {
-        a: { id: 'a', type: 'cube', center: { x: -1, y: 0.5, z: 0 } },
-        b: { id: 'b', type: 'cube', center: { x: -0.5, y: 0.75, z: 0.5 } },
-        c: { id: 'c', type: 'cube', center: { x: 2, y: 0.5, z: 0 } },
-        d: { id: 'd', type: 'cube', center: { x: 3, y: 0.5, z: 0 } },
+        a: { id: 'a', kind: 'cube', center: { x: -1, y: 0.5, z: 0 } },
+        b: { id: 'b', kind: 'cube', center: { x: -0.5, y: 0.75, z: 0.5 } },
+        c: { id: 'c', kind: 'cube', center: { x: 2, y: 0.5, z: 0 } },
+        d: { id: 'd', kind: 'cube', center: { x: 3, y: 0.5, z: 0 } },
       },
     },
   ],
@@ -66,13 +66,13 @@ const CRATE_MESH = {
 const KIT: Scene.SceneDocument = {
   scenes: [{ ...OVERLAP.scenes[0], id: 'kit', layout: 'kit' }],
   layouts: [
-    { id: 'kit', dim: '3d', model: 'kit', elements: { c: { id: 'c', type: 'cube', center: { x: 3, y: 0.5, z: 0 } } } },
+    { id: 'kit', dim: '3d', model: 'kit', elements: { c: { id: 'c', kind: 'cube', center: { x: 3, y: 0.5, z: 0 } } } },
   ],
   models: [
     {
       id: 'kit',
       dim: '3d',
-      objects: { crate: { id: 'crate', type: 'mesh', lockAspect: true, props: { mesh: CRATE_MESH } } },
+      objects: { crate: { id: 'crate', kind: 'mesh', lockAspect: true, props: { mesh: CRATE_MESH } } },
     },
   ],
 };
@@ -85,9 +85,9 @@ const FLUSH: Scene.SceneDocument = {
       id: 'flush',
       dim: '3d',
       elements: {
-        p: { id: 'p', type: 'cube', center: { x: 0, y: 0.5, z: 0 } },
-        q: { id: 'q', type: 'cube', center: { x: 2.6, y: 0.5, z: 0 } },
-        r: { id: 'r', type: 'cube', center: { x: 0, y: 2.6, z: 0 } },
+        p: { id: 'p', kind: 'cube', center: { x: 0, y: 0.5, z: 0 } },
+        q: { id: 'q', kind: 'cube', center: { x: 2.6, y: 0.5, z: 0 } },
+        r: { id: 'r', kind: 'cube', center: { x: 0, y: 2.6, z: 0 } },
       },
     },
   ],
@@ -401,7 +401,7 @@ export const ExtrudeTest: Story = {
  *
  * Test:
  * 1. With Move, a click on a cube selects it and puts the gizmo on it.
- * 2. A drag from one of the gizmo's arrows moves the cube, which stays selected.
+ * 2. A drag from one of the gizmo's arrows moves the cube, which stays selected, with its box round it on every frame.
  */
 /**
  * Selects `select` (cube c, the first, carries the gizmo) with the Move tool and drags the gizmo by `steps` of `stride` px
@@ -482,6 +482,20 @@ const dragGizmo =
       handles.set(id, [...(handles.get(id) ?? []), pixel]);
     }
     const before = boundsOf();
+    // Every frame drawn from here on, each selected cube's box is on the cube.
+    const apart: string[] = [];
+    scene()?.onAfterRenderObservable.add(() => {
+      for (const id of select) {
+        const box = scene()?.getMeshByName(`box-${id}`);
+        const item = scene()?.getMeshByName(`item-${id}`)?.getBoundingInfo().boundingBox;
+        // Where the box is placed, as it may not have drawn yet: its own bounds are stale until its line shader compiles.
+        const placed = box && [...box.position.asArray(), ...box.position.add(box.scaling).asArray()];
+        const drawn = item && [...item.minimumWorld.asArray(), ...item.maximumWorld.asArray()];
+        const on = placed && drawn && placed.every((value, index) => Math.abs(value - drawn[index]) < 0.005);
+        !on &&
+          apart.push(`${id}: ${placed?.map((value) => value.toFixed(2))} | ${drawn?.map((value) => value.toFixed(2))}`);
+      }
+    });
 
     // 2. Babylon focuses its canvas on the press, and a drag lasts only while the canvas keeps the focus.
     // A handle at right angles to the drag on screen moves nothing, so each is tried, from its middle, until one does.
@@ -497,6 +511,8 @@ const dragGizmo =
           buttons: 1,
         });
       }
+      // A frame drawn part way through shows the cube moved while the document is as it was.
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       const end = steps * stride;
       await fireEvent.pointerUp(view, {
         ...from,
@@ -511,6 +527,7 @@ const dragGizmo =
     }
     await waitFor(() => expect(bounds('item-c')).not.toBe(before.c));
     await expect(editor.dataset.selection).toBe(select.join(' '));
+    await expect(apart.join('; ')).toBe('');
     await landed?.(before, boundsOf());
   };
 
@@ -1011,6 +1028,29 @@ export const EscapeTest: Story = {
     await frame();
     await expect(bounds('item-extrude-1')).toBeUndefined();
     await expect(editor.dataset.selection).toBe('');
+  },
+};
+
+/**
+ * Select all, as in 2D.
+ *
+ * Test:
+ * 1. With the scene focused, the select-all chord selects every element of the layout.
+ * 2. The editor takes the chord, so the browser does not select the page's text.
+ */
+export const SelectAllTest: Story = {
+  args: { exemplar: 'overlap' },
+  play: async ({ canvasElement }) => {
+    const { editor } = await harness(canvasElement, 'item-c');
+    const chord = new KeyboardEvent('keydown', { key: 'a', metaKey: true, bubbles: true, cancelable: true });
+
+    // 1.
+    editor.focus();
+    editor.dispatchEvent(chord);
+    await waitFor(() => expect(editor.dataset.selection).toBe('a b c d'));
+
+    // 2.
+    await expect(chord.defaultPrevented).toBe(true);
   },
 };
 

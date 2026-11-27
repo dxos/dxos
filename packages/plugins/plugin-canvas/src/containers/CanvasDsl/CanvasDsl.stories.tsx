@@ -43,7 +43,7 @@ const INTENT = trim`
     node cli "CLI"
   }
 
-  group core "Core" cols=2 gap=16 padding=16 border=true {
+  group core "Core" cols=2 gap=16 padding=16 stroke=solid {
     node graph "Graph"
     node feeds "Feeds"
     node sync "Sync"

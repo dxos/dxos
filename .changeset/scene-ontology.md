@@ -1,0 +1,18 @@
+---
+'@dxos/scene': minor
+'@dxos/plugin-canvas': minor
+---
+
+Breaking: a stored drawing uses one set of names. `kind` tells an element, a node and a model object apart (every link is `kind: 'link'` with a `path`); a style states `color`, `fill`, `stroke`, `corners`, `font`, `align` and `valign` in 2D and 3D alike; a colour is one string (`blue`, `blue/2`, `#1e90ff`) and a font is a slot of the theme, which may define named colours and typefaces; a port is a point of its node's frame. A stored element is the node or link itself, with no `props.canvas`: layouts, models and style catalogs move to version 0.2.0, and plugin-canvas migrates a drawing stored at 0.1.0 when its space loads. `@dxos/scene` also exports `Ontology`, the registry of every schema of a stored drawing, from which `moon run scene:gen-ontology` writes `ontology.schema.json` and the docs page.
+
+In the 3D editor the select-all chord selects every element of the open layout, a selection's box stays round its element while it is dragged, the scale tool sizes an element in step with its handle's travel, and the inspector panel's titles and labels no longer select as text.
+
+In the 2D editor a group made through the scene model draws its members where they were (they disappeared before), and it can still be ungrouped after it is moved. A group of a group draws all of its members, and ungrouping a moved group takes a group inside it along.
+
+A model object's kind now names the container it is: `group`, `hull` and `view`, and any other object with parts is a reusable Object (`containerOf`). The 2D editor no longer stores `view:` and `instance:` objects: a node keeps the object that places its layout. Make object draws as an Object where it drew as a View, a hull can be ungrouped, ungrouping a resized group keeps its members' size, the Objects panel lists reusable Objects only, and a selected group has a selection box in 3D. A `.dx` object drawn as a View says `view` as its kind.
+
+Group and Ungroup are the model's `group` and `ungroup` intents in every editor. The 2D engine's `composeSelection` and `ungroupInstance` are removed; it gives the intents where a group stands (`groupIntent2D`, `ungroupIntent2D`). A group made in the plugin's 2D canvas now stretches its members when it is resized, and Ungroup takes an Object's instance apart, leaving its definition.
+
+A canvas drawing, and its card, opened before its scene has loaded now draws when the scene loads. It stayed empty until the canvas changed: the compiled article kept the editor it chose from the unloaded scene.
+
+A text part edited in place no longer moves when its editor opens: a card's title dropped 3 px. Text longer than its part now overflows the part while it is edited, as it does drawn, where the editor scrolled inside the part.

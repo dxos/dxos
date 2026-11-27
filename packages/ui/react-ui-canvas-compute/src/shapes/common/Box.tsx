@@ -28,7 +28,7 @@ export type BoxProps = PropsWithChildren<
 
 export const Box = forwardRef<HTMLDivElement, BoxProps>(
   ({ children, classNames, shape, title, status, open, onAction }, forwardedRef) => {
-    invariant(shape.type);
+    invariant(shape.kind);
     // The chrome comes from the node registry the scene renders with.
     const { controller, debug = false } = useComputeContext();
     const def = useComputeNodeDef();
@@ -47,7 +47,7 @@ export const Box = forwardRef<HTMLDivElement, BoxProps>(
       <div ref={forwardedRef} className='flex flex-col dx-fill justify-between'>
         <div className='flex shrink-0 w-full justify-between items-center h-[32px] dx-input-surface'>
           <Icon.Icon icon={icon} classNames='mx-2' />
-          <div className='grow text-sm truncate'>{debug ? shape.type : (name ?? shape.text ?? title)}</div>
+          <div className='grow text-sm truncate'>{debug ? shape.kind : (name ?? shape.text ?? title)}</div>
           {nodeId && (
             <Button.Root
               classNames='p-1 text-green-500'
