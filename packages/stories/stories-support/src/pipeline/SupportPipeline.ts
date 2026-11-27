@@ -73,7 +73,12 @@ export type Envelope = {
   readonly outcomes: readonly Outcome[];
 };
 
-type StageResult = { readonly envelope: Envelope; readonly detail?: string };
+type StageResult = {
+  readonly envelope: Envelope;
+  readonly detail?: string;
+  /** Why the stage failed although it has an envelope to pass on; the stage is then reported as failed. */
+  readonly failure?: string;
+};
 
 const count = (value: number, noun: string): string => `${value} ${noun}${value === 1 ? '' : 's'}`;
 
@@ -84,6 +89,7 @@ const TASK_REASON: Record<Support.TaskReason, string> = {
   'no-evidence': 'No canonical document covers the topic.',
   'low-confidence': 'No passage answers the question with enough confidence.',
   'research-failed': 'Research failed before an answer could be drafted.',
+  'respond-failed': 'The reply could not be drafted.',
 };
 
 /**
@@ -111,6 +117,10 @@ export const stages =
           }
           return yield* run(envelope).pipe(
             Effect.map((result) => {
+              if (result.failure !== undefined) {
+                report(envelope, { id, status: 'failed', detail: result.failure });
+                return { ...result.envelope, failed: [...result.envelope.failed, id] };
+              }
               report(envelope, { id, status: 'success', detail: result.detail });
               return result.envelope;
             }),
@@ -168,14 +178,15 @@ export const stages =
     const facts = stage('facts', (envelope) =>
       Effect.gen(function* () {
         const found = extractFacts(envelope.source, envelope.input.recorded);
-        yield* putFacts(found);
+        // A failed write still passes the facts on: triage must make a task for every request it was asked.
+        const failure = yield* putFacts(found).pipe(Effect.match({ onSuccess: () => undefined, onFailure: describe }));
         const kinds = found.map(Support.kindOf);
         const detail = Support.FactKind.literals
           .map((kind) => [kind, kinds.filter((value) => value === kind).length] as const)
           .filter(([, total]) => total > 0)
           .map(([kind, total]) => count(total, kind))
           .join(', ');
-        return { envelope: { ...envelope, facts: found }, detail };
+        return { envelope: { ...envelope, facts: found }, detail, failure };
       }),
     );
 
@@ -251,7 +262,12 @@ export const stages =
               : {
                   kind: 'task',
                   confidence: 0,
-                  reason: Support.kindOf(fact) === 'request' ? 'request' : 'research-failed',
+                  reason:
+                    Support.kindOf(fact) === 'request'
+                      ? 'request'
+                      : envelope.failed.includes('research')
+                        ? 'research-failed'
+                        : 'respond-failed',
                 };
           const task = Task.make({
             title: sentenceOf(fact),

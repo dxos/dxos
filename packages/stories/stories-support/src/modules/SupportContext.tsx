@@ -48,6 +48,8 @@ export type SupportContextValue = {
   readonly facts: readonly Fact.Fact[];
   /** Messages the generators have yet to send. */
   readonly remaining: number;
+  /** Whether the pipeline is running and can take a message. */
+  readonly ready: boolean;
   /** Whether the generators are sending on their own. */
   readonly playing: boolean;
   /** Has the next generator send one message; false when none is left. */
@@ -137,10 +139,13 @@ export const SupportProvider = ({
   const providers = Hooks.useCapabilities(SupportCapabilities.Processor);
   const facts = useFacts(space);
   const [runs, setRuns] = useState<readonly Support.MessageRun[]>([]);
-  const [remaining, setRemaining] = useState(corpus.length);
   const [playing, setPlaying] = useState(false);
+  const [ready, setReady] = useState(false);
 
   const generators = useMemo(() => Generator.makeAll(corpus), [corpus]);
+  // The generators hold their own cursors; `sent` re-reads the count after each message.
+  const [sent, setSent] = useState(0);
+  const remaining = useMemo(() => Generator.remaining(generators), [generators, sent]);
   const queue = useRef<Queue.Queue<SupportPipeline.Input>>(undefined);
 
   // The pipeline: one fiber for the life of the story, fed by the queue the generators send into.
@@ -158,6 +163,7 @@ export const SupportProvider = ({
     const host = { db: space.db };
     const inputs = Effect.runSync(Queue.unbounded<SupportPipeline.Input>());
     queue.current = inputs;
+    setReady(true);
     const fiber = Effect.runFork(
       SupportPipeline.run(Stream.fromQueue(inputs), {
         db: space.db,
@@ -176,18 +182,23 @@ export const SupportProvider = ({
     );
     return () => {
       queue.current = undefined;
+      setReady(false);
       Effect.runFork(Fiber.interrupt(fiber));
     };
   }, [space, mailbox, taskSet, providers, registry, stageDelay]);
 
   const step = useCallback(() => {
-    const entry = Generator.next(generators)?.take();
+    // Checked before a message is taken, so a pipeline that is not running never costs the actor a message.
     const inputs = queue.current;
-    if (!entry || !inputs || !space || !feed) {
+    if (!inputs || !space || !feed) {
+      return false;
+    }
+    const entry = Generator.next(generators)?.take();
+    if (!entry) {
       return false;
     }
     const message = Generator.toMessage(entry);
-    setRemaining(Generator.remaining(generators, corpus));
+    setSent((count) => count + 1);
     setRuns((current) => [Support.makeRun(message.id, entry.subject), ...current]);
     void EffectEx.runPromise(
       Feed.append(feed, [message]).pipe(
@@ -196,7 +207,7 @@ export const SupportProvider = ({
       ),
     ).catch((error: unknown) => log.catch(error));
     return true;
-  }, [generators, corpus, space, feed]);
+  }, [generators, space, feed]);
 
   // While playing, the generators send one message every interval until none is left.
   useEffect(() => {
@@ -219,9 +230,9 @@ export const SupportProvider = ({
   const value = useMemo<SupportContextValue | undefined>(
     () =>
       space && mailbox && taskSet && feed
-        ? { space, mailbox, feed, taskSet, runs, facts, remaining, playing, step, setPlaying }
+        ? { space, mailbox, feed, taskSet, runs, facts, remaining, ready, playing, step, setPlaying }
         : undefined,
-    [space, mailbox, taskSet, feed, runs, facts, remaining, playing, step],
+    [space, mailbox, taskSet, feed, runs, facts, remaining, ready, playing, step],
   );
 
   return <SupportContext.Provider value={value}>{children}</SupportContext.Provider>;

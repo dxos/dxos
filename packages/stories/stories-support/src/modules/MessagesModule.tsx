@@ -13,7 +13,7 @@ import { ListModule, type ListRow } from './ListModule.tsx';
 import { type SupportContextValue, useSupport } from './SupportContext.tsx';
 
 /** The generators' controls: send one message, or let the actors send on their own. */
-const Controls = ({ remaining, playing, step, setPlaying, total }: SupportContextValue & { total: number }) => {
+const Controls = ({ remaining, ready, playing, step, setPlaying, total }: SupportContextValue & { total: number }) => {
   const menu = useMenuBuilder(
     (): ActionGraphProps =>
       MenuBuilder.make()
@@ -24,7 +24,7 @@ const Controls = ({ remaining, playing, step, setPlaying, total }: SupportContex
           {
             label: `Send next message (${remaining} left)`,
             icon: 'ph--skip-forward--regular',
-            disabled: remaining === 0 || playing,
+            disabled: remaining === 0 || playing || !ready,
             disposition: 'toolbar',
             testId: 'support.step',
           },
@@ -35,14 +35,14 @@ const Controls = ({ remaining, playing, step, setPlaying, total }: SupportContex
           {
             label: playing ? 'Pause the generators' : 'Start the generators',
             icon: playing ? 'ph--pause--regular' : 'ph--play--regular',
-            disabled: remaining === 0,
+            disabled: remaining === 0 || !ready,
             disposition: 'toolbar',
             testId: 'support.play',
           },
           () => setPlaying(!playing),
         )
         .build(),
-    [total, remaining, playing, step, setPlaying],
+    [total, remaining, ready, playing, step, setPlaying],
   );
   return <ActionToolbar {...menu} alwaysActive />;
 };

@@ -130,7 +130,13 @@ export const Citation = Schema.Struct({
   quote: Schema.String,
 });
 
-export const TaskReason = Schema.Literals(['request', 'no-evidence', 'low-confidence', 'research-failed']);
+export const TaskReason = Schema.Literals([
+  'request',
+  'no-evidence',
+  'low-confidence',
+  'research-failed',
+  'respond-failed',
+]);
 
 /** The outcome for one question or request. A draft always carries at least one citation. */
 export const Decision = Schema.Union([
@@ -177,9 +183,14 @@ run with `Pipeline.run`.
 | 5   | `respond`  | Each question and its evidence          | A draft with its `Cites` relations, or a decision to make a task      | Responder plugin      |
 | 6   | `triage`   | Each request; each question without a draft | A `Task` in the "Support" task set, naming the message in a foreign key | The pipeline     |
 
-A stage that fails marks its row failed and the message continues: when `research` fails, `respond`
-is skipped and stays not started, and `triage` makes a task with the reason `research-failed`. No
-failure stops the stream.
+A stage that fails marks its row failed and the message continues. No failure stops the stream, and
+every request and question still ends in a draft or a task:
+
+- When `facts` cannot store what it read, the facts stay on the envelope, so later stages still see
+  the questions and requests.
+- When `research` fails, `respond` is skipped and stays not started, and `triage` makes a task with
+  the reason `research-failed`.
+- When `respond` fails, `triage` makes a task with the reason `respond-failed`.
 
 ## Plugins and their contracts
 

@@ -15,6 +15,8 @@ export type Generator = {
   readonly pending: () => CorpusMessage | undefined;
   /** Removes and returns the actor's next message. */
   readonly take: () => CorpusMessage | undefined;
+  /** How many messages the actor has yet to send. */
+  readonly remaining: () => number;
 };
 
 /** A generator for one actor over that actor's messages in `corpus`, in order. */
@@ -24,7 +26,8 @@ export const make = (key: ActorKey, corpus: readonly CorpusMessage[] = CORPUS): 
   return {
     actor: ACTORS[key],
     pending: () => messages[cursor],
-    take: () => messages[cursor++],
+    take: () => (cursor < messages.length ? messages[cursor++] : undefined),
+    remaining: () => messages.length - cursor,
   };
 };
 
@@ -39,12 +42,8 @@ export const next = (generators: readonly Generator[]): Generator | undefined =>
     .sort((first, second) => (first.pending()?.created ?? '').localeCompare(second.pending()?.created ?? ''))[0];
 
 /** How many messages the generators have yet to send. */
-export const remaining = (generators: readonly Generator[], corpus: readonly CorpusMessage[] = CORPUS): number =>
-  generators.reduce((total, generator) => {
-    const pending = generator.pending();
-    const own = corpus.filter((message) => message.from === generator.actor.key);
-    return total + (pending ? own.length - own.indexOf(pending) : 0);
-  }, 0);
+export const remaining = (generators: readonly Generator[]): number =>
+  generators.reduce((total, generator) => total + generator.remaining(), 0);
 
 /** A corpus entry as the message its actor sends. */
 export const toMessage = (entry: CorpusMessage): Message.Message => {

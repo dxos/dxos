@@ -60,7 +60,13 @@ export interface Citation extends Schema.Schema.Type<typeof Citation> {}
 // Decisions.
 //
 
-export const TaskReason = Schema.Literals(['request', 'no-evidence', 'low-confidence', 'research-failed']);
+export const TaskReason = Schema.Literals([
+  'request',
+  'no-evidence',
+  'low-confidence',
+  'research-failed',
+  'respond-failed',
+]);
 export type TaskReason = Schema.Schema.Type<typeof TaskReason>;
 
 export const DraftDecision = Schema.Struct({
