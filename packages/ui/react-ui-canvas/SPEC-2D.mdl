@@ -259,7 +259,7 @@ type Port
     `<constraint x y>` states. Ports come from the kind, not the instance (decision 12);
     `portsPerSide` places them along each side (never at a corner): the side is shared among one more
     gap than it has ports, the gap is rounded down to a whole minor grid unit, and the ports stand that
-    far apart about the side's centre (decision D-86). `accepts` constrains which end of a link may land
+    far apart about the side's centre (decisions D-86 and D-88). `accepts` constrains which end of a link may land
     here, and a link between two constrained ports is directed by that alone.
   fields:
     id: PortId                        # a generated port's id is its side's compass letter and its index, e.g. 'e2'
@@ -738,7 +738,8 @@ feat F-6: Open registry
     written by a newer host, or one whose plugin is off, opens.
   req F-6.4: Ports come from the definition; a node may still carry its own. A side's generated ports stand
     a whole number of minor grid units apart, symmetrical about its centre: the side's length over one
-    more than their count, rounded down to the unit. A side too short for one unit a gap is shared evenly.
+    more than their count, rounded down to the unit. An even count gives up one more unit where that puts its
+    ports on the grid's lines. A side too short for one unit a gap is shared evenly.
 ```
 
 ```mdl
@@ -1928,6 +1929,23 @@ decision D-87: A side too short for one minor grid unit between its ports shares
   for: user:richburdon
   affects: [F-6.4]
   why: Rounded down, the gap on such a side is nothing, so its ports would stack on the centre and collapse to one, and a link pinned to another would lose its port.
+```
+
+```mdl
+decision D-88: An even count of ports on a side a whole number of units long takes a gap one unit shorter where the gap and the side differ in parity, so its ports stand on the grid's lines. Fills in [D-86].
+  date: 2026-11-27
+  by: user:richburdon
+  affects: [F-6.4]
+  why: An even count stands half a gap either side of the centre, so six ports three units apart on a side 24 units long stood half a unit off every line.
+```
+
+```mdl
+decision D-89: A gap of one unit is not shortened, and neither is the gap of a side that is not a whole number of units long. Fills in [D-88].
+  date: 2026-11-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-6.4]
+  why: One unit less than one is no gap, which would stack the ports, and a side of no whole length has no line for its ports to stand on.
 ```
 
 ## Appendix: Extension Definitions

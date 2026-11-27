@@ -43,13 +43,20 @@ export const portId = (side: Side, index = 1): string => `${SIDE_LETTERS[side]}$
 
 /**
  * How far apart `count` ports stand on a side `extent` long: the side shared among `count + 1` gaps, rounded down to a
- * whole minor grid unit (`grid`, scene px), so links leaving neighbouring ports run a whole number of units apart. A
- * side too short for one unit a gap is shared evenly, so its ports do not stack.
+ * whole minor grid unit (`grid`, scene px), so links leaving neighbouring ports run a whole number of units apart. An
+ * even count stands half a gap either side of the centre, so its gap gives up one more unit where that puts the ports
+ * on the grid's lines. A side too short for one unit a gap is shared evenly, so its ports do not stack.
  */
 export const portPitch = (count: number, extent: number, grid = DEFAULT_GRID): number => {
   const even = extent / (count + 1);
-  const whole = grid > 0 ? Math.floor(even / grid) * grid : 0;
-  return whole > 0 ? whole : even;
+  const units = grid > 0 ? Math.floor(even / grid) : 0;
+  if (units < 1) {
+    return even;
+  }
+  // Half a gap from the centre is on a line only when the gap and the side are both odd or both even in units.
+  const span = extent / grid;
+  const between = count % 2 === 0 && Number.isInteger(span) && (span + units) % 2 !== 0;
+  return (between && units > 1 ? units - 1 : units) * grid;
 };
 
 /**

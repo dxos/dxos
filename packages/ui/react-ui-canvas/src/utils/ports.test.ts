@@ -72,6 +72,20 @@ describe('ports', () => {
     expect(along(sidePorts(3, { width: 256, height: 100 }, 8), 'top', 256)).toEqual([64, 128, 192]);
   });
 
+  test('an even count keeps to the grid lines by a gap one unit shorter', ({ expect }) => {
+    // 288 / 7 is 41.14, three units, which would stand the middle two 18 either side of 144, between the lines;
+    // two units stand all six on them.
+    expect(along(sidePorts(6, { width: 288, height: 288 }, 12), 'top', 288)).toEqual([84, 108, 132, 156, 180, 204]);
+    // A gap already of the side's parity is kept: 25 units and three, 20 units and four.
+    expect(along(sidePorts(6, { width: 300, height: 300 }, 12), 'top', 300)).toEqual([60, 96, 132, 168, 204, 240]);
+    expect(along(sidePorts(4, { width: 240, height: 240 }, 12), 'top', 240)).toEqual([48, 96, 144, 192]);
+    // An odd count has a port on the centre whatever the gap, so its gap is not shortened.
+    expect(along(sidePorts(5, { width: 288, height: 288 }, 12), 'top', 288)).toEqual([48, 96, 144, 192, 240]);
+    // A gap of one unit has nothing to give, and a side that is not whole units has no lines to keep to.
+    expect(along(sidePorts(2, { width: 48, height: 48 }, 12), 'top', 48)).toEqual([18, 30]);
+    expect(along(sidePorts(2, { width: 126, height: 126 }, 12), 'top', 126)).toEqual([45, 81]);
+  });
+
   test('a side too short for a grid unit between its ports divides evenly', ({ expect }) => {
     // 40 / 4 is 10, less than a unit of 12, so the ports keep apart rather than stack on the centre.
     expect(along(sidePorts(3, { width: 40, height: 40 }, 12), 'top', 40)).toEqual([10, 20, 30]);

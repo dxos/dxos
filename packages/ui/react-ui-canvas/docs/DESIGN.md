@@ -151,7 +151,8 @@ types; `VIEWS.md` keeps the reasoning behind the containers.
   `portsPerSide` (default 3) ports along each side, named `<side><index>` (`e2` is the east centre) and
   listed centre-first so automatic links prefer the centre. A side's ports stand a whole number of minor grid
   units apart about its centre: the side's length over one more than their count, rounded down to the unit
-  (`portPitch`); a side too short for one unit a gap is shared evenly. Ports that land on one point collapse to
+  (`portPitch`). An even count gives up one more unit where that puts its ports on the grid's lines; a side too
+  short for one unit a gap is shared evenly. Ports that land on one point collapse to
   the first.
   The ellipse declares one port per side: only the frame's side centres lie on the curve.
 - **Automatic links**: when either endpoint has no `port`, the router picks the port pair with the shortest

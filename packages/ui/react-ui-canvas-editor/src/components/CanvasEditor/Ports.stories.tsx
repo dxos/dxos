@@ -5,8 +5,9 @@
 //
 // Where a shape's ports stand along a side. The side is shared among one more gap than it has ports, and the gap is
 // rounded down to a whole unit of the minor grid, so the ports stand a whole number of units apart about the side's
-// centre and leave the rest of the side at its two ends. Each shape here hangs a link from every port of its bottom
-// side, so the spacing shows without hovering.
+// centre and leave the rest of the side at its two ends. An even count gives up one more unit where that puts its
+// ports on the grid's lines. Each shape here hangs a link from every port of its bottom side, so the spacing shows
+// without hovering.
 //
 // 1. Hover a shape: its ports show on all four sides, the bottom ones where the links leave.
 // 2. Resize a shape: its ports keep to whole units, and step apart only when the side has room for another unit.
@@ -30,7 +31,7 @@ import {
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
-import { type Link, type RectNode, type Scene } from '@dxos/scene';
+import { DEFAULT_GRID, type Link, type RectNode, type Scene } from '@dxos/scene';
 
 import { FullEditor, SceneEditorStory } from '../../testing/index.ts';
 
@@ -53,6 +54,11 @@ const ROWS: readonly (readonly Case[])[] = [
   [
     { id: 'six', width: 300, ports: 6, pitch: 36 },
     { id: 'five', width: 300, ports: 5, pitch: 48 },
+  ],
+  // 288 / 7 is 41.14, three units, which would stand six ports between the lines of a side 24 units long: two do not.
+  [
+    { id: 'lined', width: 288, ports: 6, pitch: 24 },
+    { id: 'odd', width: 288, ports: 5, pitch: 48 },
   ],
   // 240 / 5 is 48 already; 240 / 4 is 60, a whole five units, and 240 / 3 is 80, which rounds down to 72.
   [
@@ -150,6 +156,7 @@ export const Default: StoryObj = {};
  * 2. On each shape the links leave the bottom side its case's pitch apart: a whole number of grid units, or an even
  *    share of a side too short for one.
  * 3. They stand symmetrically about the side's centre.
+ * 4. Six ports on a side 24 units long stand on the grid's lines, counted from the side's start.
  */
 export const Test: StoryObj = {
   play: async ({ canvasElement }) => {
@@ -164,7 +171,7 @@ export const Test: StoryObj = {
     const last = CASES[CASES.length - 1];
     await waitFor(() => expect(leaves(`${last.id}-${last.ports}`)).toBeDefined());
 
-    for (const { id, ports, pitch } of CASES) {
+    for (const { id, width, ports, pitch } of CASES) {
       const points = Array.from({ length: ports }, (_, index) => leaves(`${id}-${index + 1}`) ?? Number.NaN);
 
       // 2. Neighbours stand the pitch apart.
@@ -174,6 +181,15 @@ export const Test: StoryObj = {
 
       // 3. The first and last are as far from the centre as each other.
       await expect(points[0] + points[points.length - 1], `${id} centre`).toBeCloseTo(2 * CENTRES[id], 6);
+
+      // 4. The shape whose gap was shortened for it.
+      if (id === 'lined') {
+        const start = CENTRES[id] - width / 2;
+        for (const point of points) {
+          const units = (point - start) / DEFAULT_GRID;
+          await expect(units, `${id} on a line`).toBeCloseTo(Math.round(units), 6);
+        }
+      }
     }
   },
 };
