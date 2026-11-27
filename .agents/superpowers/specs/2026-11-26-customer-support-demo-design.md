@@ -380,6 +380,49 @@ Determinism:
 - The play story advances with `Step`, never a timer, and waits on rows by test id.
 - The confidence rule and the corpus's expected outcomes are unit tests that need no browser.
 
+## Phases
+
+### Phase 1: the pipeline answers from documents
+
+Everything above. The Responder is a rule: it answers only what a passage in the space covers, and
+everything else becomes a task for a person.
+
+### Phase 2: an agent answers, and delegates research to other agents
+
+Rich added this on 2026-11-26. It is not built in phase 1; this section records the direction.
+
+The Responder becomes an agent. When a question has no passage that answers it, the agent does not
+give up at once: it delegates research to other agents, and answers once one of them finds the
+answer. Only a question that research cannot answer becomes a task for a person.
+
+- **The responder is a session.** It runs as a `SessionProcess` and receives each question through
+  the same `Responder` contract, so the pipeline does not change.
+- **Research is delegated, not called.** For each line of enquiry the responder creates a research
+  `Task` and assigns it to a receiver through `AgentService`, as the `org.dxos.agent-delegation` spec
+  describes: a thread of its own for a light lookup, another session for a separate line of work,
+  another agent when its permissions or specialization are needed. The task, not a message, is the
+  control plane.
+- **Research agents specialize.** One reads the canonical documents, one queries the RDF graph for
+  what the same organization or other customers were told before, and one searches outside the
+  space. Each is a provider of the `Researcher` contract, so phase 1's Research plugin is the first
+  of them.
+- **A research task ends with evidence.** The receiver attaches what it found to the task as
+  `Evidence` and closes it. The responder applies the confidence rule to the evidence of all its
+  research tasks, then writes a draft that cites it or makes a task for a person with what was
+  tried.
+- **The story shows the delegation.** A message's `respond` row opens into its research tasks, each
+  with its own status and the agent it was given to. These are real `Task` objects, so the card for
+  them is `TaskProgress`, and the Tasks column separates work given to agents from work given to
+  people.
+
+Open questions for phase 2:
+
+1. Whether evidence from outside the space may be cited in a draft, or may only start a task. Phase
+   1's rule is that a draft cites a document in the space.
+2. Whether a research agent that finds an answer also writes it into the space as a new canonical
+   document, so the next question is answered by phase 1's rule.
+3. How long the responder waits for research before it makes a task for a person.
+
 ## Decisions
 
 Rich accepted the first option of each on 2026-11-26.
