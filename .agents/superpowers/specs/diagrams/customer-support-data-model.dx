@@ -1,0 +1,30 @@
+diagram flow=down
+group inbox "Inbox (feed)" {
+  node Mailbox "Mailbox" ref="packages/plugins/plugin-inbox/src/types/Mailbox.ts"
+  node Message "Message" ref="packages/sdk/types/src/types/Message.ts"
+  node Draft "Draft (Message)" ref="packages/sdk/types/src/types/DraftMessage.ts"
+}
+group echo "ECHO graph (CRM)" {
+  node Person "Person" ref="packages/sdk/types/src/types/Person.ts"
+  node Organization "Organization" ref="packages/sdk/types/src/types/Organization.ts"
+  node Document "Document" ref="packages/plugins/plugin-markdown/src/types/Markdown.ts"
+  node TaskSet "TaskSet" ref="packages/sdk/types/src/types/TaskSet.ts"
+  node Task "Task" ref="packages/sdk/types/src/types/Task.ts"
+}
+group rdf "RDF graph (memory)" {
+  node Fact "Fact" ref="packages/core/echo/echo-memory/src/Fact.ts"
+  node Statement "Statement"
+  node Question "Question"
+  node Request "Request"
+}
+edge Mailbox one-to-many Message "feed"
+edge Message -> Person "sender"
+edge Organization one-to-many Person "employs"
+edge Draft -> Message "replies to"
+edge Draft -> Document "cites"
+edge TaskSet one-to-many Task "tasks"
+edge Task -> Message "created from"
+edge Fact -> Message "source"
+edge Statement extends Fact
+edge Question extends Fact
+edge Request extends Fact
