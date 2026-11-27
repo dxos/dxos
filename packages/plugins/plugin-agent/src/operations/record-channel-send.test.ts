@@ -11,7 +11,7 @@ import * as Agent from '@dxos/compute/Agent';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, Feed, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
@@ -85,6 +85,45 @@ describe('RecordChannelSend', () => {
           ['assistant', { _tag: 'text', text: 'Also, which venue?' }],
         ]);
         expect(messages[0].properties).toMatchObject(receipt);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'two first contacts at the same time share one chat',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, {
+          name: 'Concierge',
+          instructions: 'Greet people.',
+        });
+        const channel = yield* Database.add(makeTestChannel());
+        const channelRef = Ref.make(channel);
+        yield* Database.flush();
+
+        const [first, second] = yield* Effect.all(
+          ['Which day is the demo?', 'Also, which venue?'].map((text) =>
+            Operation.invoke(AgentOperation.RecordChannelSend, {
+              agent: agentRef,
+              channel: channelRef,
+              thread: 'dm-1',
+              text,
+            }),
+          ),
+          { concurrency: 'unbounded' },
+        );
+        expect(second.chat.uri).toBe(first.chat.uri);
+        yield* Database.flush();
+        const agent = yield* Database.load(agentRef);
+        const key = AgentChannels.chatKey(channel.id, 'dm-1');
+        const chats = (yield* Database.query(Filter.foreignKeys(Agent.Session, [key])).run).filter(
+          (chat) => Obj.getParent(chat)?.id === agent.id,
+        );
+        expect(chats).toHaveLength(1);
+        const messages = yield* TrajectoryStore.messages(yield* Database.load(chats[0].feed));
+        expect(messages).toHaveLength(2);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

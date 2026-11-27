@@ -53,9 +53,7 @@ export const ensureChannelChat = Effect.fnUntraced(function* ({
   title,
 }: EnsureChannelChatProps) {
   const key = AgentChannels.chatKey(channel.id, thread);
-  // The same conversation may be bridged to more than one agent.
-  const existing = yield* Database.query(Query.select(Filter.foreignKeys(Agent.Session, [key]))).run;
-  const match = existing.find((chat) => Obj.getParent(chat)?.id === agent.id);
+  const match = yield* findChat(agent, key);
   if (match) {
     yield* bindChannelSkills(match, channel);
     return match;
@@ -76,6 +74,14 @@ export const ensureChannelChat = Effect.fnUntraced(function* ({
     }),
   );
 
+  // Concurrent first contacts can each create a chat: the oldest wins and the others give theirs up.
+  const winner = yield* findChat(agent, key);
+  if (winner && winner.id !== chat.id) {
+    yield* Database.remove(chat);
+    yield* Database.remove(feed);
+    return winner;
+  }
+
   const runtime = yield* Effect.context<Database.Service>();
   const AiContext = yield* Effect.promise(aiContextRuntime);
   const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
@@ -88,6 +94,16 @@ export const ensureChannelChat = Effect.fnUntraced(function* ({
   );
   return chat;
 }, Effect.scoped);
+
+/** The agent's chat for a conversation key, the oldest if concurrent first contacts made more than one. */
+const findChat = Effect.fnUntraced(function* (agent: Agent.Agent, key: ReturnType<typeof AgentChannels.chatKey>) {
+  // The same conversation may be bridged to more than one agent.
+  const chats = yield* Database.query(Query.select(Filter.foreignKeys(Agent.Session, [key]))).run;
+  return chats
+    .filter((chat) => Obj.getParent(chat)?.id === agent.id)
+    .sort((left, right) => left.id.localeCompare(right.id))
+    .at(0);
+});
 
 /** Appends a message the agent sent to the chat's feed; `properties` carry the backend's receipt. */
 export const appendToChat = Effect.fnUntraced(function* (
