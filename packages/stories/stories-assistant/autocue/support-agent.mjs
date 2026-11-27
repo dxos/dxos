@@ -15,7 +15,6 @@
  */
 
 const MESSAGES = '[data-testid="support.messages"]';
-const PIPELINE = '[data-testid="support.pipeline"]';
 const TASKS = '[data-testid="support.tasks"]';
 const DRAFTS = '[data-testid="support.drafts"]';
 const COLUMN = '[data-testid="chat-plane.column"]';
@@ -69,7 +68,7 @@ export const steps = [
       'A question a document answers gets a draft that cites it. Everything else becomes a task: requests, and questions no document covers.',
     run: async ({ demo, page }) => {
       await demo.caption({ value: 'Answered from documents, or left as a task', subtitle: 'drafts and tasks' });
-      await demo.hover({ selector: `${PIPELINE} [data-testid="support.run"]`, label: 'Pipeline' });
+      await demo.hover({ selector: '[data-testid="support.run"]', label: 'Pipeline' });
       await waitForRows(page, 'support.messages', 12, 60_000);
       await waitForRows(page, 'support.tasks', 6, 30_000);
       await waitForRows(page, 'support.drafts', 7, 30_000);
@@ -107,6 +106,7 @@ export const steps = [
     run: async ({ demo, page }) => {
       await demo.caption({ value: 'Research, then a cited draft', subtitle: 'the pipeline’s own rule' });
       await waitForText(page, COLUMN, 'Writing a Hyperdrive document', 60_000);
+      await demo.click({ selector: `${COLUMN} >> text=Research Hyperdrive and Aurora`, label: 'Hyperdrive session' });
       await waitForText(page, COLUMN, 'Drafted the reply to Eli Novak', 90_000);
       await waitForText(page, COLUMN, 'Drafted the reply to Dara Singh', 90_000);
       await waitForRows(page, 'support.drafts', 9, 30_000);

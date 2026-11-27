@@ -12,6 +12,8 @@ import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
 import { Blob, Feed, Tag } from '@dxos/echo';
 import * as BrainPlugin from '@dxos/plugin-brain/BrainPlugin';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
+import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
+import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { TagIndex } from '@dxos/schema';
 import {
   CORPUS,
@@ -80,6 +82,8 @@ const supportAgent: Story = {
       TagIndex.TagIndex,
     ],
     plugins: [
+      // Files the document a session writes: markdown's create operation adds it through plugin-space.
+      SpacePlugin.make({}),
       BrainPlugin.make(),
       EntitiesPlugin(),
       ResearchPlugin({ failOn: (question) => FAULTS.includes(question) }),
@@ -90,15 +94,15 @@ const supportAgent: Story = {
     onInit: async ({ space }) => {
       await seed(space.db);
     },
-    skills: [SupportSkill.key, DelegationSkill.key, PlanningSkill.key],
+    skills: [SupportSkill.key, DelegationSkill.key, PlanningSkill.key, MarkdownSkill.key],
     scripted: ScriptedScene.play(Scripts.supportAgent),
     assistantSettings: { parallelThreads: true },
   }),
   args: {
+    // The inbox on the left, stacked over the tasks and drafts it leaves, so the agent's chats get the rest.
     layout: [
-      [SupportRole.Messages],
-      [SupportRole.Pipeline],
-      [SupportRole.Tasks, SupportRole.Drafts],
+      [SupportRole.Messages, SupportRole.Tasks],
+      [SupportRole.Pipeline, SupportRole.Drafts],
       [
         {
           type: StoryRole.ChatPlane,
@@ -106,12 +110,11 @@ const supportAgent: Story = {
             kind: 'chats',
             suggestions: [SUPPORT_REQUEST],
             align: 'start',
-            defaultDrawer: 'tasks',
           } satisfies ChatPlaneModuleData,
         },
       ],
     ],
-    columns: 'minmax(18rem,22rem)_minmax(16rem,20rem)_minmax(18rem,24rem)_1fr',
+    columns: 'minmax(18rem,22rem)_minmax(18rem,22rem)_1fr',
   },
 };
 
