@@ -376,13 +376,15 @@ export class DocumentsSynchronizer extends Resource {
     if (!syncState || syncState.initialLease) {
       return;
     }
+    // Gone from this host (e.g. wiped by garbage collection); its next save, if any, queues it again.
+    // Asked before leasing: a lease on a document this host does not store leaves a handle that
+    // never loads, and one that never loads is never evicted.
+    const [heads] = await this._params.automergeHost.getHeads([documentId]);
+    if (heads === undefined) {
+      return;
+    }
     using lease = this._params.automergeHost.acquireDoc<DatabaseDirectory>(documentId);
     if (!lease.loaded) {
-      // Gone from this host (e.g. wiped by garbage collection); its next save, if any, queues it again.
-      const [storedHeads] = await this._params.automergeHost.getHeads([documentId]);
-      if (storedHeads === undefined) {
-        return;
-      }
       try {
         await asyncTimeout(lease.waitUntilReady(), RELOAD_TIMEOUT);
       } catch (err) {

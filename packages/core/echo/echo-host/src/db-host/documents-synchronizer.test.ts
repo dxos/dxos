@@ -187,6 +187,35 @@ describe('DocumentsSynchronizer', () => {
     expect((await resent).documentId).toBe(stale.handle.documentId);
   });
 
+  test('a passive subscription to a document the host no longer stores does not load it', async () => {
+    const { host, synchronizer, createDirectory, next } = await setupPassive();
+    const wiped = await createDirectory('wiped');
+    const wipedAt = A.getHeads(wiped.handle.doc()!);
+    const stale = await createDirectory('shown');
+    const shownAt = A.getHeads(stale.handle.doc()!);
+    stale.handle.change((doc) => {
+      doc.objects![stale.objectId].data.title = 'stored';
+    });
+    const storedAt = A.getHeads(stale.handle.doc()!);
+    const published = host.documentHeadsChanged.waitFor(
+      ({ documentId, heads }) => documentId === stale.handle.documentId && A.equals(heads, storedAt),
+    );
+    await host.flush(Context.default());
+    await asyncTimeout(published, 5_000);
+    // What garbage collection does to a document that left its space directory.
+    await host.removeDocument(wiped.handle.documentId);
+    expect(host.loadedDocumentIds).not.toContain(wiped.handle.documentId);
+
+    const sent = next();
+    await synchronizer.addDocuments([
+      { documentId: wiped.handle.documentId, heads: wipedAt, passive: true },
+      { documentId: stale.handle.documentId, heads: shownAt, passive: true },
+    ]);
+    // Pending documents are taken in the order they were queued, so the wiped one came first.
+    expect((await sent).documentId).toBe(stale.handle.documentId);
+    expect(host.loadedDocumentIds).not.toContain(wiped.handle.documentId);
+  });
+
   test("a passive update carries the change and its object's JSON at the new heads", async () => {
     const { host, synchronizer, createDirectory, next } = await setupPassive();
     const { handle, objectId } = await createDirectory('shown');

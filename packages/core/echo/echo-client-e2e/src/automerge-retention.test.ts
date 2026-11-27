@@ -4,6 +4,7 @@
 
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
+import { waitForCondition } from '@dxos/async';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
@@ -140,6 +141,9 @@ describe('automerge object retention', { tags: ['memory'] }, () => {
     // Removal alone is a soft delete — the object stays in the space directory, so nothing evicts.
     // Collection is what unlinks it, which is what `_evictRemovedObjects` watches for.
     await db.runGarbageCollection();
+    // The collection reaches this client as a change to its copy of the space directory, after the
+    // host call returns: a reading taken before that still holds every document the eviction drops.
+    await waitForCondition({ condition: () => db.getAllObjectIds().length === 0, timeout: 60_000, interval: 50 });
     // Drains the deferred full-text pass too: a batch still in flight would be reachable
     // from the checkpoint below and measured as retention.
     await db.flush({ secondaryIndexes: true });
@@ -151,6 +155,9 @@ describe('automerge object retention', { tags: ['memory'] }, () => {
     // The client holds nothing for the space beyond its root document.
     expect(removed.stats?.loaded.client.objects).toBe(0);
     expect(removed.stats?.loaded.client.documents).toBe(1);
+    // Across the host, not per space (`docs.h`): a handle for a document that left the directory is
+    // no longer counted as the space's, so only the host-wide count sees one kept for it.
+    expect(removed.stats?.loaded.host.documentsTotal).toBe(1);
     // A sanity ceiling on the heap, not the measurement: the objects cost something to hold, and
     // most of it comes back. See the file comment on why this is not a tight budget.
     expect(removed.heapUsed - baseline.heapUsed).toBeLessThan(held.heapUsed - baseline.heapUsed);
