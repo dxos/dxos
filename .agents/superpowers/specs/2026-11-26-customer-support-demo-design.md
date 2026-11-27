@@ -192,10 +192,11 @@ failure before `triage` still leaves every request and question with a draft or 
   the reason `research-failed`.
 - When `respond` fails, `triage` makes a task with the reason `respond-failed`.
 
-`triage` itself is the exception. It is the last stage and the only one that creates tasks, so when
-its write fails, the requests and unanswered questions of that message have no task. Nothing retries
-it: the failed Triage row on the message's card is what tells a person to look. The stream carries on
-with the next message.
+`triage` itself is the exception. It is the last stage and the only one that creates tasks, and it
+writes one task at a time. When a write fails, one or more of that message's requests and unanswered
+questions have no task; a task written before the failure remains. Nothing retries the stage: the
+failed Triage row on the message's card is what tells a person to look. The stream carries on with
+the next message.
 
 ## Plugins and their contracts
 
