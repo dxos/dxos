@@ -149,10 +149,11 @@ types; `VIEWS.md` keeps the reasoning behind the containers.
 - **Ports** come from the node's own `ports` when it carries them (how compute nodes with schema-derived
   inputs/outputs will express them, see `MIGRATION.md`), else the type's `NodeDef.ports(node)`, else
   `portsPerSide` (default 3) ports along each side, named `<side><index>` (`e2` is the east centre) and
-  listed centre-first so automatic links prefer the centre. A side's ports stand a whole number of minor grid
-  units apart about its centre: the side's length over one more than their count, rounded down to the unit
-  (`portPitch`). An even count gives up one more unit where that puts its ports on the grid's lines; a side too
-  short for one unit a gap is shared evenly. Ports that land on one point collapse to
+  listed centre-first so automatic links prefer the centre. A side's ports stand a whole number of half major
+  cells apart about its middle, each on a half line of the major grid and none nearer a corner than half a cell
+  (`portPitch`): of the gaps that do so, the one nearest the side's length over its count, then the one with
+  more ports on whole lines, then the wider. A side with no such gap takes the same rule on the minor grid,
+  then on half of it, and then is shared evenly. Ports that land on one point collapse to
   the first.
   The ellipse declares one port per side: only the frame's side centres lie on the curve.
 - **Automatic links**: when either endpoint has no `port`, the router picks the port pair with the shortest

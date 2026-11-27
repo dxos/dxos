@@ -11,6 +11,7 @@
 import {
   type Bounds,
   DEFAULT_GRID,
+  MAJOR_GRID_RATIO,
   type Node,
   type Point,
   type Port,
@@ -41,22 +42,49 @@ const SIDE_LETTERS: Record<Side, string> = { top: 'n', right: 'e', bottom: 's', 
  */
 export const portId = (side: Side, index = 1): string => `${SIDE_LETTERS[side]}${index}`;
 
+/** Whether `value` is on a line of a grid `step` apart, to within the rounding of a division. */
+const onLine = (value: number, step: number): boolean => Math.abs(value / step - Math.round(value / step)) < 1e-9;
+
 /**
- * How far apart `count` ports stand on a side `extent` long: the side shared among `count + 1` gaps, rounded down to a
- * whole minor grid unit (`grid`, scene px), so links leaving neighbouring ports run a whole number of units apart. An
- * even count stands half a gap either side of the centre, so its gap gives up one more unit where that puts the ports
- * on the grid's lines. A side too short for one unit a gap is shared evenly, so its ports do not stack.
+ * The gap, a whole number of `step`s, that stands `count` ports about the middle of a side `extent` long with every
+ * port on a line of the `step` grid and none nearer a corner than one step; of those, the gap nearest the side's even
+ * share (`extent / count`, which leaves half a gap at each end), then the one with more ports on the lines twice as
+ * far apart, then the wider. Undefined where the side has no such gap.
+ */
+const gapOnGrid = (count: number, extent: number, step: number): number | undefined => {
+  const share = extent / count;
+  let best: { gap: number; distance: number; lines: number } | undefined;
+  for (let gap = step; (count - 1) * gap <= extent - 2 * step; gap += step) {
+    const places = Array.from({ length: count }, (_, index) => extent / 2 + (index - (count - 1) / 2) * gap);
+    if (!places.every((place) => onLine(place, step))) {
+      continue;
+    }
+    const distance = Math.abs(gap - share);
+    const lines = places.filter((place) => onLine(place, 2 * step)).length;
+    // Gaps come widest last, so of two as near and as much on the lines the wider is kept.
+    if (!best || distance < best.distance - 1e-9 || (distance <= best.distance + 1e-9 && lines >= best.lines)) {
+      best = { gap, distance, lines };
+    }
+  }
+  return best?.gap;
+};
+
+/**
+ * How far apart `count` ports stand on a side `extent` long, about its middle, so that links leave a shape on the
+ * grid's lines: a gap of half major cells that lands every port on a half line, as many as it can on a whole one
+ * (`gapOnGrid`), on a drawing whose minor grid is `grid` scene px. A side with no room for that takes the same rule
+ * on the minor grid and then on half of it, and a side that fits none, or is itself off the grid, is shared evenly.
  */
 export const portPitch = (count: number, extent: number, grid = DEFAULT_GRID): number => {
-  const even = extent / (count + 1);
-  const units = grid > 0 ? Math.floor(even / grid) : 0;
-  if (units < 1) {
-    return even;
+  if (count > 1 && grid > 0) {
+    for (let step = (grid * MAJOR_GRID_RATIO) / 2; step >= grid / 2; step /= 2) {
+      const gap = gapOnGrid(count, extent, step);
+      if (gap !== undefined) {
+        return gap;
+      }
+    }
   }
-  // Half a gap from the centre is on a line only when the gap and the side are both odd or both even in units.
-  const span = extent / grid;
-  const between = count % 2 === 0 && Number.isInteger(span) && (span + units) % 2 !== 0;
-  return (between && units > 1 ? units - 1 : units) * grid;
+  return extent / (count + 1);
 };
 
 /**

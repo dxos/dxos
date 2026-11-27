@@ -55,41 +55,45 @@ describe('ports', () => {
     expect(sidePorts(1, left).map(portOffset)).toEqual([0.5, 0.5, 0.5, 0.5]);
   });
 
-  test('a side spaces its ports a whole number of grid units apart, about its centre', ({ expect }) => {
-    // 300 / 7 is 42.86, which rounds down to 3 units of 12: six ports 36 apart, the middle two 18 either side of 150.
-    const six = sidePorts(6, { width: 300, height: 256 }, 12);
-    expect(along(six, 'top', 300)).toEqual([60, 96, 132, 168, 204, 240]);
-    expect(along(six, 'bottom', 300)).toEqual([60, 96, 132, 168, 204, 240]);
-    // Each side by its own length: 256 / 7 is 36.57, so 36 apart about 128.
-    expect(along(six, 'left', 256)).toEqual([38, 74, 110, 146, 182, 218]);
-    // An odd count has a port on the centre, exactly.
-    const three = sidePorts(3, { width: 256, height: 100 }, 12);
-    expect(along(three, 'top', 256)).toEqual([68, 128, 188]);
-    expect(three.filter((port) => portOffset(port) === 0.5).map((port) => port.id)).toEqual(['n2', 'e2', 's2', 'w2']);
-    // 100 / 4 is 25, so 24 apart.
-    expect(along(three, 'right', 100)).toEqual([26, 50, 74]);
-    // The unit is the drawing's: on a grid of 8 the same side spaces them 64 apart.
-    expect(along(sidePorts(3, { width: 256, height: 100 }, 8), 'top', 256)).toEqual([64, 128, 192]);
-  });
-
-  test('an even count keeps to the grid lines by a gap one unit shorter', ({ expect }) => {
-    // 288 / 7 is 41.14, three units, which would stand the middle two 18 either side of 144, between the lines;
-    // two units stand all six on them.
-    expect(along(sidePorts(6, { width: 288, height: 288 }, 12), 'top', 288)).toEqual([84, 108, 132, 156, 180, 204]);
-    // A gap already of the side's parity is kept: 25 units and three, 20 units and four.
-    expect(along(sidePorts(6, { width: 300, height: 300 }, 12), 'top', 300)).toEqual([60, 96, 132, 168, 204, 240]);
+  test('a side spaces its ports by half major cells, on the grid, nearest its even share', ({ expect }) => {
+    // Six on six cells: a whole cell apart, each on a half line, the outer two half a cell from the corners.
+    expect(along(sidePorts(6, { width: 288, height: 288 }, 12), 'top', 288)).toEqual([24, 72, 120, 168, 216, 264]);
+    // Three on five cells: 240 / 3 is 80, and a cell and a half apart stands the outer two on whole lines.
+    expect(along(sidePorts(3, { width: 240, height: 240 }, 12), 'top', 240)).toEqual([48, 120, 192]);
+    // Two on five cells: two cells apart and three are as near 120, and three stands both on whole lines.
+    expect(along(sidePorts(2, { width: 240, height: 240 }, 12), 'top', 240)).toEqual([48, 192]);
+    // An even count about a half line takes whole cells, which stand every port on a line.
     expect(along(sidePorts(4, { width: 240, height: 240 }, 12), 'top', 240)).toEqual([48, 96, 144, 192]);
-    // An odd count has a port on the centre whatever the gap, so its gap is not shortened.
+    expect(along(sidePorts(6, { width: 336, height: 336 }, 12), 'top', 336)).toEqual([48, 96, 144, 192, 240, 288]);
     expect(along(sidePorts(5, { width: 288, height: 288 }, 12), 'top', 288)).toEqual([48, 96, 144, 192, 240]);
-    // A gap of one unit has nothing to give, and a side that is not whole units has no lines to keep to.
-    expect(along(sidePorts(2, { width: 48, height: 48 }, 12), 'top', 48)).toEqual([18, 30]);
-    expect(along(sidePorts(2, { width: 126, height: 126 }, 12), 'top', 126)).toEqual([45, 81]);
+    // The nearest gap is kept where a shorter one would stand more ports on whole lines: seven spread, not bunched.
+    expect(along(sidePorts(7, { width: 336, height: 336 }, 12), 'top', 336)).toEqual([24, 72, 120, 168, 216, 264, 312]);
+    expect(along(sidePorts(5, { width: 336, height: 336 }, 12), 'top', 336)).toEqual([24, 96, 168, 240, 312]);
   });
 
-  test('a side too short for a grid unit between its ports divides evenly', ({ expect }) => {
-    // 40 / 4 is 10, less than a unit of 12, so the ports keep apart rather than stack on the centre.
+  test("each side is spaced by its own length and the drawing's own grid", ({ expect }) => {
+    const three = sidePorts(3, { width: 240, height: 96 }, 12);
+    expect(along(three, 'top', 240)).toEqual([48, 120, 192]);
+    expect(along(three, 'bottom', 240)).toEqual([48, 120, 192]);
+    expect(along(three, 'left', 96)).toEqual([24, 48, 72]);
+    // An odd count has a port on the centre, exactly.
+    expect(three.filter((port) => portOffset(port) === 0.5).map((port) => port.id)).toEqual(['n2', 'e2', 's2', 'w2']);
+    // On a grid of 8 the cell is 32, which 240 is not a whole number of halves of: the next finer line is every 8.
+    expect(along(sidePorts(3, { width: 240, height: 96 }, 8), 'top', 240)).toEqual([40, 120, 200]);
+  });
+
+  test('a side with no room on the half lines takes a finer grid, and then an even share', ({ expect }) => {
+    // Four on three cells: whole cells reach the corners, so the minor grid, two units apart.
+    expect(along(sidePorts(4, { width: 144, height: 144 }, 12), 'top', 144)).toEqual([36, 60, 84, 108]);
+    // Six on two cells: half the minor grid, one unit apart.
+    expect(along(sidePorts(6, { width: 96, height: 96 }, 12), 'top', 96)).toEqual([18, 30, 42, 54, 66, 78]);
+    // Six on one cell fit no grid, and a side that is not on the grid has no line to land on: 48 / 7 and 256 / 4.
+    expect(along(sidePorts(6, { width: 48, height: 48 }, 12), 'top', 48)).toEqual([
+      6.857143, 13.714286, 20.571429, 27.428571, 34.285714, 41.142857,
+    ]);
+    expect(along(sidePorts(3, { width: 256, height: 256 }, 12), 'top', 256)).toEqual([64, 128, 192]);
     expect(along(sidePorts(3, { width: 40, height: 40 }, 12), 'top', 40)).toEqual([10, 20, 30]);
-    // A side with no length has nowhere to put them but its ends' fractions.
+    // A side with no length has nowhere to put them but its middle.
     expect(sidePorts(1, { width: 0, height: 0 }, 12).map(portOffset)).toEqual([0.5, 0.5, 0.5, 0.5]);
   });
 
@@ -134,18 +138,18 @@ describe('ports', () => {
       kind: 'rect',
       id: 'r',
       z: 'a',
-      center: { x: 128, y: 64 },
-      size: { width: 256, height: 128 },
+      center: { x: 120, y: 48 },
+      size: { width: 240, height: 96 },
     });
     const ports = nodePorts(defaultNodeRegistry, wide);
-    // Three to a side, a whole number of grid units apart (the top at 68, 128, 188; the right at 40, 64, 88).
-    expect(along(ports, 'top', 256)).toEqual([68, 128, 188]);
-    expect(along(ports, 'right', 128)).toEqual([40, 64, 88]);
+    // Three to a side, by the side's own length (the top at 48, 120, 192; the right at 24, 48, 72).
+    expect(along(ports, 'top', 240)).toEqual([48, 120, 192]);
+    expect(along(ports, 'right', 96)).toEqual([24, 48, 72]);
     // The grid is the drawing's, which the caller states.
-    expect(along(nodePorts(defaultNodeRegistry, wide, 16), 'top', 256)).toEqual([64, 128, 192]);
+    expect(along(nodePorts(defaultNodeRegistry, wide, 16), 'top', 240)).toEqual([40, 120, 200]);
     expect(ports.filter((port) => port.side === 'top').map((port) => port.id)).toEqual(['n2', 'n1', 'n3']);
     expect(ports.filter((port) => port.side === 'right').map((port) => port.id)).toEqual(['e2', 'e1', 'e3']);
-    // One cell wide keeps all three a side too: its ports stand one grid unit apart.
+    // A frame off the grid keeps all three a side too, an even share apart.
     const narrow = createNode({
       kind: 'rect',
       id: 'r',

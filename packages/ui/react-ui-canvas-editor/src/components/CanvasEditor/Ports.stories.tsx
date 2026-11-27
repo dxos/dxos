@@ -3,14 +3,14 @@
 //
 
 //
-// Where a shape's ports stand along a side. The side is shared among one more gap than it has ports, and the gap is
-// rounded down to a whole unit of the minor grid, so the ports stand a whole number of units apart about the side's
-// centre and leave the rest of the side at its two ends. An even count gives up one more unit where that puts its
-// ports on the grid's lines. Each shape here stands on the major grid, as a shape drawn or moved on the canvas does,
+// Where a shape's ports stand along a side. They stand a whole number of half major cells apart about the side's
+// middle, each on a half line of the major grid and none nearer a corner than half a cell. Of the gaps that do that,
+// the side takes the one nearest its even share (its length over its count), and of two as near the one that stands
+// more ports on whole lines. Each shape here stands on the major grid, as a shape drawn or moved on the canvas does,
 // and hangs a link from every port of its bottom side, so the spacing shows without hovering.
 //
 // 1. Hover a shape: its ports show on all four sides, the bottom ones where the links leave.
-// 2. Resize a shape: its ports keep to whole units, and step apart only when the side has room for another unit.
+// 2. Resize a shape: its ports stay on the grid's lines, and step apart as the side makes room.
 // 3. Change Ports in Properties: the links of ports the side no longer has re-attach to the nearest one.
 //
 
@@ -31,7 +31,7 @@ import {
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
-import { DEFAULT_GRID, type Link, MAJOR_GRID, type RectNode, type Scene } from '@dxos/scene';
+import { type Link, MAJOR_GRID, type RectNode, type Scene } from '@dxos/scene';
 
 import { FullEditor, SceneEditorStory } from '../../testing/index.ts';
 
@@ -42,6 +42,8 @@ type Case = {
   ports: number;
   /** Scene px between neighbouring ports. */
   pitch: number;
+  /** A side with no room on the grid, whose ports share it evenly. */
+  even?: boolean;
 };
 
 /** Every size and place here is a whole number of major cells, which is where the canvas lands a shape. */
@@ -51,27 +53,29 @@ const HEIGHT = 2 * MAJOR_GRID;
 const DROP = MAJOR_GRID;
 
 const ROWS: readonly (readonly Case[])[] = [
-  // 336 / 7 is 48 already, four units of 12; 336 / 6 is 56, which rounds down to four.
+  // Seven cells, whose middle is a half line: six ports a cell apart stand on whole lines, and five a cell and a
+  // half apart stand two on whole lines and the rest on half ones.
   [
     { id: 'six', width: 336, ports: 6, pitch: 48 },
-    { id: 'five', width: 336, ports: 5, pitch: 48 },
+    { id: 'five', width: 336, ports: 5, pitch: 72 },
   ],
-  // 288 / 7 is 41.14, three units, which would stand six ports between the lines of a side 24 units long: two do not.
+  // Six cells, whose middle is a whole line: six ports a cell apart stand on half lines, five on whole ones.
   [
-    { id: 'lined', width: 288, ports: 6, pitch: 24 },
-    { id: 'odd', width: 288, ports: 5, pitch: 48 },
+    { id: 'half', width: 288, ports: 6, pitch: 48 },
+    { id: 'whole', width: 288, ports: 5, pitch: 48 },
   ],
-  // 240 / 5 is 48 already; 240 / 4 is 60, a whole five units, and 240 / 3 is 80, which rounds down to 72.
+  // Five cells: four a cell apart; three a cell and a half apart, the outer two on whole lines; two three cells
+  // apart, which is as near the even share as two cells and stands both on whole lines.
   [
     { id: 'four', width: 240, ports: 4, pitch: 48 },
-    { id: 'three', width: 240, ports: 3, pitch: 60 },
-    { id: 'two', width: 240, ports: 2, pitch: 72 },
+    { id: 'three', width: 240, ports: 3, pitch: 72 },
+    { id: 'two', width: 240, ports: 2, pitch: 144 },
   ],
-  // A side too short for a unit a gap shares itself evenly: 48 / 7.
+  // Two cells take three half a cell apart; six on one cell fit no grid and share it evenly, 48 / 7.
   [
     { id: 'narrow', width: 96, ports: 3, pitch: 24 },
     { id: 'one', width: 96, ports: 1, pitch: 0 },
-    { id: 'short', width: 48, ports: 6, pitch: 48 / 7 },
+    { id: 'short', width: 48, ports: 6, pitch: 48 / 7, even: true },
   ],
 ];
 
@@ -158,10 +162,9 @@ export const Default: StoryObj = {};
 
 /**
  * 1. Every shape stands on the major grid, and every port's link is drawn.
- * 2. On each shape the links leave the bottom side its case's pitch apart: a whole number of grid units, or an even
- *    share of a side too short for one.
- * 3. They stand symmetrically about the side's centre.
- * 4. Six ports on a side 24 units long stand on the grid's lines, counted from the side's start.
+ * 2. On each shape the links leave the bottom side its case's gap apart.
+ * 3. They stand symmetrically about the side's middle.
+ * 4. Each leaves on a half line of the major grid, counted from the side's start, but on the side too short for one.
  */
 export const Test: StoryObj = {
   play: async ({ canvasElement }) => {
@@ -182,7 +185,7 @@ export const Test: StoryObj = {
     const last = CASES[CASES.length - 1];
     await waitFor(() => expect(leaves(`${last.id}-${last.ports}`)).toBeDefined());
 
-    for (const { id, width, ports, pitch } of CASES) {
+    for (const { id, width, ports, pitch, even } of CASES) {
       const points = Array.from({ length: ports }, (_, index) => leaves(`${id}-${index + 1}`) ?? Number.NaN);
 
       // 2. Neighbours stand the pitch apart.
@@ -193,12 +196,12 @@ export const Test: StoryObj = {
       // 3. The first and last are as far from the centre as each other.
       await expect(points[0] + points[points.length - 1], `${id} centre`).toBeCloseTo(2 * CENTRES[id], 6);
 
-      // 4. The shape whose gap was shortened for it.
-      if (id === 'lined') {
+      // 4. Half a major cell is the coarsest line a port may stand on.
+      if (!even) {
         const start = CENTRES[id] - width / 2;
         for (const point of points) {
-          const units = (point - start) / DEFAULT_GRID;
-          await expect(units, `${id} on a line`).toBeCloseTo(Math.round(units), 6);
+          const steps = (point - start) / (MAJOR_GRID / 2);
+          await expect(steps, `${id} on a line`).toBeCloseTo(Math.round(steps), 6);
         }
       }
     }
