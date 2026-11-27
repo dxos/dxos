@@ -251,6 +251,9 @@
       "path": "../../ui/ui-theme"
     },
     {
+      "path": "../stories-support"
+    },
+    {
       "path": "../storybook-testing"
     }
   ]

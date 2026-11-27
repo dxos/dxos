@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
-import { type Database, Filter } from '@dxos/echo';
+import { type Database, Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { Task, type TaskSet } from '@dxos/types';
 
@@ -15,6 +15,21 @@ const TITLE = 'Tasks';
 const EMPTY = 'No tasks yet.';
 const TEST_ID = 'support.tasks';
 
+/** A task given to an agent shows who has it; one left for a person shows why it was made. */
+const holderOf = (task: Task.Task): string | undefined => {
+  if (task.delegate?.role !== 'assistant') {
+    return undefined;
+  }
+  const subject = task.delegate.subject?.target;
+  const who = (subject && Obj.getLabel(subject)) ?? 'an agent';
+  return task.status === 'done' ? `Done by ${who}` : `Given to ${who}`;
+};
+
+const STATUS_ICON: Partial<Record<Task.Status, string>> = {
+  started: 'ph--robot--regular',
+  done: 'ph--check-square--regular',
+};
+
 type TaskRowsProps = {
   db: Database.Database;
   taskSet: TaskSet.TaskSet;
@@ -24,6 +39,12 @@ type TaskRowsProps = {
 const TaskRows = ({ db, taskSet }: TaskRowsProps) => {
   const tasks = useQuery(db, Filter.type(Task.Task));
   const [refs] = useObject(taskSet, 'tasks');
+  // A query re-runs when tasks come and go, not when one changes; an agent taking or finishing a task changes it.
+  const [version, setVersion] = useState(0);
+  useEffect(() => {
+    const unsubscribes = tasks.map((task) => Obj.subscribe(task, () => setVersion((value) => value + 1)));
+    return () => unsubscribes.forEach((unsubscribe) => unsubscribe());
+  }, [tasks]);
   const rows = useMemo<ListRow[]>(() => {
     const order = new Map(refs.map((ref, index) => [Task.refEntityId(ref), index]));
     return tasks
@@ -32,10 +53,10 @@ const TaskRows = ({ db, taskSet }: TaskRowsProps) => {
       .map((task) => ({
         id: task.id,
         label: task.title,
-        description: task.description?.split('\n')[0],
-        icon: 'ph--check-square-offset--regular',
+        description: holderOf(task) ?? task.description?.split('\n')[0],
+        icon: STATUS_ICON[task.status ?? 'todo'] ?? 'ph--check-square-offset--regular',
       }));
-  }, [tasks, refs]);
+  }, [tasks, refs, version]);
   return <ListModule title={TITLE} rows={rows} empty={EMPTY} testId={TEST_ID} />;
 };
 
