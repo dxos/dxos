@@ -20,6 +20,24 @@ import { DiscordBot, DiscordChannel } from '#types';
 
 import directMessage from './direct-message.ts';
 
+const setup = Effect.fnUntraced(function* () {
+  const agent = yield* Database.add(
+    Obj.make(Agent.Agent, { name: 'Kai', instructions: Ref.make(Instructions.make({ name: 'Kai', text: '' })) }),
+  );
+  const token = yield* Database.add(Obj.make(AccessToken.AccessToken, { source: 'discord.com', token: 'x' }));
+  const discord = yield* Database.add(
+    Channel.make({
+      backend: {
+        kind: DiscordChannel.BACKEND_KIND,
+        config: DiscordChannel.make({ accessToken: Ref.make(token), applicationId: 'app-1' }),
+      },
+    }),
+  );
+  yield* Database.add(AgentChannels.make({ agent, channels: [discord] }));
+  yield* Database.flush();
+  return { agent, discord };
+});
+
 const TestLayer = TestDatabaseLayer({
   types: [
     Agent.Agent,
@@ -35,21 +53,7 @@ const TestLayer = TestDatabaseLayer({
 describe('DirectMessage', () => {
   it.effect("posts through the bot, then records what it sent in the DM's chat", () =>
     Effect.gen(function* () {
-      const agent = yield* Database.add(
-        Obj.make(Agent.Agent, { name: 'Kai', instructions: Ref.make(Instructions.make({ name: 'Kai', text: '' })) }),
-      );
-      const token = yield* Database.add(Obj.make(AccessToken.AccessToken, { source: 'discord.com', token: 'x' }));
-      const discord = yield* Database.add(
-        Channel.make({
-          backend: {
-            kind: DiscordChannel.BACKEND_KIND,
-            config: DiscordChannel.make({ accessToken: Ref.make(token), applicationId: 'app-1' }),
-          },
-        }),
-      );
-      yield* Database.add(AgentChannels.make({ agent, channels: [discord] }));
-      yield* Database.flush();
-
+      const { agent, discord } = yield* setup();
       const acts: DiscordBot.Action[] = [];
       const invoked: { key: string; input: unknown }[] = [];
       const result = yield* directMessage
@@ -85,6 +89,26 @@ describe('DirectMessage', () => {
         properties: { discord: { channelId: 'dm-1', messageId: 'message-1' } },
       });
       expect(invoked[0].input).toMatchObject({ channel: { uri: Ref.make(discord).uri } });
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('returns the receipt when recording the sent DM fails, so the caller does not send it again', () =>
+    Effect.gen(function* () {
+      const { agent } = yield* setup();
+      const result = yield* directMessage
+        .handler({ agent: Ref.make(agent), to: '111111111111111111', text: 'Hi' })
+        .pipe(
+          Effect.provideService(DiscordBot.DiscordBotService, {
+            act: () => Effect.succeed({ channelId: 'dm-1', messageId: 'message-1' }),
+            findMembers: () => Effect.succeed([]),
+          }),
+          Effect.provideService(Operation.Service, {
+            invoke: () => Effect.die('no database'),
+            schedule: () => Effect.void,
+            invokePromise: async () => ({ error: new Error('unused') }),
+          }),
+        );
+      expect(result).toEqual({ channel: 'dm-1', message: 'message-1' });
     }).pipe(Effect.provide(TestLayer)),
   );
 });

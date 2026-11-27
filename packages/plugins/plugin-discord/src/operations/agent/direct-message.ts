@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Ref } from '@dxos/echo';
+import { log } from '@dxos/log';
 import * as AgentOperation from '@dxos/plugin-agent/AgentOperation';
 
 import { DiscordAgentOperation, DiscordBot } from '#types';
@@ -28,7 +29,8 @@ const handler: Operation.WithHandler<typeof DiscordAgentOperation.DirectMessage>
           ...(attachments ? { files: attachments } : {}),
         });
         // The agent owns the DM's chat: it records what it sent there, keyed by the DM channel the post opened, so the
-        // person's answer reads in context (EDGE's bot only carries the message).
+        // person's answer reads in context (EDGE's bot only carries the message). The DM is already out, so a failed record
+        // is logged rather than failing the send, which the caller would retry as a second DM.
         yield* Operation.invoke(AgentOperation.RecordChannelSend, {
           agent,
           channel: Ref.make(channel),
@@ -37,7 +39,7 @@ const handler: Operation.WithHandler<typeof DiscordAgentOperation.DirectMessage>
           properties: {
             discord: { channelId: posted.channelId, ...(posted.messageId ? { messageId: posted.messageId } : {}) },
           },
-        });
+        }).pipe(Effect.catchCause((cause) => Effect.sync(() => log.warn('recording the sent DM failed', { cause }))));
         return { channel: posted.channelId, message: posted.messageId };
       }, Effect.orDie),
     ),
