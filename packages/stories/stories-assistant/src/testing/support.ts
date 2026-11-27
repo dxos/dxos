@@ -113,7 +113,11 @@ export const SupportHandlers = OperationHandlerSet.make(
   AnswerSupportTask.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* ({ task: taskRef }) {
-        const task = yield* Database.load(taskRef).pipe(Effect.orDie);
+        const loaded = yield* Database.load(taskRef).pipe(Effect.orDie);
+        if (!Obj.instanceOf(Task.Task, loaded)) {
+          return yield* Effect.die(new Error('The reference names no task.'));
+        }
+        const task = loaded;
         const { mailbox, message } = yield* messageOf(task);
         const { db } = yield* Database.Service;
         const sender = { email: message.sender.email ?? '', name: message.sender.name };
