@@ -10,12 +10,15 @@
 
 import {
   type Bounds,
+  DEFAULT_GRID,
+  MAJOR_GRID_RATIO,
   type Node,
   type Point,
   type Port,
   type PortDirection,
   type Side,
   SIDES,
+  type Size,
   sidePort,
 } from '@dxos/scene';
 
@@ -39,37 +42,85 @@ const SIDE_LETTERS: Record<Side, string> = { top: 'n', right: 'e', bottom: 's', 
  */
 export const portId = (side: Side, index = 1): string => `${SIDE_LETTERS[side]}${index}`;
 
+/** Whether `value` is on a line of a grid `step` apart, to within the rounding of a division. */
+const onLine = (value: number, step: number): boolean => Math.abs(value / step - Math.round(value / step)) < 1e-9;
+
 /**
- * `count` ports spread evenly along each side, named by `portId`. Each side lists its centre port first
- * so an automatic link ties to the centre.
+ * The gap, a whole number of `step`s, that stands `count` ports about the middle of a side `extent` long with every
+ * port on a line of the `step` grid and none nearer a corner than one step; of those, the gap nearest the side's even
+ * share (`extent / count`, which leaves half a gap at each end), then the one with more ports on the lines twice as
+ * far apart, then the wider. Undefined where the side has no such gap.
  */
-export const sidePorts = (count = DEFAULT_PORTS_PER_SIDE): readonly Port[] => {
+const gapOnGrid = (count: number, extent: number, step: number): number | undefined => {
+  const share = extent / count;
+  let best: { gap: number; distance: number; lines: number } | undefined;
+  for (let gap = step; (count - 1) * gap <= extent - 2 * step; gap += step) {
+    const places = Array.from({ length: count }, (_, index) => extent / 2 + (index - (count - 1) / 2) * gap);
+    if (!places.every((place) => onLine(place, step))) {
+      continue;
+    }
+    const distance = Math.abs(gap - share);
+    const lines = places.filter((place) => onLine(place, 2 * step)).length;
+    // Gaps come widest last, so of two as near and as much on the lines the wider is kept.
+    if (!best || distance < best.distance - 1e-9 || (distance <= best.distance + 1e-9 && lines >= best.lines)) {
+      best = { gap, distance, lines };
+    }
+  }
+  return best?.gap;
+};
+
+/**
+ * How far apart `count` ports stand on a side `extent` long, about its middle, so that links leave a shape on the
+ * grid's lines: a gap of half major cells that lands every port on a half line, as many as it can on a whole one
+ * (`gapOnGrid`), on a drawing whose minor grid is `grid` scene px. A side with no room for that takes the same rule
+ * on the minor grid and then on half of it, and a side that fits none, or is itself off the grid, is shared evenly.
+ */
+export const portPitch = (count: number, extent: number, grid = DEFAULT_GRID): number => {
+  if (count > 1 && grid > 0) {
+    for (let step = (grid * MAJOR_GRID_RATIO) / 2; step >= grid / 2; step /= 2) {
+      const gap = gapOnGrid(count, extent, step);
+      if (gap !== undefined) {
+        return gap;
+      }
+    }
+  }
+  return extent / (count + 1);
+};
+
+/**
+ * `count` ports along each side of a frame of `size`, named by `portId`, `portPitch` apart and symmetrical about the
+ * side's centre. Each side lists its centre port first so an automatic link ties to the centre.
+ */
+export const sidePorts = (count: number, size: Size, grid = DEFAULT_GRID): readonly Port[] => {
   const middle = (count + 1) / 2;
   const indices = Array.from({ length: count }, (_, index) => index + 1).sort(
     (left, right) => Math.abs(left - middle) - Math.abs(right - middle) || left - right,
   );
-  return SIDES.flatMap((side) => indices.map((index) => sidePort(portId(side, index), side, index / (count + 1))));
+  return SIDES.flatMap((side) => {
+    const extent = side === 'top' || side === 'bottom' ? size.width : size.height;
+    // The step as a fraction of the side, which is what a port states; a side with no length has only its middle.
+    const step = extent > 0 ? portPitch(count, extent, grid) / extent : 0;
+    return indices.map((index) => sidePort(portId(side, index), side, 0.5 + (index - middle) * step));
+  });
 };
-
-export const defaultPorts: readonly Port[] = sidePorts();
 
 /** How many ports a node spreads along each side: its own count, else its kind's, else the default. */
 export const portsPerSideOf = (registry: NodeRegistry, node: Node): number =>
   clampPorts(node.portsPerSide ?? nodeDef(registry, node)?.portsPerSide ?? DEFAULT_PORTS_PER_SIDE);
 
 /**
- * A node's ports: its own when it carries them, else its own `portsPerSide` spread along each side, else
- * its kind's layout or count. Ports landing on the same point collapse to the first, so a definition
- * cannot stack two at one place.
+ * A node's ports: its own when it carries them, else its own `portsPerSide` along each side, else its kind's layout or
+ * count, spaced by the drawing's minor grid (`grid`, scene px). Ports landing on the same point collapse to the first,
+ * so a definition cannot stack two at one place.
  */
-export const nodePorts = (registry: NodeRegistry, node: Node): readonly Port[] => {
+export const nodePorts = (registry: NodeRegistry, node: Node, grid = DEFAULT_GRID): readonly Port[] => {
   const def = nodeDef(registry, node);
+  const bounds = nodeBounds(node);
   const ports =
     node.ports ??
-    (node.portsPerSide !== undefined ? sidePorts(clampPorts(node.portsPerSide)) : undefined) ??
+    (node.portsPerSide !== undefined ? sidePorts(clampPorts(node.portsPerSide), bounds, grid) : undefined) ??
     def?.ports?.(node) ??
-    sidePorts(def?.portsPerSide);
-  const bounds = nodeBounds(node);
+    sidePorts(clampPorts(def?.portsPerSide ?? DEFAULT_PORTS_PER_SIDE), bounds, grid);
   const seen = new Set<string>();
   return ports.filter((port) => {
     const { x, y } = portPoint(bounds, port);

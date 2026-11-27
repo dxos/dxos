@@ -8,7 +8,7 @@
 //
 
 import { type Scene as Diagram } from '@dxos/diagram';
-import { type ElementId, type Link, type Point, isEllipseNode, linkPath } from '@dxos/scene';
+import { DEFAULT_GRID, type ElementId, type Link, type Point, isEllipseNode, linkPath } from '@dxos/scene';
 
 import { type NodeRegistry, type RenderList2D } from '../model/index.ts';
 import { nodeTitle } from './parts.ts';
@@ -31,8 +31,8 @@ export type DiagramObjects = {
 const objectId = (id: ElementId): string => encodeURIComponent(id);
 
 /** The polyline a link is drawn along, in scene coordinates. */
-const linkPoints = (scene: RenderList2D, registry: NodeRegistry, link: Link): Point[] | undefined => {
-  const geometry = linkGeometry(scene, registry, link);
+const linkPoints = (scene: RenderList2D, registry: NodeRegistry, link: Link, grid: number): Point[] | undefined => {
+  const geometry = linkGeometry(scene, registry, link, undefined, grid);
   if (!geometry) {
     return undefined;
   }
@@ -47,9 +47,9 @@ const linkPoints = (scene: RenderList2D, registry: NodeRegistry, link: Link): Po
     case 'spline':
       return [source.point, ...(link.points ?? []), target.point];
     case 'smart':
-      return smartPoints(source, target);
+      return smartPoints(source, target, grid);
     case 'ortho':
-      return orthoPoints(source, target);
+      return orthoPoints(source, target, grid);
     case 'curve':
       return Array.from({ length: CURVE_SAMPLES + 1 }, (_, index) => curvePoint(source, target, index / CURVE_SAMPLES));
   }
@@ -60,7 +60,7 @@ const linkPoints = (scene: RenderList2D, registry: NodeRegistry, link: Link): Po
  * compares nodes across objects exactly as it does for an engine's output. Nodes that enclose
  * others read as containers there, which is what a guide frame around a group is.
  */
-export const toDiagramObjects = (scene: RenderList2D, registry: NodeRegistry): DiagramObjects => {
+export const toDiagramObjects = (scene: RenderList2D, registry: NodeRegistry, grid = DEFAULT_GRID): DiagramObjects => {
   const elementOf = new Map<string, ElementId>();
   const objects: Diagram.WorldObject[] = [];
   for (const node of Object.values(scene.nodes)) {
@@ -83,7 +83,7 @@ export const toDiagramObjects = (scene: RenderList2D, registry: NodeRegistry): D
     });
   }
   for (const link of Object.values(scene.links)) {
-    const points = linkPoints(scene, registry, link);
+    const points = linkPoints(scene, registry, link, grid);
     if (!points || points.length < 2) {
       continue;
     }

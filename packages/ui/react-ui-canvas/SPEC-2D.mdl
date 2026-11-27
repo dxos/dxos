@@ -257,8 +257,11 @@ type Port
     An attachment point on a node, stated as a fraction of its frame (`0,0` the top-left corner, `1,1`
     the bottom-right), so it keeps its place however the node is resized: the point a draw.io
     `<constraint x y>` states. Ports come from the kind, not the instance (decision 12);
-    `portsPerSide` spreads them along each side (never at a corner). `accepts` constrains which end
-    of a link may land here, and a link between two constrained ports is directed by that alone.
+    `portsPerSide` places them along each side (never at a corner): where the side has room on the
+    grid, a whole number of half major cells apart about its middle, each on a line of the grid; a side
+    with no such room takes a finer grid or an even share ([F-6.4], decisions D-86 and D-87). `accepts`
+    constrains which end of a link may land here, and a link between two constrained ports is directed
+    by that alone.
   fields:
     id: PortId                        # a generated port's id is its side's compass letter and its index, e.g. 'e2'
     x: number                         # 0..1 across the frame
@@ -734,7 +737,11 @@ feat F-6: Open registry
   req F-6.3: An unknown type still renders rather than throwing, as the core base (`BaseNode`): a node as
     a box showing its `label`, with ports and an editable label, and a link as a straight line. A View
     written by a newer host, or one whose plugin is off, opens.
-  req F-6.4: Ports come from the definition; a node may still carry its own.
+  req F-6.4: Ports come from the definition; a node may still carry its own. A side's generated ports stand
+    a whole number of half major cells apart, symmetrical about its middle, each on a half line of the major
+    grid and none nearer a corner than half a cell. Of the gaps that do so the side takes the one nearest its
+    length over its count, then the one with more ports on whole lines, then the wider. A side with no such
+    gap takes the same rule on the minor grid, then on half of it, and then is shared evenly.
 ```
 
 ```mdl
@@ -1907,6 +1914,23 @@ decision D-85: Group and Ungroup in the 2D engine are the model's `group` and `u
   by: user:richburdon
   affects: [F-9.2, F-9.3]
   why: A group made in a host was placed from the origin and drew letterboxed when resized, while one made in the standalone editor stretched with its frame; one implementation gives both the same group.
+```
+
+```mdl
+decision D-86: A side's generated ports stand a whole number of half major cells apart about its middle, and land on the major grid's whole lines where they can and on its half lines otherwise, where they stood at `i / (n + 1)` of the side. The cell is the drawing's own grid, which every reader of a node's ports is given.
+  date: 2026-11-27
+  by: user:richburdon
+  affects: [F-6.4]
+  why: Ports at even fractions of a side fall between grid lines on most sizes, so the links leaving them run off the grid and at gaps that change with every resize.
+```
+
+```mdl
+decision D-87: Of the gaps that land every port on a half line and keep it half a cell from the corners, a side takes the one nearest its length over its count, which leaves about half a gap at each end; of two as near, the one with more ports on whole lines, then the wider. A side with no such gap takes the same rule on the minor grid and then on half of it, and a side that fits none, or is not itself on the grid, is shared evenly among one more gap than it has ports. Fills in [D-86].
+  date: 2026-11-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-6.4]
+  why: The three sides the rule was stated by (six ports on six cells a cell apart, three on five a cell and a half apart, two on five three cells apart) all take the gap nearest the length over the count; the nearest gap first keeps seven ports on seven cells spread where more of them on whole lines would bunch them, and the even share keeps the ports of a side too short for any grid from stacking.
 ```
 
 ## Appendix: Extension Definitions

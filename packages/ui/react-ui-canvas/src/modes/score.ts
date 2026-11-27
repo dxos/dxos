@@ -8,7 +8,7 @@ import { Diagnostics, Objective, Score } from '@dxos/diagram';
 import { type Scene, findLayout } from '@dxos/scene';
 
 import { type NodeRegistry } from '../model/index.ts';
-import { type DiagramObjects, toDiagramObjects } from '../utils/index.ts';
+import { type DiagramObjects, gridPitch, toDiagramObjects } from '../utils/index.ts';
 import { toRenderList2D } from '../viewport2d/index.ts';
 
 /**
@@ -22,7 +22,9 @@ export const layoutDiagramObjects = (
   registry: NodeRegistry,
 ): DiagramObjects | undefined => {
   const record = findLayout(document, layout);
-  return record?.dim === '2d' ? toDiagramObjects(toRenderList2D(document, record), registry) : undefined;
+  return record?.dim === '2d'
+    ? toDiagramObjects(toRenderList2D(document, record), registry, gridPitch(record))
+    : undefined;
 };
 
 /** Scored mode over a 2D layout: the objective's scorers (the default one unless given), none for no such layout. */

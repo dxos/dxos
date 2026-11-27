@@ -148,9 +148,13 @@ types; `VIEWS.md` keeps the reasoning behind the containers.
   draw no background of their own. The properties panel renders it as a group with the hue picker.
 - **Ports** come from the node's own `ports` when it carries them (how compute nodes with schema-derived
   inputs/outputs will express them, see `MIGRATION.md`), else the type's `NodeDef.ports(node)`, else
-  `portsPerSide` (default 3) ports spread along each side, named `<side><index>` (`e2` is the east centre) and
-  listed centre-first so automatic links prefer the centre. A port is drawn at the major grid line nearest its
-  offset, kept within its side; ports that land on one point collapse to the first, so a small node keeps fewer.
+  `portsPerSide` (default 3) ports along each side, named `<side><index>` (`e2` is the east centre) and
+  listed centre-first so automatic links prefer the centre. A side's ports stand a whole number of half major
+  cells apart about its middle, each on a half line of the major grid and none nearer a corner than half a cell
+  (`portPitch`): of the gaps that do so, the one nearest the side's length over its count, then the one with
+  more ports on whole lines, then the wider. A side with no such gap takes the same rule on the minor grid,
+  then on half of it, and then is shared evenly. Ports that land on one point collapse to
+  the first.
   The ellipse declares one port per side: only the frame's side centres lie on the curve.
 - **Automatic links**: when either endpoint has no `port`, the router picks the port pair with the shortest
   distance; it is recomputed whenever the projection re-emits, so re-arranging the diagram re-attaches links. A

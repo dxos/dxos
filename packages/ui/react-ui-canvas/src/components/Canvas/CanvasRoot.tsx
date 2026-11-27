@@ -420,6 +420,7 @@ const CanvasEngine = ({
     cancelAnimation,
     isNavigating,
     cell,
+    grid,
     minor,
     major,
     snap,

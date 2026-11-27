@@ -342,9 +342,14 @@ export const sideToward = (from: Point, to: Point): Side => {
 };
 
 /** A node end as the port picker sees it, or nothing when the node is gone. */
-const terminalOf = (scene: RenderList2D, registry: NodeRegistry, end: PortEndpoint): PortTerminal | undefined => {
+const terminalOf = (
+  scene: RenderList2D,
+  registry: NodeRegistry,
+  end: PortEndpoint,
+  grid: number,
+): PortTerminal | undefined => {
   const node = scene.nodes[end.node];
-  return node ? { bounds: nodeBounds(node), ports: nodePorts(registry, node), port: end.port } : undefined;
+  return node ? { bounds: nodeBounds(node), ports: nodePorts(registry, node, grid), port: end.port } : undefined;
 };
 
 const routeEnd = (terminal: PortTerminal, port: Port): RouteEnd => ({
@@ -390,12 +395,13 @@ export const latticeEnds = (
   registry: NodeRegistry,
   link: Link,
   route: LatticeRoute,
+  grid = DEFAULT_GRID,
 ): { from: RouteEnd; to: RouteEnd; points: Point[] } | undefined => {
   if (linkPath(link) !== 'smart' || isPointEndpoint(link.source) || isPointEndpoint(link.target)) {
     return undefined;
   }
-  const source = terminalOf(scene, registry, link.source);
-  const target = terminalOf(scene, registry, link.target);
+  const source = terminalOf(scene, registry, link.source, grid);
+  const target = terminalOf(scene, registry, link.target, grid);
   if (!source || !target) {
     return undefined;
   }
@@ -459,11 +465,11 @@ export const linkGeometry = (
     return diagram;
   }
   const route = lattice && onCells(scene, link, lattice) ? latticeRoute(scene, lattice) : undefined;
-  const routed = route && latticeEnds(scene, registry, link, route);
+  const routed = route && latticeEnds(scene, registry, link, route, grid);
   if (routed) {
     return { link, path: splinePath(routed.points, grid), source: routed.from, target: routed.to };
   }
-  const ends = resolveEnds(scene, registry, link.source, link.target, linkPath(link));
+  const ends = resolveEnds(scene, registry, link.source, link.target, grid, linkPath(link));
   if (!ends) {
     return undefined;
   }
@@ -496,12 +502,12 @@ const centredEnd = (node: Node, toward: Point): RouteEnd => {
  * A plain (non-smart) link's ends: a free point stays where it is, a named port is used as given, and a node end with
  * no port points at the node's centre, from the other end's centre (or port, or point), stopping at its outline.
  */
-const centredEnds = (scene: RenderList2D, registry: NodeRegistry, source: Endpoint, target: Endpoint) => {
+const centredEnds = (scene: RenderList2D, registry: NodeRegistry, source: Endpoint, target: Endpoint, grid: number) => {
   const anchor = (end: Endpoint): Point | undefined => {
     if (isPointEndpoint(end)) {
       return end.point;
     }
-    const terminal = terminalOf(scene, registry, end);
+    const terminal = terminalOf(scene, registry, end, grid);
     const port = end.port === undefined ? undefined : terminal?.ports.find((candidate) => candidate.id === end.port);
     return terminal && port ? portPoint(terminal.bounds, port) : scene.nodes[end.node]?.center;
   };
@@ -517,7 +523,7 @@ const centredEnds = (scene: RenderList2D, registry: NodeRegistry, source: Endpoi
     if (!node) {
       return undefined;
     }
-    const terminal = terminalOf(scene, registry, end);
+    const terminal = terminalOf(scene, registry, end, grid);
     const port = end.port === undefined ? undefined : terminal?.ports.find((candidate) => candidate.id === end.port);
     return terminal && port ? routeEnd(terminal, port) : centredEnd(node, other);
   };
@@ -531,10 +537,11 @@ const resolveEnds = (
   registry: NodeRegistry,
   source: Endpoint,
   target: Endpoint,
+  grid: number,
   path?: LinkPath,
 ): [RouteEnd, RouteEnd] | undefined => {
   if (path !== undefined && path !== 'smart' && path !== 'ortho') {
-    return centredEnds(scene, registry, source, target);
+    return centredEnds(scene, registry, source, target, grid);
   }
   if (isPointEndpoint(source)) {
     if (isPointEndpoint(target)) {
@@ -543,7 +550,7 @@ const resolveEnds = (
         { point: target.point, side: sideToward(target.point, source.point), free: true },
       ];
     }
-    const terminal = terminalOf(scene, registry, target);
+    const terminal = terminalOf(scene, registry, target, grid);
     const port = terminal && nearestPort(terminal, source.point, 'in');
     if (!terminal || !port) {
       return undefined;
@@ -552,7 +559,7 @@ const resolveEnds = (
     return [{ point: source.point, side: sideToward(source.point, to.point), free: true }, to];
   }
   if (isPointEndpoint(target)) {
-    const terminal = terminalOf(scene, registry, source);
+    const terminal = terminalOf(scene, registry, source, grid);
     const port = terminal && nearestPort(terminal, target.point, 'out');
     if (!terminal || !port) {
       return undefined;
@@ -560,8 +567,8 @@ const resolveEnds = (
     const from = routeEnd(terminal, port);
     return [from, { point: target.point, side: sideToward(target.point, from.point), free: true }];
   }
-  const sourceTerminal = terminalOf(scene, registry, source);
-  const targetTerminal = terminalOf(scene, registry, target);
+  const sourceTerminal = terminalOf(scene, registry, source, grid);
+  const targetTerminal = terminalOf(scene, registry, target, grid);
   const pair = sourceTerminal && targetTerminal && pairPorts(sourceTerminal, targetTerminal);
   if (!sourceTerminal || !targetTerminal || !pair) {
     return undefined;
@@ -612,11 +619,11 @@ export const viewLinkGeometry = (
         const geometry = linkGeometry(scene, registry, link, undefined, grid);
         return geometry ? [{ link, from: geometry.source, to: geometry.target, points: undefined }] : [];
       }
-      const chosen = latticeEnds(scene, registry, link, route);
+      const chosen = latticeEnds(scene, registry, link, route, grid);
       if (chosen) {
         return [{ link, from: chosen.from, to: chosen.to, points: chosen.points }];
       }
-      const ends = resolveEnds(scene, registry, link.source, link.target, linkPath(link));
+      const ends = resolveEnds(scene, registry, link.source, link.target, grid, linkPath(link));
       if (!ends) {
         return [];
       }
