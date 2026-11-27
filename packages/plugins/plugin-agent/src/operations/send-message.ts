@@ -8,18 +8,17 @@ import * as Exit from 'effect/Exit';
 import * as Result from 'effect/Result';
 
 import type * as Capability from '@dxos/app-framework/Capability';
-import { TrajectoryStore } from '@dxos/assistant';
 import type * as Agent from '@dxos/compute/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import * as ThreadOperation from '@dxos/plugin-thread/ThreadOperation';
-import { Channel, Message, Person, Task } from '@dxos/types';
+import { Channel, Person, Task } from '@dxos/types';
 
 import { BrainSkill } from '#skills';
 import { AgentChannels, BrainService, ChatParticipant, type Relay, RelayOperation } from '#types';
 
 import { loadChats } from './agent-skills.ts';
-import { ensureChannelChat } from './ensure-channel-chat.ts';
+import { appendToChat, ensureChannelChat } from './ensure-channel-chat.ts';
 import { asParty, partyName } from './relay.ts';
 import { applyStatus } from './update-relay.ts';
 
@@ -143,19 +142,6 @@ const roleIn = (relay: Relay.Relay, party: Obj.Unknown): 'recipient' | 'requeste
     : relay.requester && Task.refEntityId(relay.requester) === party.id
       ? 'requester'
       : undefined;
-
-/** Records the message in a Composer chat, where whoever has the chat open reads it. */
-const appendToChat = (agent: Agent.Agent, chat: Agent.Session, text: string, properties?: Record<string, unknown>) =>
-  Effect.gen(function* () {
-    const feed = yield* Database.load(chat.feed).pipe(Effect.orDie);
-    yield* TrajectoryStore.appendMessages(feed, [
-      Message.make({
-        sender: { role: 'assistant', name: agent.name },
-        blocks: [{ _tag: 'text', text }],
-        properties,
-      }),
-    ]);
-  });
 
 type Posted = { delivered: true; chat: Agent.Session } | { delivered: false; reason?: string };
 

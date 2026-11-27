@@ -106,6 +106,38 @@ export const EnsureChannelChat = Operation.make({
 });
 
 /**
+ * Records a message the agent sent into a channel conversation in its chat for that conversation, creating the chat on
+ * first contact: for an operation that posts through a backend directly (a Discord direct message), so the chat the
+ * person's answer arrives in shows what was sent. `properties` carry the backend's receipt.
+ */
+export const RecordChannelSend = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.agent.recordChannelSend'),
+    name: 'Record channel send',
+    description: "Records a message the agent sent in a channel conversation in the agent's chat for it.",
+    icon: 'ph--chat-circle-text--regular',
+  },
+  services: [Database.Service],
+  types: CHAT_TYPES,
+  input: Schema.Struct({
+    agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent that sent the message.' }),
+    channel: Ref.Ref(Channel.Channel).annotate({ description: 'The channel the conversation is in.' }),
+    thread: Schema.optional(
+      Schema.String.annotate({
+        description: 'A backend-scoped thread id inside the channel (a Discord thread or DM).',
+      }),
+    ),
+    text: Schema.String.annotate({ description: 'What was sent.' }),
+    properties: Schema.optional(
+      Schema.Record(Schema.String, Schema.Unknown).annotate({ description: "The backend's receipt for the message." }),
+    ),
+  }),
+  output: Schema.Struct({
+    chat: Ref.Ref(Agent.Session),
+  }),
+});
+
+/**
  * Finds or creates an agent's chat for a session: a conversation with a caller that is not a channel, such as an MCP
  * client (EDGE compute-service's `askAgent`). Idempotent on `(agent, kind, key)`: the chat carries
  * `AgentSession.chatKey` as an `Obj.Meta` foreign key. A new chat binds the agent's context, its session skills and

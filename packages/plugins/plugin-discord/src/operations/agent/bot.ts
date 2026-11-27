@@ -8,12 +8,12 @@ import type * as Agent from '@dxos/compute/Agent';
 import { Database, Filter, Query, type Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import * as AgentChannels from '@dxos/plugin-agent/AgentChannels';
-import { Person } from '@dxos/types';
+import { type Channel, Person } from '@dxos/types';
 
 import { DiscordBot, DiscordChannel } from '#types';
 
-/** The bot that serves the agent's Discord channels; an agent is in Discord through one bot. */
-export const agentBot = Effect.fnUntraced(function* (agentRef: Ref.Ref<Agent.Agent>) {
+/** The agent's Discord channel and the bot that serves it; an agent is in Discord through one bot. */
+export const agentDiscordChannel = Effect.fnUntraced(function* (agentRef: Ref.Ref<Agent.Agent>) {
   const agent = yield* Database.load(agentRef);
   const { db } = yield* Database.Service;
   for (const channel of yield* AgentChannels.loadChannels(agent)) {
@@ -22,15 +22,20 @@ export const agentBot = Effect.fnUntraced(function* (agentRef: Ref.Ref<Agent.Age
     }
     const config = yield* Database.load(channel.backend.config).pipe(Effect.orElseSucceed(() => undefined));
     if (DiscordChannel.instanceOf(config)) {
-      return {
+      const bot: DiscordBot.Bot = {
         applicationId: config.applicationId,
         spaceId: db.spaceId,
         channel: EID.make({ spaceId: db.spaceId, entityId: channel.id }),
-      } satisfies DiscordBot.Bot;
+      };
+      return { bot, channel } satisfies { bot: DiscordBot.Bot; channel: Channel.Channel };
     }
   }
   return yield* Effect.fail(new DiscordBot.DiscordBotError({ message: 'The agent is not in any Discord channel.' }));
 });
+
+/** The bot that serves the agent's Discord channels. */
+export const agentBot = (agentRef: Ref.Ref<Agent.Agent>) =>
+  agentDiscordChannel(agentRef).pipe(Effect.map(({ bot }) => bot));
 
 /** An account found, or why there is none. */
 type Lookup = { readonly userId: string } | { readonly reason: string };
