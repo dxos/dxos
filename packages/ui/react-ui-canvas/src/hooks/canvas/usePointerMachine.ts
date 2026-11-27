@@ -220,6 +220,8 @@ export type UsePointerMachineOptions = {
   select: (ids: Iterable<ElementId>) => void;
   /** Scene px of one nominal unit (the model's major grid cell), which a new node's default size is counted in. */
   cell: number;
+  /** The drawing's own minor grid in scene px, whatever level is drawn: what a node's ports and a link's elbows are placed by. */
+  grid: number;
 } & Pick<SceneCamera, 'setCamera' | 'cancelAnimation' | 'isNavigating'> &
   Pick<SceneSnap, 'minor' | 'major' | 'snap' | 'isClick' | 'moveDelta'> &
   Pick<EditMode, 'exitEdit'>;
@@ -301,6 +303,7 @@ export const usePointerMachine = ({
   cancelAnimation,
   isNavigating,
   cell,
+  grid,
   minor,
   major,
   snap,
@@ -969,12 +972,12 @@ export const usePointerMachine = ({
       // An end that cannot be changed has no handle, and so no menu of its own.
       const anchors = links.flatMap((link) => {
         const geometry =
-          capabilities.update && !link.locked ? linkGeometry(scene, nodeRegistry, link, undefined, minor) : undefined;
+          capabilities.update && !link.locked ? linkGeometry(scene, nodeRegistry, link, undefined, grid) : undefined;
         return geometry ? [{ link: link.id, source: geometry.source.point, target: geometry.target.point }] : [];
       });
       return linkEndAt(anchors, toScene(event), reach / registry.get(atoms.camera).zoom);
     },
-    [capabilities.update, scene, nodeRegistry, minor, toScene, registry, atoms.camera],
+    [capabilities.update, scene, nodeRegistry, grid, toScene, registry, atoms.camera],
   );
 
   /** A press on a link beside one of its ends is on that end, so its marker is as good a target as its handle. */
@@ -1022,7 +1025,7 @@ export const usePointerMachine = ({
         return;
       }
       event.stopPropagation();
-      const geometry = linkGeometry(scene, nodeRegistry, link, undefined, minor);
+      const geometry = linkGeometry(scene, nodeRegistry, link, undefined, grid);
       if (!geometry) {
         return;
       }
@@ -1030,7 +1033,7 @@ export const usePointerMachine = ({
       const to = end === 'source' ? geometry.source.point : geometry.target.point;
       startDrag({ kind: 'end', id: link.id, end, fixed: other.point, fixedSide: other.side, to }, event);
     },
-    [capabilities.update, scene, nodeRegistry, minor, startDrag],
+    [capabilities.update, scene, nodeRegistry, grid, startDrag],
   );
 
   /** Double-click on a spline adds a control point there; a link on any other path has no points to edit. */
@@ -1040,7 +1043,7 @@ export const usePointerMachine = ({
         return;
       }
       event.stopPropagation();
-      const geometry = linkGeometry(scene, nodeRegistry, link, undefined, minor);
+      const geometry = linkGeometry(scene, nodeRegistry, link, undefined, grid);
       if (!geometry) {
         return;
       }
@@ -1051,7 +1054,7 @@ export const usePointerMachine = ({
       draw.apply(updateElement(link.id, { points }));
       select([link.id]);
     },
-    [capabilities.update, scene, nodeRegistry, minor, toScene, snap, draw, select],
+    [capabilities.update, scene, nodeRegistry, grid, toScene, snap, draw, select],
   );
 
   /**
@@ -1068,7 +1071,7 @@ export const usePointerMachine = ({
       const boundsOf = nodeBounds(node);
       let nearest: Port | undefined;
       let best = Infinity;
-      for (const candidate of nodePorts(nodeRegistry, node, minor).filter((port) => portAccepts(port, direction))) {
+      for (const candidate of nodePorts(nodeRegistry, node, grid).filter((port) => portAccepts(port, direction))) {
         const value = Math.hypot(...distance(portPoint(boundsOf, candidate), point));
         if (value < best) {
           best = value;
@@ -1079,7 +1082,7 @@ export const usePointerMachine = ({
       // the link binds to the body, which is also what a node with no port accepting this end takes.
       return nearest && best <= reach ? { node: node.id, port: nearest.id } : { node: node.id };
     },
-    [scene, registry, atoms.camera, nodeRegistry, minor],
+    [scene, registry, atoms.camera, nodeRegistry, grid],
   );
 
   // Hover comes from the model with a margin, not from the node element, so it survives the pointer
@@ -1480,7 +1483,7 @@ export const usePointerMachine = ({
                 // is drawn with one.
                 ends: drawnLinkEnds(
                   registry.get(atoms.linkEnds),
-                  isDirected(scene, nodeRegistry, current.source, target, minor),
+                  isDirected(scene, nodeRegistry, current.source, target, grid),
                 ),
               });
               edits.push(insertLink({ ...link, layer: activeLayer(scene, registry.get(atoms.layer)) }));
@@ -1585,6 +1588,7 @@ export const usePointerMachine = ({
       nodeEdit,
       minor,
       cell,
+      grid,
       snap,
       activate,
       rootRef,

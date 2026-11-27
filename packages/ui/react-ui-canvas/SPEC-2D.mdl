@@ -257,8 +257,9 @@ type Port
     An attachment point on a node, stated as a fraction of its frame (`0,0` the top-left corner, `1,1`
     the bottom-right), so it keeps its place however the node is resized: the point a draw.io
     `<constraint x y>` states. Ports come from the kind, not the instance (decision 12);
-    `portsPerSide` places them along each side (never at a corner): a whole number of half major cells
-    apart about the side's middle, each on a line of the grid (decisions D-86 and D-87). `accepts`
+    `portsPerSide` places them along each side (never at a corner): where the side has room on the
+    grid, a whole number of half major cells apart about its middle, each on a line of the grid; a side
+    with no such room takes a finer grid or an even share ([F-6.4], decisions D-86 and D-87). `accepts`
     constrains which end of a link may land here, and a link between two constrained ports is directed
     by that alone.
   fields:
