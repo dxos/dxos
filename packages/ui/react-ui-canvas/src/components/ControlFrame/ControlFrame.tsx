@@ -317,7 +317,7 @@ export const ControlFrame = memo(
         })}
         {[...portNodes].map((node) => {
           const bounds = nodeBounds(node);
-          return nodePorts(registry, node).map((port) => {
+          return nodePorts(registry, node, grid).map((port) => {
             const point = portPoint(bounds, port);
             // Filled while it is an end of the drag in progress: the source, or the port it would drop on.
             const isEnd = (end: Endpoint | undefined) =>

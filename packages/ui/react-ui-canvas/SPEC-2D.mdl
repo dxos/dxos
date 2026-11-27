@@ -257,8 +257,10 @@ type Port
     An attachment point on a node, stated as a fraction of its frame (`0,0` the top-left corner, `1,1`
     the bottom-right), so it keeps its place however the node is resized: the point a draw.io
     `<constraint x y>` states. Ports come from the kind, not the instance (decision 12);
-    `portsPerSide` spreads them along each side (never at a corner). `accepts` constrains which end
-    of a link may land here, and a link between two constrained ports is directed by that alone.
+    `portsPerSide` places them along each side (never at a corner): the side is shared among one more
+    gap than it has ports, the gap is rounded down to a whole minor grid unit, and the ports stand that
+    far apart about the side's centre (decision D-86). `accepts` constrains which end of a link may land
+    here, and a link between two constrained ports is directed by that alone.
   fields:
     id: PortId                        # a generated port's id is its side's compass letter and its index, e.g. 'e2'
     x: number                         # 0..1 across the frame
@@ -734,7 +736,9 @@ feat F-6: Open registry
   req F-6.3: An unknown type still renders rather than throwing, as the core base (`BaseNode`): a node as
     a box showing its `label`, with ports and an editable label, and a link as a straight line. A View
     written by a newer host, or one whose plugin is off, opens.
-  req F-6.4: Ports come from the definition; a node may still carry its own.
+  req F-6.4: Ports come from the definition; a node may still carry its own. A side's generated ports stand
+    a whole number of minor grid units apart, symmetrical about its centre: the side's length over one
+    more than their count, rounded down to the unit. A side too short for one unit a gap is shared evenly.
 ```
 
 ```mdl
@@ -1907,6 +1911,23 @@ decision D-85: Group and Ungroup in the 2D engine are the model's `group` and `u
   by: user:richburdon
   affects: [F-9.2, F-9.3]
   why: A group made in a host was placed from the origin and drew letterboxed when resized, while one made in the standalone editor stretched with its frame; one implementation gives both the same group.
+```
+
+```mdl
+decision D-86: A side's generated ports stand `floor(length / (n + 1))` apart, counted in whole minor grid units, symmetrical about the side's centre, where they stood at `i / (n + 1)` of the side. The unit is the drawing's own grid, which every reader of a node's ports is given.
+  date: 2026-11-27
+  by: user:richburdon
+  affects: [F-6.4]
+  why: Ports at even fractions of a side fall between grid lines on most sizes, so the links leaving them run off the grid and at gaps that change with every resize.
+```
+
+```mdl
+decision D-87: A side too short for one minor grid unit between its ports shares itself evenly among them, as every side did before. Fills in [D-86].
+  date: 2026-11-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-6.4]
+  why: Rounded down, the gap on such a side is nothing, so its ports would stack on the centre and collapse to one, and a link pinned to another would lose its port.
 ```
 
 ## Appendix: Extension Definitions
