@@ -135,7 +135,9 @@ export const Test: Story = {
     ]);
     await expect(within(rows[2]).getByRole('img')).toHaveAccessibleName('Failed');
     await expect(within(rows[3]).getByRole('img')).toHaveAccessibleName('Started');
-    await expect(getComputedStyle(within(rows[3]).getByRole('img')).animationName).toBe('dx-spin');
+    // The working icon is still for a reader who prefers reduced motion.
+    const spin = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'none' : 'dx-spin';
+    await expect(getComputedStyle(within(rows[3]).getByRole('img')).animationName).toBe(spin);
     await expect(rows[3]).toHaveTextContent(STEPS[3].title);
   },
 };

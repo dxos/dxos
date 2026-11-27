@@ -153,9 +153,11 @@ export const Test: Story = {
     await expect(new Set(icons.map((svg) => svg.dataset.icon)).size).toBe(4);
     await expect(new Set(icons.map((svg) => getComputedStyle(svg).color)).size).toBe(4);
     await expect(part(ROWS.failed, '[data-rail="start"] svg')).toHaveAccessibleName('Failed');
+    // The working icon is still for a reader who prefers reduced motion.
+    const spin = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'none' : 'dx-spin';
     for (const id of Object.values(ROWS)) {
       const animation = getComputedStyle(part(id, '[data-rail="start"] svg')).animationName;
-      await expect(animation).toBe(id === ROWS.working ? 'dx-spin' : 'none');
+      await expect(animation).toBe(id === ROWS.working ? spin : 'none');
     }
 
     // Only the working task's title is at full emphasis.
