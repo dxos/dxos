@@ -14,3 +14,5 @@ A model object's kind now names the container it is: `group`, `hull` and `view`,
 Group and Ungroup are the model's `group` and `ungroup` intents in every editor. The 2D engine's `composeSelection` and `ungroupInstance` are removed; it gives the intents where a group stands (`groupIntent2D`, `ungroupIntent2D`). A group made in the plugin's 2D canvas now stretches its members when it is resized, and Ungroup takes an Object's instance apart, leaving its definition.
 
 A canvas drawing, and its card, opened before its scene has loaded now draws when the scene loads. It stayed empty until the canvas changed: the compiled article kept the editor it chose from the unloaded scene.
+
+A text part edited in place no longer moves when its editor opens: a card's title dropped 3 px. Text longer than its part now overflows the part while it is edited, as it does drawn, where the editor scrolled inside the part.
