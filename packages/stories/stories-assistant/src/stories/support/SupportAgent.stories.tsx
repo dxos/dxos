@@ -16,15 +16,15 @@ import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { TagIndex } from '@dxos/schema';
 import {
-  CORPUS,
   Cites,
+  CORPUS,
   EntitiesPlugin,
   ResearchPlugin,
   ResponderPlugin,
   SupportProvider,
   SupportRole,
-  moduleSurfaces as supportSurfaces,
   seed,
+  moduleSurfaces as supportSurfaces,
 } from '@dxos/stories-support/testing';
 import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 import * as ModuleSurfacesPlugin from '@dxos/storybook-testing/ModuleSurfacesPlugin';
@@ -32,10 +32,10 @@ import { Message, Organization, Person } from '@dxos/types';
 
 import { type ChatPlaneModuleData, StoryRole } from '../../modules/index.ts';
 import {
+  Scripts,
   SUPPORT_DELEGATED,
   SUPPORT_REQUEST,
   SUPPORT_SESSIONS,
-  Scripts,
   type SupportSessionKey,
   supportSessionDone,
 } from '../../scripts/index.ts';

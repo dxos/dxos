@@ -5,9 +5,9 @@
 // What another story needs to put the support pipeline and its columns beside its own modules.
 export * from './generators/index.ts';
 export {
-  StoryRole as SupportRole,
   SupportProvider,
   type SupportProviderProps,
+  StoryRole as SupportRole,
   moduleSurfaces,
 } from './modules/index.ts';
 export * from './pipeline/index.ts';
