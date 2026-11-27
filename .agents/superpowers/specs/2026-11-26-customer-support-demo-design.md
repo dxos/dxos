@@ -1,7 +1,7 @@
 # Customer support demo
 
-Status: proposal, awaiting go-ahead. Open decisions are in [Decisions](#decisions); each has a
-recommendation, and the rest of this document is written as if the recommendations are accepted.
+Status: approved. Rich accepted the first option of every item in [Decisions](#decisions) on
+2026-11-26. The work is the registered project `support-demo`.
 
 ## Summary
 
@@ -348,7 +348,7 @@ pauses the generators, appends one message (`Step`) and resets the space.
 
 **Progress in the pipeline column.** A message's card appears with all six rows not started as soon
 as the message is appended. The row of the stage being run is working; a finished stage is success
-or failed. The card is the `StatusList` from dxos/dxos#14703, drawn from the in-memory `MessageRun`
+or failed. The card is the `StatusList` from `@dxos/react-ui-list` (dxos/dxos#14703), drawn from the in-memory `MessageRun`
 (decision 6). In the running story each stage waits a short time so the working row can be seen; in
 tests the wait is zero.
 
@@ -382,7 +382,7 @@ Determinism:
 
 ## Decisions
 
-Each is open until Rich answers. The first option is the recommendation.
+Rich accepted the first option of each on 2026-11-26.
 
 1. **How a plugin offers its processor.**
    1. A multi capability now, with each contract written in the plugin services shape. dxos/dxos#14693
