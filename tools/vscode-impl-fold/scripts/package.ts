@@ -1,0 +1,33 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { createVSIX } from '@vscode/vsce';
+import { cpSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+const out = join(root, 'dist/vscode-impl-fold.vsix');
+
+/**
+ * Packages the `.vsix` from a staging copy whose manifest has no dependency fields: vsce reads `@types/vscode` as a
+ * semver range and fails on the workspace's `catalog:` specifiers, and the bundle already carries every dependency.
+ */
+const stage = mkdtempSync(join(tmpdir(), 'vscode-impl-fold-'));
+try {
+  const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
+  delete manifest.dependencies;
+  delete manifest.devDependencies;
+  writeFileSync(join(stage, 'package.json'), `${JSON.stringify(manifest, null, 2)}\n`);
+  const bindings = readdirSync(join(root, 'dist'))
+    .filter((file) => file.endsWith('.node'))
+    .map((file) => `dist/${file}`);
+  for (const entry of ['README.md', '.vscodeignore', 'dist/extension.cjs', ...bindings]) {
+    cpSync(join(root, entry), join(stage, entry), { recursive: true });
+  }
+  await createVSIX({ cwd: stage, packagePath: out, dependencies: false, skipLicense: true });
+} finally {
+  rmSync(stage, { recursive: true, force: true });
+}

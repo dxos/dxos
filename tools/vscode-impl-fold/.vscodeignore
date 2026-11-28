@@ -1,0 +1,12 @@
+.vscode/**
+dist/**
+!dist/extension.cjs
+!dist/*.node
+node_modules/**
+scripts/**
+src/**
+*.vsix
+.vscodeignore
+moon.yml
+tsconfig.json
+vitest.config.ts

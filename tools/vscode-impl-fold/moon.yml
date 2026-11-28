@@ -1,0 +1,39 @@
+layer: tool
+language: typescript
+tags:
+  - typecheck
+  - ts-test
+
+tasks:
+  # The standalone vitest config writes no JUnit or coverage, so the inherited outputs would never exist.
+  test:
+    options:
+      mergeOutputs: replace
+    outputs: []
+
+  # `dist/extension.cjs` and the oxc-parser native binding for this platform, the code the `.vsix` ships.
+  bundle:
+    command: node scripts/bundle.ts
+    inputs:
+      - src/**/*.ts
+      - scripts/bundle.ts
+    outputs:
+      - dist/extension.cjs
+      # Absent on a platform with no binding installed; the extension then uses the language-server path.
+      - glob: dist/*.node
+        optional: true
+
+  # `dist/vscode-impl-fold.vsix`, installable with `code --install-extension`; see README.md.
+  package:
+    command: node scripts/package.ts
+    deps:
+      - ~:bundle
+    inputs:
+      - package.json
+      - README.md
+      - .vscodeignore
+      - scripts/package.ts
+      - dist/extension.cjs
+      - dist/*.node
+    outputs:
+      - dist/vscode-impl-fold.vsix
