@@ -117,8 +117,10 @@ export type MeshData = { positions: Float32Array; indices: Uint32Array };
 export type GeometrySource = (item: RenderItem) => MeshData | undefined;
 
 type ItemMeshes = {
-  /** What the meshes were built for; a change of kind, look or geometry rebuilds them. */
+  /** What the meshes were built for; a change of kind or look rebuilds them, and one of geometry alone refills them. */
   signature: string;
+  /** The triangles the surface was given, for an item drawn from data. */
+  data?: MeshData;
   surface: Mesh;
   material: Material;
   rim?: { mesh: Mesh; material: ShaderMaterial };
@@ -213,7 +215,7 @@ const turnOf = (mesh: AbstractMesh): Quaternion =>
 const geometryIds = new WeakMap<MeshData, number>();
 let nextGeometryId = 1;
 
-/** What an item's meshes are built from; a change rebuilds them. Geometry counts by identity, not size. */
+/** What an item's meshes are built from; a change rebuilds or refills them. Geometry counts by identity, not size. */
 export const itemSignature = (kind: string, spec: MaterialSpec, data: MeshData | undefined): string => {
   let geometry = 0;
   if (data) {
@@ -221,6 +223,19 @@ export const itemSignature = (kind: string, spec: MaterialSpec, data: MeshData |
     geometryIds.set(data, geometry);
   }
   return `${kind}:${spec.kind}:${spec.edges}:${geometry}`;
+};
+
+/** A signature without its geometry: the kind and look, which the meshes and their materials are made for. */
+const builtFor = (signature: string): string => signature.slice(0, signature.lastIndexOf(':'));
+
+/** Gives a mesh `data`'s triangles, creased, in place of any it has. */
+const setTriangles = (mesh: Mesh, data: MeshData): void => {
+  const { positions, indices, normals } = creasedNormals(data);
+  const vertices = new VertexData();
+  vertices.positions = positions;
+  vertices.indices = indices;
+  vertices.normals = normals;
+  vertices.applyToMesh(mesh);
 };
 
 /** The most frames drawn while waiting for shaders, so a shader that never compiles cannot keep the view drawing. */
@@ -1530,12 +1545,7 @@ export class SceneRenderer3D {
     const name = `item-${item.key}`;
     if (data) {
       const mesh = new Mesh(name, this.#scene);
-      const { positions, indices, normals } = creasedNormals(data);
-      const vertices = new VertexData();
-      vertices.positions = positions;
-      vertices.indices = indices;
-      vertices.normals = normals;
-      vertices.applyToMesh(mesh);
+      setTriangles(mesh, data);
       return mesh;
     }
     switch (item.type) {
@@ -1566,7 +1576,7 @@ export class SceneRenderer3D {
       const edge = Color3.FromHexString(spec.color).scale(spec.kind === 'neu' ? 1 : 0.45);
       surface.edgesColor = new Color4(edge.r, edge.g, edge.b, 1);
     }
-    const meshes: ItemMeshes = { signature, surface, material };
+    const meshes: ItemMeshes = { signature, surface, material, ...(data ? { data } : {}) };
     // A see-through shell in the presentation theme carries a rim and a lattice, parented so they move with it.
     if (spec.kind === 'rim') {
       const rim = surface.clone(`rim-${item.key}`, surface);
@@ -1622,7 +1632,22 @@ export class SceneRenderer3D {
       const data = geometry?.(item) ?? meshData(item);
       const signature = itemSignature(item.type, spec, data);
       let meshes = this.#items.get(item.key);
-      if (meshes?.signature !== signature) {
+      if (
+        meshes?.data &&
+        data &&
+        meshes.signature !== signature &&
+        builtFor(meshes.signature) === builtFor(signature)
+      ) {
+        // A mesh made anew is not outlined until its outline's effect is ready, so a selected solid rebuilt on every
+        // move of a drag flickers: other triangles go into the mesh that is there.
+        setTriangles(meshes.surface, data);
+        if (meshes.surface.edgesRenderer) {
+          meshes.surface.disableEdgesRendering();
+          meshes.surface.enableEdgesRendering();
+        }
+        meshes.signature = signature;
+        meshes.data = data;
+      } else if (meshes?.signature !== signature) {
         meshes?.surface.dispose(false, true);
         meshes = this.#createItem(item, spec, data, signature);
         this.#items.set(item.key, meshes);
