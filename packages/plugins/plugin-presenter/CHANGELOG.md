@@ -1,5 +1,65 @@
 # @dxos/plugin-presenter
 
+## 0.18.0
+
+### Minor Changes
+
+- 29101e4: A presentation can set a footer, drawn on every slide: a left, a center and a right part of inline slide markdown, edited beside the theme in the presentation's properties. The new `<SlideCurrentNo />` and `<SlidesTotal />` tags draw the slide's number and the number of slides, in the footer or anywhere in a slide, counting the slides that are presented. A slide's frontmatter `footer: false` leaves the footer off it; the `cover` and `end` layouts show none unless the slide says `footer: true`.
+
+### Patch Changes
+
+- Updated dependencies [f1eb193]
+- Updated dependencies [95565bc]
+- Updated dependencies [70fd4dc]
+- Updated dependencies [8352d6b]
+- Updated dependencies [ac5df84]
+- Updated dependencies [f3b7b73]
+- Updated dependencies [89a0c8f]
+- Updated dependencies [ab30077]
+- Updated dependencies [9542326]
+- Updated dependencies [6f5a3c5]
+- Updated dependencies [174b0e2]
+- Updated dependencies [a7af8ed]
+- Updated dependencies [0471a3a]
+- Updated dependencies [352c3fc]
+- Updated dependencies [b930857]
+- Updated dependencies [b11bcdc]
+- Updated dependencies [29101e4]
+- Updated dependencies [49790f7]
+- Updated dependencies [5a43453]
+- Updated dependencies [0d5f1c0]
+  - @dxos/compute@0.18.0
+  - @dxos/app-framework@0.18.0
+  - @dxos/app-toolkit@0.18.0
+  - @dxos/react-ui-slides@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/react-ui-form@0.18.0
+  - @dxos/react-ui@0.18.0
+  - @dxos/ui-editor@0.18.0
+  - @dxos/plugin-space@0.18.0
+  - @dxos/react-ui-list@0.18.0
+  - @dxos/plugin-code@0.18.0
+  - @dxos/plugin-markdown@0.18.0
+  - @dxos/plugin-client@0.18.0
+  - @dxos/plugin-deck@0.18.0
+  - @dxos/plugin-file@0.18.0
+  - @dxos/plugin-studio@0.18.0
+  - @dxos/react-ui-editor@0.18.0
+  - @dxos/echo-doc@0.18.0
+  - @dxos/echo-react@0.18.0
+  - @dxos/schema@0.18.0
+  - @dxos/app-graph@0.18.0
+  - @dxos/react-ui-attention@0.18.0
+  - @dxos/react-ui-menu@0.18.0
+  - @dxos/react-ui-syntax-highlighter@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/errors@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/util@0.18.0
+  - @dxos/react-hooks@0.18.0
+  - @dxos/ui-theme@0.18.0
+
 ## 0.17.0
 
 ### Minor Changes

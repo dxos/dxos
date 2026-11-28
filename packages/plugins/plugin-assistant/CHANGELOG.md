@@ -1,5 +1,117 @@
 # @dxos/plugin-assistant
 
+## 0.18.0
+
+### Minor Changes
+
+- 70fd4dc: Agents can delegate work to another agent: `Agent.delegate({ target: { kind: 'agent', agent: Obj.getURI(receiver) } })` and the delegation skill's delegate-to-agent hand a request to that agent's session, which runs on its own permissions; an ambiguous agent name is refused.
+  
+  Processes now carry an `authority` (a principal and the grants it holds) instead of a guard: `Process.Guard`, `SpawnOptions.guard` and `@dxos/permission`'s `Guard` module are removed. Every call a process makes is held to its own authority and those it inherited, checked by compute-runtime's `Verifier`. Authorities persist with the process. `Process.Manager.grant` adds grants to a live process and to the copies its children inherited; the manager a process sees grants only to processes held to its own authorities, never to itself. Operations declare what they need with `Operation.requires`.
+  
+  A consentable call an authority refuses is put to a `Consent` service, and a one-time consent covers only the requirement it was asked about. In a chat, "Allow for this chat" grants the permission to the session. Plugins give a chat's agent its authority with `AssistantCapabilities.SessionAuthority`. The chat shows a refused call as denied rather than failed, and offers Try again on a failed request. These permission APIs are experimental. `@dxos/permission` is now published.
+- 72a12c0: `ChatPlane` columns are full height, bordered and capped at 40rem, and a column's prompt renders inside it while the column is selected, so only that column gives up height to its prompt. `ChatPlane.Root` takes `align='start'` to rest the selection, or a group of columns that fits, at the start of the strip; a centered plane always centers the selected column. The left and right arrow keys step between columns from inside a thread. `ThemePlugin` takes `followDocument`, which makes it follow the page's `dark` class instead of the OS, so a host such as storybook can own the theme. A task list rendered `flush` drops the well around its title field, and `Chat.Suggestions` truncates a chip longer than the composer.
+- b2afa8e: Code mode is off by default again. The `disableCodeMode` setting is replaced by `codeMode`, an opt-in ("Code mode (experimental)" in the assistant settings). A saved `disableCodeMode` is ignored; a `codeMode: true` saved before code mode became the default turns it on.
+- 794c28c: `Agent.delegate` hands work to another session: a new one that starts on the caller's model, skills and context (or a named existing one), with the delegated task on its checklist and the session as the task's delegate; the delegation skill exposes it as the `delegateToSession` tool. In the chat, main now reads as one thread with no gutter, a thread working out of view is a single row pinned after the transcript instead of a card, and a subagent's waiting task and a tool run's stats no longer add rows or space to the main thread. `ChatModel` is now an interface implemented by `LiveChatModel` (formerly the `ChatModel` class) and `ReplayChatModel`, which renders a fixed list of trajectory events. The task-set section takes `filter` and `editor` options to hide its toolbar and its add-task editor, and `ScriptedScene.withoutDelays` plays a scripted scene with every delay removed.
+
+### Patch Changes
+
+- 8d2c135: A virtualized list re-measures a row that resizes without a commit of its own, such as a card whose surface fills in late, before the frame paints. A list pinned to its end no longer jumps a row after it loads.
+  
+  Selecting another column in a `ChatPlane` eases the strip straight to it. It no longer jumps the other way first.
+- Updated dependencies [0bb1251]
+- Updated dependencies [f1eb193]
+- Updated dependencies [95565bc]
+- Updated dependencies [70fd4dc]
+- Updated dependencies [8352d6b]
+- Updated dependencies [ac5df84]
+- Updated dependencies [4a8493f]
+- Updated dependencies [72a12c0]
+- Updated dependencies [f3b7b73]
+- Updated dependencies [89a0c8f]
+- Updated dependencies [ab30077]
+- Updated dependencies [ee536b6]
+- Updated dependencies [6f5a3c5]
+- Updated dependencies [174b0e2]
+- Updated dependencies [a7af8ed]
+- Updated dependencies [0471a3a]
+- Updated dependencies [352c3fc]
+- Updated dependencies [b930857]
+- Updated dependencies [794c28c]
+- Updated dependencies [b11bcdc]
+- Updated dependencies [49790f7]
+- Updated dependencies [5a43453]
+- Updated dependencies [0d5f1c0]
+  - @dxos/assistant@0.18.0
+  - @dxos/compute@0.18.0
+  - @dxos/app-framework@0.18.0
+  - @dxos/app-toolkit@0.18.0
+  - @dxos/compute-runtime@0.18.0
+  - @dxos/agent-runtime@0.18.0
+  - @dxos/echo-client@0.18.0
+  - @dxos/assistant-toolkit@0.18.0
+  - @dxos/react-ui-task@0.18.0
+  - @dxos/types@0.18.0
+  - @dxos/devtools@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/react-ui-form@0.18.0
+  - @dxos/react-ui@0.18.0
+  - @dxos/ui-editor@0.18.0
+  - @dxos/plugin-space@0.18.0
+  - @dxos/react-ui-list@0.18.0
+  - @dxos/conductor@0.18.0
+  - @dxos/plugin-markdown@0.18.0
+  - @dxos/plugin-routine@0.18.0
+  - @dxos/plugin-transcription@0.18.0
+  - @dxos/plugin-attention@0.18.0
+  - @dxos/plugin-client@0.18.0
+  - @dxos/plugin-connector@0.18.0
+  - @dxos/plugin-deck@0.18.0
+  - @dxos/plugin-file@0.18.0
+  - @dxos/plugin-graph@0.18.0
+  - @dxos/plugin-observability@0.18.0
+  - @dxos/plugin-registry@0.18.0
+  - @dxos/plugin-search@0.18.0
+  - @dxos/plugin-tasks@0.18.0
+  - @dxos/react-ui-trace@0.18.0
+  - @dxos/plugin-status-bar@0.18.0
+  - @dxos/ai@0.18.0
+  - @dxos/edge-client@0.18.0
+  - @dxos/client@0.18.0
+  - @dxos/config@0.18.0
+  - @dxos/observability@0.18.0
+  - @dxos/react-client@0.18.0
+  - @dxos/react-ui-editor@0.18.0
+  - @dxos/link@0.18.0
+  - @dxos/echo-react@0.18.0
+  - @dxos/schema@0.18.0
+  - @dxos/react-ui-assistant@0.18.0
+  - @dxos/react-ui-feed@0.18.0
+  - @dxos/react-ui-transcription@0.18.0
+  - @dxos/app-graph@0.18.0
+  - @dxos/react-ui-mosaic@0.18.0
+  - @dxos/react-ui-attention@0.18.0
+  - @dxos/react-ui-chat@0.18.0
+  - @dxos/react-ui-components@0.18.0
+  - @dxos/react-ui-dnd@0.18.0
+  - @dxos/react-ui-experimental@0.18.0
+  - @dxos/react-ui-menu@0.18.0
+  - @dxos/halo-react@0.18.0
+  - @dxos/mcp-client@0.18.0
+  - @dxos/async@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/errors@0.18.0
+  - @dxos/graph@0.18.0
+  - @dxos/invariant@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/permission@0.18.0
+  - @dxos/util@0.18.0
+  - @dxos/react-hooks@0.18.0
+  - @dxos/react-list@0.18.0
+  - @dxos/ui@0.18.0
+  - @dxos/ui-theme@0.18.0
+  - @dxos/ui-types@0.18.0
+
 ## 0.17.0
 
 ### Minor Changes

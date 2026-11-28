@@ -1,5 +1,15 @@
 # @dxos/diagram
 
+## 0.18.0
+
+### Patch Changes
+
+- Updated dependencies [5cb7fec]
+  - @dxos/scene@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/invariant@0.18.0
+  - @dxos/util@0.18.0
+
 ## 0.17.0
 
 ### Minor Changes

@@ -1,5 +1,47 @@
 # @dxos/compute
 
+## 0.18.0
+
+### Minor Changes
+
+- f1eb193: Every `Agent.Service` verb now requires only `Agent.Service`. Session verbs (`Agent.open`, `submitPrompt`, `waitForCompletion`, ...) take the database from the session, and the current-process verbs (`Agent.currentSession`, `currentFeed`, `currentAgent`, `currentThread`, `enqueueMessage`, `setAlarm`, `spawn`) find their caller through `Process.current` and resolve its database through the runtime's `ServiceResolver`. `Process.current` now reads the new `Process.CurrentProcess` reference, which each process handle sets on the context its handlers run with, so it no longer requires `Process.ManagerService`; `Manager.current` returns the same process.
+- 70fd4dc: Agents can delegate work to another agent: `Agent.delegate({ target: { kind: 'agent', agent: Obj.getURI(receiver) } })` and the delegation skill's delegate-to-agent hand a request to that agent's session, which runs on its own permissions; an ambiguous agent name is refused.
+  
+  Processes now carry an `authority` (a principal and the grants it holds) instead of a guard: `Process.Guard`, `SpawnOptions.guard` and `@dxos/permission`'s `Guard` module are removed. Every call a process makes is held to its own authority and those it inherited, checked by compute-runtime's `Verifier`. Authorities persist with the process. `Process.Manager.grant` adds grants to a live process and to the copies its children inherited; the manager a process sees grants only to processes held to its own authorities, never to itself. Operations declare what they need with `Operation.requires`.
+  
+  A consentable call an authority refuses is put to a `Consent` service, and a one-time consent covers only the requirement it was asked about. In a chat, "Allow for this chat" grants the permission to the session. Plugins give a chat's agent its authority with `AssistantCapabilities.SessionAuthority`. The chat shows a refused call as denied rather than failed, and offers Try again on a failed request. These permission APIs are experimental. `@dxos/permission` is now published.
+- ac5df84: An operation that runs in a plugin bundle on EDGE gets the full `Agent.Service` from the EDGE process that hosts its session (`PluginProtocol.InvocationScope.agent`), and the bundle runs no process of its own. There, `Agent.running` answers an atom fixed at the time of the call rather than a live one, since a live atom would hold an RPC open past the invocation. `Agent.open` there takes no `provider`, `systemPrompt` or `location` and dies if given them, since EDGE opens a session's process as the session was created. `Agent.conversationService` is removed. The `ProcessProtocol` decoders are now `ProcessProtocolCodec` in `@dxos/compute-runtime/remote-process`, and `@dxos/agent-runtime` exports `prepareSessionDelegation` and `prepareAgentDelegation`.
+  
+  `Database.absorbWorkingSet` now waits until the documents a refresh delivered are integrated (`RepoProxy.integrated`), so a caller resolves the objects a nested call created instead of falling back to a lagging index.
+- f3b7b73: Code mode runs the Effect dialect, with its real ECHO bindings, in a Cloudflare Worker Loader isolate, and MCP's `runScript` runs that dialect too.
+  
+  - `WorkerSandboxWorkerd` is a `WorkerSandbox` spawner for a Worker Loader isolate, as `WorkerSandboxBrowser` is for a Web Worker: a deployment bundles `@dxos/agent-code-mode/workerd-worker-entry` and hands it to `WorkerSandboxWorkerd.spawn`. The isolate's ECHO services are limited to its own space (`WorkerHandle.limit`). `WorkerSandbox.Options` gains `refresh` and `workingSet` for services that, like EDGE's, can neither report nor wait for heads, and its `echo` is passed the space it serves.
+  - `Operation.hiddenInCodeMode` (`HiddenInCodeModeAnnotation`, read with `isHiddenInCodeMode`) hides an operation from the dialects that hold the database (`Dialect.database`: the Effect dialect, and MCP scripts) while the plain dialect and tool callers still see it; plugin-space and plugin-markdown hide the operations the database API does entirely. `EFFECT_API` exports the Effect dialect's API reference.
+  - MCP `runScript` scripts are written against the DXOS API (`Database.query(Filter.type(...)).run`, `Obj.update`, `Database.add`, `print`, `DOCS`) on the space `spaceId` names. `yield* Operation.invoke(yield* Database.resolve(key), input)` runs an operation as `invokeOperation` does, through the skill gate with the script's `skillTokens`.
+  
+  Breaking for `@dxos/mcp-server`: `invoke(key, input?, { spaceId }?)` and runScript's other verbs are gone; an operation's failure fails the program rather than being a `ToolFailure`; `spaceId` is required. `ScriptOptions` takes a code mode `Sandbox` or a `runner` (`Operation.ScriptRunner`) that the request is handed to. `inProcessScriptSandbox`, `isolateScriptSandbox`, `scriptIsolateModule`, `SCRIPT_EFFECT_MODULE`, `scriptRunner`, `scriptDispatch`, `scriptCallOutcome`, `ScriptCall` and `ScriptOutcome` are removed.
+- ab30077: Agents and sessions now live in one `@dxos/compute/Agent` module: `Agent.Session` (formerly `@dxos/assistant/Chat`, same DXN), `Agent.Agent` (formerly `@dxos/assistant/Agent`) and `Agent.Service` (formerly `@dxos/compute/AgentService`), with session verbs such as `Agent.submitPrompt(session, prompt)` replacing the session handle. Breaking: `HarnessService` is removed in favour of `Agent.currentSession` and the `AiContext` / `TrajectoryStore` current-session helpers; `AgentProcess` is renamed `SessionProcess`; `makeInitialized` and `resetChatHistory` move to `@dxos/assistant/AgentSetup`; `Agent.addTask` / `deleteTask` require `Database.Service` instead of taking a database; `Agent.linkCompanion` takes `{ session, subject }` and `CompanionChatAnnotation` is renamed `Agent.CompanionSessionAnnotation` (stored id unchanged); `Agent.isOpenTask` moves to `Task.isOpen`, beside the new `Task.formatChecklist`. `Process.current`, `Agent.Thread` and the session, agent and thread process annotations are new.
+
+### Patch Changes
+
+- Updated dependencies [ac5df84]
+- Updated dependencies [296efd1]
+- Updated dependencies [4a8493f]
+- Updated dependencies [ab30077]
+- Updated dependencies [6f5a3c5]
+  - @dxos/protocols@0.18.0
+  - @dxos/types@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/ai@0.18.0
+  - @dxos/schema@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/errors@0.18.0
+  - @dxos/invariant@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/permission@0.18.0
+  - @dxos/vendor-kbn-handlebars@0.18.0
+
 ## 0.17.0
 
 ### Minor Changes

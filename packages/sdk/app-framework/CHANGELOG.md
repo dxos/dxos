@@ -1,5 +1,42 @@
 # @dxos/app-framework
 
+## 0.18.0
+
+### Patch Changes
+
+- 95565bc: `useApp` and `PluginManagerHost` take a `placeholder` option, which renders in place of the app until its shell mounts.
+- 89a0c8f: A plugin served from its Vite dev server loads when its entry imports JSX from another file. `composerPlugin` now installs the React Refresh shim from a module the entry imports first, so it runs before those files' preamble check; before, each one threw "@vitejs/plugin-react can't detect preamble".
+- 352c3fc: CSS imported by a plugin module now loads in a production app build: the plugin manifest lists the stylesheets each module body adds to the page, and they are linked before the body is imported.
+- Updated dependencies [f1eb193]
+- Updated dependencies [70fd4dc]
+- Updated dependencies [ac5df84]
+- Updated dependencies [296efd1]
+- Updated dependencies [4a8493f]
+- Updated dependencies [f3b7b73]
+- Updated dependencies [ab30077]
+- Updated dependencies [6f5a3c5]
+  - @dxos/compute@0.18.0
+  - @dxos/protocols@0.18.0
+  - @dxos/compute-runtime@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/operation@0.18.0
+  - @dxos/edge-client@0.18.0
+  - @dxos/async@0.18.0
+  - @dxos/context@0.18.0
+  - @dxos/debug@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/errors@0.18.0
+  - @dxos/graph@0.18.0
+  - @dxos/invariant@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/util@0.18.0
+  - @dxos/web-context@0.18.0
+  - @dxos/web-context-react@0.18.0
+  - @dxos/react-error-boundary@0.18.0
+  - @dxos/react-hooks@0.18.0
+  - @dxos/ui-theme@0.18.0
+
 ## 0.17.0
 
 ### Minor Changes

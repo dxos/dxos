@@ -1,5 +1,27 @@
 # @dxos/edge-client
 
+## 0.18.0
+
+### Patch Changes
+
+- Updated dependencies [ac5df84]
+- Updated dependencies [296efd1]
+- Updated dependencies [4a8493f]
+  - @dxos/protocols@0.18.0
+  - @dxos/credentials@0.18.0
+  - @dxos/keyring@0.18.0
+  - @dxos/async@0.18.0
+  - @dxos/context@0.18.0
+  - @dxos/crypto@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/errors@0.18.0
+  - @dxos/invariant@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/node-std@0.18.0
+  - @dxos/tracing@0.18.0
+  - @dxos/util@0.18.0
+
 ## 0.17.0
 
 ### Minor Changes

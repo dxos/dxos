@@ -1,5 +1,29 @@
 # @dxos/react-ui
 
+## 0.18.0
+
+### Minor Changes
+
+- b11bcdc: `Card.Poster` takes content other than an image and a `position='end'` that bleeds it to the card's bottom edge; grids gain `useFitWidth` to fit columns to a card's width by their content. Sheets get a card preview of their first chart or their grid, and the table card shows its grid at the same fitted width.
+
+### Patch Changes
+
+- 0471a3a: Fix Listbox rows with a description collapsing to one line, title over description, when the list's height is bounded.
+- 5a43453: `Trans` resolves keys in the namespace of the `t` it receives from `useTranslation` again, instead of rendering the raw key.
+- 0d5f1c0: A `Tree` (and so a `TaskList`) that is not height-bound no longer stops the wheel from scrolling the page around it; a tree that overflows its own viewport still contains overscroll.
+- @dxos/async@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/i18n@0.18.0
+  - @dxos/invariant@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/util@0.18.0
+  - @dxos/lit-ui@0.18.0
+  - @dxos/react-error-boundary@0.18.0
+  - @dxos/react-focus@0.18.0
+  - @dxos/react-hooks@0.18.0
+  - @dxos/ui-theme@0.18.0
+  - @dxos/ui-types@0.18.0
+
 ## 0.17.0
 
 ### Minor Changes

@@ -1,5 +1,112 @@
 # @dxos/plugin-debug
 
+## 0.18.0
+
+### Minor Changes
+
+- 29101e4: The DXOS Architecture space template moves from plugin-canvas to plugin-debug and takes the DXOS Deck as its presentation, in place of the ECHO deck: a presentation whose slides are markdown files and whose diagrams are canvas drawings built from `.dx` files, with the element kinds they draw with (card, feed card, chip, heading, plank, app frame). plugin-canvas keeps the architecture partial and no longer contributes a space template. Breaking: `@dxos/plugin-canvas/Architecture` no longer exports `ArchitectureSpace`; the template is `ArchitectureSpace` in `@dxos/plugin-debug/ArchitectureSpace`.
+
+### Patch Changes
+
+- 9542326: The DXOS Deck's diagrams keep their card styles in a production build, so the cards draw with their panel, type size and spacing in the deployed app as they do on a dev server. Bold text in a slide takes the subheading color at the body's weight, so color alone marks it; the title of a flow card is unchanged.
+- 7910a47: A slide of the DXOS Deck can set `class: studio-code-compact`, `studio-bullets-compact`, `studio-lines-tight` or `studio-cover` in its frontmatter to draw smaller code, smaller bullets, tighter lines or the cover's subtitle, so a deck imported from a space that uses them is styled.
+- 18386b2: The DXOS Deck that the DXOS Architecture space template seeds is rewritten as 17 slides: new slides for the thesis, the fit with Cloudflare, the ECHO API, spaces, the runtime, proofs and status, with new drawings for spaces and the runtime, a softer foreground colour, and no speaker notes.
+- Updated dependencies [1f59605]
+- Updated dependencies [0bb1251]
+- Updated dependencies [f1eb193]
+- Updated dependencies [95565bc]
+- Updated dependencies [70fd4dc]
+- Updated dependencies [8352d6b]
+- Updated dependencies [ac5df84]
+- Updated dependencies [296efd1]
+- Updated dependencies [4a8493f]
+- Updated dependencies [ceb9448]
+- Updated dependencies [3b9147d]
+- Updated dependencies [f3b7b73]
+- Updated dependencies [89a0c8f]
+- Updated dependencies [ab30077]
+- Updated dependencies [ee536b6]
+- Updated dependencies [6f5a3c5]
+- Updated dependencies [174b0e2]
+- Updated dependencies [a7af8ed]
+- Updated dependencies [0471a3a]
+- Updated dependencies [352c3fc]
+- Updated dependencies [b930857]
+- Updated dependencies [5cb7fec]
+- Updated dependencies [620eb9f]
+- Updated dependencies [b11bcdc]
+- Updated dependencies [29101e4]
+- Updated dependencies [49790f7]
+- Updated dependencies [5a43453]
+- Updated dependencies [0d5f1c0]
+  - @dxos/plugin-sheet@0.18.0
+  - @dxos/assistant@0.18.0
+  - @dxos/compute@0.18.0
+  - @dxos/app-framework@0.18.0
+  - @dxos/app-toolkit@0.18.0
+  - @dxos/protocols@0.18.0
+  - @dxos/assistant-toolkit@0.18.0
+  - @dxos/react-ui-canvas@0.18.0
+  - @dxos/types@0.18.0
+  - @dxos/devtools@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/react-ui-form@0.18.0
+  - @dxos/react-ui@0.18.0
+  - @dxos/ui-editor@0.18.0
+  - @dxos/plugin-space@0.18.0
+  - @dxos/scene@0.18.0
+  - @dxos/plugin-canvas@0.18.0
+  - @dxos/plugin-presenter@0.18.0
+  - @dxos/react-ui-list@0.18.0
+  - @dxos/conductor@0.18.0
+  - @dxos/plugin-code@0.18.0
+  - @dxos/plugin-inbox@0.18.0
+  - @dxos/plugin-markdown@0.18.0
+  - @dxos/plugin-projects@0.18.0
+  - @dxos/react-ui-canvas-compute@0.18.0
+  - @dxos/compute-hyperformula@0.18.0
+  - @dxos/operation@0.18.0
+  - @dxos/plugin-attention@0.18.0
+  - @dxos/plugin-chess@0.18.0
+  - @dxos/plugin-client@0.18.0
+  - @dxos/plugin-connector@0.18.0
+  - @dxos/plugin-game@0.18.0
+  - @dxos/plugin-google@0.18.0
+  - @dxos/plugin-graph@0.18.0
+  - @dxos/plugin-illustrator@0.18.0
+  - @dxos/plugin-kanban@0.18.0
+  - @dxos/plugin-map@0.18.0
+  - @dxos/plugin-tldraw@0.18.0
+  - @dxos/plugin-voxel@0.18.0
+  - @dxos/plugin-status-bar@0.18.0
+  - @dxos/config@0.18.0
+  - @dxos/react-client@0.18.0
+  - @dxos/link@0.18.0
+  - @dxos/echo-react@0.18.0
+  - @dxos/schema@0.18.0
+  - @dxos/react-ui-table@0.18.0
+  - @dxos/app-graph@0.18.0
+  - @dxos/react-ui-attention@0.18.0
+  - @dxos/react-ui-components@0.18.0
+  - @dxos/react-ui-debug@0.18.0
+  - @dxos/react-ui-menu@0.18.0
+  - @dxos/react-ui-syntax-highlighter@0.18.0
+  - @dxos/react-ui-terminal@0.18.0
+  - @dxos/diagram@0.18.0
+  - @dxos/async@0.18.0
+  - @dxos/context@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/errors@0.18.0
+  - @dxos/graph@0.18.0
+  - @dxos/invariant@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/log-store-idb@0.18.0
+  - @dxos/random@0.18.0
+  - @dxos/tracing@0.18.0
+  - @dxos/util@0.18.0
+  - @dxos/ui-theme@0.18.0
+
 ## 0.17.0
 
 ### Minor Changes

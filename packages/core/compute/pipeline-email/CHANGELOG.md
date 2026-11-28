@@ -1,5 +1,31 @@
 # @dxos/pipeline-email
 
+## 0.18.0
+
+### Patch Changes
+
+- Updated dependencies [f1eb193]
+- Updated dependencies [70fd4dc]
+- Updated dependencies [ac5df84]
+- Updated dependencies [f3b7b73]
+- Updated dependencies [ab30077]
+- Updated dependencies [6f5a3c5]
+  - @dxos/compute@0.18.0
+  - @dxos/types@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/extractor@0.18.0
+  - @dxos/ai@0.18.0
+  - @dxos/extractor-lib@0.18.0
+  - @dxos/link@0.18.0
+  - @dxos/schema@0.18.0
+  - @dxos/pipeline-rdf@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/markdown@0.18.0
+  - @dxos/node-std@0.18.0
+  - @dxos/util@0.18.0
+  - @dxos/pipeline@0.18.0
+  - @dxos/echo-memory@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

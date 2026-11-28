@@ -1,5 +1,14 @@
 # @dxos/echo-panproto
 
+## 0.18.0
+
+### Patch Changes
+
+- Updated dependencies [6f5a3c5]
+  - @dxos/echo@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/invariant@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

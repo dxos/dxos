@@ -1,5 +1,43 @@
 # @dxos/react-ui-trace
 
+## 0.18.0
+
+### Patch Changes
+
+- Updated dependencies [f1eb193]
+- Updated dependencies [70fd4dc]
+- Updated dependencies [ac5df84]
+- Updated dependencies [4a8493f]
+- Updated dependencies [f3b7b73]
+- Updated dependencies [ab30077]
+- Updated dependencies [6f5a3c5]
+- Updated dependencies [0471a3a]
+- Updated dependencies [b930857]
+- Updated dependencies [b11bcdc]
+- Updated dependencies [49790f7]
+- Updated dependencies [5a43453]
+- Updated dependencies [0d5f1c0]
+- Updated dependencies [8d2c135]
+  - @dxos/compute@0.18.0
+  - @dxos/compute-runtime@0.18.0
+  - @dxos/types@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/react-ui@0.18.0
+  - @dxos/ui-editor@0.18.0
+  - @dxos/react-ui-list@0.18.0
+  - @dxos/react-ui-virtual@0.18.0
+  - @dxos/react-client@0.18.0
+  - @dxos/react-ui-editor@0.18.0
+  - @dxos/react-ui-components@0.18.0
+  - @dxos/react-ui-menu@0.18.0
+  - @dxos/react-ui-syntax-highlighter@0.18.0
+  - @dxos/async@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/util@0.18.0
+  - @dxos/react-hooks@0.18.0
+  - @dxos/ui-theme@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

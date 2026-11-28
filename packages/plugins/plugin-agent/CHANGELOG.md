@@ -1,5 +1,76 @@
 # @dxos/plugin-agent
 
+## 0.18.0
+
+### Minor Changes
+
+- b3a4967: plugin-discord's direct-message operation records the DM it sends in the agent's chat for that DM (keyed by the DM channel the post opened, with the bot's receipt), through plugin-agent's new `RecordChannelSend` operation, so the person's answer reads in context. EDGE's Discord bot no longer records DMs it posts; the agent owns the DM's chat.
+
+### Patch Changes
+
+- 7a34270: An agent in a conversation no longer resolves and records what people tell it before replying; the Brain skill records each turn's facts after it, attributed to whoever said them, and now keeps a decision stated with "we" (as `decided`) instead of dropping it. The agent still records facts from earlier messages shown to it as context, such as a channel's recent messages, in the same steps as the requested work.
+- d38490c: When the Relay skill cannot deliver a message with `sendMessage` and the agent knows the recipient's Discord user id, the agent now sends the message with Discord's own direct-message tool. This restores direct messages from agents that run in a plugin bundle on EDGE, where `thread.openDirect` cannot reach Discord's channel backend.
+- Updated dependencies [0bb1251]
+- Updated dependencies [f1eb193]
+- Updated dependencies [95565bc]
+- Updated dependencies [70fd4dc]
+- Updated dependencies [8352d6b]
+- Updated dependencies [ac5df84]
+- Updated dependencies [296efd1]
+- Updated dependencies [4a8493f]
+- Updated dependencies [f3b7b73]
+- Updated dependencies [89a0c8f]
+- Updated dependencies [ab30077]
+- Updated dependencies [ff7c6a9]
+- Updated dependencies [6f5a3c5]
+- Updated dependencies [174b0e2]
+- Updated dependencies [a7af8ed]
+- Updated dependencies [0471a3a]
+- Updated dependencies [352c3fc]
+- Updated dependencies [b930857]
+- Updated dependencies [b11bcdc]
+- Updated dependencies [49790f7]
+- Updated dependencies [5a43453]
+- Updated dependencies [0d5f1c0]
+  - @dxos/assistant@0.18.0
+  - @dxos/compute@0.18.0
+  - @dxos/app-framework@0.18.0
+  - @dxos/app-toolkit@0.18.0
+  - @dxos/protocols@0.18.0
+  - @dxos/assistant-toolkit@0.18.0
+  - @dxos/types@0.18.0
+  - @dxos/plugin-thread@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/react-ui-form@0.18.0
+  - @dxos/react-ui@0.18.0
+  - @dxos/plugin-space@0.18.0
+  - @dxos/react-ui-list@0.18.0
+  - @dxos/plugin-markdown@0.18.0
+  - @dxos/plugin-client@0.18.0
+  - @dxos/plugin-explorer@0.18.0
+  - @dxos/ai@0.18.0
+  - @dxos/halo@0.18.0
+  - @dxos/edge-client@0.18.0
+  - @dxos/client@0.18.0
+  - @dxos/echo-react@0.18.0
+  - @dxos/schema@0.18.0
+  - @dxos/app-graph@0.18.0
+  - @dxos/react-ui-menu@0.18.0
+  - @dxos/react-ui-rdf@0.18.0
+  - @dxos/halo-react@0.18.0
+  - @dxos/pipeline-rdf@0.18.0
+  - @dxos/context@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/errors@0.18.0
+  - @dxos/invariant@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/util@0.18.0
+  - @dxos/brain@0.18.0
+  - @dxos/echo-memory@0.18.0
+  - @dxos/react-hooks@0.18.0
+  - @dxos/ui-theme@0.18.0
+
 ## 0.17.0
 
 ### Minor Changes

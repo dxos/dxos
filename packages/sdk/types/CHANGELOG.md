@@ -1,5 +1,26 @@
 # @dxos/types
 
+## 0.18.0
+
+### Minor Changes
+
+- ab30077: Agents and sessions now live in one `@dxos/compute/Agent` module: `Agent.Session` (formerly `@dxos/assistant/Chat`, same DXN), `Agent.Agent` (formerly `@dxos/assistant/Agent`) and `Agent.Service` (formerly `@dxos/compute/AgentService`), with session verbs such as `Agent.submitPrompt(session, prompt)` replacing the session handle. Breaking: `HarnessService` is removed in favour of `Agent.currentSession` and the `AiContext` / `TrajectoryStore` current-session helpers; `AgentProcess` is renamed `SessionProcess`; `makeInitialized` and `resetChatHistory` move to `@dxos/assistant/AgentSetup`; `Agent.addTask` / `deleteTask` require `Database.Service` instead of taking a database; `Agent.linkCompanion` takes `{ session, subject }` and `CompanionChatAnnotation` is renamed `Agent.CompanionSessionAnnotation` (stored id unchanged); `Agent.isOpenTask` moves to `Task.isOpen`, beside the new `Task.formatChecklist`. `Process.current`, `Agent.Thread` and the session, agent and thread process annotations are new.
+
+### Patch Changes
+
+- Updated dependencies [ac5df84]
+- Updated dependencies [4a8493f]
+- Updated dependencies [6f5a3c5]
+  - @dxos/echo-client@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/link@0.18.0
+  - @dxos/schema@0.18.0
+  - @dxos/errors@0.18.0
+  - @dxos/invariant@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/random@0.18.0
+  - @dxos/util@0.18.0
+
 ## 0.17.0
 
 ### Minor Changes

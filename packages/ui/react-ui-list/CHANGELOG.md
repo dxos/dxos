@@ -1,5 +1,23 @@
 # @dxos/react-ui-list
 
+## 0.18.0
+
+### Minor Changes
+
+- 49790f7: Add `StatusList`, a card of rows that each show a status (success, failed, not started, working), and `TaskProgress` in `@dxos/react-ui-task`, which draws a run of `Task` objects with it; both take `monochrome`.
+
+### Patch Changes
+
+- Updated dependencies [0471a3a]
+- Updated dependencies [b11bcdc]
+- Updated dependencies [5a43453]
+- Updated dependencies [0d5f1c0]
+  - @dxos/react-ui@0.18.0
+  - @dxos/util@0.18.0
+  - @dxos/react-focus@0.18.0
+  - @dxos/ui-theme@0.18.0
+  - @dxos/ui-types@0.18.0
+
 ## 0.17.0
 
 ### Minor Changes

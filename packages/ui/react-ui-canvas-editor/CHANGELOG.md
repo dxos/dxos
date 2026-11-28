@@ -1,5 +1,39 @@
 # @dxos/react-ui-canvas-editor
 
+## 0.18.0
+
+### Minor Changes
+
+- 6bea0e3: The canvas display toolbar can show a Cursors toggle that hides collaborators' pointers, offered when the host sets `EditorDisplay.cursors`. In Composer's Canvas plugin it is on by default, remembered per drawing on each device, and its default is the new `showCursors` setting.
+
+### Patch Changes
+
+- 3b9147d: Two fixes to the 3D Extrude drag. The face now stays under the pointer: its distance is where the pointer's ray meets the face's normal, where it was the drag's length scaled at the press, which ran ahead of the pointer as the face came towards a perspective camera. And a selected solid no longer flickers while a drag reshapes it, as an extrusion's preview does after an undo: the renderer puts its new triangles into the mesh it has, where it made a new mesh each move and lost the outline for a frame.
+- Updated dependencies [ceb9448]
+- Updated dependencies [3b9147d]
+- Updated dependencies [6f5a3c5]
+- Updated dependencies [174b0e2]
+- Updated dependencies [a7af8ed]
+- Updated dependencies [0471a3a]
+- Updated dependencies [5cb7fec]
+- Updated dependencies [b11bcdc]
+- Updated dependencies [49790f7]
+- Updated dependencies [5a43453]
+- Updated dependencies [0d5f1c0]
+  - @dxos/react-ui-canvas@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/react-ui-form@0.18.0
+  - @dxos/react-ui@0.18.0
+  - @dxos/scene@0.18.0
+  - @dxos/react-ui-list@0.18.0
+  - @dxos/animation@0.18.0
+  - @dxos/react-ui-animation@0.18.0
+  - @dxos/react-ui-menu@0.18.0
+  - @dxos/diagram@0.18.0
+  - @dxos/react-hooks@0.18.0
+  - @dxos/ui-theme@0.18.0
+  - @dxos/ui-types@0.18.0
+
 ## 0.17.0
 
 ### Minor Changes

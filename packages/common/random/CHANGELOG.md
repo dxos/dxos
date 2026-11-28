@@ -1,5 +1,12 @@
 # @dxos/random
 
+## 0.18.0
+
+### Patch Changes
+
+- @dxos/node-std@0.18.0
+  - @dxos/util@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

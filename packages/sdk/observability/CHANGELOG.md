@@ -1,5 +1,28 @@
 # @dxos/observability
 
+## 0.18.0
+
+### Patch Changes
+
+- Updated dependencies [ac5df84]
+- Updated dependencies [296efd1]
+- Updated dependencies [4a8493f]
+- Updated dependencies [6f5a3c5]
+  - @dxos/protocols@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/client@0.18.0
+  - @dxos/client-protocol@0.18.0
+  - @dxos/config@0.18.0
+  - @dxos/async@0.18.0
+  - @dxos/context@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/invariant@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/log-store-idb@0.18.0
+  - @dxos/node-std@0.18.0
+  - @dxos/tracing@0.18.0
+  - @dxos/util@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

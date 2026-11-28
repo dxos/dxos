@@ -1,5 +1,25 @@
 # @dxos/echo
 
+## 0.18.0
+
+### Minor Changes
+
+- 6f5a3c5: Upgrade `effect` and `@effect/*` to 4.1.5; consumers that share Effect services with DXOS packages must move to Effect 4.1 too.
+
+### Patch Changes
+
+- @dxos/echo-protocol@0.18.0
+  - @dxos/async@0.18.0
+  - @dxos/debug@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/errors@0.18.0
+  - @dxos/invariant@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/node-std@0.18.0
+  - @dxos/util@0.18.0
+  - @dxos/blob@0.18.0
+
 ## 0.17.0
 
 ### Minor Changes

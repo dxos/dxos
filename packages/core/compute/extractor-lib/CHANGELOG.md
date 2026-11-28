@@ -1,5 +1,16 @@
 # @dxos/extractor-lib
 
+## 0.18.0
+
+### Patch Changes
+
+- Updated dependencies [ab30077]
+- Updated dependencies [6f5a3c5]
+  - @dxos/types@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/extractor@0.18.0
+  - @dxos/log@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

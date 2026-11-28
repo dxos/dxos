@@ -1,5 +1,26 @@
 # @dxos/plugin-builder
 
+## 0.18.0
+
+### Patch Changes
+
+- Updated dependencies [b368fb2]
+- Updated dependencies [95565bc]
+- Updated dependencies [ac5df84]
+- Updated dependencies [296efd1]
+- Updated dependencies [4a8493f]
+- Updated dependencies [89a0c8f]
+- Updated dependencies [352c3fc]
+  - @dxos/plugin-host-cloudflare@0.18.0
+  - @dxos/app-framework@0.18.0
+  - @dxos/protocols@0.18.0
+  - @dxos/edge-compute@0.18.0
+  - @dxos/echo-protocol@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/errors@0.18.0
+  - @dxos/invariant@0.18.0
+  - @dxos/keys@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

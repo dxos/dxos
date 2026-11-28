@@ -1,5 +1,30 @@
 # @dxos/plugin-payments
 
+## 0.18.0
+
+### Patch Changes
+
+- Updated dependencies [95565bc]
+- Updated dependencies [8352d6b]
+- Updated dependencies [89a0c8f]
+- Updated dependencies [174b0e2]
+- Updated dependencies [a7af8ed]
+- Updated dependencies [0471a3a]
+- Updated dependencies [352c3fc]
+- Updated dependencies [b11bcdc]
+- Updated dependencies [5a43453]
+- Updated dependencies [0d5f1c0]
+  - @dxos/app-framework@0.18.0
+  - @dxos/app-toolkit@0.18.0
+  - @dxos/react-ui-form@0.18.0
+  - @dxos/react-ui@0.18.0
+  - @dxos/plugin-client@0.18.0
+  - @dxos/halo@0.18.0
+  - @dxos/edge-client@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/util@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

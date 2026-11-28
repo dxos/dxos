@@ -1,5 +1,93 @@
 # @dxos/cli
 
+## 0.18.0
+
+### Patch Changes
+
+- Updated dependencies [b1e0afd]
+- Updated dependencies [1f59605]
+- Updated dependencies [0bb1251]
+- Updated dependencies [b368fb2]
+- Updated dependencies [f1eb193]
+- Updated dependencies [95565bc]
+- Updated dependencies [70fd4dc]
+- Updated dependencies [8352d6b]
+- Updated dependencies [ac5df84]
+- Updated dependencies [296efd1]
+- Updated dependencies [4a8493f]
+- Updated dependencies [72a12c0]
+- Updated dependencies [f3b7b73]
+- Updated dependencies [b2afa8e]
+- Updated dependencies [89a0c8f]
+- Updated dependencies [ab30077]
+- Updated dependencies [6f5a3c5]
+- Updated dependencies [352c3fc]
+- Updated dependencies [b930857]
+- Updated dependencies [794c28c]
+- Updated dependencies [b5aee82]
+- Updated dependencies [8d2c135]
+  - @dxos/agent-code-mode@0.18.0
+  - @dxos/assistant@0.18.0
+  - @dxos/plugin-host-cloudflare@0.18.0
+  - @dxos/compute@0.18.0
+  - @dxos/app-framework@0.18.0
+  - @dxos/plugin-assistant@0.18.0
+  - @dxos/app-toolkit@0.18.0
+  - @dxos/protocols@0.18.0
+  - @dxos/compute-runtime@0.18.0
+  - @dxos/edge-compute@0.18.0
+  - @dxos/echo-client@0.18.0
+  - @dxos/assistant-toolkit@0.18.0
+  - @dxos/mcp-server@0.18.0
+  - @dxos/types@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/plugin-space@0.18.0
+  - @dxos/deus@0.18.0
+  - @dxos/plugin-inbox@0.18.0
+  - @dxos/plugin-markdown@0.18.0
+  - @dxos/plugin-projects@0.18.0
+  - @dxos/plugin-review@0.18.0
+  - @dxos/plugin-routine@0.18.0
+  - @dxos/plugin-script@0.18.0
+  - @dxos/plugin-transcription@0.18.0
+  - @dxos/plugin-builder@0.18.0
+  - @dxos/cli-util@0.18.0
+  - @dxos/plugin-chess@0.18.0
+  - @dxos/plugin-client@0.18.0
+  - @dxos/plugin-connector@0.18.0
+  - @dxos/plugin-file@0.18.0
+  - @dxos/plugin-game@0.18.0
+  - @dxos/plugin-google@0.18.0
+  - @dxos/plugin-illustrator@0.18.0
+  - @dxos/plugin-jmap@0.18.0
+  - @dxos/plugin-kanban@0.18.0
+  - @dxos/plugin-map@0.18.0
+  - @dxos/plugin-observability@0.18.0
+  - @dxos/plugin-registry@0.18.0
+  - @dxos/plugin-sample@0.18.0
+  - @dxos/plugin-table@0.18.0
+  - @dxos/plugin-tasks@0.18.0
+  - @dxos/ai@0.18.0
+  - @dxos/halo@0.18.0
+  - @dxos/halo-adapter-client@0.18.0
+  - @dxos/edge-client@0.18.0
+  - @dxos/network-manager@0.18.0
+  - @dxos/client@0.18.0
+  - @dxos/client-protocol@0.18.0
+  - @dxos/observability@0.18.0
+  - @dxos/schema@0.18.0
+  - @dxos/introspect@0.18.0
+  - @dxos/async@0.18.0
+  - @dxos/context@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/effect-atom-solid@0.18.0
+  - @dxos/errors@0.18.0
+  - @dxos/invariant@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/random@0.18.0
+  - @dxos/util@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

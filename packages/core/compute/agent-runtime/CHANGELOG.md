@@ -1,5 +1,39 @@
 # @dxos/agent-runtime
 
+## 0.18.0
+
+### Minor Changes
+
+- ac5df84: An operation that runs in a plugin bundle on EDGE gets the full `Agent.Service` from the EDGE process that hosts its session (`PluginProtocol.InvocationScope.agent`), and the bundle runs no process of its own. There, `Agent.running` answers an atom fixed at the time of the call rather than a live one, since a live atom would hold an RPC open past the invocation. `Agent.open` there takes no `provider`, `systemPrompt` or `location` and dies if given them, since EDGE opens a session's process as the session was created. `Agent.conversationService` is removed. The `ProcessProtocol` decoders are now `ProcessProtocolCodec` in `@dxos/compute-runtime/remote-process`, and `@dxos/agent-runtime` exports `prepareSessionDelegation` and `prepareAgentDelegation`.
+  
+  `Database.absorbWorkingSet` now waits until the documents a refresh delivered are integrated (`RepoProxy.integrated`), so a caller resolves the objects a nested call created instead of falling back to a lagging index.
+- 794c28c: `Agent.delegate` hands work to another session: a new one that starts on the caller's model, skills and context (or a named existing one), with the delegated task on its checklist and the session as the task's delegate; the delegation skill exposes it as the `delegateToSession` tool. In the chat, main now reads as one thread with no gutter, a thread working out of view is a single row pinned after the transcript instead of a card, and a subagent's waiting task and a tool run's stats no longer add rows or space to the main thread. `ChatModel` is now an interface implemented by `LiveChatModel` (formerly the `ChatModel` class) and `ReplayChatModel`, which renders a fixed list of trajectory events. The task-set section takes `filter` and `editor` options to hide its toolbar and its add-task editor, and `ScriptedScene.withoutDelays` plays a scripted scene with every delay removed.
+
+### Patch Changes
+
+- Updated dependencies [0bb1251]
+- Updated dependencies [f1eb193]
+- Updated dependencies [70fd4dc]
+- Updated dependencies [ac5df84]
+- Updated dependencies [4a8493f]
+- Updated dependencies [f3b7b73]
+- Updated dependencies [ab30077]
+- Updated dependencies [6f5a3c5]
+  - @dxos/assistant@0.18.0
+  - @dxos/compute@0.18.0
+  - @dxos/compute-runtime@0.18.0
+  - @dxos/echo-client@0.18.0
+  - @dxos/types@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/ai@0.18.0
+  - @dxos/link@0.18.0
+  - @dxos/schema@0.18.0
+  - @dxos/mcp-client@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/util@0.18.0
+
 ## 0.17.0
 
 ### Minor Changes

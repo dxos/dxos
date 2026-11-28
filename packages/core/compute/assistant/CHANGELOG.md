@@ -1,5 +1,44 @@
 # @dxos/assistant
 
+## 0.18.0
+
+### Minor Changes
+
+- 4a8493f: echo-client's registry can now consult async sources for what it does not hold. `HypergraphImpl.registerRegistrySource(source)` takes a `RegistrySource` (`resolve(uri)`, and optionally `query(query)`) and replaces `registerTypeSource`. A registry query's `run()` asks the sources before it answers: by key, or, for a query that names none, by enumerating. A registry URI (`dxn:`) resolves through them too. `runSync()` and `results` still read only what the registry holds, and `@dxos/echo`'s `Registry` interface is unchanged. The compute runtime's `typeSource` option becomes `registrySource`. `describeTypes` now takes the type entities to describe rather than a database. The skill manager's `queryTypes` reads them with a registry-scoped database query, so it also lists types from the registry's sources.
+  
+  `PluginProtocol.Env` gains an optional `REGISTRY` (`PluginProtocol.Registry`). EDGE uses it to resolve and list the types, skills and operation records its enabled plugins publish, and a plugin bundle's host makes it the source of each invocation's registry. A skill bound by registry URI, `querySkills` and `queryTypes` then reach whichever plugin contributes the entity, not only the bundle's own. `TYPE_REGISTRY` remains for hosts published before `REGISTRY`.
+
+### Patch Changes
+
+- 0bb1251: Agent turns now state today's date (UTC) at the end of the system prompt, so the model no longer resolves a date given without a year, such as a milestone on "12 December", to a past year. `createSystemPrompt` no longer renders its own date and time line, and `SystemPromptOptions` drops `DATETIME`. The model-fixture matcher in `@dxos/ai/testing` ignores the date section, in both Effect prompts and Anthropic request bodies, so recorded conversations replay on any day.
+- Updated dependencies [f1eb193]
+- Updated dependencies [70fd4dc]
+- Updated dependencies [ac5df84]
+- Updated dependencies [4a8493f]
+- Updated dependencies [f3b7b73]
+- Updated dependencies [ab30077]
+- Updated dependencies [6f5a3c5]
+  - @dxos/compute@0.18.0
+  - @dxos/compute-runtime@0.18.0
+  - @dxos/echo-client@0.18.0
+  - @dxos/types@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/ai@0.18.0
+  - @dxos/echo-protocol@0.18.0
+  - @dxos/echo-doc@0.18.0
+  - @dxos/schema@0.18.0
+  - @dxos/mcp-client@0.18.0
+  - @dxos/context@0.18.0
+  - @dxos/debug@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/errors@0.18.0
+  - @dxos/invariant@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/node-std@0.18.0
+  - @dxos/sql-sqlite@0.18.0
+  - @dxos/util@0.18.0
+
 ## 0.17.0
 
 ### Minor Changes

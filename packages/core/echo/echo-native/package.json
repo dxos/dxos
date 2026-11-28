@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-native",
-  "version": "0.17.0",
+  "version": "0.18.0",
   "private": true,
   "description": "Experimental ECHO database whose storage engine (Turso + Automerge) is Rust compiled to WebAssembly",
   "homepage": "https://dxos.org",
