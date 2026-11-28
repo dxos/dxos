@@ -163,10 +163,12 @@ export const extrudeIntent = ({
   // A face lined up with another body's side is what a person pulling it wants most, so that holds ahead of the grid.
   const axis = face.x !== 0 ? 'x' : face.y !== 0 ? 'y' : 'z';
   const sign = face[axis];
-  const flush =
+  const stop =
     step > 0 && boxes && side !== undefined
       ? nearestStop(0, faceStops([side + free * sign], boxes, axis), DETENT_PX / pixels)
       : undefined;
+  // A side past the reach is not one the face goes to.
+  const flush = stop && Math.abs(free + stop.delta * sign) <= reach ? stop : undefined;
   const held = flush
     ? free + flush.delta * sign
     : landing

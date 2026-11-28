@@ -161,6 +161,35 @@ describe('SceneRenderer3D.pick', () => {
     view.dispose();
   });
 
+  test('an edged item given other triangles and another colour draws its edges in the new colour', () => {
+    const engine = new NullEngine({
+      renderWidth: 800,
+      renderHeight: 600,
+      textureSize: 256,
+      deterministicLockstep: false,
+      lockstepMaxSteps: 1,
+    });
+    const view = new SceneRenderer3D({ engine, theme: 'cad', background: '#ffffff' });
+    const { items, links } = renderList(doc([{ id: 'a', kind: 'solid', props: { op: 'union', operands: '' } }]));
+    const styled = (color: string) => ({
+      items: items.map((item) => ({ ...item, style: { color, stroke: 'solid' as const } })),
+      links,
+    });
+    const [small, large] = [cubeMesh(1), cubeMesh(2)];
+    const edges = () => engine.scenes[0].getMeshByName('item-a')?.edgesColor;
+
+    view.render(styled('#ff0000'), CAMERA, { geometry: () => small });
+    expect(edges()?.r).toBeCloseTo(0.45);
+    expect(edges()?.b).toBeCloseTo(0);
+    view.render(styled('#0000ff'), CAMERA, { geometry: () => large });
+    expect(edges()?.r).toBeCloseTo(0);
+    expect(edges()?.b).toBeCloseTo(0.45);
+    // The colour alone changes too, which rebuilds nothing.
+    view.render(styled('#ff0000'), CAMERA, { geometry: () => large });
+    expect(edges()?.r).toBeCloseTo(0.45);
+    view.dispose();
+  });
+
   test('an item that stops being a composite frame is picked through to, with the meshes it has or other triangles', () => {
     const engine = new NullEngine({
       renderWidth: 800,

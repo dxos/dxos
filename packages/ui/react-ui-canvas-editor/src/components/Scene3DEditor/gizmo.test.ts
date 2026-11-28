@@ -103,10 +103,10 @@ describe('extrudeIntent', () => {
     // Looking along the ground, a face pushed away from the camera closes on a point of the screen it never passes.
     const along: Scene.Camera3D = { ...camera, yaw: 0, pitch: 5 };
     const away = { x: 0, y: 0, z: 1 };
-    const far = (pixels: number, step = 0) => {
+    const far = (pixels: number, step = 0, more: Partial<Parameters<typeof extrudeIntent>[0]> = {}) => {
       const intent = extrudeIntent({
         ...{ id: 'e', target: 'box', normal: away, camera: along, viewport, point, step, landing: step > 0 },
-        dragPixels: pixels,
+        ...{ dragPixels: pixels, ...more },
       });
       return intent?.kind === 'extrude' ? intent.distance : undefined;
     };
@@ -115,6 +115,9 @@ describe('extrudeIntent', () => {
     expect(Math.abs(past ?? 0)).toBe(100);
     // A landing there is on the last whole step short of that reach, not the nearest one, which is past it.
     expect(Math.abs(far(5_000, 6) ?? 0)).toBe(96);
+    // Nor is the face held on another body's side just past the reach, though that is within the detent.
+    const boxes = { beyond: { min: { x: -1, y: -1, z: 100.01 }, max: { x: 1, y: 1, z: 110 } } };
+    expect(far(5_000, 10, { boxes, side: 0, landing: false })).toBe(100);
   });
 
   test('an orthographic view has no vanishing point, so a face follows the pointer however far', () => {

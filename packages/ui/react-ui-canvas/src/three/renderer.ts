@@ -1570,9 +1570,6 @@ export class SceneRenderer3D {
     if (spec.edges && !(spec.kind === 'neu' && item.type === 'sphere')) {
       surface.enableEdgesRendering();
       surface.edgesWidth = 2;
-      // Darker than the surface, so the edges read against it; Neu's body is the ground, so its edges are the hue itself.
-      const edge = Color3.FromHexString(spec.color).scale(spec.kind === 'neu' ? 1 : 0.45);
-      surface.edgesColor = new Color4(edge.r, edge.g, edge.b, 1);
     }
     const meshes: ItemMeshes = { signature, surface, material, ...(data ? { data } : {}) };
     // A see-through shell in the presentation theme carries a rim and a lattice, parented so they move with it.
@@ -1674,6 +1671,9 @@ export class SceneRenderer3D {
         radians(item.rotation.z),
       );
       const color = Color3.FromHexString(spec.color);
+      // Darker than the surface, so the edges read against it; Neu's body is the ground, so its edges are the hue itself.
+      const edge = color.scale(spec.kind === 'neu' ? 1 : 0.45);
+      surface.edgesColor = new Color4(edge.r, edge.g, edge.b, 1);
       // A rim shell's surface is nearly clear; the rim and lattice carry its colour. A Neu body is the ground's tone.
       const body = this.#palette && spec.kind === 'neu' ? Color3.FromHexString(this.#palette.ground) : color;
       setSurface(material, body, spec.kind === 'rim' ? spec.alpha * 0.25 : spec.alpha);
@@ -1681,7 +1681,6 @@ export class SceneRenderer3D {
         // A solid sphere's rim carries its hue; any other body's edges do, a rim on its flat faces would wash them, and
         // one round a see-through shell tints everything seen through it.
         setNeuAccent(material, item.type === 'sphere' && castsNeuShadow(spec, item) ? color : Color3.Black());
-        surface.edgesColor = new Color4(color.r, color.g, color.b, 1);
       }
       rim && setRim(rim.material, color, RIM_STRENGTH * Math.min(1, spec.alpha / 0.4));
       lattice && setLattice(lattice.material, color, LATTICE_OPACITY * Math.min(1, spec.alpha / 0.4));
