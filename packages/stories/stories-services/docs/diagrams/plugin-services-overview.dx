@@ -1,0 +1,6 @@
+diagram flow=right
+node Consumer "Consumer plugin"
+node Service "Service" right-of Consumer
+node Provider "Provider plugin" right-of Service
+edge Consumer -> Service "calls"
+edge Provider implements Service "provides"

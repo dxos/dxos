@@ -218,6 +218,7 @@
       "@dxos/stories-inbox",
       "@dxos/stories-lens",
       "@dxos/stories-projects",
+      "@dxos/stories-services",
       "@dxos/storybook-addon-logger",
       "@dxos/storybook-testing",
       "@dxos/storybook-utils",

@@ -1,0 +1,13 @@
+diagram kind=sequence
+node Consumer "Consumer plugin"
+node Resolver "Service resolver"
+node Local "Local host"
+node Remote "Remote host"
+edge Consumer calls Resolver "get(Summarizer)"
+edge Resolver calls Local "provider here?"
+edge Local returns Resolver "needs aiGateway"
+edge Resolver calls Remote "describe()"
+edge Remote returns Resolver "provides Summarizer"
+edge Resolver returns Consumer "client (remote stub)"
+edge Consumer calls Remote "summarize(text)"
+edge Remote returns Consumer "stream of tokens"
