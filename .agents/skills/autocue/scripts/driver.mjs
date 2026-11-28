@@ -41,7 +41,8 @@
  * `--theme` sets the emulated color scheme (`dark` by default, `light`). `--action-timeout` (5000 ms)
  * bounds how long a gesture, or a flow script's raw locator, waits for its target. `--cadence` (600 ms)
  * is the least time between two on-camera gestures. The app's `@dxos/log` output streams to `<out>/app.log`
- * (`--log <file>`, or `off`) in the NDJSON shape `scripts/query-logs.mjs` reads.
+ * (`--log <file>`, or `off`) in the NDJSON shape `scripts/query-logs.mjs` reads. After `--idle-timeout` (300000 ms)
+ * with no op in flight the recorder holds its last frame, so a driver left open between takes stops filling the disk.
  */
 
 import { chromium } from '@playwright/test';
@@ -98,6 +99,9 @@ const parseArgs = () => {
     'theme': 'dark',
     // Per-gesture wait for its target: a wrong selector should fail in seconds, not stall the demo.
     'action-timeout': 5_000,
+    // With no op in flight this long the recorder holds its last frame; longer than an agent's think time between
+    // ops, so only a driver left open between takes is held. `0` never holds.
+    'idle-timeout': 300_000,
     // Minimum gap between consecutive gestures, the pause a person takes to find the next control.
     'cadence': 600,
     // NDJSON of the app's `@dxos/log` output, `app.log`-shaped; `<out>/app.log` when unset, `off` to skip.
@@ -307,6 +311,14 @@ if (manual && !native) {
   context.on('close', () => process.exit(0));
 }
 
+/**
+ * Idle is no op in flight for `--idle-timeout` (a backgrounded `run` is in flight until its take ends); the recorder
+ * holds one frame while idle, since a driver left open between takes would otherwise record an animated page for hours.
+ */
+let opsInFlight = 0;
+let lastOpAt = Date.now();
+const idle = () => options['idle-timeout'] > 0 && opsInFlight === 0 && Date.now() - lastOpAt > options['idle-timeout'];
+
 const recorder = !hires
   ? undefined
   : native
@@ -324,6 +336,7 @@ const recorder = !hires
         fps: options.fps,
         crf: options.crf,
         quality: options.quality,
+        idle,
       });
 
 /**
@@ -1066,16 +1079,16 @@ const handlers = {
     const timelineFile = path.join(options.out, 'timeline.json');
     // Read while the page is still open: the app's own config is the only record of the EDGE it talked to.
     const recording = await recordingInfo({ page, flowFile: flow.file, appUrl: options.url, target: options.target });
-    // The flow file names the package it exercises, which the trimmer uses to name and place the upload.
-    writeFileSync(
-      timelineFile,
-      JSON.stringify({ started, flow: flow.file, recording, steps: timeline, speed: speedChanges }, null, 2),
-    );
     let recorded;
     try {
+      // The flow file names the package it exercises, which the trimmer uses to name and place the upload.
+      writeFileSync(
+        timelineFile,
+        JSON.stringify({ started, flow: flow.file, recording, steps: timeline, speed: speedChanges }, null, 2),
+      );
       recorded = await recorder?.stop();
     } finally {
-      // Also when the encode fails: the app, browser and log tap must not outlive the session.
+      // Also when the timeline write or the encode fails (a full disk): the app, browser and log tap must not outlive the session.
       // Before the session closes: the polled tap drains once more and stops its timer.
       await logTap?.close();
       await context?.close();
@@ -1090,7 +1103,7 @@ const handlers = {
       size: `${viewport.width * scale}x${viewport.height * scale}`,
       timeline: timelineFile,
       steps: timeline.length,
-      // The recorder kept writing, but what it wrote after this point is not the app.
+      // The video ends on a stale frame: its frames stopped coming (Tauri) or could not be written (a full disk).
       ...(recorded?.lost ? { lost: recorded.lost } : {}),
     };
   },
@@ -1138,6 +1151,7 @@ const server = createServer((request, response) => {
       );
     }
 
+    opsInFlight++;
     try {
       const result = await handler(command);
       // Serialized before the header goes out, so a result that cannot be stringified reaches the catch below.
@@ -1159,6 +1173,9 @@ const server = createServer((request, response) => {
       // the driver would lose the recording of the failure.
       response.writeHead(200, { 'content-type': 'application/json' });
       response.end(JSON.stringify({ ok: false, error: error.message?.split('\n').slice(0, 6).join('\n') }));
+    } finally {
+      opsInFlight--;
+      lastOpAt = Date.now();
     }
   });
 });

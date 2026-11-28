@@ -484,6 +484,7 @@ encoder is a fixed 1 Mbit realtime VP8, so asking it for a bigger frame only sme
 | `--chromium-args`  | none            | extra Chromium flags, comma-separated — e.g. a fake microphone playing a voice file (see `plugin-meeting-recorder/autocue`)       |
 | `--persist`        | `off`           | `on` records from `--profile`, signed in during a manual session, instead of a fresh browser                                      |
 | `--headed`         | `off`           | `on` shows a recording's window, so a person can watch the take as it is recorded                                                 |
+| `--idle-timeout`   | `300000`        | ms with no op in flight before the recorder holds its last frame; `0` never holds                                                 |
 
 **`deviceScaleFactor` alone does not make the video 2x.** The page renders at 2x (`devicePixelRatio`
 reads 2, screenshots are sharp), but Chromium's screencast still captures at CSS size, so the frames
@@ -494,6 +495,11 @@ recording by cropping a frame at 1:1 next to a `screenshot` of the same screen; 
 The recording is variable-frame-rate — Chromium only emits a frame when something paints — so `stop`
 encodes in time proportional to the motion, not the session length. The trimmer resamples on decode and
 re-encodes with the same VP9 settings (`--crf`, default 30), so the resolution survives trimming.
+
+**An idle driver holds still.** With no op in flight for `--idle-timeout` (5 minutes; a backgrounded `run` is in
+flight until its take ends), the recorder keeps replacing one frame, so a driver left open between takes keeps one
+frame on disk and the gap trims away as a still. A frame that cannot be written (a full disk) stops the recording
+until the next `cut`, with a `recorder:` log line and a `lost` reason on `stop`; the driver keeps serving.
 
 ### The action overlay
 
