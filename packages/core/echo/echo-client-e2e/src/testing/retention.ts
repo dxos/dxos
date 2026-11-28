@@ -4,6 +4,7 @@
 
 import { type Database } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
+import { PIN_TTL } from '@dxos/echo-client/testing';
 
 /**
  * Shared harness for retention suites: does a subsystem release its objects once the caller lets go?
@@ -44,8 +45,12 @@ export type ReportScale = {
  * it still counts collected objects as live. One pass per link of the release chain, and an object
  * loaded on demand hangs off a longer one than an eagerly linked object did — the count is what the
  * assertion is about, so the passes have to outlast the chain rather than measure it.
+ *
+ * The passes start after the client's pin window: it holds a core touched within the last one to
+ * two `PIN_TTL` strongly, and no number of collections outlasts a timer.
  */
 export const settle = async (): Promise<void> => {
+  await new Promise((resolve) => setTimeout(resolve, 2 * PIN_TTL));
   for (let iteration = 0; iteration < 6; iteration++) {
     global.gc?.();
     await new Promise((resolve) => setImmediate(resolve));
@@ -113,7 +118,8 @@ export const report = (title: string, checkpoints: Checkpoint[], { objectCount, 
   console.log(
     `  ${'checkpoint'.padEnd(32)}${column('heap', 9)}${column('delta', 9)}${column('wasm', 9)}` +
       `${column('rss', 9)}${column('alive', 7)}${column('objs', 6)}${column('feeds', 6)}` +
-      `${column('feedObjs', 9)}${column('docs.c', 8)}${column('docs.h', 8)}${column('queries', 8)}`,
+      `${column('feedObjs', 9)}${column('docs.c', 8)}${column('docs.h', 8)}${column('docs.all', 9)}` +
+      `${column('queries', 8)}`,
   );
   for (const { label, heapUsed, rss, wasm, alive: live, stats } of checkpoints) {
     const delta = heapUsed - floor;
@@ -125,7 +131,7 @@ export const report = (title: string, checkpoints: Checkpoint[], { objectCount, 
         `${column(live ?? '-', 7)}${column(client?.objects ?? '-', 6)}` +
         `${column(client?.feeds ?? '-', 6)}${column(client?.feedObjects ?? '-', 9)}` +
         `${column(client?.documents ?? '-', 8)}${column(host?.documents ?? '-', 8)}` +
-        `${column(host?.queriesTotal ?? '-', 8)}`,
+        `${column(host?.documentsTotal ?? '-', 9)}${column(host?.queriesTotal ?? '-', 8)}`,
     );
   }
 };
