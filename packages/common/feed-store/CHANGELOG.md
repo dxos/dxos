@@ -1,5 +1,22 @@
 # @dxos/feed-store
 
+## 0.18.0
+
+### Patch Changes
+
+- @dxos/keyring@0.18.0
+  - @dxos/async@0.18.0
+  - @dxos/crypto@0.18.0
+  - @dxos/debug@0.18.0
+  - @dxos/hypercore@0.18.0
+  - @dxos/invariant@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/node-std@0.18.0
+  - @dxos/random-access-storage@0.18.0
+  - @dxos/util@0.18.0
+  - @dxos/vendor-hypercore@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

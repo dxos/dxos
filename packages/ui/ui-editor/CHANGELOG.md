@@ -1,5 +1,31 @@
 # @dxos/ui-editor
 
+## 0.18.0
+
+### Patch Changes
+
+- b930857: Deleting an object now also removes it from the list its parent declares with `ContainerAnnotation` (a presentation's slides), and undo puts it back in place; undo in an automerge-bound editor no longer reverts the document's initial load and blanks the text.
+- Updated dependencies [ac5df84]
+- Updated dependencies [296efd1]
+- Updated dependencies [4a8493f]
+- Updated dependencies [6f5a3c5]
+  - @dxos/protocols@0.18.0
+  - @dxos/echo-client@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/client@0.18.0
+  - @dxos/echo-doc@0.18.0
+  - @dxos/app-graph@0.18.0
+  - @dxos/nlp@0.18.0
+  - @dxos/async@0.18.0
+  - @dxos/context@0.18.0
+  - @dxos/display-name@0.18.0
+  - @dxos/invariant@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/util@0.18.0
+  - @dxos/ui@0.18.0
+  - @dxos/ui-theme@0.18.0
+  - @dxos/ui-types@0.18.0
+
 ## 0.17.0
 
 ### Minor Changes

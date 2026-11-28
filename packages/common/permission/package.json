@@ -1,6 +1,6 @@
 {
   "name": "@dxos/permission",
-  "version": "0.17.0",
+  "version": "0.18.0",
   "description": "Permission DSL: subjects, commands, policies, grants, requirements, and the pure check evaluator.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

@@ -1,5 +1,61 @@
 # @dxos/stories-agent
 
+## 0.18.0
+
+### Patch Changes
+
+- Updated dependencies [0bb1251]
+- Updated dependencies [f1eb193]
+- Updated dependencies [95565bc]
+- Updated dependencies [70fd4dc]
+- Updated dependencies [8352d6b]
+- Updated dependencies [ac5df84]
+- Updated dependencies [296efd1]
+- Updated dependencies [4a8493f]
+- Updated dependencies [72a12c0]
+- Updated dependencies [f3b7b73]
+- Updated dependencies [b2afa8e]
+- Updated dependencies [89a0c8f]
+- Updated dependencies [ab30077]
+- Updated dependencies [7a34270]
+- Updated dependencies [ff7c6a9]
+- Updated dependencies [b3a4967]
+- Updated dependencies [6f5a3c5]
+- Updated dependencies [174b0e2]
+- Updated dependencies [a7af8ed]
+- Updated dependencies [0471a3a]
+- Updated dependencies [352c3fc]
+- Updated dependencies [d38490c]
+- Updated dependencies [794c28c]
+- Updated dependencies [b11bcdc]
+- Updated dependencies [5a43453]
+- Updated dependencies [0d5f1c0]
+- Updated dependencies [8d2c135]
+  - @dxos/assistant@0.18.0
+  - @dxos/compute@0.18.0
+  - @dxos/app-framework@0.18.0
+  - @dxos/plugin-assistant@0.18.0
+  - @dxos/app-toolkit@0.18.0
+  - @dxos/protocols@0.18.0
+  - @dxos/types@0.18.0
+  - @dxos/plugin-agent@0.18.0
+  - @dxos/plugin-discord@0.18.0
+  - @dxos/plugin-thread@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/react-ui-form@0.18.0
+  - @dxos/react-ui@0.18.0
+  - @dxos/client@0.18.0
+  - @dxos/config@0.18.0
+  - @dxos/react-client@0.18.0
+  - @dxos/crawler@0.18.0
+  - @dxos/link@0.18.0
+  - @dxos/react-ui-debug@0.18.0
+  - @dxos/async@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/echo-memory@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

@@ -1,5 +1,19 @@
 # @dxos/react-ui-virtual
 
+## 0.18.0
+
+### Patch Changes
+
+- 8d2c135: A virtualized list re-measures a row that resizes without a commit of its own, such as a card whose surface fills in late, before the frame paints. A list pinned to its end no longer jumps a row after it loads.
+  
+  Selecting another column in a `ChatPlane` eases the strip straight to it. It no longer jumps the other way first.
+- Updated dependencies [0471a3a]
+- Updated dependencies [b11bcdc]
+- Updated dependencies [5a43453]
+- Updated dependencies [0d5f1c0]
+  - @dxos/react-ui@0.18.0
+  - @dxos/ui-theme@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

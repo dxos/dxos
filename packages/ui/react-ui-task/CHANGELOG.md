@@ -1,5 +1,33 @@
 # @dxos/react-ui-task
 
+## 0.18.0
+
+### Patch Changes
+
+- 72a12c0: `ChatPlane` columns are full height, bordered and capped at 40rem, and a column's prompt renders inside it while the column is selected, so only that column gives up height to its prompt. `ChatPlane.Root` takes `align='start'` to rest the selection, or a group of columns that fits, at the start of the strip; a centered plane always centers the selected column. The left and right arrow keys step between columns from inside a thread. `ThemePlugin` takes `followDocument`, which makes it follow the page's `dark` class instead of the OS, so a host such as storybook can own the theme. A task list rendered `flush` drops the well around its title field, and `Chat.Suggestions` truncates a chip longer than the composer.
+- Updated dependencies [ab30077]
+- Updated dependencies [6f5a3c5]
+- Updated dependencies [174b0e2]
+- Updated dependencies [a7af8ed]
+- Updated dependencies [0471a3a]
+- Updated dependencies [b930857]
+- Updated dependencies [b11bcdc]
+- Updated dependencies [49790f7]
+- Updated dependencies [5a43453]
+- Updated dependencies [0d5f1c0]
+  - @dxos/types@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/react-ui-form@0.18.0
+  - @dxos/react-ui@0.18.0
+  - @dxos/ui-editor@0.18.0
+  - @dxos/react-ui-list@0.18.0
+  - @dxos/echo-react@0.18.0
+  - @dxos/react-ui-markdown@0.18.0
+  - @dxos/react-ui-menu@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/ui-theme@0.18.0
+  - @dxos/ui-types@0.18.0
+
 ## 0.17.0
 
 ### Minor Changes

@@ -1,5 +1,13 @@
 # @dxos/drawing
 
+## 0.18.0
+
+### Patch Changes
+
+- @dxos/diagram@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/errors@0.18.0
+
 ## 0.17.0
 
 ### Minor Changes

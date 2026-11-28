@@ -1,5 +1,77 @@
 # @dxos/plugin-discord
 
+## 0.18.0
+
+### Minor Changes
+
+- ff7c6a9: The Discord channel backend posts every send through the bot's `act` on EDGE, so a relay into another Discord thread and a DM the agent opens are posted at once, with Kai's token too; Discord sends no longer call Discord's REST API from the client with a pasted token. Mirrored delivery is removed: `ChannelBackendProvider.mirrored` and `ChannelBackend.isMirrored` are gone, and an agent posts every channel message through `SendToChannel`. Where the backend's capability is not visible (its own bundle on EDGE), `SendToChannel` and `OpenDirect` invoke the backend's own operations from `ThreadOperation.backendOperations(kind)`, which plugin-discord handles. `ThreadOperation.SendReceipt` gains an optional `thread`, the thread a message landed in; a DM opened by its first post reports its DM channel there, and plugin-agent keys the conversation's chat by it.
+- b3a4967: plugin-discord's direct-message operation records the DM it sends in the agent's chat for that DM (keyed by the DM channel the post opened, with the bot's receipt), through plugin-agent's new `RecordChannelSend` operation, so the person's answer reads in context. EDGE's Discord bot no longer records DMs it posts; the agent owns the DM's chat.
+
+### Patch Changes
+
+- Updated dependencies [0bb1251]
+- Updated dependencies [f1eb193]
+- Updated dependencies [95565bc]
+- Updated dependencies [70fd4dc]
+- Updated dependencies [8352d6b]
+- Updated dependencies [ac5df84]
+- Updated dependencies [296efd1]
+- Updated dependencies [4a8493f]
+- Updated dependencies [f3b7b73]
+- Updated dependencies [89a0c8f]
+- Updated dependencies [ab30077]
+- Updated dependencies [7a34270]
+- Updated dependencies [ff7c6a9]
+- Updated dependencies [b3a4967]
+- Updated dependencies [6f5a3c5]
+- Updated dependencies [174b0e2]
+- Updated dependencies [a7af8ed]
+- Updated dependencies [0471a3a]
+- Updated dependencies [352c3fc]
+- Updated dependencies [d38490c]
+- Updated dependencies [b11bcdc]
+- Updated dependencies [49790f7]
+- Updated dependencies [5a43453]
+- Updated dependencies [0d5f1c0]
+  - @dxos/assistant@0.18.0
+  - @dxos/compute@0.18.0
+  - @dxos/app-framework@0.18.0
+  - @dxos/app-toolkit@0.18.0
+  - @dxos/protocols@0.18.0
+  - @dxos/echo-client@0.18.0
+  - @dxos/types@0.18.0
+  - @dxos/plugin-agent@0.18.0
+  - @dxos/plugin-thread@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/react-ui-form@0.18.0
+  - @dxos/react-ui@0.18.0
+  - @dxos/react-ui-list@0.18.0
+  - @dxos/plugin-client@0.18.0
+  - @dxos/plugin-connector@0.18.0
+  - @dxos/ai@0.18.0
+  - @dxos/edge-client@0.18.0
+  - @dxos/config@0.18.0
+  - @dxos/react-client@0.18.0
+  - @dxos/crawler@0.18.0
+  - @dxos/link@0.18.0
+  - @dxos/pipeline-discord@0.18.0
+  - @dxos/echo-react@0.18.0
+  - @dxos/app-graph@0.18.0
+  - @dxos/react-ui-menu@0.18.0
+  - @dxos/pipeline-rdf@0.18.0
+  - @dxos/context@0.18.0
+  - @dxos/errors@0.18.0
+  - @dxos/invariant@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/util@0.18.0
+  - @dxos/pipeline@0.18.0
+  - @dxos/blob@0.18.0
+  - @dxos/echo-memory@0.18.0
+  - @dxos/react-hooks@0.18.0
+  - @dxos/ui-theme@0.18.0
+  - @dxos/ui-types@0.18.0
+
 ## 0.17.0
 
 ### Minor Changes

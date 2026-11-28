@@ -1,5 +1,12 @@
 # @dxos/permission
 
+## 0.18.0
+
+### Patch Changes
+
+- @dxos/errors@0.18.0
+  - @dxos/keys@0.18.0
+
 ## 0.17.0
 
 ### Minor Changes

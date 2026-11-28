@@ -1,5 +1,15 @@
 # @dxos/echo-query
 
+## 0.18.0
+
+### Patch Changes
+
+- Updated dependencies [6f5a3c5]
+  - @dxos/echo@0.18.0
+  - @dxos/invariant@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/node-std@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

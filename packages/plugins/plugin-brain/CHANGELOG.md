@@ -1,5 +1,58 @@
 # @dxos/plugin-brain
 
+## 0.18.0
+
+### Patch Changes
+
+- a751852: The Memory page shows each query's SPARQL with syntax highlighting. The Brain skill steers open-ended questions toward what the content says: survey the predicates and entities first, group by topic, report themes in aggregate without naming people, and read a negated fact as the source's own negation. A new Community Findings project template holds five analysis tasks that each name the artifact their answer goes in (four sheets with charts and a docs-gap brief), and a deck task that presents them; with a community's memory imported, the agent answers each task from the memory and files the artifact on it.
+- Updated dependencies [f1eb193]
+- Updated dependencies [95565bc]
+- Updated dependencies [70fd4dc]
+- Updated dependencies [8352d6b]
+- Updated dependencies [ac5df84]
+- Updated dependencies [ceb9448]
+- Updated dependencies [3b9147d]
+- Updated dependencies [f3b7b73]
+- Updated dependencies [89a0c8f]
+- Updated dependencies [ab30077]
+- Updated dependencies [6f5a3c5]
+- Updated dependencies [0471a3a]
+- Updated dependencies [352c3fc]
+- Updated dependencies [b930857]
+- Updated dependencies [5cb7fec]
+- Updated dependencies [b11bcdc]
+- Updated dependencies [5a43453]
+- Updated dependencies [0d5f1c0]
+  - @dxos/compute@0.18.0
+  - @dxos/app-framework@0.18.0
+  - @dxos/app-toolkit@0.18.0
+  - @dxos/react-ui-canvas@0.18.0
+  - @dxos/types@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/react-ui@0.18.0
+  - @dxos/plugin-space@0.18.0
+  - @dxos/scene@0.18.0
+  - @dxos/plugin-inbox@0.18.0
+  - @dxos/plugin-projects@0.18.0
+  - @dxos/plugin-routine@0.18.0
+  - @dxos/pipeline-email@0.18.0
+  - @dxos/ai@0.18.0
+  - @dxos/client@0.18.0
+  - @dxos/link@0.18.0
+  - @dxos/schema@0.18.0
+  - @dxos/app-graph@0.18.0
+  - @dxos/react-ui-rdf@0.18.0
+  - @dxos/react-ui-syntax-highlighter@0.18.0
+  - @dxos/diagram@0.18.0
+  - @dxos/pipeline-rdf@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/graph@0.18.0
+  - @dxos/invariant@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/util@0.18.0
+  - @dxos/echo-memory@0.18.0
+
 ## 0.17.0
 
 ### Minor Changes

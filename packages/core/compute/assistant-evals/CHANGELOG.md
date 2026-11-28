@@ -1,5 +1,24 @@
 # @dxos/assistant-evals
 
+## 0.18.0
+
+### Patch Changes
+
+- Updated dependencies [1f59605]
+- Updated dependencies [8352d6b]
+- Updated dependencies [620eb9f]
+- Updated dependencies [b11bcdc]
+- Updated dependencies [29101e4]
+  - @dxos/plugin-sheet@0.18.0
+  - @dxos/app-toolkit@0.18.0
+  - @dxos/plugin-presenter@0.18.0
+  - @dxos/plugin-attention@0.18.0
+  - @dxos/edge-client@0.18.0
+  - @dxos/echo-doc@0.18.0
+  - @dxos/react-ui-attention@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/log@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

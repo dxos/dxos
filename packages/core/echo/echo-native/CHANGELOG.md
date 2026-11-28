@@ -1,5 +1,23 @@
 # @dxos/echo-native
 
+## 0.18.0
+
+### Patch Changes
+
+- Updated dependencies [ac5df84]
+- Updated dependencies [296efd1]
+- Updated dependencies [4a8493f]
+- Updated dependencies [6f5a3c5]
+  - @dxos/protocols@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/echo-sqlite@0.18.0
+  - @dxos/echo-protocol@0.18.0
+  - @dxos/async@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/invariant@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/log@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

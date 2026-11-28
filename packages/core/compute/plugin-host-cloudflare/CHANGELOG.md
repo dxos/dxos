@@ -1,5 +1,40 @@
 # @dxos/plugin-host-cloudflare
 
+## 0.18.0
+
+### Patch Changes
+
+- b368fb2: A bundle's RPC to a process it spawned through `Agent.spawn` no longer fails with `DataCloneError: AbortSignal serialization is not enabled`: the request crosses to EDGE's session target without the client's `AbortSignal`, which Workers RPC cannot carry.
+- Updated dependencies [0bb1251]
+- Updated dependencies [f1eb193]
+- Updated dependencies [95565bc]
+- Updated dependencies [70fd4dc]
+- Updated dependencies [8352d6b]
+- Updated dependencies [ac5df84]
+- Updated dependencies [296efd1]
+- Updated dependencies [4a8493f]
+- Updated dependencies [f3b7b73]
+- Updated dependencies [89a0c8f]
+- Updated dependencies [ab30077]
+- Updated dependencies [6f5a3c5]
+- Updated dependencies [352c3fc]
+  - @dxos/assistant@0.18.0
+  - @dxos/compute@0.18.0
+  - @dxos/app-framework@0.18.0
+  - @dxos/app-toolkit@0.18.0
+  - @dxos/protocols@0.18.0
+  - @dxos/compute-runtime@0.18.0
+  - @dxos/types@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/ai@0.18.0
+  - @dxos/functions-runtime-cloudflare@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/errors@0.18.0
+  - @dxos/invariant@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/blob@0.18.0
+
 ## 0.17.0
 
 ### Minor Changes

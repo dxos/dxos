@@ -1,5 +1,14 @@
 # @dxos/brain
 
+## 0.18.0
+
+### Patch Changes
+
+- @dxos/datalog@0.18.0
+  - @dxos/errors@0.18.0
+  - @dxos/util@0.18.0
+  - @dxos/echo-memory@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

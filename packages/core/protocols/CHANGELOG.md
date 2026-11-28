@@ -1,5 +1,30 @@
 # @dxos/protocols
 
+## 0.18.0
+
+### Minor Changes
+
+- ac5df84: An operation that runs in a plugin bundle on EDGE gets the full `Agent.Service` from the EDGE process that hosts its session (`PluginProtocol.InvocationScope.agent`), and the bundle runs no process of its own. There, `Agent.running` answers an atom fixed at the time of the call rather than a live one, since a live atom would hold an RPC open past the invocation. `Agent.open` there takes no `provider`, `systemPrompt` or `location` and dies if given them, since EDGE opens a session's process as the session was created. `Agent.conversationService` is removed. The `ProcessProtocol` decoders are now `ProcessProtocolCodec` in `@dxos/compute-runtime/remote-process`, and `@dxos/agent-runtime` exports `prepareSessionDelegation` and `prepareAgentDelegation`.
+  
+  `Database.absorbWorkingSet` now waits until the documents a refresh delivered are integrated (`RepoProxy.integrated`), so a caller resolves the objects a nested call created instead of falling back to a lagging index.
+- 296efd1: `PluginProtocol.Catalog` gains an optional `hooks` list of `HookRecord`s: the end-request hooks a plugin bundle's plugin contributes, each naming one of the catalog's operations. EDGE reads hooks only from catalogs, so a plugin's hooks keep firing after it is served from its bundle. A catalog without `hooks` has none.
+- 4a8493f: echo-client's registry can now consult async sources for what it does not hold. `HypergraphImpl.registerRegistrySource(source)` takes a `RegistrySource` (`resolve(uri)`, and optionally `query(query)`) and replaces `registerTypeSource`. A registry query's `run()` asks the sources before it answers: by key, or, for a query that names none, by enumerating. A registry URI (`dxn:`) resolves through them too. `runSync()` and `results` still read only what the registry holds, and `@dxos/echo`'s `Registry` interface is unchanged. The compute runtime's `typeSource` option becomes `registrySource`. `describeTypes` now takes the type entities to describe rather than a database. The skill manager's `queryTypes` reads them with a registry-scoped database query, so it also lists types from the registry's sources.
+  
+  `PluginProtocol.Env` gains an optional `REGISTRY` (`PluginProtocol.Registry`). EDGE uses it to resolve and list the types, skills and operation records its enabled plugins publish, and a plugin bundle's host makes it the source of each invocation's registry. A skill bound by registry URI, `querySkills` and `queryTypes` then reach whichever plugin contributes the entity, not only the bundle's own. `TYPE_REGISTRY` remains for hosts published before `REGISTRY`.
+
+### Patch Changes
+
+- @dxos/async@0.18.0
+  - @dxos/context@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/errors@0.18.0
+  - @dxos/invariant@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/timeframe@0.18.0
+  - @dxos/util@0.18.0
+  - @dxos/echo-memory@0.18.0
+
 ## 0.17.0
 
 ### Minor Changes

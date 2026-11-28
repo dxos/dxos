@@ -1,5 +1,35 @@
 # @dxos/react-ui-canvas
 
+## 0.18.0
+
+### Minor Changes
+
+- ceb9448: A shape's ports stand on the grid's lines, where they stood at even fractions of each side: a whole number of half major cells apart about the side's middle, on whole lines where they can be and half lines otherwise, by the gap nearest the side's length over their count (`portPitch`). Breaking: `sidePorts` takes the frame's size, `nodePorts`, `latticeEnds` and `toDiagramObjects` take the drawing's grid, and `defaultPorts` is removed.
+
+### Patch Changes
+
+- 3b9147d: Two fixes to the 3D Extrude drag. The face now stays under the pointer: its distance is where the pointer's ray meets the face's normal, where it was the drag's length scaled at the press, which ran ahead of the pointer as the face came towards a perspective camera. And a selected solid no longer flickers while a drag reshapes it, as an extrusion's preview does after an undo: the renderer puts its new triangles into the mesh it has, where it made a new mesh each move and lost the outline for a frame.
+- Updated dependencies [174b0e2]
+- Updated dependencies [a7af8ed]
+- Updated dependencies [0471a3a]
+- Updated dependencies [b930857]
+- Updated dependencies [5cb7fec]
+- Updated dependencies [b11bcdc]
+- Updated dependencies [5a43453]
+- Updated dependencies [0d5f1c0]
+  - @dxos/react-ui-form@0.18.0
+  - @dxos/react-ui@0.18.0
+  - @dxos/ui-editor@0.18.0
+  - @dxos/scene@0.18.0
+  - @dxos/react-ui-editor@0.18.0
+  - @dxos/animation@0.18.0
+  - @dxos/react-ui-animation@0.18.0
+  - @dxos/diagram@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/react-hooks@0.18.0
+  - @dxos/ui-theme@0.18.0
+
 ## 0.17.0
 
 ### Minor Changes

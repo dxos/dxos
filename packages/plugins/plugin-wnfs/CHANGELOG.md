@@ -1,5 +1,34 @@
 # @dxos/plugin-wnfs
 
+## 0.18.0
+
+### Patch Changes
+
+- Updated dependencies [95565bc]
+- Updated dependencies [8352d6b]
+- Updated dependencies [89a0c8f]
+- Updated dependencies [6f5a3c5]
+- Updated dependencies [0471a3a]
+- Updated dependencies [352c3fc]
+- Updated dependencies [b11bcdc]
+- Updated dependencies [5a43453]
+- Updated dependencies [0d5f1c0]
+  - @dxos/app-framework@0.18.0
+  - @dxos/app-toolkit@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/react-ui@0.18.0
+  - @dxos/plugin-client@0.18.0
+  - @dxos/plugin-file@0.18.0
+  - @dxos/client@0.18.0
+  - @dxos/react-client@0.18.0
+  - @dxos/crypto@0.18.0
+  - @dxos/invariant@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/util@0.18.0
+  - @dxos/blob@0.18.0
+  - @dxos/ui-theme@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes

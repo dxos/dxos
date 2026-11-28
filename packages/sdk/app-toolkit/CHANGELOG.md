@@ -1,5 +1,63 @@
 # @dxos/app-toolkit
 
+## 0.18.0
+
+### Patch Changes
+
+- 8352d6b: A space invitation link opened while signed out is held behind the welcome gate and redeemed once the user signs in or signs up, including when sign-in finishes in another tab. `LayoutOperation.UpdateDialog` with a `subject` and `state: false` now closes the dialog only while that subject is shown, in every layout.
+- Updated dependencies [f1eb193]
+- Updated dependencies [95565bc]
+- Updated dependencies [70fd4dc]
+- Updated dependencies [ac5df84]
+- Updated dependencies [296efd1]
+- Updated dependencies [4a8493f]
+- Updated dependencies [f3b7b73]
+- Updated dependencies [89a0c8f]
+- Updated dependencies [ab30077]
+- Updated dependencies [6f5a3c5]
+- Updated dependencies [0471a3a]
+- Updated dependencies [352c3fc]
+- Updated dependencies [b11bcdc]
+- Updated dependencies [49790f7]
+- Updated dependencies [5a43453]
+- Updated dependencies [0d5f1c0]
+  - @dxos/compute@0.18.0
+  - @dxos/app-framework@0.18.0
+  - @dxos/protocols@0.18.0
+  - @dxos/types@0.18.0
+  - @dxos/echo@0.18.0
+  - @dxos/react-ui@0.18.0
+  - @dxos/react-ui-list@0.18.0
+  - @dxos/ai@0.18.0
+  - @dxos/credentials@0.18.0
+  - @dxos/edge-client@0.18.0
+  - @dxos/client@0.18.0
+  - @dxos/client-protocol@0.18.0
+  - @dxos/config@0.18.0
+  - @dxos/react-client@0.18.0
+  - @dxos/link@0.18.0
+  - @dxos/migrations@0.18.0
+  - @dxos/schema@0.18.0
+  - @dxos/app-graph@0.18.0
+  - @dxos/react-ui-attention@0.18.0
+  - @dxos/react-ui-menu@0.18.0
+  - @dxos/react-ui-syntax-highlighter@0.18.0
+  - @dxos/halo-react@0.18.0
+  - @dxos/context@0.18.0
+  - @dxos/display-name@0.18.0
+  - @dxos/effect@0.18.0
+  - @dxos/errors@0.18.0
+  - @dxos/graph@0.18.0
+  - @dxos/i18n@0.18.0
+  - @dxos/invariant@0.18.0
+  - @dxos/keys@0.18.0
+  - @dxos/log@0.18.0
+  - @dxos/util@0.18.0
+  - @dxos/progress@0.18.0
+  - @dxos/react-focus@0.18.0
+  - @dxos/ui-theme@0.18.0
+  - @dxos/ui-types@0.18.0
+
 ## 0.17.0
 
 ### Minor Changes
