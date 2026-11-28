@@ -126,8 +126,9 @@ feat F-4: Solids
   uses: [org.dxos.scene]
   req F-4.1: Join makes a union of the selection and Subtract a difference of two (the first is the base, the
     second the tool cut from it), each a new solid element selected after it is made ([org.dxos.scene#D-52]).
-  req F-4.2: Extrude drags a face along its normal by the distance the pointer moves along it on screen; a selected
-    face is the one extruded, wherever the drag starts.
+  req F-4.2: Extrude drags a face along its normal so that the face stays under the pointer: the point pressed goes
+    where the pointer is along the normal as the screen shows it, at any depth ([D-28], [D-29]); a selected face is
+    the one extruded, wherever the drag starts.
   req F-4.3: A solid is recomputed with Manifold when drawn, the WASM module loaded on first use; a solid that cannot
     be built draws the operands that exist, each as itself.
 ```
@@ -416,6 +417,22 @@ decision D-27: A selected group is outlined through its members, with one box ro
   date: 2026-11-26
   by: user:richburdon
   affects: [F-2.7]
+```
+
+```mdl
+decision D-28: The face an extrusion pulls follows the pointer; it does not move faster or slower than it.
+  date: 2026-11-27
+  by: user:richburdon
+  affects: [F-4.2]
+```
+
+```mdl
+decision D-29: An extrusion's distance is where the pointer's ray meets the face's normal through the point pressed, not the drag's length times the world length of a pixel at that point. Past the point of the screen the normal vanishes at, the face goes ten camera distances and no further. Fills in [D-28].
+  date: 2026-11-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-4.2]
+  why: A perspective view shows a world unit larger the nearer it is, so a distance scaled at the press ran ahead of the pointer as the face came at the camera and fell behind as it went away.
 ```
 
 ---
