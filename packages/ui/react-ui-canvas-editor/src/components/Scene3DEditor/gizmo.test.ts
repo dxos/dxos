@@ -103,9 +103,9 @@ describe('extrudeIntent', () => {
     // Looking along the ground, a face pushed away from the camera closes on a point of the screen it never passes.
     const along: Scene.Camera3D = { ...camera, yaw: 0, pitch: 5 };
     const away = { x: 0, y: 0, z: 1 };
-    const far = (pixels: number) => {
+    const far = (pixels: number, step = 0) => {
       const intent = extrudeIntent({
-        ...{ id: 'e', target: 'box', normal: away, camera: along, viewport, point },
+        ...{ id: 'e', target: 'box', normal: away, camera: along, viewport, point, step, landing: step > 0 },
         dragPixels: pixels,
       });
       return intent?.kind === 'extrude' ? intent.distance : undefined;
@@ -113,6 +113,19 @@ describe('extrudeIntent', () => {
     const [near, past] = [far(20), far(5_000)];
     expect(Math.sign(past ?? 0)).toBe(Math.sign(near ?? 0));
     expect(Math.abs(past ?? 0)).toBe(100);
+    // A landing there is on the last whole step short of that reach, not the nearest one, which is past it.
+    expect(Math.abs(far(5_000, 6) ?? 0)).toBe(96);
+  });
+
+  test('an orthographic view has no vanishing point, so a face follows the pointer however far', () => {
+    const flat: Scene.Camera3D = { ...camera, projection: 'orthographic' };
+    for (const units of [150, -150]) {
+      const intent = extrudeIntent({
+        ...{ id: 'e', target: 'box', normal: up, camera: flat, viewport, point },
+        dragPixels: pixelsFor(units, flat),
+      });
+      expect(intent?.kind === 'extrude' && intent.distance).toBeCloseTo(units, 2);
+    }
   });
 
   test('pushing a face in leaves at least a minor grid unit of the solid, snapping or not', () => {

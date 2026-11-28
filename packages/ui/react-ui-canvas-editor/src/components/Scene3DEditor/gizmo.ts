@@ -150,12 +150,16 @@ export const extrudeIntent = ({
   const along = under
     ? (under.x - point.x) * face.x + (under.y - point.y) * face.y + (under.z - point.z) * face.z
     : undefined;
-  const reach = EXTRUDE_REACH * camera.distance;
+  // Only a perspective view has a vanishing point; an orthographic one shows every place on the axis, however far.
+  const furthest = camera.projection === 'orthographic' ? Infinity : EXTRUDE_REACH * camera.distance;
+  // On a whole step, so a distance that snaps never lands past it.
+  const reach = step > 0 ? Math.floor(furthest / step) * step : furthest;
+  const ahead = along !== undefined && Math.sign(along) === Math.sign(dragPixels);
+  if (!ahead && !Number.isFinite(reach)) {
+    return undefined;
+  }
   // Past its axis's vanishing point no place on the axis is under the pointer, and the nearest is behind the camera.
-  const free =
-    along !== undefined && Math.sign(along) === Math.sign(dragPixels)
-      ? Math.sign(along) * Math.min(Math.abs(along), reach)
-      : Math.sign(dragPixels) * reach;
+  const free = ahead ? Math.sign(along) * Math.min(Math.abs(along), reach) : Math.sign(dragPixels) * reach;
   // A face lined up with another body's side is what a person pulling it wants most, so that holds ahead of the grid.
   const axis = face.x !== 0 ? 'x' : face.y !== 0 ? 'y' : 'z';
   const sign = face[axis];

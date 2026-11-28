@@ -117,25 +117,26 @@ describe('SceneRenderer3D.pick', () => {
     view.dispose();
   });
 
+  /** A cube `half` out from the origin each way. */
+  const cubeMesh = (half: number) => ({
+    positions: new Float32Array(
+      [0, 1, 2, 3, 4, 5, 6, 7].flatMap((corner) =>
+        [corner & 1, corner & 2, corner & 4].map((bit) => (bit ? half : -half)),
+      ),
+    ),
+    indices: new Uint32Array(
+      [
+        [0, 2, 3, 1],
+        [4, 5, 7, 6],
+        [0, 1, 5, 4],
+        [2, 6, 7, 3],
+        [0, 4, 6, 2],
+        [1, 3, 7, 5],
+      ].flatMap(([a, b, c, d]) => [a, b, c, a, c, d]),
+    ),
+  });
+
   test('other triangles for an item go into the mesh it has, so a selected solid reshaped by a drag stays outlined', () => {
-    /** A cube `half` out from the origin each way. */
-    const cube = (half: number) => ({
-      positions: new Float32Array(
-        [0, 1, 2, 3, 4, 5, 6, 7].flatMap((corner) =>
-          [corner & 1, corner & 2, corner & 4].map((bit) => (bit ? half : -half)),
-        ),
-      ),
-      indices: new Uint32Array(
-        [
-          [0, 2, 3, 1],
-          [4, 5, 7, 6],
-          [0, 1, 5, 4],
-          [2, 6, 7, 3],
-          [0, 4, 6, 2],
-          [1, 3, 7, 5],
-        ].flatMap(([a, b, c, d]) => [a, b, c, a, c, d]),
-      ),
-    });
     const engine = new NullEngine({
       renderWidth: 800,
       renderHeight: 600,
@@ -145,7 +146,7 @@ describe('SceneRenderer3D.pick', () => {
     });
     const view = new SceneRenderer3D({ engine, theme: 'cad', background: '#ffffff', selection: '#ff8800' });
     const list = renderList(doc([{ id: 'a', kind: 'solid', props: { op: 'union', operands: '' } }]));
-    const [small, large] = [cube(1), cube(2)];
+    const [small, large] = [cubeMesh(1), cubeMesh(2)];
     view.render(list, CAMERA, { geometry: () => small });
     view.select(['a']);
     const mesh = engine.scenes[0].getMeshByName('item-a')?.uniqueId;
@@ -157,6 +158,32 @@ describe('SceneRenderer3D.pick', () => {
     expect(view.itemBounds().a.max.x).toBeCloseTo(2);
     expect(view.highlighted).toEqual(['a']);
     expect(view.boxes.a?.max.x).toBeCloseTo(2);
+    view.dispose();
+  });
+
+  test('an item that stops being a composite frame is picked through to, with the meshes it has or other triangles', () => {
+    const engine = new NullEngine({
+      renderWidth: 800,
+      renderHeight: 600,
+      textureSize: 256,
+      deterministicLockstep: false,
+      lockstepMaxSteps: 1,
+    });
+    const view = new SceneRenderer3D({ engine, theme: 'cad', background: '#ffffff' });
+    const { items, links } = renderList(doc([{ id: 'a', kind: 'solid', props: { op: 'union', operands: '' } }]));
+    const frames = { items: items.map((item) => ({ ...item, frame: true })), links };
+    const [small, large] = [cubeMesh(1), cubeMesh(2)];
+    const through = () => view.pick({ x: 400, y: 300 }, { through: true }).item;
+
+    view.render(frames, CAMERA, { geometry: () => small });
+    expect(through()).toBeUndefined();
+    view.render({ items, links }, CAMERA, { geometry: () => small });
+    expect(through()).toBe('a');
+
+    view.render(frames, CAMERA, { geometry: () => small });
+    expect(through()).toBeUndefined();
+    view.render({ items, links }, CAMERA, { geometry: () => large });
+    expect(through()).toBe('a');
     view.dispose();
   });
 

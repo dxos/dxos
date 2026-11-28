@@ -1564,8 +1564,6 @@ export class SceneRenderer3D {
 
   #createItem(item: RenderItem, spec: MaterialSpec, data: MeshData | undefined, signature: string): ItemMeshes {
     const surface = this.#createSurface(item, data);
-    // Picking finds an item by the key its surface carries; a composite's frame says so, to be looked through.
-    surface.metadata = { key: item.key, frame: item.frame === true };
     const material = createSurfaceMaterial(this.#scene, `surface-${item.key}`, spec.kind === 'rim' ? 'pbr' : spec.kind);
     surface.material = material;
     // A sphere has no edge, and its pole fans would draw as stray dots; Neu's rim carries its hue instead.
@@ -1653,6 +1651,9 @@ export class SceneRenderer3D {
         this.#items.set(item.key, meshes);
       }
       const { surface, material, rim, lattice } = meshes;
+      // Picking finds an item by the key its surface carries; a composite's frame says so, to be looked through, and an
+      // item can become one or stop being one while it keeps its meshes.
+      surface.metadata = { key: item.key, frame: item.frame === true };
       const visible = spec.alpha > 0.001;
       surface.setEnabled(visible);
       if (this.#ground) {
