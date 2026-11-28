@@ -1,0 +1,286 @@
+{
+  "poll": [
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "worker",
+        "origin": { "x": 352, "y": 192 },
+        "scale": 1,
+        "elements": [
+          {
+            "kind": "rect",
+            "id": "frame",
+            "x": 0,
+            "y": 0,
+            "w": 256,
+            "h": 384,
+            "color": "light-blue",
+            "fill": "tint",
+            "stroke": "dashed"
+          },
+          {
+            "kind": "text",
+            "id": "label",
+            "x": 16,
+            "y": 3,
+            "text": "Cloudflare Worker",
+            "color": "grey",
+            "weight": "s"
+          }
+        ]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "objects",
+        "origin": { "x": -32, "y": 704 },
+        "scale": 1,
+        "elements": [
+          {
+            "kind": "rect",
+            "id": "frame",
+            "x": 0,
+            "y": 0,
+            "w": 640,
+            "h": 160,
+            "color": "light-green",
+            "fill": "tint",
+            "stroke": "dashed"
+          },
+          { "kind": "text", "id": "label", "x": 16, "y": 3, "text": "Durable Objects", "color": "grey", "weight": "s" }
+        ]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "Browser",
+        "origin": { "x": 384, "y": 0 },
+        "scale": 1,
+        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 192, "h": 96, "text": "Respondent's browser" }]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "Page",
+        "origin": { "x": 384, "y": 224 },
+        "scale": 1,
+        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 192, "h": 96, "text": "Poll page /p/:id" }]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "Api",
+        "origin": { "x": 384, "y": 448 },
+        "scale": 1,
+        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 192, "h": 96, "text": "API /api/polls" }]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "PollA",
+        "origin": { "x": 384, "y": 736 },
+        "scale": 1,
+        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 192, "h": 96, "text": "Poll A" }]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "PollB",
+        "origin": { "x": 0, "y": 736 },
+        "scale": 1,
+        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 192, "h": 96, "text": "Poll B" }]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "Storage",
+        "origin": { "x": 384, "y": 960 },
+        "scale": 1,
+        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 192, "h": 96, "text": "SQLite storage" }]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "edges",
+        "origin": { "x": 0, "y": 0 },
+        "scale": 1,
+        "elements": [
+          { "kind": "arrow", "id": "Browser-Page-0", "start": { "x": 480, "y": 96 }, "end": { "x": 480, "y": 224 } },
+          { "kind": "arrow", "id": "Page-Api-1", "start": { "x": 480, "y": 320 }, "end": { "x": 480, "y": 448 } },
+          {
+            "kind": "line",
+            "id": "Api-bus-0-trunk",
+            "points": [
+              { "x": 480, "y": 544 },
+              { "x": 480, "y": 640 }
+            ]
+          },
+          { "kind": "arrow", "id": "Api-PollA-2", "start": { "x": 480, "y": 640 }, "end": { "x": 480, "y": 736 } },
+          {
+            "kind": "line",
+            "id": "Api-PollB-3-path",
+            "points": [
+              { "x": 480, "y": 640 },
+              { "x": 96, "y": 640 }
+            ]
+          },
+          { "kind": "arrow", "id": "Api-PollB-3", "start": { "x": 96, "y": 640 }, "end": { "x": 96, "y": 736 } },
+          {
+            "kind": "arrow",
+            "id": "Storage-bus-1-trunk",
+            "start": { "x": 480, "y": 896 },
+            "end": { "x": 480, "y": 960 }
+          },
+          {
+            "kind": "line",
+            "id": "PollA-Storage-4",
+            "points": [
+              { "x": 480, "y": 832 },
+              { "x": 480, "y": 896 }
+            ]
+          },
+          {
+            "kind": "line",
+            "id": "PollB-Storage-5",
+            "points": [
+              { "x": 96, "y": 832 },
+              { "x": 96, "y": 896 },
+              { "x": 480, "y": 896 }
+            ]
+          },
+          { "kind": "text", "id": "Browser-Page-0-label", "x": 488, "y": 147, "text": "opens", "weight": "s" },
+          { "kind": "text", "id": "Page-Api-1-label", "x": 361, "y": 371, "text": "marks, every 5 s", "weight": "s" },
+          { "kind": "text", "id": "Api-bus-0-trunk-label", "x": 488, "y": 595, "text": "one per poll", "weight": "s" },
+          { "kind": "text", "id": "Storage-bus-1-trunk-label", "x": 488, "y": 915, "text": "one key", "weight": "s" }
+        ]
+      }
+    }
+  ],
+  "flights": [
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "worker",
+        "origin": { "x": 352, "y": 192 },
+        "scale": 1,
+        "elements": [
+          {
+            "kind": "rect",
+            "id": "frame",
+            "x": 0,
+            "y": 0,
+            "w": 256,
+            "h": 608,
+            "color": "light-blue",
+            "fill": "tint",
+            "stroke": "dashed"
+          },
+          {
+            "kind": "text",
+            "id": "label",
+            "x": 16,
+            "y": 3,
+            "text": "Cloudflare Worker",
+            "color": "grey",
+            "weight": "s"
+          }
+        ]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "Browser",
+        "origin": { "x": 384, "y": 0 },
+        "scale": 1,
+        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 192, "h": 96, "text": "Traveler's browser" }]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "Page",
+        "origin": { "x": 384, "y": 224 },
+        "scale": 1,
+        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 192, "h": 96, "text": "Poll page" }]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "Api",
+        "origin": { "x": 384, "y": 448 },
+        "scale": 1,
+        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 192, "h": 96, "text": "API /offers" }]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "Secret",
+        "origin": { "x": 384, "y": 672 },
+        "scale": 1,
+        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 192, "h": 96, "text": "DUFFEL token" }]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "Poll",
+        "origin": { "x": 768, "y": 448 },
+        "scale": 1,
+        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 192, "h": 96, "text": "Poll object" }]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "Duffel",
+        "origin": { "x": 0, "y": 448 },
+        "scale": 1,
+        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 192, "h": 96, "text": "Duffel API" }]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "edges",
+        "origin": { "x": 0, "y": 0 },
+        "scale": 1,
+        "elements": [
+          { "kind": "arrow", "id": "Browser-Page-0", "start": { "x": 480, "y": 96 }, "end": { "x": 480, "y": 224 } },
+          { "kind": "arrow", "id": "Page-Api-1", "start": { "x": 480, "y": 320 }, "end": { "x": 480, "y": 448 } },
+          { "kind": "arrow", "id": "Api-Poll-2", "start": { "x": 576, "y": 496 }, "end": { "x": 768, "y": 496 } },
+          { "kind": "arrow", "id": "Api-Duffel-3", "start": { "x": 384, "y": 496 }, "end": { "x": 192, "y": 496 } },
+          {
+            "kind": "arrow",
+            "id": "Api-Secret-4",
+            "start": { "x": 480, "y": 544 },
+            "end": { "x": 480, "y": 672 },
+            "relation": "dependency",
+            "stroke": "dashed"
+          },
+          { "kind": "text", "id": "Browser-Page-0-label", "x": 488, "y": 147, "text": "origin, pick", "weight": "s" },
+          { "kind": "text", "id": "Page-Api-1-label", "x": 488, "y": 371, "text": "search", "weight": "s" },
+          {
+            "kind": "text",
+            "id": "Api-Poll-2-label",
+            "x": 622,
+            "y": 418,
+            "text": "trip, cached offers",
+            "weight": "s"
+          },
+          { "kind": "text", "id": "Api-Duffel-3-label", "x": 227, "y": 466, "text": "offer request", "weight": "s" }
+        ]
+      }
+    }
+  ]
+}

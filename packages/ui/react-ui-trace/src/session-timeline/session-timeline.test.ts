@@ -276,6 +276,44 @@ describe('buildSessionTimeline', () => {
   );
 
   it.effect(
+    'draws a live delegated run on the task in flight',
+    Effect.fnUntraced(function* ({ expect }) {
+      const first = Task.make({ title: 'First', status: 'review' });
+      const second = Task.make({ title: 'Second', status: 'started' });
+      const third = Task.make({ title: 'Third', status: 'started' });
+      const chat = makeChat('Live', [first, second, third]);
+      yield* TestTraceService.withMeta(
+        { pid: 'agent', conversation: chat.feed },
+        Effect.gen(function* () {
+          yield* Trace.write(Trace.AgentRequestBegin, {}); // 1.
+          yield* toolCall('Read file'); // 2.
+          yield* Trace.write(Trace.TaskStatusChanged, {
+            taskId: first.id,
+            title: 'First',
+            status: 'review',
+            previousStatus: 'started',
+          }); // 3.
+          yield* toolCall('Write file'); // 4.
+        }),
+      );
+
+      const messages = yield* TestTraceService.messages;
+      const timeline = buildSessionTimeline({
+        traceMessages: messages,
+        sessions: [chat.session],
+        tasks: [first, second, third],
+        now: 20,
+      });
+      const lane = (task: Task.Task) => timeline.lanes.find((candidate) => candidate.id === `task:${task.id}`);
+      expect(lane(first)).toMatchObject({ start: 1, end: 3 });
+      expect(lane(second)).toMatchObject({ start: 3, end: undefined });
+      expect(lane(third)?.start).toBeUndefined();
+      const lanesByLabel = new Map(timeline.markers.map((marker) => [marker.label, marker.laneId]));
+      expect(lanesByLabel.get('Write file')).toBe(lane(second)?.id);
+    }, Effect.provide(TestTraceService.layer)),
+  );
+
+  it.effect(
     'a task belonging to no lane on this chart cuts nothing',
     Effect.fnUntraced(function* ({ expect }) {
       const mine = Task.make({ title: 'Mine', status: 'done' });

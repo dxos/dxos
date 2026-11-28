@@ -1,0 +1,15 @@
+diagram flow=down
+node Browser "Respondent's browser"
+group worker "Cloudflare Worker" {
+  node Page "Poll page /p/:id"
+  node Api "API /api/polls"
+}
+group objects "Durable Objects" {
+  node PollA "Poll A"
+  node PollB "Poll B"
+}
+node Storage "SQLite storage"
+edge Browser -> Page "opens"
+edge Page -> Api "marks, every 5 s"
+edge Api -> PollA, PollB "one per poll" bus
+edge PollA, PollB -> Storage "one key" bus

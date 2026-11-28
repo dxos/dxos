@@ -212,7 +212,7 @@ const resolveSubtasks = (root: Task.Task): Task.Task[] =>
  * The turn generator to hand to `ScriptedLanguageModel.scriptedAiServiceMiddleware`.
  */
 /** The chat a request comes from: its own entry among the prompt's context objects. */
-const CHAT_CONTEXT = /<dxn>([^<]+)<\/dxn>\s*<typename>org\.dxos\.type\.assistant\.chat<\/typename>/;
+const CHAT_CONTEXT = /^- org\.dxos\.type\.assistant\.chat (\S+)/m;
 
 /**
  * The task delegated to the chat behind `request`. Delegation names the chat as the task's delegate,
