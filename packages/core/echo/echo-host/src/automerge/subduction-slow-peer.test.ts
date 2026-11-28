@@ -12,6 +12,8 @@ import {
 } from '@automerge/automerge-repo';
 import { type ExpectStatic, beforeAll, describe, test } from 'vitest';
 
+import { Trigger } from '@dxos/async';
+
 import { type TestConnectionStateProvider, type TestTransportOptions } from '../testing/index.ts';
 import {
   connectAdapters,
@@ -349,5 +351,54 @@ describe('Subduction sync with a slow peer', () => {
       return doc.value;
     };
     await expect.poll(storedValue, { timeout: WITHIN_MS }).toBe(1);
+  });
+
+  test('a resync requested while a round is in flight runs another round once it settles', async ({ expect }) => {
+    let edgeLink: 'on' | 'off' = 'on';
+    const { reader, edge, connect } = await createReader({ edgeLink: () => edgeLink });
+    await connect(expect);
+    const handle = reader.create<Doc>();
+    handle.change((doc) => {
+      doc.value = 0;
+    });
+    const copy = await edge.find<Doc>(handle.url);
+    await expect.poll(() => copy.doc()?.value, { timeout: WITHIN_MS }).toBe(0);
+    await expect.poll(() => reader.hasPendingSubductionSync(handle.documentId), { timeout: WITHIN_MS }).toBe(false);
+
+    // Holds each round after its exchange with the peers, so it settles on what they held before the edit below.
+    const subduction = await reader.subduction;
+    const syncWithPeer = subduction.syncWithPeer.bind(subduction);
+    const settle = new Trigger();
+    let exchanged = 0;
+    subduction.syncWithPeer = async (peerId, sedimentreeId, subscribe, timeoutMs) => {
+      const result = await syncWithPeer(peerId, sedimentreeId, subscribe, timeoutMs);
+      exchanged++;
+      await settle.wait();
+      return result;
+    };
+    reader.resyncSubduction(handle.documentId);
+    await expect.poll(() => exchanged, { timeout: WITHIN_MS }).toBeGreaterThan(0);
+
+    // An edit whose push never reaches the reader, as when its connection to the edge is replaced: the
+    // edge's round for it goes out on the cut link, so it waits out its deadline rather than retrying.
+    const edgeSubduction = await edge.subduction;
+    const edgeSyncWithPeer = edgeSubduction.syncWithPeer.bind(edgeSubduction);
+    const pushed = new Trigger();
+    edgeSubduction.syncWithPeer = (peerId, sedimentreeId, subscribe, timeoutMs) => {
+      const result = edgeSyncWithPeer(peerId, sedimentreeId, subscribe, timeoutMs);
+      pushed.wake();
+      return result;
+    };
+    edgeLink = 'off';
+    copy.change((doc) => {
+      doc.value = 1;
+    });
+    await pushed.wait({ timeout: WITHIN_MS });
+    edgeLink = 'on';
+
+    // What `AutomergeHost` does on seeing the edge's heads move: it asks once per head pair.
+    reader.resyncSubduction(handle.documentId);
+    settle.wake();
+    await expect.poll(() => handle.doc()?.value, { timeout: WITHIN_MS }).toBe(1);
   });
 });
