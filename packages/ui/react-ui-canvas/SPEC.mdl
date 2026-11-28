@@ -415,6 +415,9 @@ feat F-12: Selection and tools
   req F-12.7: The rail's create group ends with a Library tool when the host supplies library objects
     (`DimensionConfig.library`); a pick defines the object in the model once, as one undo step, then arms `place`
     ([org.dxos.scene#D-57]).
+  req F-12.8: An element taken out of the open layout, by an undo or by a peer, leaves the selection in both
+    dimensions, and a redo that brings it back does not select it; an element a gesture selects before the host's
+    document holds it stays selected ([D-60]).
 ```
 
 ```mdl
@@ -1064,6 +1067,15 @@ decision D-59: The camera, actions and display parts share one bottom bar, a rea
   for: user:wittjosiah
   affects: [F-18.1, SceneEditor.Actions, SceneEditor.Camera, SceneEditor.Display, SceneEditor.Root, SceneEditor.Viewport]
   why: The user chose one shared toolbar (2026-11-15) over three bars side by side, which needed measuring code to share the row; composing one toolbar's graph is react-ui-menu's existing pattern and ranks the three parts' controls together.
+```
+
+```mdl
+decision D-60: The editor's root drops from the selection every element the open layout held before a document change and does not hold after it, in both dimensions; an id the layout never held stays.
+  date: 2026-11-28
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-12.8, SceneEditor.Root]
+  why: The user asked for the fix (2026-11-28): after an undo the selection still named the removed solid, so the next extrusion, which takes the same id, was drawn selected while it was dragged, and Delete stayed enabled on nothing. The 2D engine cleared such an id only on its own undo, not on the host's or a peer's.
 ```
 
 ---

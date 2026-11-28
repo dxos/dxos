@@ -3,6 +3,7 @@
 //
 // @vitest-environment happy-dom
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
@@ -95,6 +96,47 @@ describe('the 2D dimension under SceneEditor', () => {
     await act(async () => screen.getByTestId('toolbar-zoom-in').click());
     await act(async () => new Promise((resolve) => setTimeout(resolve, 600)));
     expect(screen.getByText('125%')).toBeDefined();
+  });
+
+  test('an element removed from the open layout leaves the selection, as the engine draws it', async () => {
+    const config = createConfig2D();
+    let selected: readonly string[] = [];
+    const Probe = () => {
+      selected = useAtomValue(useSceneSelection('Probe').atoms.selection);
+      return null;
+    };
+    const Host = ({ document }: { document: Scene.SceneDocument }) => (
+      <SceneEditor.Root
+        config={config}
+        document={document}
+        scene='s'
+        onIntent={() => {}}
+        display={DISPLAY}
+        authoredCamera={AUTHORED}
+        onCameraChange={() => {}}
+      >
+        <Select ids={['a', 'b']} />
+        <Probe />
+        <SceneEditor.Viewport />
+      </SceneEditor.Root>
+    );
+    const { rerender } = render(<Host document={DOCUMENT} />);
+    await waitFor(() => expect(document.querySelector('[data-selected-id="a"]')).not.toBeNull());
+    expect(selected).toEqual(['a', 'b']);
+    // An undo through the host's history, or a peer's delete, takes `a` away.
+    const without: Scene.SceneDocument = {
+      ...DOCUMENT,
+      layouts: [
+        {
+          id: 'root',
+          dim: '2d',
+          elements: { b: { id: 'b', kind: 'rect', center: { x: 300, y: 0 }, size: { width: 100, height: 100 } } },
+        },
+      ],
+    };
+    rerender(<Host document={without} />);
+    await waitFor(() => expect(document.querySelector('[data-node-id="a"]')).toBeNull());
+    expect(selected).toEqual(['b']);
   });
 
   test('the shared camera is the scene point at the view’s centre: a fitted view shares it, and a peer’s is taken, not echoed', async () => {

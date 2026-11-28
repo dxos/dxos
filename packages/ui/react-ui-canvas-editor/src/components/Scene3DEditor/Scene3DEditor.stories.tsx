@@ -14,8 +14,9 @@ import { type WorkPlane } from '@dxos/react-ui-canvas/3d';
 import * as Button from '@dxos/react-ui/Button';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
-import { type LayoutIntent, type Scene, applyIntent } from '@dxos/scene';
+import { type LayoutIntent, type Scene, applyIntent, findLayout } from '@dxos/scene';
 
+import { withoutRemoved } from '../../editor/index.ts';
 import { Scene3DEditor } from './Scene3DEditor.tsx';
 import { type FaceSelection, type Tool3D } from './tools.ts';
 
@@ -175,6 +176,14 @@ const DefaultStory = ({ exemplar, commitDelay, initialTool = 'select', grid, sna
   const [editing, setEditing] = useState<string>();
   const [face, setFace] = useState<FaceSelection>();
   const scene = document.scenes[0];
+  // As the full editor does: an element an undo takes away is no longer selected.
+  const [drawn, setDrawn] = useState(document);
+  if (drawn !== document) {
+    setDrawn(document);
+    const open = editing ?? scene?.layout;
+    open !== undefined &&
+      setSelection((selection) => [...withoutRemoved(selection, findLayout(drawn, open), findLayout(document, open))]);
+  }
   const onIntent = useCallback(
     (layout: string, intent: LayoutIntent) => {
       const apply = () =>
@@ -298,7 +307,7 @@ export const Extrude: Story = {
  * 3. A press on a cube and a move away from it draw the extruded solid, not yet in the document; a further move
  *    reshapes the mesh drawn rather than making another.
  * 4. The release makes the `extrude` element, selected.
- * 5. Undo (⌘Z) takes the extrusion away, and redo (⇧⌘Z) brings it back.
+ * 5. Undo (⌘Z) takes the extrusion away, no longer selected, and redo (⇧⌘Z) brings it back.
  */
 export const ExtrudeTest: Story = {
   args: { exemplar: 'overlap', commitDelay: 100 },
@@ -400,8 +409,11 @@ export const ExtrudeTest: Story = {
     // 5.
     await fireEvent.keyDown(editor, { key: 'z', metaKey: true });
     await waitFor(() => expect(bounds('item-extrude-1')).toBeUndefined());
+    // The solid taken away is no longer selected, so the next one made with its id is not drawn selected.
+    await waitFor(() => expect(editor.dataset.selection).toBe(''));
     await fireEvent.keyDown(editor, { key: 'z', metaKey: true, shiftKey: true });
     await waitFor(() => expect(bounds('item-extrude-1')).toBe(preview));
+    await expect(editor.dataset.selection).toBe('');
   },
 };
 

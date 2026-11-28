@@ -6,7 +6,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { type ActiveTool, type FaceSelection } from '@dxos/react-ui-canvas';
-import { type LayoutIntent } from '@dxos/scene';
+import { type LayoutIntent, type Scene } from '@dxos/scene';
 
 /** An in-flight gesture's edit, drawn but not yet written (decision 8). */
 export type EditorPreview = { layout: string; intent: LayoutIntent };
@@ -69,6 +69,17 @@ export const createViewState = (registry: Registry.AtomRegistry): ViewState => {
     setFace: (face) => registry.set(atoms.face, face),
   };
 };
+
+/**
+ * `selection` without the elements `before` held and `after` does not; an id neither holds stays, since a gesture
+ * selects what it made before the host's document holds it.
+ */
+export const withoutRemoved = (
+  selection: readonly string[],
+  before: Scene.LayoutRecord | undefined,
+  after: Scene.LayoutRecord | undefined,
+): readonly string[] =>
+  selection.filter((id) => before?.elements[id] === undefined || after?.elements[id] !== undefined);
 
 /** The editor's own state beside the dimension's: gesture previews, the context menu, notices and the playhead. */
 export type EditorAtoms = {
