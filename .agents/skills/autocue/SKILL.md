@@ -495,6 +495,12 @@ The recording is variable-frame-rate — Chromium only emits a frame when someth
 encodes in time proportional to the motion, not the session length. The trimmer resamples on decode and
 re-encodes with the same VP9 settings (`--crf`, default 30), so the resolution survives trimming.
 
+**An idle driver holds still.** With no op in flight for a minute (a backgrounded `run` is in flight until its take
+ends), each frame replaces the last, so a driver left open between takes keeps one frame on disk and the gap trims
+away as a still; wait inside the driver (`waitFor`, `sleep`), not with a shell `sleep`. A frame that cannot be
+written (a full disk) ends the recording with a `recorder:` log line and a `lost` reason on `stop`; the driver keeps
+serving.
+
 ### The action overlay
 
 Every gesture is painted into the page as it happens, so the video shows causes as well as effects:

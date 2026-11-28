@@ -14,6 +14,10 @@
  * us (Chromium's screencast emits on paint), so a still stretch costs one file and the output is
  * variable-frame-rate: an agent-paced session encodes in time proportional to its motion, not its
  * length. `trim-static.mjs` resamples to a constant rate on decode, so it reads this unchanged.
+ *
+ * While `idle()` holds, each frame replaces the last one instead of adding a file, so a driver left open between
+ * takes keeps one frame on disk however much the page animates, and the gap encodes as a still the trimmer cuts.
+ * A frame that cannot be written (a full disk) ends the recording with a log line; `stop` encodes what came before.
  */
 
 import { spawn, spawnSync } from 'node:child_process';
@@ -31,9 +35,9 @@ export const hasFullFfmpeg = () => {
 
 /**
  * @param {import('@playwright/test').Page} page
- * @param {{ dir: string, file: string, size: { width: number, height: number }, fps: number, crf: number, quality: number }} options
+ * @param {{ dir: string, file: string, size: { width: number, height: number }, fps: number, crf: number, quality: number, idle?: () => boolean }} options
  */
-export const startRecorder = async (page, { dir, file, size, fps, crf, quality }) => {
+export const startRecorder = async (page, { dir, file, size, fps, crf, quality, idle = () => false }) => {
   const framesDir = path.join(dir, 'frames');
   rmSync(framesDir, { recursive: true, force: true });
   mkdirSync(framesDir, { recursive: true });
@@ -47,11 +51,16 @@ export const startRecorder = async (page, { dir, file, size, fps, crf, quality }
   // Frames closer together than one output frame overwrite the last one: during a drag Chromium emits
   // at display rate, and every extra frame is disk and encode time the output rate would discard anyway.
   const minGap = 1000 / fps;
+  /** Why frames stopped being kept, once a write has failed. */
+  let lost;
 
   await page.screencast.start({
     size,
     quality,
     onFrame: ({ data, timestamp }) => {
+      if (lost) {
+        return;
+      }
       // Dated by when the browser presented it, not when it arrived: a frame painted before a `cut` can be
       // delivered after it, and would otherwise carry discarded footage into the new recording.
       const ms = (Number.isFinite(timestamp) ? timestamp : Date.now()) - started;
@@ -59,13 +68,23 @@ export const startRecorder = async (page, { dir, file, size, fps, crf, quality }
         return;
       }
       const last = frames.at(-1);
-      if (last && ms - last.ms < minGap) {
-        writeFileSync(last.file, data);
+      const replace = last && (ms - last.ms < minGap || idle());
+      const frameFile = replace ? last.file : path.join(framesDir, `${String(written++).padStart(6, '0')}.jpg`);
+      try {
+        writeFileSync(frameFile, data);
+      } catch (error) {
+        // Thrown from a screencast callback, this would be uncaught and take the driver down with the recording.
+        lost = `frames stopped at ${(ms / 1000).toFixed(1)}s: ${error.message}; the video ends on the last frame kept`;
+        // A half-written JPEG would fail the encode on `stop`; unlisted, it is only deleted with the folder.
+        if (replace) {
+          frames.pop();
+        }
+        console.error(`recorder: ${lost}`);
         return;
       }
-      const frameFile = path.join(framesDir, `${String(written++).padStart(6, '0')}.jpg`);
-      writeFileSync(frameFile, data);
-      frames.push({ file: frameFile, ms });
+      if (!replace) {
+        frames.push({ file: frameFile, ms });
+      }
     },
   });
 
@@ -132,7 +151,7 @@ export const startRecorder = async (page, { dir, file, size, fps, crf, quality }
       throw new Error(`ffmpeg exited ${code}; frames kept in ${framesDir}`);
     }
     rmSync(framesDir, { recursive: true, force: true });
-    return { file, frames: frames.length, seconds: stoppedMs / 1000 };
+    return { file, frames: frames.length, seconds: stoppedMs / 1000, ...(lost ? { lost } : {}) };
   };
 
   /**

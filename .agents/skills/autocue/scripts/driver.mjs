@@ -307,6 +307,15 @@ if (manual && !native) {
   context.on('close', () => process.exit(0));
 }
 
+/**
+ * Idle is no op in flight for a minute (a backgrounded `run` is in flight until its take ends); the recorder holds
+ * one frame while idle, since a driver left open between takes would otherwise record an animated page for hours.
+ */
+const IDLE_MS = 60_000;
+let opsInFlight = 0;
+let lastOpAt = Date.now();
+const idle = () => opsInFlight === 0 && Date.now() - lastOpAt > IDLE_MS;
+
 const recorder = !hires
   ? undefined
   : native
@@ -324,6 +333,7 @@ const recorder = !hires
         fps: options.fps,
         crf: options.crf,
         quality: options.quality,
+        idle,
       });
 
 /**
@@ -1138,6 +1148,7 @@ const server = createServer((request, response) => {
       );
     }
 
+    opsInFlight++;
     try {
       const result = await handler(command);
       // Serialized before the header goes out, so a result that cannot be stringified reaches the catch below.
@@ -1159,6 +1170,9 @@ const server = createServer((request, response) => {
       // the driver would lose the recording of the failure.
       response.writeHead(200, { 'content-type': 'application/json' });
       response.end(JSON.stringify({ ok: false, error: error.message?.split('\n').slice(0, 6).join('\n') }));
+    } finally {
+      opsInFlight--;
+      lastOpAt = Date.now();
     }
   });
 });
