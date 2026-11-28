@@ -244,11 +244,16 @@ export class GraphBuilder extends Builder.GraphBuilder<
       ...urlGrammar,
       linked: { ...DEFAULT_LINKED, ...urlGrammar?.linked },
     };
+    // Bound after `super` returns; the comparator first runs on a flush, well after construction.
+    let graph: Graph.ExpandableGraph | undefined;
+    // A connector re-run that only rebuilt its actions' closures is a no-op apart from the closures: retarget
+    // the stored forwarders and skip the flush, instead of re-offering every node of the relation.
+    const sameAction = (offer: Node.NodeArg<any>) => graph !== undefined && Graph.retargetAction(graph, offer);
     super({
       registry,
       relationKey: (relation) => Graph.relationKey(relation ?? 'child'),
       inline,
-      unchanged: nodeArgsUnchanged,
+      unchanged: (prev, next) => nodeArgsUnchanged(prev, next, { sameAction }),
       decorateNode,
       store: (hooks, resolvedRegistry) => makeStore(graphProps, hooks, resolvedRegistry),
     });
@@ -256,6 +261,7 @@ export class GraphBuilder extends Builder.GraphBuilder<
     invariant(grammar.linked.prefix.length > 0, 'UrlGrammar.linked.prefix must not be empty');
     invariant(grammar.tailSeparator.length > 0, 'UrlGrammar.tailSeparator must not be empty');
     this.urlGrammar = grammar;
+    graph = this.graph;
   }
 
   /** Hand flushes to the scheduler so a large expansion yields to the main thread. */

@@ -334,6 +334,34 @@ describe('Graph', () => {
     expect(invoked).toEqual(['a', 'b']);
   });
 
+  test('retargetAction points a stored action at a new closure only while nothing else differs', () => {
+    const graph = Graph.make();
+    const invoked: string[] = [];
+    const Value = Context.Service<number>('app-graph/test/RetargetValue');
+    const stored = Context.make(Value, 1);
+    const offer = (name: string, context = stored, label = 'A', id = EXAMPLE_ID) => {
+      const action = {
+        ...Node.makeAction({ id, data: () => Effect.sync(() => invoked.push(name)), properties: { label } }),
+        _actionContext: context,
+      };
+      return action;
+    };
+    Graph.addNode(graph, offer('a'));
+
+    expect(Graph.retargetAction(graph, offer('b'))).toBe(true);
+    // Another writer's context or label cannot ride a retarget: the caller re-adds the node instead.
+    expect(Graph.retargetAction(graph, offer('c', Context.make(Value, 2)))).toBe(false);
+    expect(Graph.retargetAction(graph, offer('d', stored, 'B'))).toBe(false);
+    expect(Graph.retargetAction(graph, offer('e', stored, 'A', exampleId(2)))).toBe(false);
+
+    const node = Graph.getNode(graph, EXAMPLE_ID).pipe(Option.getOrThrow);
+    assert.ok(Node.isAction(node));
+    Effect.runSync(node.data());
+    expect(invoked).toEqual(['b']);
+    expect(node._actionContext).toBe(stored);
+    expect(node.properties.label).toBe('A');
+  });
+
   test('re-offering an action with a new context updates it', () => {
     const graph = Graph.make();
     const invoke = () => Effect.void;

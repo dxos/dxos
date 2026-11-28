@@ -888,6 +888,40 @@ const stableData = (graph: GraphImpl, id: string, type: string, existing: unknow
 };
 
 /**
+ * Points the stored action at the offered closure, as re-adding `offer` would, without re-adding it: the node,
+ * its edges and the graph's version are untouched. Returns false, so the caller adds the node instead, when the
+ * graph holds no forwarder of its own for the id (the node is absent or is not an action), or when re-adding
+ * would change anything else — another writer's context or properties are what re-adding replaces.
+ */
+export const retargetAction = (
+  graph: BaseGraph,
+  offer: Node.NodeArg<any> & { _actionContext?: Node.ActionContext },
+): boolean => {
+  const internal = getInternal(graph);
+  const { id, data, properties = {}, _actionContext: context } = offer;
+  const existing = internal._currentNode(id);
+  if (Option.isNone(existing) || !Node.isAction(existing.value) || typeof data !== 'function') {
+    return false;
+  }
+  const stored = existing.value;
+  // Mirrors `addNode`: an offer without a context keeps the stored one, and properties are merged per key.
+  if (context !== undefined && stored._actionContext !== context) {
+    return false;
+  }
+  if (Object.keys(properties).some((key) => !Equal.equals(stored.properties[key], properties[key]))) {
+    return false;
+  }
+  const forwarder = stored.data;
+  if (!isForwarder(forwarder) || forwarder[ForwardedKey].graph !== internal || forwarder[ForwardedKey].id !== id) {
+    return false;
+  }
+  if (forwarder !== data) {
+    forwarder[ForwardedKey].target = isForwarder(data) ? data[ForwardedKey].target : data;
+  }
+  return true;
+};
+
+/**
  * Add a node to the graph.
  */
 export const addNode = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg<any, Record<string, any>>): T => {

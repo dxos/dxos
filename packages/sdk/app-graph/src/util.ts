@@ -45,11 +45,28 @@ export const secondaryParts = (key: string): string[] => key.split(SECONDARY);
 export const normalizeRelation = (relation?: Node.RelationInput): Node.Relation =>
   relation == null ? Node.child : typeof relation === 'string' ? Node.relation(relation) : relation;
 
+export type NodeArgsUnchangedOptions = {
+  /**
+   * Called for every action whose previous and offered `data` are both functions with the same context, with
+   * the offered action. Returning true treats it as unchanged; the callee is then responsible for making the
+   * stored node run the offered closure from now on (the app graph's `retargetAction`). Without it, a
+   * re-created closure reads as changed.
+   */
+  sameAction?: (offer: Node.NodeArg<any>) => boolean;
+};
+
+/** The context an extension attaches to its actions, which `NodeArg` does not declare. */
+const actionContext = (node: Node.NodeArg<any> & { _actionContext?: unknown }): unknown => node._actionContext;
+
 /**
  * Returns true if two NodeArg arrays are semantically identical (same id, type, data, properties per index).
  * Inline child nodes (the `nodes` field) are compared recursively.
  */
-export const nodeArgsUnchanged = (prev: readonly Node.NodeArg<any>[], next: readonly Node.NodeArg<any>[]): boolean => {
+export const nodeArgsUnchanged = (
+  prev: readonly Node.NodeArg<any>[],
+  next: readonly Node.NodeArg<any>[],
+  options: NodeArgsUnchangedOptions = {},
+): boolean => {
   if (prev.length !== next.length) {
     return false;
   }
@@ -59,10 +76,30 @@ export const nodeArgsUnchanged = (prev: readonly Node.NodeArg<any>[], next: read
     return (
       prevNode.id === nextNode.id &&
       prevNode.type === nextNode.type &&
-      shallowEqual(prevNode.data, nextNode.data) &&
+      dataUnchanged(prevNode, nextNode, options) &&
       Equal.equals(prevNode.properties ?? {}, nextNode.properties ?? {}) &&
-      nodeArgsUnchanged(prevNode.nodes ?? [], nextNode.nodes ?? []) &&
-      nodeArgsUnchanged(prevNode.actions ?? [], nextNode.actions ?? [])
+      nodeArgsUnchanged(prevNode.nodes ?? [], nextNode.nodes ?? [], options) &&
+      nodeArgsUnchanged(prevNode.actions ?? [], nextNode.actions ?? [], options)
     );
   });
+};
+
+const dataUnchanged = (
+  prevNode: Node.NodeArg<any>,
+  nextNode: Node.NodeArg<any>,
+  { sameAction }: NodeArgsUnchangedOptions,
+): boolean => {
+  // Builders rebuild an action's closure inline on every connector run, so its identity carries no
+  // information; the context it runs with is attached per extension and stays stable, so it is compared.
+  // A closure equal to the baseline still goes through `sameAction`: the baseline only advances when output
+  // is applied, so the stored node may target a closure from a skipped run in between.
+  if (
+    sameAction !== undefined &&
+    nextNode.type === Node.ActionType &&
+    typeof prevNode.data === 'function' &&
+    typeof nextNode.data === 'function'
+  ) {
+    return actionContext(prevNode) === actionContext(nextNode) && sameAction(nextNode);
+  }
+  return shallowEqual(prevNode.data, nextNode.data);
 };
