@@ -439,6 +439,8 @@ try {
     peers: peerList.map((peer, index) => ({
       name: peer.name,
       file: stopped[index].file,
+      // Set when a frame write failed: the pane's footage ends early.
+      lost: stopped[index].lost,
       offsetMs: peer.recorder.started - base,
     })),
     steps: captions,

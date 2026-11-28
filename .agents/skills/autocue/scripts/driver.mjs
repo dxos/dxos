@@ -1076,16 +1076,16 @@ const handlers = {
     const timelineFile = path.join(options.out, 'timeline.json');
     // Read while the page is still open: the app's own config is the only record of the EDGE it talked to.
     const recording = await recordingInfo({ page, flowFile: flow.file, appUrl: options.url, target: options.target });
-    // The flow file names the package it exercises, which the trimmer uses to name and place the upload.
-    writeFileSync(
-      timelineFile,
-      JSON.stringify({ started, flow: flow.file, recording, steps: timeline, speed: speedChanges }, null, 2),
-    );
     let recorded;
     try {
+      // The flow file names the package it exercises, which the trimmer uses to name and place the upload.
+      writeFileSync(
+        timelineFile,
+        JSON.stringify({ started, flow: flow.file, recording, steps: timeline, speed: speedChanges }, null, 2),
+      );
       recorded = await recorder?.stop();
     } finally {
-      // Also when the encode fails: the app, browser and log tap must not outlive the session.
+      // Also when the timeline write or the encode fails (a full disk): the app, browser and log tap must not outlive the session.
       // Before the session closes: the polled tap drains once more and stops its timer.
       await logTap?.close();
       await context?.close();
