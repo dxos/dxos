@@ -8,8 +8,8 @@ by: agent:claude-code
 # Review: EdgePlugins
 
 Reviewed against dxos `main` (fe33761, with #14334 and #14389) and dxos/edge#1426 (`claude/edge-plugin-releases` at
-6b89e06), updated for dxos/dxos#14396 (host gaps), which now counts as done. Code that is only on other open PRs (#14395
-bundle fixes, #14393 CLI) counts as not done.
+6b89e06), updated for dxos/dxos#14411, which landed the host gaps (#14396), the bundle fixes (#14395) and the lazy CLI
+client (#14393) together.
 
 The publish-and-run path works on each side and, with dxos/dxos#14396, across them: edge#1426's router calls `protocolVersion()`, which the entrypoint now exports (PluginEntrypoint). `composerPlugin` builds one bundle with `vendor/`. `check-edge-release` loads every
 `edge-release` bundle alone in workerd. registry-service describes each upload in Worker Loader, indexes operations,
@@ -17,7 +17,7 @@ types and channels in D1, and refuses activation failures, key conflicts and cha
 `dxn:` key to the bundle's Dynamic Worker, with a fallback to operation-service. Types another plugin publishes resolve
 through `TYPE_REGISTRY` and ECHO type sources. Each of these has tests in workerd or on the edge stack.
 
-Of 87 items: 41 done, 3 untested, 22 partial, 4 diverged, 17 missing. Findings:
+Of 87 items: 43 done, 3 untested, 21 partial, 3 diverged, 17 missing. Findings:
 
 - **Discovery still reads operation-service.** MCP `queryOperations`, `loadSkill` and the agents' skill list read
   operation-service's KV catalog, not bundle catalogs (F-4.2, F-5.1, F-6.8). operation-service also still serves 25 keys
@@ -80,13 +80,13 @@ verdict SpacePluginChannel: No space annotation; compute-service resolves every 
 ```
 
 ```mdl
-verdict InvocationScope: On main the scope carries only accessTokenService, and the space travels in InvokeRequest.spaceId.
+verdict InvocationScope: The scope carries the request context, the host services and other plugins' operations, but not the space.
   status: partial
   evidence: [github:dxos/dxos/packages/core/protocols/src/PluginProtocol.ts#InvocationScope, github:dxos/edge/packages/services/compute-service/src/plugins/invocation-scope.ts#invocationScope]
   tests: [github:dxos/edge/packages/services/edge/test/plugin-store.node.test.ts]
   note: |
-    caller, traceSink, cancellation and a nested invoke are missing on main. dxos/dxos#14396 (P3, P4, open) adds the
-    request context and host services to the scope. edge#1426 already builds the matching scope in compute-service.
+    dxos/dxos#14411 (P3, P4) added the request context and host services; edge#1426 builds the matching scope in
+    compute-service. The space still travels in `InvokeRequest.spaceId`, not `scope.spaceId` as the target has it.
 ```
 
 ```mdl
@@ -123,14 +123,13 @@ verdict PluginLoader: The rewrite, main module and LOADER.get by hash work; tail
 ```
 
 ```mdl
-verdict PluginEntrypoint: describe and invoke are served with failures as data; edge#1426 also calls protocolVersion, which main lacks.
-  status: partial
+verdict PluginEntrypoint: describe, invoke and protocolVersion are served, with failures as data.
+  status: done
   evidence: [github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/PluginHost.ts#make, github:dxos/dxos/packages/core/compute/edge-compute/src/plugin-loader/PluginLoader.ts#workerCode, github:dxos/dxos/packages/core/protocols/src/PluginProtocol.ts#Entrypoint]
   tests: [github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/PluginHost.workerd.test.ts]
   note: |
-    edge#1426's router calls `protocolVersion()` before every invoke. The main module that main's PluginLoader generates
-    exports only `describe` and `invoke`. The protocol version is in dxos/dxos#14396 (P10, open), so a bundle built
-    from main does not run under edge#1426.
+    edge#1426's router calls `protocolVersion()` before every invoke; the generated main module answers it from the
+    vendored host since dxos/dxos#14411 (P10), and reports 1 for a host that predates versioning.
 ```
 
 ```mdl
@@ -155,7 +154,7 @@ verdict publishPlugin: dx registry publish builds, describes locally and uploads
   note: |
     The only end-to-end test (edge `plugin-store.node.test.ts`, the dx CLI suite) is skipped unless `DX_CLI` names a
     `dx`, and edge does not install one. On main, `--upload-only --edge-url` still waits for the ECHO client to
-    initialize; dxos/dxos#14393 (open) removes that wait. The spec's `status: unimplemented` is out of date.
+    initialize; dxos/dxos#14411 (from #14393) removed that wait. The spec's `status: unimplemented` is out of date.
 ```
 
 ```mdl
@@ -353,14 +352,13 @@ verdict F-5.1: queryOperations lists operation-service's catalog, not bundle cat
 ```
 
 ```mdl
-verdict F-5.2: A key a bundle implements runs in its Dynamic Worker in the given space; ECHO output is not encoded.
+verdict F-5.2: A key a bundle implements runs in its Dynamic Worker in the given space, with ECHO output encoded, only in plugins routing.
   status: partial
   evidence: [github:dxos/edge/packages/services/compute-service/src/plugins/plugin-router.ts#invokeInBundle, github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/PluginHost.ts#make]
   tests: [github:dxos/edge/packages/services/edge/test/plugin-store.node.test.ts, github:dxos/edge/packages/services/edge/test/plugin-seed.node.test.ts, github:dxos/dxos/packages/plugins/plugin-space/src/edge-bundle.test.ts]
   note: |
-    The host returns the handler's output as Workers RPC clones it, which drops a live ECHO object. T-7's test is
-    `test.fails` for this on main. dxos/dxos#14396 (P2, open) encodes output as operation-service does. Only in plugins
-    routing (`OPERATION_ROUTING=plugins`).
+    dxos/dxos#14411 (P2) encodes output as operation-service does, so a live ECHO object survives Workers RPC (T-7).
+    Only in plugins routing (`OPERATION_ROUTING=plugins`); the default still sends every key to operation-service.
 ```
 
 ```mdl
@@ -527,7 +525,7 @@ verdict F-12.1: check-edge-release loads every edge-release bundle alone in work
   status: done
   evidence: [github:dxos/dxos/packages/core/compute/plugin-builder/src/verify-bundle.ts#verifyBundle, github:dxos/dxos/packages/core/compute/plugin-builder/src/load-bundle.ts#loadBundle, github:dxos/dxos/.moon/tasks/tag-edge-release.yml]
   tests: [github:dxos/dxos/packages/core/compute/plugin-builder/src/PluginBundle.test.ts, github:dxos/dxos/.github/workflows/check.yml]
-  note: The memory and load-time budget is in dxos/dxos#14395 (open).
+  note: The memory and load-time budget landed in dxos/dxos#14411 (from #14395).
 ```
 
 ```mdl
@@ -585,10 +583,9 @@ verdict T-6: All four cases pass against the real space bundle.
 ```
 
 ```mdl
-verdict T-7: The test exists as test.fails; main does not encode the output.
-  status: diverged
+verdict T-7: The test passes now that the host encodes the output.
+  status: done
   tests: [github:dxos/dxos/packages/plugins/plugin-space/src/edge-bundle.test.ts]
-  note: The test asserts this scenario and is expected to fail. dxos/dxos#14396 (P2, open) encodes the output and flips it.
 ```
 
 ```mdl
@@ -639,8 +636,8 @@ verdict T-15: Works; the e2e test is skipped in CI because no `dx` binary is ins
   status: partial
   tests: [github:dxos/edge/packages/services/edge/test/plugin-store.node.test.ts]
   note: |
-    `describe.skipIf(!existsSync(DX_CLI))`: edge does not declare `@dxos/cli`, and no workflow sets `DX_CLI`. Adding it
-    to edge needs a dxos pin that includes dxos/dxos#14393, which lets `--upload-only` run without the ECHO client.
+    `describe.skipIf(!existsSync(DX_CLI))`. edge#1426 adds `@dxos/cli`; it runs once edge pins a dxos build that includes
+    dxos/dxos#14411, which lets `--upload-only` run without the ECHO client.
 ```
 
 ```mdl
