@@ -102,6 +102,10 @@ export const middleware = ({
               // allow list, it removes it, and `/@fs/<absolute path>` would then serve any file the
               // process can read.
               fs: { allow: [appRoot, repoRoot] },
+              // Only the UI's own sources are watched for hot reload. Every workspace module and icon asset the
+              // page loads would otherwise be watched too, and under Bun each watch holds its directory chain
+              // open: thousands of descriptors, past the point where the process can spawn git (Watch.ts).
+              watch: { ignored: (path: string) => !path.startsWith(appRoot) },
             },
             // The UI is Solid, except for the chat thread, which is the repository's own React
             // component. `vite-plugin-solid` must therefore be scoped to the Solid half — left
@@ -116,18 +120,21 @@ export const middleware = ({
               // `@dxos/react-ui`'s `Icon` reads glyphs out of a sprite this plugin builds; without
               // it every icon in the thread renders as an empty box.
               IconsPlugin({
-                symbolPattern: iconSymbolPattern({ sets: ['ph', 'dx', 'px'], regularOnly: ['dx', 'px'] }),
+                // `vsc` is the tree's VS Code glyphs (Seti files, codicon declarations), written by scripts/icons.ts.
+                symbolPattern: iconSymbolPattern({ sets: ['ph', 'dx', 'px', 'vsc'], regularOnly: ['dx', 'px', 'vsc'] }),
                 assetPath: (iconSet, name, variant) =>
                   iconSet === 'dx'
                     ? join(repoRoot, 'packages/ui/brand/assets/icons', `${name}.svg`)
                     : iconSet === 'px'
                       ? join(repoRoot, 'packages/ui/ui-icons/assets', `${name}.svg`)
-                      : join(
-                          repoRoot,
-                          'node_modules/@phosphor-icons/core/assets',
-                          variant,
-                          `${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
-                        ),
+                      : iconSet === 'vsc'
+                        ? join(repoRoot, 'tools/code-index/assets/icons', `${name}.svg`)
+                        : join(
+                            repoRoot,
+                            'node_modules/@phosphor-icons/core/assets',
+                            variant,
+                            `${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
+                          ),
                 spriteFile: 'icons.svg',
                 contentPaths: [join(repoRoot, '{packages,tools}/**/src/**/*.{ts,tsx,css}')],
               }),

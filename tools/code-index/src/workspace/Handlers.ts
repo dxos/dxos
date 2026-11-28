@@ -19,7 +19,9 @@ import * as IndexStatus from './IndexStatus.ts';
 import * as Log from './Log.ts';
 import type * as Models from './Models.ts';
 import * as Protocol from './Protocol.ts';
+import * as Search from './Search.ts';
 import * as Titles from './Titles.ts';
+import * as Tree from './Tree.ts';
 
 /**
  * The server side of the protocol. A `Dispatch` of a `UserMessage` is the one call that does work:
@@ -46,6 +48,17 @@ export const layer = (options: { readonly root: string; readonly model: Models.S
       yield* store.stats().pipe(Effect.ignore, Effect.forkIn(scope));
       // Built on the first `Describe`, so `describe` resolves a box's `ref` exactly as the MCP tool does.
       const mcp = yield* Effect.cached(Server.handlers(store));
+      const tree = yield* Tree.make(store, options.root);
+      const search = yield* Search.make(store);
+      // Built now so the first Cmd+P is instant, and again after each pass that moved the revision.
+      yield* search.warm.pipe(Effect.ignore, Effect.forkIn(scope));
+      yield* index.changes.pipe(
+        Stream.map((status) => status.revision),
+        Stream.changes,
+        Stream.drop(1),
+        Stream.runForEach(() => search.refresh.pipe(Effect.ignore)),
+        Effect.forkIn(scope),
+      );
 
       /**
        * One turn at a time per project. The log serializes individual appends, not turns, so two
@@ -146,6 +159,18 @@ export const layer = (options: { readonly root: string; readonly model: Models.S
             ),
             Effect.mapError((cause) => failure(cause.message)),
           ),
+
+        TreeChildren: ({ ids, diff }: { ids: readonly string[]; diff?: boolean }) =>
+          tree.children(ids, { diff }).pipe(Effect.mapError((cause) => failure(cause.message))),
+
+        TreeLocate: ({ id }: { id: string }) =>
+          tree.locate(id).pipe(Effect.mapError((cause) => failure(cause.message))),
+
+        Search: ({ query }: { query: string }) =>
+          search.search(query).pipe(Effect.mapError((cause) => failure(cause.message))),
+
+        TreeSource: ({ id }: { id: string }) =>
+          tree.source(id).pipe(Effect.mapError((cause) => failure(cause.message))),
 
         ListProjects: () =>
           log.listProjects().pipe(

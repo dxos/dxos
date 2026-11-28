@@ -4,12 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 import { execFile } from 'node:child_process';
-import { mkdir, mkdtemp, rm, utimes, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, mkdtemp, rm, utimes, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { parseSync } from 'oxc-parser';
-import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from 'vitest';
 
 import * as EffectEx from '@dxos/effect/EffectEx';
 
@@ -284,4 +284,132 @@ describe('Indexer', () => {
       ).toEqual([]);
     }
   }, 60_000);
+});
+
+describe('Indexer, when files cannot be read', () => {
+  let root: string;
+  let dir: string;
+
+  beforeAll(async () => {
+    root = await mkdtemp(join(tmpdir(), 'code-index-unreadable-'));
+    dir = join(root, 'node_modules', '.code-index');
+    await mkdir(join(root, 'src', 'locked'), { recursive: true });
+    await writeFile(join(root, 'src', 'a.ts'), 'export const a = 1;\n');
+    await writeFile(join(root, 'src', 'locked', 'b.ts'), 'export const b = 2;\n');
+    await git(root, 'init', '--quiet');
+    // Tracked, so `git ls-files` lists them whether or not their directory can be read.
+    await git(root, 'add', '-A');
+  }, 60_000);
+
+  afterAll(async () => {
+    await chmod(join(root, 'src', 'locked'), 0o755).catch(() => {});
+    await rm(root, { recursive: true, force: true });
+  });
+
+  const index = () =>
+    EffectEx.runPromise(Effect.scoped(Effect.provide(Indexer.run({ root, workers: 1 }), Store.layer(dir))));
+
+  const paths = () =>
+    EffectEx.runPromise(
+      Effect.scoped(
+        Effect.provide(
+          Effect.flatMap(Store.Store, (store) => store.listFiles()),
+          Store.layer(dir),
+        ),
+      ),
+    ).then((files) => files.map(({ path }) => path));
+
+  // A stat that fails for any reason but absence (EMFILE while an install holds every descriptor,
+  // EACCES) says nothing about whether the file exists, so it must not read as a deletion.
+  test('a file that cannot be stat-ed fails the pass rather than being removed', async () => {
+    await index();
+    expect(await paths()).toEqual(['src/a.ts', 'src/locked/b.ts']);
+
+    await chmod(join(root, 'src', 'locked'), 0o000);
+    try {
+      await expect(index()).rejects.toThrow(/Failed to stat src\/locked\/b\.ts/);
+    } finally {
+      await chmod(join(root, 'src', 'locked'), 0o755);
+    }
+    expect(await paths()).toEqual(['src/a.ts', 'src/locked/b.ts']);
+  }, 60_000);
+});
+
+describe('Indexer, when git stops listing a file', () => {
+  let root: string;
+  let dir: string;
+
+  // A repository per test, each indexed once as its baseline, so no test leans on another's pass.
+  beforeEach(async () => {
+    root = await mkdtemp(join(tmpdir(), 'code-index-unlisted-'));
+    dir = join(root, 'node_modules', '.code-index');
+    await mkdir(join(root, 'src', 'nested'), { recursive: true });
+    await writeFile(join(root, 'src', 'a.ts'), 'export const a = 1;\n');
+    await writeFile(join(root, 'src', 'nested', 'b.ts'), 'export const b = 2;\n');
+    await writeFile(join(root, 'src', 'scratch.ts'), 'export const scratch = 3;\n');
+    await writeFile(join(root, 'src', 'a"b.ts'), 'export const quoted = 4;\n');
+    await git(root, 'init', '--quiet');
+  }, 60_000);
+
+  afterEach(async () => {
+    await chmod(join(root, 'src', 'nested'), 0o755).catch(() => {});
+    await rm(root, { recursive: true, force: true });
+  });
+
+  const index = () =>
+    EffectEx.runPromise(Effect.scoped(Effect.provide(Indexer.run({ root, workers: 1 }), Store.layer(dir))));
+
+  const paths = () =>
+    EffectEx.runPromise(
+      Effect.scoped(
+        Effect.provide(
+          Effect.flatMap(Store.Store, (store) => store.listFiles()),
+          Store.layer(dir),
+        ),
+      ),
+    ).then((files) => files.map(({ path }) => path));
+
+  const ALL = ['src/a"b.ts', 'src/a.ts', 'src/nested/b.ts', 'src/scratch.ts'];
+
+  test('a file that exists and is not ignored stays indexed though the listing omits it', async () => {
+    await index();
+    expect(await paths()).toEqual(ALL);
+
+    // An embedded repository is listed as one directory entry, so its files drop out of the listing.
+    await git(join(root, 'src', 'nested'), 'init', '--quiet');
+    const result = await index();
+    expect(result.removed).toBe(0);
+    expect(await paths()).toEqual(ALL);
+  }, 60_000);
+
+  test('a file in a directory that cannot be read is kept, since its absence is not established', async () => {
+    await index();
+    await chmod(join(root, 'src', 'nested'), 0o000);
+    const result = await index();
+    expect(result.removed).toBe(0);
+    expect(await paths()).toEqual(ALL);
+  }, 60_000);
+
+  test('a file git now ignores, or that is gone, still leaves the index', async () => {
+    // A quote makes git print the path quoted and escaped; one outside the BMP is two UTF-16 units inside it.
+    await writeFile(join(root, 'src', '😀"c.ts'), 'export const emoji = 5;\n');
+    await index();
+    expect(await paths()).toEqual([...ALL, 'src/😀"c.ts']);
+    await writeFile(join(root, '.gitignore'), 'src/scratch.ts\nsrc/a"b.ts\nsrc/😀"c.ts\n');
+    await rm(join(root, 'src', 'a.ts'));
+    const result = await index();
+    expect(result.removed).toBe(4);
+    expect(await paths()).toEqual(['src/nested/b.ts']);
+  }, 60_000);
+});
+
+describe('Crawler.unquote', () => {
+  test('decodes the C-quoted records git prints for unusual paths, by code point', () => {
+    expect(Crawler.unquote('src/plain.ts')).toBe('src/plain.ts');
+    expect(Crawler.unquote('"src/a\\"b.ts"')).toBe('src/a"b.ts');
+    expect(Crawler.unquote('"src/😀\\"b.ts"')).toBe('src/😀"b.ts');
+    // With core.quotePath on, a non-ASCII byte is an octal escape; the bytes reassemble into the character.
+    expect(Crawler.unquote('"src/\\360\\237\\230\\200.ts"')).toBe('src/😀.ts');
+    expect(Crawler.unquote('"src/tab\\there.ts"')).toBe('src/tab\there.ts');
+  });
 });

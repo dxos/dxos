@@ -134,6 +134,7 @@ catalog:
   '@fontsource/poiret-one': ^5.2.8
   '@hazae41/symbol-dispose-polyfill': ^1.0.2
   '@huggingface/transformers': ^3.8.1
+  '@iconify-json/codicon': ^1.2.78
   '@internationalized/date': ^3.12.3
   '@ipld/car': ^5.3.3
   '@jitl/quickjs-wasmfile-release-sync': ^0.31.0
@@ -635,6 +636,7 @@ catalog:
   seedrandom: ^3.0.5
   semver: ^7.7.4
   serve: ^14.2.5
+  seti-ui: ^1.11.0
   sharp: ^0.34.5
   shiki: ^4.5.0
   simplex-noise: ^4.0.3

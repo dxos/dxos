@@ -71,6 +71,8 @@ type Declaration = {
   /** The top-level statement, including any `export` wrapper — the snippet span. */
   readonly statement: Node;
   readonly offset: number;
+  /** The module's default export, whatever it is named. */
+  readonly isDefault?: boolean;
 };
 
 const isPrivateMember = (node: Node): boolean =>
@@ -157,6 +159,95 @@ const staticMembers = (node: Node, className: string, exported: boolean): Declar
   });
 };
 
+/** The longest signature kept for a member; a longer one is cut, since it is a list row, not the source. */
+const MAX_SIGNATURE = 160;
+
+/** A member's source on one line, its body (a method's block) replaced by `{ … }`. */
+const signatureOf = (source: string, member: Node): string => {
+  const body = isNode(member.value) && isNode(member.value.body) ? member.value.body : undefined;
+  const text = body
+    ? `${source.slice(member.start, body.start).trimEnd()} { … }`
+    : source.slice(member.start, member.end).replace(/[;,]\s*$/, '');
+  const line = text.replace(/\s+/g, ' ').trim();
+  return line.length > MAX_SIGNATURE ? `${line.slice(0, MAX_SIGNATURE - 1)}…` : line;
+};
+
+const MEMBER_KINDS: Record<string, string> = {
+  PropertyDefinition: 'property',
+  AccessorProperty: 'property',
+  TSPropertySignature: 'property',
+  TSMethodSignature: 'method',
+};
+
+/**
+ * What a class, an interface or an object type lists: its properties, methods and accessors, each
+ * with the lines it spans. Private members (`#x`, `private x`) are left out, as they are not what a
+ * reader of the type can reach; index signatures and call signatures have no name to list.
+ */
+export const membersOf = (source: string, node: Node, lineAt: (offset: number) => number): Ontology.MemberFact[] => {
+  const literal =
+    node.type === 'TSTypeAliasDeclaration' &&
+    isNode(node.typeAnnotation) &&
+    node.typeAnnotation.type === 'TSTypeLiteral'
+      ? node.typeAnnotation
+      : undefined;
+  const elements =
+    node.type === 'ClassDeclaration' || node.type === 'TSInterfaceDeclaration'
+      ? isNode(node.body) && Array.isArray(node.body.body)
+        ? node.body.body
+        : []
+      : literal && Array.isArray(literal.members)
+        ? literal.members
+        : [];
+  // An overloaded method is declared once per signature; it is one member, spanning all of them.
+  const byName = new Map<string, Ontology.MemberFact>();
+  for (const member of elements.filter(isNode).flatMap((element) => memberOf(source, element, lineAt))) {
+    const key = `${member.static === true ? 'static ' : ''}${member.name}`;
+    const seen = byName.get(key);
+    byName.set(key, seen ? { ...seen, endLine: Math.max(seen.endLine, member.endLine) } : member);
+  }
+  return [...byName.values()];
+};
+
+/** The accessor or method kind of a member, or `undefined` for a property. */
+const methodKindOf = (member: Node): string | undefined => {
+  if (member.type !== 'MethodDefinition' && member.type !== 'TSMethodSignature') {
+    return undefined;
+  }
+  switch (member.kind) {
+    case 'get':
+      return 'getter';
+    case 'set':
+      return 'setter';
+    case 'constructor':
+      return 'constructor';
+    default:
+      return 'method';
+  }
+};
+
+const memberOf = (source: string, member: Node, lineAt: (offset: number) => number): Ontology.MemberFact[] => {
+  if (isPrivateMember(member)) {
+    return [];
+  }
+  const name = keyNameOf(member);
+  const kind = methodKindOf(member) ?? MEMBER_KINDS[member.type];
+  // A constructor's key is `constructor`; anything else with no plain name (computed keys) is skipped.
+  if (!kind || (!name && kind !== 'constructor')) {
+    return [];
+  }
+  return [
+    {
+      name: name ?? 'constructor',
+      kind,
+      line: lineAt(member.start),
+      endLine: lineAt(member.end),
+      signature: signatureOf(source, member),
+      ...(member.static === true ? { static: true } : {}),
+    },
+  ];
+};
+
 /**
  * Top-level declarations, with whether each one leaves the module. Recurses into namespace bodies —
  * `export namespace X { export const Y = … }` declares `X.Y`, which is module API under another name.
@@ -194,7 +285,12 @@ export const declarations = (body: readonly Statement[], prefix = '', inherited 
         return isNode(statement.declaration) ? qualify(declarationsOf(statement.declaration, statement, true)) : [];
       case 'ExportDefaultDeclaration': {
         const declaration = isNode(statement.declaration) ? statement.declaration : undefined;
-        const named = declaration ? qualify(declarationsOf(declaration, statement, true)) : [];
+        // `export default class X` is named `X`, so the default-ness is a fact of its own, not of the name.
+        const named = declaration
+          ? qualify(declarationsOf(declaration, statement, true)).map((entry) =>
+              entry.node === declaration ? { ...entry, isDefault: true } : entry,
+            )
+          : [];
         return named.length > 0
           ? named
           : [
@@ -202,6 +298,7 @@ export const declarations = (body: readonly Statement[], prefix = '', inherited 
                 name: 'default',
                 kind: declaration ? (KINDS[declaration.type] ?? 'variable') : 'variable',
                 exported: true,
+                isDefault: true,
                 node: declaration ?? statement,
                 statement,
                 offset: statement.start,
@@ -1137,8 +1234,11 @@ export const snippetOf = (
   const cuts: Cut[] = [];
   const literals: Array<{ node: Node; depth: number }> = [];
 
+  // JSDoc stays: it is the API a reader of the signature needs (a member's meaning, its defaults). Other
+  // comments are implementation notes, and go with the implementation.
   for (const comment of comments) {
-    if (comment.start >= statement.start && comment.end <= statement.end) {
+    const isDoc = comment.type === 'Block' && comment.value.startsWith('*');
+    if (!isDoc && comment.start >= statement.start && comment.end <= statement.end) {
       cuts.push({ start: comment.start, end: comment.end, text: '' });
     }
   }
@@ -1398,6 +1498,8 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
   }
 
   const declared = declarations(body);
+  // Member and end lines are many per file; an index of line starts answers each in log time.
+  const lineAt = lineIndex(source);
   const inference = infer({ path, program: programNode(parsed), imports: bindings });
   const types = TypeRdf.collector();
   /** `hasType`, and the term as JSON with literal freshness intact, for the cross-file pass to bind. */
@@ -1597,6 +1699,11 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
       'kind': declaration.kind,
       'exported': declaration.exported,
       'line': lineOf(source, declaration.offset),
+      'endLine': lineAt(declaration.statement.end),
+      ...(declaration.isDefault === true ? { defaultExport: true } : {}),
+      ...((members) => (members.length === 0 ? {} : { members: JSON.stringify(members) }))(
+        membersOf(source, declaration.node, lineAt),
+      ),
       'extends': refsToIris(extendsRefs),
       'constructedBy': refsToIris(construction.constructedBy),
       ...((rest) => (rest.length === 0 ? {} : { constructedByPath: rest.join('.') }))(
@@ -1731,6 +1838,8 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
       'apiDependsOn': alias.typeOnly && alias.origin ? [alias.origin] : [],
       'implDependsOn': !alias.typeOnly && alias.origin ? [alias.origin] : [],
       'aliasOf': alias.origin ? [alias.origin] : [],
+      // `export { x as default } from` is this module's default, which `export *` does not carry on.
+      ...(alias.name === 'default' ? { defaultExport: true } : {}),
     }));
 
   // The namespace is a symbol of this file like any other export — `Ontology` is what an importer

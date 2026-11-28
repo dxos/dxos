@@ -664,3 +664,118 @@ describe('call sites', () => {
     expect(site(sites, `${sym('src/k.ts', 'join')}/call/Surface.create/0`).literal).toEqual(['id=join']);
   });
 });
+
+describe('members and declaration extents', () => {
+  const MEMBERS_SOURCE = [
+    'export class Box {', // 1
+    '  static empty = new Box();', // 2
+    '  #secret = 1;', // 3
+    '  private hidden = 2;', // 4
+    '  readonly size: number;', // 5
+    '  constructor(size: number) {', // 6
+    '    this.size = size;', // 7
+    '  }', // 8
+    '  get area(): number {', // 9
+    '    return this.size ** 2;', // 10
+    '  }', // 11
+    '  grow(by: number): Box;', // 12
+    '  grow(by: string): Box;', // 13
+    '  grow(by: number | string): Box {', // 14
+    '    return new Box(this.size + Number(by));', // 15
+    '  }', // 16
+    '}', // 17
+    '', // 18
+    'export interface Shape { readonly sides: number; describe(prefix?: string): string }', // 19
+    '', // 20
+    'export type Options = {', // 21
+    '  label?: string;', // 22
+    '  onPick: (id: string) => void;', // 23
+    '};', // 24
+    '', // 25
+    'export type Alias = Box | Shape;', // 26
+    '',
+  ].join('\n');
+  const analyzed = analyzeTypeScript({
+    ...context,
+    path: 'src/members.ts',
+    source: MEMBERS_SOURCE,
+    resolve: () => undefined,
+  });
+  const declared = (name: string) => analyzed.declares.find((candidate) => candidate.name === name);
+  const membersOf = (name: string): Ontology.MemberFact[] => JSON.parse(declared(name)?.members ?? '[]');
+
+  test('a class lists its public members, an overloaded method once across all its lines, bodies elided', () => {
+    expect(membersOf('Box')).toEqual([
+      { name: 'empty', kind: 'property', line: 2, endLine: 2, signature: 'static empty = new Box()', static: true },
+      { name: 'size', kind: 'property', line: 5, endLine: 5, signature: 'readonly size: number' },
+      { name: 'constructor', kind: 'constructor', line: 6, endLine: 8, signature: 'constructor(size: number) { … }' },
+      { name: 'area', kind: 'getter', line: 9, endLine: 11, signature: 'get area(): number { … }' },
+      { name: 'grow', kind: 'method', line: 12, endLine: 16, signature: 'grow(by: number): Box' },
+    ]);
+  });
+
+  test('an interface and an object type list their properties and methods; another alias lists none', () => {
+    expect(membersOf('Shape').map((member) => [member.name, member.kind])).toEqual([
+      ['sides', 'property'],
+      ['describe', 'method'],
+    ]);
+    expect(membersOf('Options').map((member) => member.signature)).toEqual([
+      'label?: string',
+      'onPick: (id: string) => void',
+    ]);
+    expect(declared('Alias')?.members).toBeUndefined();
+  });
+
+  test('a snippet keeps the JSDoc inside a declaration and drops other comments', () => {
+    const documented = analyzeTypeScript({
+      ...context,
+      path: 'src/documented.ts',
+      source: [
+        'export type Options = {',
+        '  /** Retain the original id. */',
+        '  retainId?: boolean;',
+        '  // An implementation note.',
+        '  deep?: boolean;',
+        '};',
+        '',
+      ].join('\n'),
+      resolve: () => undefined,
+    });
+    const snippet = documented.declares.find((candidate) => candidate.name === 'Options')?.snippet ?? '';
+    expect(snippet).toContain('/** Retain the original id. */');
+    expect(snippet).not.toContain('implementation note');
+  });
+
+  test('a default export is marked as one, whatever it is named and however it is written', () => {
+    const exportsOf = (source: string) =>
+      analyzeTypeScript({ ...context, path: 'src/defaults.ts', source, resolve: () => undefined }).declares.map(
+        (declared) => [declared.name, declared.defaultExport ?? false],
+      );
+    expect(exportsOf('export  default class Extra {}\nexport const other = 1;\n')).toEqual([
+      ['Extra', true],
+      ['other', false],
+    ]);
+    expect(exportsOf('export default () => 1;\n')).toEqual([['default', true]]);
+  });
+
+  test('a re-export aliased to default is marked as the default export', () => {
+    const { declares } = analyzeTypeScript({
+      ...context,
+      path: 'src/barrel.ts',
+      source: "export { thing as default, other } from './named.ts';\n",
+      resolve: () => '/repo/src/named.ts',
+    });
+    expect(declares.map((declared) => [declared.name, declared.defaultExport ?? false])).toEqual([
+      ['default', true],
+      ['other', false],
+    ]);
+  });
+
+  test('a declaration records the line its statement ends on', () => {
+    expect(
+      Object.fromEntries(
+        ['Box', 'Shape', 'Options', 'Alias'].map((name) => [name, [declared(name)?.line, declared(name)?.endLine]]),
+      ),
+    ).toEqual({ Box: [1, 17], Shape: [19, 19], Options: [21, 24], Alias: [26, 26] });
+  });
+});

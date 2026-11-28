@@ -49,7 +49,16 @@
       "path": "../../packages/ui/react-ui-feed"
     },
     {
+      "path": "../../packages/ui/react-ui-list"
+    },
+    {
       "path": "../../packages/ui/react-ui-markdown"
+    },
+    {
+      "path": "../../packages/ui/react-ui-search"
+    },
+    {
+      "path": "../../packages/ui/react-ui-syntax-highlighter"
     },
     {
       "path": "../../packages/ui/ui-editor"
