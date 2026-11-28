@@ -429,7 +429,11 @@ try {
     console.error('could not read the recording metadata:', error);
     return undefined;
   });
-  const stopped = await Promise.all(peerList.map((peer) => peer.recorder.stop().catch((error) => ({ error }))));
+  // A message, not the `Error`: an `Error` serializes to `{}` in `timeline.json` and the summary.
+  const stopped = await Promise.all(
+    peerList.map((peer) => peer.recorder.stop().catch((error) => ({ error: String(error?.message ?? error) }))),
+  );
+  const stopFailed = stopped.some((result) => result.error);
   await Promise.all(peerList.map((peer) => peer.context.close().catch(() => {})));
 
   const base = takeStart ?? Math.min(...peerList.map((peer) => peer.recorder.started));
@@ -441,6 +445,8 @@ try {
       file: stopped[index].file,
       // Set when a frame write failed: the pane's footage ends early.
       lost: stopped[index].lost,
+      // Set when the recorder produced no file: the pane has no footage.
+      error: stopped[index].error,
       offsetMs: peer.recorder.started - base,
     })),
     steps: captions,
@@ -463,7 +469,12 @@ try {
     }).catch((error) => ({ error: String(error?.message ?? error) }));
   }
   console.log(
-    JSON.stringify({ ok: !failed && !composed?.error, steps: results, timeline: timeline.peers, composed }, null, 2),
+    JSON.stringify(
+      { ok: !failed && !stopFailed && !composed?.error, steps: results, timeline: timeline.peers, composed },
+      null,
+      2,
+    ),
   );
-  process.exitCode = failed ? 1 : 0;
+  // A pane with no recording is a failed take even when every step passed.
+  process.exitCode = failed || stopFailed ? 1 : 0;
 }
