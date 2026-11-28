@@ -11,6 +11,7 @@ import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { DXN } from '@dxos/keys';
 
 import * as Annotation from './Annotation.ts';
+import * as Filter from './Filter.ts';
 import * as JsonSchema from './JsonSchema.ts';
 import * as Obj from './Obj.ts';
 import * as Ref from './Ref.ts';
@@ -437,6 +438,105 @@ describe('Annotation', () => {
 
       const snapshot = Obj.getSnapshot(person);
       expect(Option.getOrThrow(Annotation.get(snapshot, ColorAnnotation))).toBe('snapshot-color');
+    });
+  });
+
+  describe('keyed', () => {
+    const Entry = Schema.Struct({ score: Schema.Number });
+    const Scores = Annotation.make({
+      id: 'org.dxos.annotation.scores',
+      schema: Schema.Record(Schema.String, Entry),
+      keyed: true,
+    });
+    // The same id without `keyed`: how the record was stored before the annotation became keyed.
+    const BareScores = Annotation.make({
+      id: 'org.dxos.annotation.scores',
+      schema: Schema.Record(Schema.String, Entry),
+    });
+    const Player = Type.makeObject(DXN.make('com.example.type.player', '0.1.0'))(
+      Schema.Struct({ name: Schema.String }),
+    );
+
+    test('stores each entry under its own meta key', ({ expect }) => {
+      const player = Obj.make(Player, { name: 'Alice' });
+      Annotation.update(player, Scores, (scores) => {
+        scores.alice = { score: 1 };
+        scores.bob = { score: 2 };
+      });
+
+      expect(Annotation.get(player, Scores).pipe(Option.getOrThrow)).toEqual({
+        alice: { score: 1 },
+        bob: { score: 2 },
+      });
+      expect(Object.keys(Obj.getMeta(player).annotations).sort()).toEqual([
+        'org.dxos.annotation.scores/alice',
+        'org.dxos.annotation.scores/bob',
+      ]);
+    });
+
+    test('update edits an entry in place and deletes removed entries', ({ expect }) => {
+      const player = Obj.make(Player, { name: 'Alice' });
+      Annotation.update(player, Scores, (scores) => {
+        scores.alice = { score: 1 };
+        scores.bob = { score: 2 };
+      });
+      Annotation.update(player, Scores, (scores) => {
+        scores.alice.score = 5;
+        delete scores.bob;
+      });
+
+      expect(Annotation.get(player, Scores).pipe(Option.getOrThrow)).toEqual({ alice: { score: 5 } });
+      Annotation.update(player, Scores, (scores) => {
+        delete scores.alice;
+      });
+      expect(Option.isNone(Annotation.get(player, Scores))).toBe(true);
+    });
+
+    test('set replaces the entries', ({ expect }) => {
+      const player = Obj.make(Player, { name: 'Alice' });
+      Obj.update(player, (player) => {
+        Annotation.set(player, Scores, { alice: { score: 1 } });
+        Annotation.set(player, Scores, { bob: { score: 2 } });
+      });
+
+      expect(Annotation.get(player, Scores).pipe(Option.getOrThrow)).toEqual({ bob: { score: 2 } });
+    });
+
+    test('reads a record stored under the bare key; keyed entries win and deletes clear it', ({ expect }) => {
+      const player = Obj.make(Player, { name: 'Alice' });
+      Obj.update(player, (player) => {
+        Annotation.set(player, BareScores, { alice: { score: 1 }, bob: { score: 2 } });
+      });
+      Annotation.update(player, Scores, (scores) => {
+        scores.bob = { score: 3 };
+        delete scores.alice;
+      });
+
+      expect(Annotation.get(player, Scores).pipe(Option.getOrThrow)).toEqual({ bob: { score: 3 } });
+      expect(Annotation.get(player, BareScores).pipe(Option.getOrThrow)).toEqual({ bob: { score: 2 } });
+    });
+
+    test('requires a string-keyed record schema', ({ expect }) => {
+      expect(() =>
+        Annotation.make({
+          id: 'org.dxos.annotation.struct',
+          schema: Schema.Struct({ score: Schema.Number }),
+          // @ts-expect-error a struct is not a string-keyed record.
+          keyed: true,
+        }),
+      ).toThrow();
+      expect(() =>
+        Annotation.make({
+          id: 'org.dxos.annotation.scalar',
+          schema: Schema.String,
+          // @ts-expect-error a scalar is not a string-keyed record.
+          keyed: true,
+        }),
+      ).toThrow();
+    });
+
+    test('is not queryable', ({ expect }) => {
+      expect(() => Filter.annotation(Scores)).toThrow();
     });
   });
 

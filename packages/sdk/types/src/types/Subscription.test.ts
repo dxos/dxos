@@ -18,7 +18,7 @@ describe('Subscription', () => {
     expect(Subscription.getSubscribers(Task.make({ title: 'Task' }), 'comments')).toEqual([]);
   });
 
-  test('add creates the annotation, then adds further subscribers beside the first', ({ expect }) => {
+  test('add adds each subscriber beside the others', ({ expect }) => {
     const task = Task.make({ title: 'Task' });
     Subscription.add(task, ALICE);
     Subscription.add(task, BOB);

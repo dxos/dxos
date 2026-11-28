@@ -30,6 +30,11 @@ export const get = <T>(
   // proxy codecs nested refs in both directions, and a snapshot deep-copies what the proxy yields),
   // so the read coerces to the declared type rather than decoding a second time.
   const annotations = getMetaChecked(target).annotations;
+  if (annotation.keyed) {
+    const entries = getEntries(annotations, annotation);
+    return Object.keys(entries).length > 0 ? Option.some(entries as T) : Option.none();
+  }
+
   return annotation.key in annotations ? Option.some(annotations[annotation.key] as T) : Option.none();
 };
 
@@ -46,7 +51,12 @@ export const set = <T>(target: Mutable<Entity.Unknown>, annotation: Annotation.A
     // The dictionary slot is untyped, so the proxy can't validate against the annotation schema;
     // validate here (without encoding — the proxy encodes nested refs and links targets on assignment).
     Schema.decodeSync(Schema.toType(annotation.schema))(value);
-    getMetaChecked(target).annotations[annotation.key] = value;
+    const annotations = getMetaChecked(target).annotations;
+    if (annotation.keyed) {
+      writeEntries(annotations, annotation, getEntries(annotations, annotation), value as Entries);
+    } else {
+      annotations[annotation.key] = value;
+    }
   } else {
     throw new TypeError('Target is not an annotation target.');
   }
@@ -54,7 +64,8 @@ export const set = <T>(target: Mutable<Entity.Unknown>, annotation: Annotation.A
 
 /**
  * Mutate an existing annotation value in place via a callback, wrapping the mutation in a change
- * transaction (like `Obj.update`). Use when only an annotation needs to change. No-op when absent.
+ * transaction (like `Obj.update`). Use when only an annotation needs to change. No-op when absent,
+ * except for a keyed annotation, whose mutator starts from an empty record.
  */
 export const update = <T>(
   target: Entity.Unknown,
@@ -62,6 +73,18 @@ export const update = <T>(
   mutator: (value: Mutable<T>) => void,
 ): void => {
   change(target, (mutable) => {
+    if (annotation.keyed) {
+      const annotations = getMetaChecked(mutable).annotations;
+      const before = getEntries(annotations, annotation);
+      // Values are the live entries, so a nested edit lands in place; only added, replaced, or
+      // removed keys are written back.
+      const after = { ...before };
+      mutator(after as Mutable<T>);
+      Schema.decodeUnknownSync(Schema.toType(annotation.schema))(after);
+      writeEntries(annotations, annotation, before, after);
+      return;
+    }
+
     const current = get(mutable, annotation);
     if (Option.isSome(current)) {
       // `get` returns the value read-only; inside this change transaction the live value is mutable.
@@ -72,4 +95,59 @@ export const update = <T>(
       Schema.decodeUnknownSync(Schema.toType(annotation.schema))(value);
     }
   });
+};
+
+type Entries = Record<string, unknown>;
+
+const entryKey = (annotation: Annotation.Annotation<any>, key: string): string => `${annotation.key}/${key}`;
+
+/**
+ * Entries of a keyed annotation: a whole record written under its bare key (by a non-keyed
+ * annotation with the same id), overridden by the per-entry keys.
+ */
+const getEntries = (annotations: Readonly<Entries>, annotation: Annotation.Annotation<any>): Entries => {
+  const entries: Entries = {};
+  const record = annotations[annotation.key];
+  if (record !== null && typeof record === 'object') {
+    Object.assign(entries, record);
+  }
+
+  const prefix = entryKey(annotation, '');
+  for (const key of Object.keys(annotations)) {
+    if (key.startsWith(prefix)) {
+      entries[key.slice(prefix.length)] = annotations[key];
+    }
+  }
+
+  return entries;
+};
+
+/**
+ * Writes each added or replaced entry under its own key and deletes removed ones, never assigning a
+ * container, so concurrent writes of different entries merge. A removed entry is also deleted from
+ * the bare-key record, which stays in place for clients that still write it.
+ */
+const writeEntries = (
+  annotations: Entries,
+  annotation: Annotation.Annotation<any>,
+  before: Readonly<Entries>,
+  after: Readonly<Entries>,
+): void => {
+  for (const [key, value] of Object.entries(after)) {
+    if (before[key] !== value) {
+      annotations[entryKey(annotation, key)] = value;
+    }
+  }
+
+  for (const key of Object.keys(before)) {
+    if (key in after) {
+      continue;
+    }
+
+    delete annotations[entryKey(annotation, key)];
+    const record = annotations[annotation.key];
+    if (record !== null && typeof record === 'object' && key in record) {
+      delete (record as Entries)[key];
+    }
+  }
 };

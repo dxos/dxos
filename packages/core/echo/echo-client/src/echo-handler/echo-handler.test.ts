@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Context } from '@dxos/context';
 import { Annotation, DXN, Entity, Filter, Obj, Query, Ref, Relation, Tag, Type } from '@dxos/echo';
+import { TestReplicationNetwork } from '@dxos/echo-host/testing';
 import { EncodedReference } from '@dxos/echo-protocol';
 import {
   ATTR_RELATION_SOURCE,
@@ -816,6 +817,61 @@ describe('Reactive Object with ECHO database', () => {
 
       const ref = Annotation.get(Obj.getSnapshot(host), RootRefAnnotation).pipe(Option.getOrThrow);
       expect((await ref.load()).id).to.eq(root.id);
+    });
+  });
+
+  describe('keyed annotations', () => {
+    // Resolves once both replicas of an object reach the same heads. The database barrier covers only
+    // the space root document, and each object lives in a linked document of its own.
+    const converged = (obj1: Obj.Unknown, obj2: Obj.Unknown): Promise<void> =>
+      new Promise((resolve) => {
+        const heads = (obj: Obj.Unknown) => [...getObjectCore(obj).getHeads()].sort().join();
+        const check = () => {
+          if (heads(obj1) === heads(obj2)) {
+            unsubscribe1();
+            unsubscribe2();
+            resolve();
+          }
+        };
+        const unsubscribe1 = Obj.subscribe(obj1, check);
+        const unsubscribe2 = Obj.subscribe(obj2, check);
+        check();
+      });
+
+    const Scores = Annotation.make({
+      id: 'com.example.annotation.scores',
+      schema: Schema.Record(Schema.String, Schema.Struct({ score: Schema.Number })),
+      keyed: true,
+    });
+
+    test('first entries written concurrently by two peers both survive the merge', async () => {
+      const [spaceKey] = PublicKey.randomSequence();
+      await using network = await new TestReplicationNetwork().open();
+      await using peer1 = await builder.createPeer();
+      await using peer2 = await builder.createPeer();
+      await peer1.host.addReplicator(Context.default(), await network.createReplicator());
+      await peer2.host.addReplicator(Context.default(), await network.createReplicator());
+
+      await using db1 = await peer1.createDatabase(spaceKey);
+      const obj1 = db1.add(Obj.make(TestSchema.Expando, {}));
+      await db1.flush();
+      await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
+      await db2.waitUntilHeadsReplicated(await db1.getDocumentHeads());
+      await db2._entityManager.loadObjectCoreById(obj1.id);
+      const obj2 = db2.getObjectById<TestSchema.Expando>(obj1.id)!;
+
+      // Same tick: neither peer can have received the other's write.
+      Annotation.update(obj1, Scores, (scores) => {
+        scores.alice = { score: 1 };
+      });
+      Annotation.update(obj2, Scores, (scores) => {
+        scores.bob = { score: 2 };
+      });
+      await converged(obj1, obj2);
+
+      const expected = { alice: { score: 1 }, bob: { score: 2 } };
+      expect(Annotation.get(obj1, Scores).pipe(Option.getOrThrow)).to.deep.eq(expected);
+      expect(Annotation.get(obj2, Scores).pipe(Option.getOrThrow)).to.deep.eq(expected);
     });
   });
 
