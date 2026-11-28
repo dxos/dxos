@@ -100,6 +100,36 @@ describe('SceneEditor aspects', () => {
     }
   });
 
+  test('an element removed from the open layout leaves the selection, and one not yet stored stays in it', () => {
+    let selected: readonly string[] = [];
+    let select: ((ids: readonly string[]) => void) | undefined;
+    const Probe = () => {
+      const selection = useSceneSelection('Probe');
+      selected = useAtomValue(selection.atoms.selection);
+      select = selection.commands.select;
+      return null;
+    };
+    const editor = (document: Scene.SceneDocument) => (
+      <SceneEditor.Root config={CONFIG} document={document} scene='s' onIntent={() => {}} display={DISPLAY}>
+        <Probe />
+      </SceneEditor.Root>
+    );
+    const { rerender } = render(editor(documentWith(['a', 'b'])));
+    act(() => select?.(['a', 'b']));
+    // An undo, or a peer's delete, takes `a` away.
+    rerender(editor(documentWith(['b'])));
+    expect(selected).toEqual(['b']);
+    // A redo brings it back as it was before it was made: not selected.
+    rerender(editor(documentWith(['a', 'b'])));
+    expect(selected).toEqual(['b']);
+    // A gesture selects what it made before the host's document holds it.
+    act(() => select?.(['b', 'c']));
+    rerender(editor(documentWith(['a', 'b'])));
+    expect(selected).toEqual(['b', 'c']);
+    rerender(editor(documentWith(['a', 'b', 'c'])));
+    expect(selected).toEqual(['b', 'c']);
+  });
+
   test('the host restacks the selection against the whole view, in one batch', () => {
     const intents: { layout: string; intent: LayoutIntent }[] = [];
     let table: CommandTable | undefined;

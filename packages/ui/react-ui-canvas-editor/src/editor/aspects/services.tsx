@@ -4,8 +4,10 @@
 
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 
+import { findLayout } from '@dxos/scene';
+
 import { type DimensionConfig } from '../config.ts';
-import { createEditorStore } from '../store.ts';
+import { createEditorStore, withoutRemoved } from '../store.ts';
 import { createCommandsAspect } from './commands.ts';
 import { type SceneEditorServices } from './context.ts';
 import { createDocumentAspect } from './document.ts';
@@ -73,7 +75,17 @@ export const createSceneEditorServices = <C,>(
     MenuLead: dimension.MenuLead,
   };
   const sync = () => {
+    const before = registry.get(document.atoms.document);
     syncDocument();
+    const after = registry.get(document.atoms.document);
+    const open = registry.get(document.atoms.layout);
+    if (after !== before && open !== undefined) {
+      // An element an undo or a peer took out of the open layout would otherwise stay selected, and a later one of
+      // its id be drawn selected.
+      const selection = registry.get(dimension.selection.atoms.selection);
+      const kept = withoutRemoved(selection, findLayout(before, open), findLayout(after, open));
+      kept.length === selection.length || dimension.selection.commands.select(kept);
+    }
     time.sync();
     const { props } = latest.current;
     setChanged(registry, camera.host, props.camera);
