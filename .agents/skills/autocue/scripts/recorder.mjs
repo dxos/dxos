@@ -15,9 +15,10 @@
  * variable-frame-rate: an agent-paced session encodes in time proportional to its motion, not its
  * length. `trim-static.mjs` resamples to a constant rate on decode, so it reads this unchanged.
  *
- * While `idle()` holds, each frame replaces the last one instead of adding a file, so a driver left open between
- * takes keeps one frame on disk however much the page animates, and the gap encodes as a still the trimmer cuts.
- * A frame that cannot be written (a full disk) ends the recording with a log line; `stop` encodes what came before.
+ * While `idle()` holds, a frame at most once a second replaces the last one instead of adding a file, so a driver
+ * left open between takes keeps one frame on disk however much the page animates, and the gap encodes as a still
+ * the trimmer cuts. A frame that cannot be written (a full disk) stops the recording with a log line until the next
+ * `cut`; `stop` encodes what came before.
  */
 
 import { spawn, spawnSync } from 'node:child_process';
@@ -51,8 +52,10 @@ export const startRecorder = async (page, { dir, file, size, fps, crf, quality, 
   // Frames closer together than one output frame overwrite the last one: during a drag Chromium emits
   // at display rate, and every extra frame is disk and encode time the output rate would discard anyway.
   const minGap = 1000 / fps;
-  /** Why frames stopped being kept, once a write has failed. */
+  /** Why frames stopped being kept, once a write has failed; a `cut` clears it, since it discards that footage. */
   let lost;
+  // Wall clock, not `ms`, so a `cut` restarting the recording clock cannot leave it in the future.
+  let heldAt = 0;
 
   await page.screencast.start({
     size,
@@ -68,7 +71,12 @@ export const startRecorder = async (page, { dir, file, size, fps, crf, quality, 
         return;
       }
       const last = frames.at(-1);
-      const replace = last && (ms - last.ms < minGap || idle());
+      const held = last && idle();
+      // A held frame encodes as a still whatever its content, so rewriting it at display rate is only CPU and I/O.
+      if (held && Date.now() - heldAt < 1000) {
+        return;
+      }
+      const replace = held || (last && ms - last.ms < minGap);
       const frameFile = replace ? last.file : path.join(framesDir, `${String(written++).padStart(6, '0')}.jpg`);
       try {
         writeFileSync(frameFile, data);
@@ -82,6 +90,9 @@ export const startRecorder = async (page, { dir, file, size, fps, crf, quality, 
         console.error(`recorder: ${lost}`);
         return;
       }
+      if (held) {
+        heldAt = Date.now();
+      }
       if (!replace) {
         frames.push({ file: frameFile, ms });
       }
@@ -92,7 +103,8 @@ export const startRecorder = async (page, { dir, file, size, fps, crf, quality, 
     const stoppedMs = Date.now() - started;
     await page.screencast.stop();
     if (!frames.length) {
-      throw new Error('screencast delivered no frames');
+      // A failed write can drop the only frame, a replaced one being half-written.
+      throw new Error(lost ?? 'screencast delivered no frames');
     }
 
     // The concat demuxer takes each entry's duration from the next entry's start, and ignores the last
@@ -163,6 +175,7 @@ export const startRecorder = async (page, { dir, file, size, fps, crf, quality, 
     // Deleted now rather than at `stop`: a long setup at 2x fills a sandbox's disk before the take begins.
     frames.slice(0, -1).forEach(({ file }) => rmSync(file, { force: true }));
     frames.length = 0;
+    lost = undefined;
     started = Date.now();
     if (last) {
       frames.push({ file: last.file, ms: 0 });

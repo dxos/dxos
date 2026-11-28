@@ -41,7 +41,8 @@
  * `--theme` sets the emulated color scheme (`dark` by default, `light`). `--action-timeout` (5000 ms)
  * bounds how long a gesture, or a flow script's raw locator, waits for its target. `--cadence` (600 ms)
  * is the least time between two on-camera gestures. The app's `@dxos/log` output streams to `<out>/app.log`
- * (`--log <file>`, or `off`) in the NDJSON shape `scripts/query-logs.mjs` reads.
+ * (`--log <file>`, or `off`) in the NDJSON shape `scripts/query-logs.mjs` reads. After `--idle-timeout` (300000 ms)
+ * with no op in flight the recorder holds its last frame, so a driver left open between takes stops filling the disk.
  */
 
 import { chromium } from '@playwright/test';
@@ -98,6 +99,9 @@ const parseArgs = () => {
     'theme': 'dark',
     // Per-gesture wait for its target: a wrong selector should fail in seconds, not stall the demo.
     'action-timeout': 5_000,
+    // With no op in flight this long the recorder holds its last frame; longer than an agent's think time between
+    // ops, so only a driver left open between takes is held. `0` never holds.
+    'idle-timeout': 300_000,
     // Minimum gap between consecutive gestures, the pause a person takes to find the next control.
     'cadence': 600,
     // NDJSON of the app's `@dxos/log` output, `app.log`-shaped; `<out>/app.log` when unset, `off` to skip.
@@ -308,13 +312,12 @@ if (manual && !native) {
 }
 
 /**
- * Idle is no op in flight for a minute (a backgrounded `run` is in flight until its take ends); the recorder holds
- * one frame while idle, since a driver left open between takes would otherwise record an animated page for hours.
+ * Idle is no op in flight for `--idle-timeout` (a backgrounded `run` is in flight until its take ends); the recorder
+ * holds one frame while idle, since a driver left open between takes would otherwise record an animated page for hours.
  */
-const IDLE_MS = 60_000;
 let opsInFlight = 0;
 let lastOpAt = Date.now();
-const idle = () => opsInFlight === 0 && Date.now() - lastOpAt > IDLE_MS;
+const idle = () => options['idle-timeout'] > 0 && opsInFlight === 0 && Date.now() - lastOpAt > options['idle-timeout'];
 
 const recorder = !hires
   ? undefined
@@ -1100,7 +1103,7 @@ const handlers = {
       size: `${viewport.width * scale}x${viewport.height * scale}`,
       timeline: timelineFile,
       steps: timeline.length,
-      // The recorder kept writing, but what it wrote after this point is not the app.
+      // The video ends on a stale frame: its frames stopped coming (Tauri) or could not be written (a full disk).
       ...(recorded?.lost ? { lost: recorded.lost } : {}),
     };
   },
