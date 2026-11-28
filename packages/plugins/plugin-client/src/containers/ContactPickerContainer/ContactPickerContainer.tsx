@@ -80,11 +80,15 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
   };
 
   if (contacts.length === 0) {
-    return <p className='text-fg-muted'>{t('contact-picker-empty.message')}</p>;
+    return (
+      <p className='text-fg-muted' data-testid='contactPicker'>
+        {t('contact-picker-empty.message')}
+      </p>
+    );
   }
 
   return (
-    <Layout.Container gap='md' role='group' gutter='none'>
+    <Layout.Container gap='md' role='group' gutter='none' data-testid='contactPicker'>
       <Layout.Flex align='center' gap='sm'>
         <ContactPicker
           contacts={contacts}

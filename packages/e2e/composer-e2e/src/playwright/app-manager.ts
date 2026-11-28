@@ -429,20 +429,10 @@ export class AppManager {
   async createSpaceInvitation(): Promise<string> {
     this._invitationCode = new Trigger<string>();
     this._authCode = new Trigger<string>();
-    const more = this.page.getByTestId('membersContainer.createInvitation.more');
-    const inviteOne = this.page.getByTestId('membersContainer.inviteOne');
-    // A click on the members page can land while a new space settles, and the contact picker loads lazily and can
-    // push the trigger down mid-click, so either click is retried.
-    await expect(async () => {
-      if (!(await more.isVisible())) {
-        await this.shareSpace(2_000);
-      }
-      if ((await more.getAttribute('aria-expanded', { timeout: 2_000 })) !== 'true') {
-        await more.click({ timeout: 2_000 });
-      }
-      await expect(inviteOne).toBeVisible({ timeout: 2_000 });
-    }).toPass({ timeout: 30_000 });
-    await inviteOne.click();
+    // The lazy contact picker mounts above the invite button and pushes it down; a click before then misses.
+    await expect(this.page.getByTestId('contactPicker')).toBeVisible();
+    await this.page.getByTestId('membersContainer.createInvitation.more').click();
+    await this.page.getByTestId('membersContainer.inviteOne').click();
     await this.page.getByTestId('membersContainer.createInvitation').click();
     return await this._invitationCode.wait();
   }
