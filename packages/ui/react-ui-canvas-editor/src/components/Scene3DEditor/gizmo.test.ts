@@ -72,24 +72,70 @@ describe('extrudeIntent', () => {
   };
   const point = { x: 0, y: 0.5, z: 0 };
   const up = { x: 0, y: 1, z: 0 };
-  // The face's normal as the screen shows it: N pixels along it should be the world length N pixels span at its depth.
-  const screenStep = (() => {
-    const from = project(camera, viewport, point);
-    const to = project(camera, viewport, { x: point.x, y: point.y + 1, z: point.z });
-    return from && to ? Math.hypot(to.x - from.x, to.y - from.y) : Number.NaN;
-  })();
+  /** The pixels a drag covers to take the face `units` along its normal: how far the screen shows the point moving. */
+  const pixelsFor = (units: number, view = camera) => {
+    const from = project(view, viewport, point);
+    const to = project(view, viewport, { x: point.x, y: point.y + units, z: point.z });
+    return from && to ? Math.sign(units) * Math.hypot(to.x - from.x, to.y - from.y) : Number.NaN;
+  };
 
-  test('dragging a face along its normal by N pixels extrudes by the world length of N pixels at that depth', () => {
-    const intent = extrudeIntent({ id: 'e', target: 'box', normal: up, dragPixels: 50, camera, viewport, point });
+  test('dragging a face along its normal puts it under the pointer, near the camera and far from it', () => {
+    const intent = extrudeIntent({
+      ...{ id: 'e', target: 'box', normal: up, camera, viewport, point },
+      dragPixels: 50,
+    });
     expect(intent).toMatchObject({ kind: 'extrude', id: 'e', target: 'box', face: up });
-    expect(intent?.kind === 'extrude' && intent.distance).toBeCloseTo(50 / screenStep, 2);
+    // Seen from above the face comes at the camera as it rises, so a world unit covers more pixels the further it goes.
+    const above: Scene.Camera3D = { ...camera, pitch: 70 };
+    expect(pixelsFor(4, above)).toBeGreaterThan(1.2 * 4 * pixelsFor(1, above));
+    for (const view of [camera, above, { ...above, projection: 'orthographic' as const }]) {
+      for (const units of [0.5, 2, 4, -1.5]) {
+        const dragged = extrudeIntent({
+          ...{ id: 'e', target: 'box', normal: up, camera: view, viewport, point },
+          dragPixels: pixelsFor(units, view),
+        });
+        expect(dragged?.kind === 'extrude' && dragged.distance).toBeCloseTo(units, 2);
+      }
+    }
+  });
+
+  test('a drag past the point the normal vanishes at takes the face as far as it goes, not back', () => {
+    // Looking along the ground, a face pushed away from the camera closes on a point of the screen it never passes.
+    const along: Scene.Camera3D = { ...camera, yaw: 0, pitch: 5 };
+    const away = { x: 0, y: 0, z: 1 };
+    const far = (pixels: number, step = 0, more: Partial<Parameters<typeof extrudeIntent>[0]> = {}) => {
+      const intent = extrudeIntent({
+        ...{ id: 'e', target: 'box', normal: away, camera: along, viewport, point, step, landing: step > 0 },
+        ...{ dragPixels: pixels, ...more },
+      });
+      return intent?.kind === 'extrude' ? intent.distance : undefined;
+    };
+    const [near, past] = [far(20), far(5_000)];
+    expect(Math.sign(past ?? 0)).toBe(Math.sign(near ?? 0));
+    expect(Math.abs(past ?? 0)).toBe(100);
+    // A landing there is on the last whole step short of that reach, not the nearest one, which is past it.
+    expect(Math.abs(far(5_000, 6) ?? 0)).toBe(96);
+    // Nor is the face held on another body's side just past the reach, though that is within the detent.
+    const boxes = { beyond: { min: { x: -1, y: -1, z: 100.01 }, max: { x: 1, y: 1, z: 110 } } };
+    expect(far(5_000, 10, { boxes, side: 0, landing: false })).toBe(100);
+  });
+
+  test('an orthographic view has no vanishing point, so a face follows the pointer however far', () => {
+    const flat: Scene.Camera3D = { ...camera, projection: 'orthographic' };
+    for (const units of [150, -150]) {
+      const intent = extrudeIntent({
+        ...{ id: 'e', target: 'box', normal: up, camera: flat, viewport, point },
+        dragPixels: pixelsFor(units, flat),
+      });
+      expect(intent?.kind === 'extrude' && intent.distance).toBeCloseTo(units, 2);
+    }
   });
 
   test('pushing a face in leaves at least a minor grid unit of the solid, snapping or not', () => {
     const push = (units: number, step: number, thickness: number, landing = false) => {
       const intent = extrudeIntent({
         ...{ id: 'e', target: 'box', normal: up, camera, viewport, point, step, landing, thickness },
-        dragPixels: units * screenStep,
+        dragPixels: pixelsFor(units),
       });
       return intent?.kind === 'extrude' ? intent.distance : undefined;
     };
@@ -129,17 +175,17 @@ describe('extrudeIntent', () => {
         step: 0.5,
         landing: true,
       });
-    const intent = drag(1.3 * screenStep);
+    const intent = drag(pixelsFor(1.3));
     expect(intent?.kind === 'extrude' && intent.distance).toBe(1.5);
-    expect(drag(-0.8 * screenStep)).toMatchObject({ distance: -1 });
-    expect(drag(0.2 * screenStep)).toBeUndefined();
+    expect(drag(pixelsFor(-0.8))).toMatchObject({ distance: -1 });
+    expect(drag(pixelsFor(0.2))).toBeUndefined();
   });
 
   test('with a step, a drag under way follows the pointer, held on a step it passes within the detent', () => {
     const drag = (pixels: number) =>
       extrudeIntent({ id: 'e', target: 'box', normal: up, dragPixels: pixels, camera, viewport, point, step: 1 });
-    expect(drag(1.3 * screenStep)).toMatchObject({ distance: 1.3 });
-    expect(drag(2 * screenStep - 4)).toMatchObject({ distance: 2 });
+    expect(drag(pixelsFor(1.3))).toMatchObject({ distance: 1.3 });
+    expect(drag(pixelsFor(2) - 4)).toMatchObject({ distance: 2 });
   });
 
   test("a face pulled near another body's side is held flush on it, ahead of the grid; a landing within the detent too", () => {
@@ -148,7 +194,7 @@ describe('extrudeIntent', () => {
     const pull = (units: number, landing = false) => {
       const intent = extrudeIntent({
         ...{ id: 'e', target: 'box', normal: up, camera, viewport, point, step: 0.25, landing, boxes, side: 0.5 },
-        dragPixels: units * screenStep,
+        dragPixels: pixelsFor(units),
       });
       return intent?.kind === 'extrude' ? intent.distance : undefined;
     };

@@ -117,8 +117,10 @@ export type MeshData = { positions: Float32Array; indices: Uint32Array };
 export type GeometrySource = (item: RenderItem) => MeshData | undefined;
 
 type ItemMeshes = {
-  /** What the meshes were built for; a change of kind, look or geometry rebuilds them. */
+  /** What the meshes were built for; a change of kind or look rebuilds them, and one of geometry alone refills them. */
   signature: string;
+  /** The triangles the surface was given, for an item drawn from data. */
+  data?: MeshData;
   surface: Mesh;
   material: Material;
   rim?: { mesh: Mesh; material: ShaderMaterial };
@@ -213,7 +215,7 @@ const turnOf = (mesh: AbstractMesh): Quaternion =>
 const geometryIds = new WeakMap<MeshData, number>();
 let nextGeometryId = 1;
 
-/** What an item's meshes are built from; a change rebuilds them. Geometry counts by identity, not size. */
+/** What an item's meshes are built from; a change rebuilds or refills them. Geometry counts by identity, not size. */
 export const itemSignature = (kind: string, spec: MaterialSpec, data: MeshData | undefined): string => {
   let geometry = 0;
   if (data) {
@@ -221,6 +223,19 @@ export const itemSignature = (kind: string, spec: MaterialSpec, data: MeshData |
     geometryIds.set(data, geometry);
   }
   return `${kind}:${spec.kind}:${spec.edges}:${geometry}`;
+};
+
+/** A signature without its geometry: the kind and look, which the meshes and their materials are made for. */
+const builtFor = (signature: string): string => signature.slice(0, signature.lastIndexOf(':'));
+
+/** Gives a mesh `data`'s triangles, creased, in place of any it has. */
+const setTriangles = (mesh: Mesh, data: MeshData): void => {
+  const { positions, indices, normals } = creasedNormals(data);
+  const vertices = new VertexData();
+  vertices.positions = positions;
+  vertices.indices = indices;
+  vertices.normals = normals;
+  vertices.applyToMesh(mesh);
 };
 
 /** The most frames drawn while waiting for shaders, so a shader that never compiles cannot keep the view drawing. */
@@ -1530,12 +1545,7 @@ export class SceneRenderer3D {
     const name = `item-${item.key}`;
     if (data) {
       const mesh = new Mesh(name, this.#scene);
-      const { positions, indices, normals } = creasedNormals(data);
-      const vertices = new VertexData();
-      vertices.positions = positions;
-      vertices.indices = indices;
-      vertices.normals = normals;
-      vertices.applyToMesh(mesh);
+      setTriangles(mesh, data);
       return mesh;
     }
     switch (item.type) {
@@ -1554,19 +1564,14 @@ export class SceneRenderer3D {
 
   #createItem(item: RenderItem, spec: MaterialSpec, data: MeshData | undefined, signature: string): ItemMeshes {
     const surface = this.#createSurface(item, data);
-    // Picking finds an item by the key its surface carries; a composite's frame says so, to be looked through.
-    surface.metadata = { key: item.key, frame: item.frame === true };
     const material = createSurfaceMaterial(this.#scene, `surface-${item.key}`, spec.kind === 'rim' ? 'pbr' : spec.kind);
     surface.material = material;
     // A sphere has no edge, and its pole fans would draw as stray dots; Neu's rim carries its hue instead.
     if (spec.edges && !(spec.kind === 'neu' && item.type === 'sphere')) {
       surface.enableEdgesRendering();
       surface.edgesWidth = 2;
-      // Darker than the surface, so the edges read against it; Neu's body is the ground, so its edges are the hue itself.
-      const edge = Color3.FromHexString(spec.color).scale(spec.kind === 'neu' ? 1 : 0.45);
-      surface.edgesColor = new Color4(edge.r, edge.g, edge.b, 1);
     }
-    const meshes: ItemMeshes = { signature, surface, material };
+    const meshes: ItemMeshes = { signature, surface, material, ...(data ? { data } : {}) };
     // A see-through shell in the presentation theme carries a rim and a lattice, parented so they move with it.
     if (spec.kind === 'rim') {
       const rim = surface.clone(`rim-${item.key}`, surface);
@@ -1622,12 +1627,30 @@ export class SceneRenderer3D {
       const data = geometry?.(item) ?? meshData(item);
       const signature = itemSignature(item.type, spec, data);
       let meshes = this.#items.get(item.key);
-      if (meshes?.signature !== signature) {
+      if (
+        meshes?.data &&
+        data &&
+        meshes.signature !== signature &&
+        builtFor(meshes.signature) === builtFor(signature)
+      ) {
+        // A mesh made anew is not outlined until its outline's effect is ready, so a selected solid rebuilt on every
+        // move of a drag flickers: other triangles go into the mesh that is there.
+        setTriangles(meshes.surface, data);
+        if (meshes.surface.edgesRenderer) {
+          meshes.surface.disableEdgesRendering();
+          meshes.surface.enableEdgesRendering();
+        }
+        meshes.signature = signature;
+        meshes.data = data;
+      } else if (meshes?.signature !== signature) {
         meshes?.surface.dispose(false, true);
         meshes = this.#createItem(item, spec, data, signature);
         this.#items.set(item.key, meshes);
       }
       const { surface, material, rim, lattice } = meshes;
+      // Picking finds an item by the key its surface carries; a composite's frame says so, to be looked through, and an
+      // item can become one or stop being one while it keeps its meshes.
+      surface.metadata = { key: item.key, frame: item.frame === true };
       const visible = spec.alpha > 0.001;
       surface.setEnabled(visible);
       if (this.#ground) {
@@ -1648,6 +1671,9 @@ export class SceneRenderer3D {
         radians(item.rotation.z),
       );
       const color = Color3.FromHexString(spec.color);
+      // Darker than the surface, so the edges read against it; Neu's body is the ground, so its edges are the hue itself.
+      const edge = color.scale(spec.kind === 'neu' ? 1 : 0.45);
+      surface.edgesColor = new Color4(edge.r, edge.g, edge.b, 1);
       // A rim shell's surface is nearly clear; the rim and lattice carry its colour. A Neu body is the ground's tone.
       const body = this.#palette && spec.kind === 'neu' ? Color3.FromHexString(this.#palette.ground) : color;
       setSurface(material, body, spec.kind === 'rim' ? spec.alpha * 0.25 : spec.alpha);
@@ -1655,7 +1681,6 @@ export class SceneRenderer3D {
         // A solid sphere's rim carries its hue; any other body's edges do, a rim on its flat faces would wash them, and
         // one round a see-through shell tints everything seen through it.
         setNeuAccent(material, item.type === 'sphere' && castsNeuShadow(spec, item) ? color : Color3.Black());
-        surface.edgesColor = new Color4(color.r, color.g, color.b, 1);
       }
       rim && setRim(rim.material, color, RIM_STRENGTH * Math.min(1, spec.alpha / 0.4));
       lattice && setLattice(lattice.material, color, LATTICE_OPACITY * Math.min(1, spec.alpha / 0.4));

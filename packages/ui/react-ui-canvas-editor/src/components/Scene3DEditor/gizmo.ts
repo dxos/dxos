@@ -3,7 +3,7 @@
 //
 
 import { DETENT_PX, magnetTo, nearestStop, snapTo } from '@dxos/react-ui-canvas';
-import { type Box, type GizmoMode, SNAP, type Viewport, faceStops, project } from '@dxos/react-ui-canvas/3d';
+import { type Box, type GizmoMode, SNAP, type Viewport, axisPoint, faceStops, project } from '@dxos/react-ui-canvas/3d';
 import { type LayoutIntent, type Resolved3D, type Scene } from '@dxos/scene';
 
 /** An element's transform in its layout's coordinates, as a gizmo leaves it. */
@@ -56,6 +56,9 @@ export const gizmoIntent = (
 /** How far a face drag must travel, in pixels, to extrude. */
 const EXTRUDE_SLOP = 4;
 
+/** How far, in camera distances, a face goes once the pointer is past the point its axis vanishes at. */
+const EXTRUDE_REACH = 10;
+
 /** The axis a face normal points along, with its sign: a box's faces, which extrusion moves, are axis-aligned. */
 export const axisOf = ({ x, y, z }: Scene.Vec3): Scene.Vec3 => {
   const [ax, ay, az] = [Math.abs(x), Math.abs(y), Math.abs(z)];
@@ -106,8 +109,9 @@ export type ExtrudeDrag = {
 };
 
 /**
- * The `extrude` a face drag makes: its distance is the world length the drag spans along the face's normal at the
- * picked point. With a `step` it is held flush on a side of another of `boxes` it passes within the detent, else on a
+ * The `extrude` a face drag makes: its distance puts the picked point under the pointer, as far along the face's
+ * normal on screen as the drag is long, so the face keeps to the pointer at any depth a perspective view shows it at.
+ * With a `step` it is held flush on a side of another of `boxes` it passes within the detent, else on a
  * step, as a 2D move is, and lands so; a push into the solid stops a minor grid unit short of its far side, snapping or
  * not, so it never thins away; a landing short of half a step, a drag shorter than a click's slop, or a normal seen
  * end-on makes none.
@@ -130,18 +134,41 @@ export const extrudeIntent = ({
     return undefined;
   }
   const face = axisOf(normal);
-  const pixels = screenLength(camera, viewport, point, face);
-  if (pixels === undefined || pixels < 1e-3) {
+  const from = project(camera, viewport, point);
+  const to = project(camera, viewport, { x: point.x + face.x, y: point.y + face.y, z: point.z + face.z });
+  const pixels = from && to ? Math.hypot(to.x - from.x, to.y - from.y) : 0;
+  if (!from || !to || pixels < 1e-3) {
     return undefined;
   }
-  const free = dragPixels / pixels;
+  const under = axisPoint(
+    camera,
+    viewport,
+    { x: from.x + ((to.x - from.x) / pixels) * dragPixels, y: from.y + ((to.y - from.y) / pixels) * dragPixels },
+    point,
+    face,
+  );
+  const along = under
+    ? (under.x - point.x) * face.x + (under.y - point.y) * face.y + (under.z - point.z) * face.z
+    : undefined;
+  // Only a perspective view has a vanishing point; an orthographic one shows every place on the axis, however far.
+  const furthest = camera.projection === 'orthographic' ? Infinity : EXTRUDE_REACH * camera.distance;
+  // On a whole step, so a distance that snaps never lands past it.
+  const reach = step > 0 ? Math.floor(furthest / step) * step : furthest;
+  const ahead = along !== undefined && Math.sign(along) === Math.sign(dragPixels);
+  if (!ahead && !Number.isFinite(reach)) {
+    return undefined;
+  }
+  // Past its axis's vanishing point no place on the axis is under the pointer, and the nearest is behind the camera.
+  const free = ahead ? Math.sign(along) * Math.min(Math.abs(along), reach) : Math.sign(dragPixels) * reach;
   // A face lined up with another body's side is what a person pulling it wants most, so that holds ahead of the grid.
   const axis = face.x !== 0 ? 'x' : face.y !== 0 ? 'y' : 'z';
   const sign = face[axis];
-  const flush =
+  const stop =
     step > 0 && boxes && side !== undefined
       ? nearestStop(0, faceStops([side + free * sign], boxes, axis), DETENT_PX / pixels)
       : undefined;
+  // A side past the reach is not one the face goes to.
+  const flush = stop && Math.abs(free + stop.delta * sign) <= reach ? stop : undefined;
   const held = flush
     ? free + flush.delta * sign
     : landing

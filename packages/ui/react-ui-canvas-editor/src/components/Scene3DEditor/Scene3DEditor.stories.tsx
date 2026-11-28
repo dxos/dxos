@@ -295,7 +295,8 @@ export const Extrude: Story = {
  * Test:
  * 1. With Extrude, the face under the pointer is outlined and the cursor marks it; on open ground, neither.
  * 2. A double-click on the face selects it, highlighted; Escape clears it.
- * 3. A press on a cube and a move away from it draw the extruded solid, not yet in the document.
+ * 3. A press on a cube and a move away from it draw the extruded solid, not yet in the document; a further move
+ *    reshapes the mesh drawn rather than making another.
  * 4. The release makes the `extrude` element, selected.
  * 5. Undo (⌘Z) takes the extrusion away, and redo (⇧⌘Z) brings it back.
  */
@@ -378,6 +379,14 @@ export const ExtrudeTest: Story = {
     const preview = bounds('item-extrude-1');
     await expect(editor.dataset.selection).toBe('');
     await expect(new Set(frames)).toEqual(new Set([preview]));
+    // A further move reshapes the mesh the preview has; one made anew on each move loses its outline for a frame.
+    const drawn = scene()?.getMeshByName('item-extrude-1')?.uniqueId;
+    const further = { ...to, clientX: to.clientX - 20, clientY: to.clientY - 20 };
+    await fireEvent.pointerMove(editor, { ...further, buttons: 1 });
+    await waitFor(() => expect(bounds('item-extrude-1')).not.toBe(preview));
+    await expect(scene()?.getMeshByName('item-extrude-1')?.uniqueId).toBe(drawn);
+    await fireEvent.pointerMove(editor, { ...to, buttons: 1 });
+    await waitFor(() => expect(bounds('item-extrude-1')).toBe(preview));
 
     // 4.
     // Every frame from the release on draws the solid as previewed, while the document takes the commit and after.
