@@ -5,6 +5,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { asyncTimeout } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
@@ -171,7 +172,8 @@ const awaitDigest = async (
   const deadline = began + budgetMs;
   let last = '';
   for (;;) {
-    last = canonical(await read());
+    // Bounded too: a digest RPC that never returns is the same hang as a join that never does.
+    last = canonical(await asyncTimeout(read(), budgetMs, new Error(`digest did not return within ${budgetMs}ms`)));
     if (last === expected) {
       return { ok: true, elapsedMs: Date.now() - began, last };
     }
@@ -180,6 +182,51 @@ const awaitDigest = async (
     }
     await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
   }
+};
+
+/**
+ * Time one joiner: accept the invitation, then poll its digest until it matches the seeder's.
+ *
+ * The join is bounded by the same budget as the catch-up: replicant RPC has no timeout, and a joiner
+ * that is admitted but never gets the space ready would otherwise hold the run until CI kills it,
+ * before any summary or event is written.
+ */
+export const measureJoiner = async ({
+  joiner,
+  objects,
+  joinTimeoutMs,
+  expected,
+  join,
+  digest,
+}: {
+  joiner: number;
+  objects: number;
+  joinTimeoutMs: number;
+  expected: string;
+  join: () => Promise<{ admittedMs: number; spaceReadyMs: number }>;
+  digest: () => Promise<SpaceDigest>;
+}): Promise<JoinMeasurement> => {
+  const joined = await asyncTimeout(
+    join(),
+    joinTimeoutMs,
+    new Error(`joinSpace did not return within ${joinTimeoutMs}ms`),
+  );
+  const settled = await awaitDigest(digest, expected, joinTimeoutMs);
+  // The space loading locally is replication, not invitation, so it belongs on this side of the
+  // split even though `joinSpace` is what waited for it.
+  const replicationMs = settled.ok ? joined.spaceReadyMs + settled.elapsedMs : undefined;
+  return {
+    joiner,
+    admittedMs: joined.admittedMs,
+    spaceReadyMs: joined.spaceReadyMs,
+    replicationMs,
+    syncedMs: replicationMs === undefined ? undefined : joined.admittedMs + replicationMs,
+    objects,
+    msPerObject: replicationMs !== undefined && objects > 0 ? replicationMs / objects : undefined,
+    ok: settled.ok,
+    error: settled.ok ? undefined : `digest still differed after ${joinTimeoutMs}ms`,
+    at: new Date().toISOString(),
+  };
 };
 
 /**
@@ -296,7 +343,6 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
       // Joiners are timed independently and sequentially: run in parallel they would contend for
       // the same EDGE connection budget and measure each other rather than the system.
       for (let joiner = 0; joiner < spec.joiners; joiner++) {
-        let admittedMs = 0;
         try {
           // Spawning and sharing are inside the try because they fail too — a local stack under
           // load 500s on `/db/spaces/:id/join` — and one joiner's failure must cost only its own
@@ -304,30 +350,17 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
           // opening an invitation are the harness's cost, not the system's.
           const peer = await spawn(`joiner-${joiner}`);
           const { invitationCode } = await seeder.brain.shareSpace({ spaceId: space });
-          const joined = await peer.brain.joinSpace({ invitationCode });
-          admittedMs = joined.admittedMs;
-          // `async`/`await` rather than returning the call: an RPC handle's return is itself a
-          // promise, so passing it through unawaited types as `Promise<Promise<SpaceDigest>>`.
-          const settled = await awaitDigest(
-            async () => await peer.brain.digest({ spaceId: space }),
-            expected,
-            spec.joinTimeoutMs,
-          );
-          // The space loading locally is replication, not invitation, so it belongs on this side of
-          // the split even though `joinSpace` is what waited for it.
-          const replicationMs = settled.ok ? joined.spaceReadyMs + settled.elapsedMs : undefined;
-          measurements.push({
+          const measurement = await measureJoiner({
             joiner,
-            admittedMs,
-            spaceReadyMs: joined.spaceReadyMs,
-            replicationMs,
-            syncedMs: replicationMs === undefined ? undefined : admittedMs + replicationMs,
             objects: spec.objects,
-            msPerObject: replicationMs !== undefined && spec.objects > 0 ? replicationMs / spec.objects : undefined,
-            ok: settled.ok,
-            error: settled.ok ? undefined : `digest still differed after ${spec.joinTimeoutMs}ms`,
-            at: new Date().toISOString(),
+            joinTimeoutMs: spec.joinTimeoutMs,
+            expected,
+            // `async`/`await` rather than returning the call: an RPC handle's return is itself a
+            // promise, so passing it through unawaited types as `Promise<Promise<...>>`.
+            join: async () => await peer.brain.joinSpace({ invitationCode }),
+            digest: async () => await peer.brain.digest({ spaceId: space }),
           });
+          measurements.push(measurement);
         } catch (err) {
           // The fallback is for a joiner that failed to sync — one bad row, the rest still measured.
           // A missing agent is not that: it is the precondition for every remaining joiner too.
@@ -336,7 +369,7 @@ export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLa
           }
           measurements.push({
             joiner,
-            admittedMs,
+            admittedMs: 0,
             spaceReadyMs: undefined,
             replicationMs: undefined,
             syncedMs: undefined,
